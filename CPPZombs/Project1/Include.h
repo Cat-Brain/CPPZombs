@@ -8,6 +8,7 @@ using std::cout;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
+typedef olc::vf2d Vec2f;
 typedef olc::Pixel Color;
 typedef olc::HWButton button;
 
@@ -17,6 +18,18 @@ int JMod(int x, int m)
 {
 	return ((x % m) + m) % m;
 }
+
+int Squagnitude(Vec2 a)
+{
+	return (int)fmaxf(fabsf(a.x), fabsf(a.y));
+}
+
+int Squistance(Vec2 a, Vec2 b)
+{
+	return Squagnitude(a - b);
+}
+
+
 
 struct Inputs
 {

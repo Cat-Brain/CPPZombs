@@ -3,7 +3,7 @@
 class Game : public olc::PixelGameEngine
 {
 public:
-	vector<Entity*> entities;
+	Entities entities;
 
 	float timeBetweenFrames = 0.125f;
 	float currentTime = 0.0f;
@@ -153,7 +153,8 @@ public:
 		Clear(olc::Pixel(olc::GREEN));
 
 		if (inputs.leftMouse.bHeld)
-			TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
+			entities.push_back(new Projectile(entities[0]->pos, GetMousePos(), 10, olc::GREY, 1, 1, 1));
+			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
 		else if (inputs.rightMouse.bHeld && EmptyFromEntities(Entity::ToSpace(GetMousePos()), entities))
 			entities.push_back(new DToCol(GetMousePos(), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 

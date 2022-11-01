@@ -1,11 +1,11 @@
-#include "BuildingBlocks.h"
+#include "Projectile.h"
 
 class Player : public Entity
 {
 public:
 	using Entity::Entity;
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*> entities, int frameCount, Inputs inputs) override
+	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		if (frameCount % 2 == 0)
 		{
@@ -21,7 +21,7 @@ public:
 				direction.y++;
 
 			if (direction != Vec2(0, 0))
-				Entity::TryMove(direction, 3, entities);
+				Entity::TryMove(direction, 3, *entities);
 		}
 
 		Entity::Update(screen, entities, frameCount, inputs);

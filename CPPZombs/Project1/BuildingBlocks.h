@@ -10,29 +10,81 @@ public:
 		color2(color2)
 	{ }
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*> entities, int frameCount, Inputs inputs) override
+	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		float t = (float)health / (float)maxHealth;
 		screen->Draw(pos.x, screenHeight - pos.y - 1, Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a)));
 	}
 };
 
-class FunctionalBlock : Entity
+class FunctionalBlock : public Entity
 {
 public:
 	using Entity::Entity;
-	int ticksPerActivate = 1;
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*> entities, int frameCount, Inputs inputs) override
+	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
-		if (frameCount % ticksPerActivate == 0)
-			TUpdate(screen, entities, frameCount, inputs);
+		if (frameCount % TickPer() == 0)
+			TUpdate(screen, (Entities*)entities, frameCount, inputs);
 
 		Entity::Update(screen, entities, frameCount, inputs);
 	}
 
-	virtual void TUpdate(olc::PixelGameEngine* screen, vector<Entity*> entities, int frameCount, Inputs inputs)
+	virtual int TickPer()
+	{
+		return 2;
+	}
+
+	virtual void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 
 	}
 };
+
+/*class Conveyer : public FunctionalBlock
+{
+public:
+	virtual int MaxStack()
+	{
+		return 3;
+	}
+
+	int TickPer() override
+	{
+		return 3;
+	}
+
+	void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs) override
+	{
+		vector<Conveyer*> nearbyFilledConveyers = vector<Conveyer*>();
+		vector<Conveyer*> nearbyEmptyConveyers = vector<Conveyer*>();
+
+		for (int i = 0; i < entities->conveyers.size(); i++)
+			if (Squistance(pos, entities->conveyers[i]->pos) == 1)
+			{
+				if (entities->conveyers[i]->containedEntities.size() < ((Conveyer*)entities->conveyers[i])->MaxStack())
+				{
+					if (containedEntities.size() != 0)
+						nearbyEmptyConveyers.push_back((Conveyer*)entities->conveyers[i]);
+				}
+				else
+					nearbyFilledConveyers.push_back((Conveyer*)entities->conveyers[i]);
+			}
+
+		for (int i = 0; i < nearbyEmptyConveyers.size(); i++)
+		{
+			int countToDis = fminf(ceilf(containedEntities.size() / nearbyEmptyConveyers.size()), nearbyEmptyConveyers[i]->MaxStack() - nearbyEmptyConveyers[i]->containedEntities.size());
+			for (int j = 0; j < countToDis; j++)
+			{
+				nearbyEmptyConveyers[i]->containedEntities.push_back(containedEntities.back());
+				containedEntities.pop_back();
+			}
+		}
+
+		for (int i = 0; i < nearbyFilledConveyers.size() && containedEntities.size(); i++)
+		{
+			int countToDis = fminf(nearbyFilledConveyers[i]->containedEntities.size(), )
+			for(int j = 0; j <)
+		}
+	}
+};*/
