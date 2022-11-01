@@ -20,7 +20,7 @@ public:
 
 	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Also draws.
 	{
-		screen->Draw(pos.x, screenHeight - pos.y - 1, color);
+		screen->FillRect(Vec2(pos.x, screenHeight - pos.y - 1) * 3, Vec2(3, 3), color);
 	}
 
 	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities)

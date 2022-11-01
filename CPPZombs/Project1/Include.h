@@ -12,7 +12,7 @@ typedef olc::vf2d Vec2f;
 typedef olc::Pixel Color;
 typedef olc::HWButton button;
 
-int screenWidth = 120, screenHeight = 75;
+int screenWidth = 50, screenHeight = 50;
 
 int JMod(int x, int m)
 {
@@ -36,10 +36,11 @@ struct Inputs
 	button w, a, s, d,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
+	Vec2 mousePosition;
 
 	Inputs(button w, button a, button s, button d,
 		button up, button left, button down, button right,
-		button leftMouse, button rightMouse, button middleMouse):
-		w(w), a(a), s(s), d(d), up(up), left(left), down(down), right(right), leftMouse(leftMouse), rightMouse(rightMouse), middleMouse(middleMouse)
+		button leftMouse, button rightMouse, button middleMouse, Vec2 mousePosition):
+		w(w), a(a), s(s), d(d), up(up), left(left), down(down), right(right), leftMouse(leftMouse), rightMouse(rightMouse), middleMouse(middleMouse), mousePosition(mousePosition)
 	{ }
 };

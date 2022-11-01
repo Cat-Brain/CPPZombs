@@ -10,7 +10,7 @@ public:
 	float lastTrueFrame = 0.0f;
 	int frameCount = 0;
 
-	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button());
+	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
 
 
 	Game()
@@ -93,6 +93,8 @@ public:
 		currentTime += deltaTime;
 		if (currentTime > lastTrueFrame + timeBetweenFrames)
 		{
+			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3.0f);
+
 			Update(currentTime - lastTrueFrame);
 			lastTrueFrame += timeBetweenFrames;
 
@@ -153,16 +155,16 @@ public:
 		Clear(olc::Pixel(olc::GREEN));
 
 		if (inputs.leftMouse.bHeld)
-			entities.push_back(new Projectile(entities[0]->pos, GetMousePos(), 10, olc::GREY, 1, 1, 1));
+			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, olc::GREY, 1, 1, 1));
 			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
-		else if (inputs.rightMouse.bHeld && EmptyFromEntities(Entity::ToSpace(GetMousePos()), entities))
-			entities.push_back(new DToCol(GetMousePos(), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
+		else if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities))
+			entities.push_back(new DToCol(Entity::ToSpace(inputs.mousePosition), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 
 		for(int i = 0; i < entities.size(); i++)
-			entities[i]->Update(this, entities, frameCount, inputs);
+			entities[i]->Update(this, (vector<Entity*>*)(&entities), frameCount, inputs);
 
 		if (frameCount % 6 < 4)
-			Draw(GetMouseX(), GetMouseY(), Color(0, 0, 0, 127));
+			Draw(Entity::ToSpace(inputs.mousePosition) * 3 + Vec2(1, 1), Color(0, 0, 0, 127));
 		frameCount++;
 	}
 

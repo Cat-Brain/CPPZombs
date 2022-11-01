@@ -13,7 +13,7 @@ public:
 	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		float t = (float)health / (float)maxHealth;
-		screen->Draw(pos.x, screenHeight - pos.y - 1, Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a)));
+		screen->FillRect(Vec2(pos.x, screenHeight - pos.y - 1) * 3, Vec2(3, 3), Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a)));
 	}
 };
 
@@ -38,6 +38,41 @@ public:
 	virtual void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 
+	}
+};
+
+class Conveyer : public FunctionalBlock
+{
+public:
+	Vec2 dir;
+
+	Conveyer(Vec2 pos = Vec2(0, 0), Vec2 dir = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1) :
+		FunctionalBlock(pos, color, mass, maxHealth, health), dir(dir)
+	{
+		Start();
+	}
+
+	virtual int MaxStack()
+	{
+		return 3;
+	}
+
+	int TickPer() override
+	{
+		return 3;
+	}
+
+	void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs) override
+	{
+		Vec2 desiredPos = pos + dir;
+
+		for (int i = 0; i < entities->conveyers.size(); i++)
+			if (entities->conveyers[i]->pos == desiredPos && entities->conveyers[i]->containedEntities.size() < ((Conveyer*)entities->conveyers[i])->MaxStack())
+			{
+				entities->conveyers[i]->containedEntities.push_back(containedEntities.back());
+				containedEntities.pop_back();
+				break;
+			}
 	}
 };
 
