@@ -23,8 +23,9 @@ public:
 		screen->FillRect(Vec2(pos.x, screenHeight - pos.y - 1) * 3, Vec2(3, 3), color);
 	}
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities)
+	virtual int TryMove(Vec2 direction, int force, vector<Entity*> entities) // returns index of hit item.
 	{
+		int index = 0;
 		Vec2 newPos = pos + direction;
 		newPos.x = JMod(newPos.x, screenWidth);
 		newPos.y = JMod(newPos.y, screenHeight);
@@ -34,14 +35,15 @@ public:
 			for (int i = 0; i < entities.size(); i++)
 				if (entities[i]->pos == newPos)
 				{
-					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
-						return false;
+					if ((index = entities[i]->TryMove(direction, force - entities[i]->mass, entities)) == -1)
+						return -1;
 					break;
 				}
 		}
-		else return false;
+		else return -1;
 
 		pos = newPos;
+		return index;
 	}
 
 	virtual bool CanAttack()
