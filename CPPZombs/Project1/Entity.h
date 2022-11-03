@@ -23,9 +23,8 @@ public:
 		screen->FillRect(ToSpace(pos - camPos + screenDimH) * 3, Vec2(3, 3), color);
 	}
 
-	virtual int TryMove(Vec2 direction, int force, vector<Entity*> entities) // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities) // returns index of hit item.
 	{
-		int index = 0;
 		Vec2 newPos = pos + direction;
 
 		if (force > 0)
@@ -33,15 +32,36 @@ public:
 			for (int i = 0; i < entities.size(); i++)
 				if (entities[i]->pos == newPos)
 				{
-					if ((index = entities[i]->TryMove(direction, force - entities[i]->mass, entities)) == -1)
-						return -1;
+					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
+						return false;
 					break;
 				}
 		}
-		else return -1;
+		else return false;
 
 		pos = newPos;
-		return index;
+		return true;
+	}
+
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index) // returns index of hit item.
+	{
+		Vec2 newPos = pos + direction;
+
+		if (force > 0)
+		{
+			for (int i = 0; i < entities.size(); i++)
+				if (entities[i]->pos == newPos)
+				{
+					index = reinterpret_cast<int*>(i);
+					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
+						return false;
+					break;
+				}
+		}
+		else return false;
+
+		pos = newPos;
+		return true;
 	}
 
 	virtual bool CanAttack()

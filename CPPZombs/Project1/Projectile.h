@@ -19,11 +19,10 @@ public:
         fPos += direction;
         Vec2 oldPos = pos;
         int index;
-        if ((index = TryMove(Vec2(roundf(fPos.x), roundf(fPos.y)) - pos, 1, *entities)) != -1)
+        if (!TryMove(Vec2(roundf(fPos.x), roundf(fPos.y)) - pos, 1, *entities, &index))
         {
             (*entities)[index]->health -= GetDamage();
-            remove(entities->begin(), entities->end(), this);
-            delete this;
+            entities->erase(entities->begin() + index);
             return;
         }
 
