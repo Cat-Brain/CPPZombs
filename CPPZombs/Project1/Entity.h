@@ -20,15 +20,13 @@ public:
 
 	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Also draws.
 	{
-		screen->FillRect(Vec2(pos.x, screenHeight - pos.y - 1) * 3, Vec2(3, 3), color);
+		screen->FillRect(ToSpace(pos - camPos + screenDimH) * 3, Vec2(3, 3), color);
 	}
 
 	virtual int TryMove(Vec2 direction, int force, vector<Entity*> entities) // returns index of hit item.
 	{
 		int index = 0;
 		Vec2 newPos = pos + direction;
-		newPos.x = JMod(newPos.x, screenWidth);
-		newPos.y = JMod(newPos.y, screenHeight);
 
 		if (force > 0)
 		{

@@ -13,7 +13,10 @@ public:
 	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		float t = (float)health / (float)maxHealth;
-		screen->FillRect(Vec2(pos.x, screenHeight - pos.y - 1) * 3, Vec2(3, 3), Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a)));
+		Color tempColor = color;
+		color = Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a));
+		Entity::Update(screen, entities, frameCount, inputs);
+		color = tempColor;
 	}
 };
 

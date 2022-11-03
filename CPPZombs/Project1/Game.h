@@ -93,7 +93,7 @@ public:
 		currentTime += deltaTime;
 		if (currentTime > lastTrueFrame + timeBetweenFrames)
 		{
-			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3.0f);
+			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3) + camPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
 
 			Update(currentTime - lastTrueFrame);
 			lastTrueFrame += timeBetweenFrames;
@@ -152,7 +152,9 @@ public:
 
 	void Update(float deltaTime)
 	{
-		Clear(olc::Pixel(olc::GREEN));
+		Clear(olc::Pixel(168, 92, 20));
+
+
 
 		if (inputs.leftMouse.bHeld)
 			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, olc::GREY, 1, 1, 1));
@@ -160,11 +162,18 @@ public:
 		else if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities))
 			entities.push_back(new DToCol(Entity::ToSpace(inputs.mousePosition), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 
+
+
 		for(int i = 0; i < entities.size(); i++)
 			entities[i]->Update(this, (vector<Entity*>*)(&entities), frameCount, inputs);
 
+
+
 		if (frameCount % 6 < 4)
-			Draw(Entity::ToSpace(inputs.mousePosition) * 3 + Vec2(1, 1), Color(0, 0, 0, 127));
+			Draw(Entity::ToSpace(inputs.mousePosition - camPos + screenDimH) * 3 + Vec2(1, 1), Color(0, 0, 0, 127));
+
+
+
 		frameCount++;
 	}
 

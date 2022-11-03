@@ -23,6 +23,7 @@ public:
 			if (direction != Vec2(0, 0))
 				Entity::TryMove(direction, 3, *entities);
 		}
+		camPos = pos;
 
 		Entity::Update(screen, entities, frameCount, inputs);
 	}
