@@ -156,10 +156,10 @@ public:
 
 
 
-		if (inputs.leftMouse.bHeld)
+		if (inputs.leftMouse.bPressed)
 			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, olc::GREY, 1, 1, 1));
 			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
-		else if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities))
+		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities))
 			entities.push_back(new DToCol(Entity::ToSpace(inputs.mousePosition), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 
 

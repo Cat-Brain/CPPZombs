@@ -5,6 +5,7 @@ using std::vector;
 using std::map;
 using std::cin;
 using std::cout;
+using std::remove;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;

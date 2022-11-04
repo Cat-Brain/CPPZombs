@@ -27,9 +27,4 @@ public:
 
 		Entity::Update(screen, entities, frameCount, inputs);
 	}
-
-	bool CanAttack() override
-	{
-		return false;
-	}
 };

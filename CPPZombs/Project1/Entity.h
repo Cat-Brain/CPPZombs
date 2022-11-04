@@ -50,9 +50,9 @@ public:
 		if (force > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->pos == newPos)
+				if (entities[i]->pos == newPos && entities[i]->CanAttack())
 				{
-					index = reinterpret_cast<int*>(i);
+					*index = i;
 					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
 						return false;
 					break;
@@ -62,6 +62,19 @@ public:
 
 		pos = newPos;
 		return true;
+	}
+
+	virtual void DealDamage(int damage, vector<Entity*>* entities)
+	{
+		health -= damage;
+		if (health <= 0)
+			DestroySelf(entities);
+	}
+
+	virtual void DestroySelf(vector<Entity*>* entities)
+	{
+		entities->erase(std::find(entities->begin(), entities->end(), this));
+		delete this;
 	}
 
 	virtual bool CanAttack()

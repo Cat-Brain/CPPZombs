@@ -5,13 +5,16 @@ class Projectile : public Entity
 public:
     Vec2f direction;
     Vec2f fPos;
-    int maxDist;
+    int remainingTime;
 
     Projectile(Vec2 pos, Vec2 direction, int maxDist, Color color, int mass, int maxHealth, int health) :
-        Entity(pos, color, mass, maxHealth, health), maxDist(maxDist),
+        Entity(pos, color, mass, maxHealth, health), remainingTime(maxDist),
         fPos(pos + Vec2(0.01f, 0.01f))
     {
         this->direction = (Vec2f)(direction - pos) / Squistance(pos, direction);
+        fPos += this->direction;
+        Vec2 oldPos = this->pos;
+        this->pos = Vec2(roundf(fPos.x), roundf(fPos.y));
     }
 
     void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
@@ -19,10 +22,18 @@ public:
         fPos += direction;
         Vec2 oldPos = pos;
         int index;
+
+        if (remainingTime <= 0)
+        {
+            DestroySelf(entities);
+            return;
+        }
+        remainingTime--;
+
         if (!TryMove(Vec2(roundf(fPos.x), roundf(fPos.y)) - pos, 1, *entities, &index))
         {
-            (*entities)[index]->health -= GetDamage();
-            entities->erase(entities->begin() + index);
+            (*entities)[index]->DealDamage(GetDamage(), entities);
+            DestroySelf(entities);
             return;
         }
 
