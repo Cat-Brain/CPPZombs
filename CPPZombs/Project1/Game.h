@@ -15,13 +15,16 @@ public:
 
 	Game()
 	{
-		entities.push_back(new Player(Vec2(screenWidth / 2, screenHeight / 2), olc::BLUE));
+		entities = Entities(0);
+		entities.push_back(new Player(Entity::ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5));
+		playerAlive = true;
 		sAppName = "CPPZombs!";
 	}
 
 	virtual bool OnUserCreate()
 	{
 		SetPixelMode(Color::ALPHA);
+		srand(time(NULL));
 		return true;
 	}
 
@@ -93,9 +96,15 @@ public:
 		currentTime += deltaTime;
 		if (currentTime > lastTrueFrame + timeBetweenFrames)
 		{
-			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3) + camPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
+			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
 
-			Update(currentTime - lastTrueFrame);
+			if (playerAlive)
+				Update(currentTime - lastTrueFrame);
+			else
+			{
+				Clear(olc::BLACK);
+				DrawString(Vec2(0, 0), "Game over.\n\nPress esc\nto close.");
+			}
 			lastTrueFrame += timeBetweenFrames;
 
 			#pragma region Inputs2
@@ -153,24 +162,38 @@ public:
 	void Update(float deltaTime)
 	{
 		Clear(olc::Pixel(168, 92, 20));
+		DrawString(Vec2(0, 0), std::to_string(240 - frameCount % 240), olc::BLACK);
+		DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 
 
+		if (frameCount % 240 == 0)
+		{
+			for (int i = 0; i < frameCount / 240 * 3 + 5; i++)
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities.push_back(new Enemy(Vec2f(cosf(randomValue), sinf(randomValue)) * screenDim + playerPos, olc::CYAN, olc::BLACK, 1, 3, 3));
+			}
+		}
 
-		if (inputs.leftMouse.bPressed)
-			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, olc::GREY, 1, 1, 1));
+
+		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos)
+			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, 0, olc::GREY, 1, 1, 1));
 			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
-		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities))
-			entities.push_back(new DToCol(Entity::ToSpace(inputs.mousePosition), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
+		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities) && playerAlive)
+			entities.push_back(new DToCol(inputs.mousePosition, olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 
 
 
-		for(int i = 0; i < entities.size(); i++)
-			entities[i]->Update(this, (vector<Entity*>*)(&entities), frameCount, inputs);
+
+		entities.Update(this, frameCount, inputs); // Updates all entities.
+
+
+
 
 
 
 		if (frameCount % 6 < 4)
-			Draw(Entity::ToSpace(inputs.mousePosition - camPos + screenDimH) * 3 + Vec2(1, 1), Color(0, 0, 0, 127));
+			Draw(Entity::ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
 
 
 

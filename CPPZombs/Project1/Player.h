@@ -1,4 +1,4 @@
-#include "Projectile.h"
+#include "Enemy.h"
 
 class Player : public Entity
 {
@@ -20,11 +20,19 @@ public:
 			if (inputs.w.bHeld || inputs.up.bHeld)
 				direction.y++;
 
+			Vec2 oldPos = pos;
 			if (direction != Vec2(0, 0))
 				Entity::TryMove(direction, 3, *entities);
+
+			playerVel = pos - oldPos;
 		}
-		camPos = pos;
+		playerPos = pos;
 
 		Entity::Update(screen, entities, frameCount, inputs);
+	}
+
+	void OnDeath() override
+	{
+		playerAlive = false;
 	}
 };

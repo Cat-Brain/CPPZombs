@@ -38,10 +38,7 @@ public:
 		return 2;
 	}
 
-	virtual void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs)
-	{
-
-	}
+	virtual void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs) { }
 };
 
 /*class Conveyer : public FunctionalBlock

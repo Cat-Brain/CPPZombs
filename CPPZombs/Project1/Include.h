@@ -32,6 +32,11 @@ int Squistance(Vec2 a, Vec2 b)
 	return Squagnitude(a - b);
 }
 
+Vec2 Squarmalized(Vec2 a)
+{
+	return a / (int)fmaxf(1, Squagnitude(a));
+}
+
 
 
 struct Inputs
@@ -48,4 +53,6 @@ struct Inputs
 	{ }
 };
 
-Vec2 camPos(0, 0);
+bool playerAlive = false;
+Vec2 playerPos(0, 0);
+Vec2 playerVel(0, 0);

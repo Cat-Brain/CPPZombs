@@ -10,7 +10,7 @@ public:
 	vector<Entity*> containedEntities;
 
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1) :
-		pos(ToSpace(pos)), color(color), mass(mass), maxHealth(maxHealth), health(health), containedEntities()
+		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), containedEntities()
 	{
 		Start();
 	}
@@ -20,20 +20,22 @@ public:
 
 	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Also draws.
 	{
-		screen->FillRect(ToSpace(pos - camPos + screenDimH) * 3, Vec2(3, 3), color);
+		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities) // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int ignore = -1) // returns index of hit item.
 	{
 		Vec2 newPos = pos + direction;
 
-		if (force > 0)
+		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->pos == newPos)
+				if (i != ignore && entities[i]->pos == newPos)
 				{
-					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
+					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
+					{
 						return false;
+					}
 					break;
 				}
 		}
@@ -43,18 +45,20 @@ public:
 		return true;
 	}
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index) // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index, int ignore = -1) // returns index of hit item.
 	{
 		Vec2 newPos = pos + direction;
 
-		if (force > 0)
+		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->pos == newPos && entities[i]->CanAttack())
+				if (i != ignore && entities[i]->pos == newPos)
 				{
 					*index = i;
-					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities))
+					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
+					{
 						return false;
+					}
 					break;
 				}
 		}
@@ -64,17 +68,28 @@ public:
 		return true;
 	}
 
-	virtual void DealDamage(int damage, vector<Entity*>* entities)
+	virtual int DealDamage(int damage, vector<Entity*>* entities)
 	{
 		health -= damage;
 		if (health <= 0)
+		{
 			DestroySelf(entities);
+			return 1;
+		}
+		return 0;
 	}
 
-	virtual void DestroySelf(vector<Entity*>* entities)
+	void DestroySelf(vector<Entity*>* entities);
+
+	void DestroySelf(vector<Entity*>::iterator position, vector<Entity*>* entities)
 	{
-		entities->erase(std::find(entities->begin(), entities->end(), this));
+		entities->erase(position);
+		OnDeath();
 		delete this;
+	}
+
+	virtual void OnDeath()
+	{
 	}
 
 	virtual bool CanAttack()
@@ -92,9 +107,24 @@ public:
 		return false;
 	}
 
+	virtual bool IsEnemy()
+	{
+		return false;
+	}
+
+	virtual bool IsProjectile()
+	{
+		return false;
+	}
+
 	static Vec2 ToSpace(Vec2 positionInWorldSpace)
 	{
 		return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
+	}
+
+	static Vec2 ToRSpace(Vec2 positionInLocalSpace)
+	{
+		return ToSpace(positionInLocalSpace - playerPos + screenDimH) * 3;
 	}
 };
 
@@ -110,7 +140,7 @@ bool EmptyFromEntities(Vec2 pos, vector<Entity*> entities)
 	return true;
 }
 
-bool TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 if successful, 1 if damaged, 2 if missed.
+int TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 if successful, 1 if damaged, 2 if missed.
 {
 	for (int i = 0; i < entities->size(); i++)
 		if ((*entities)[i]->pos == pos && (*entities)[i]->CanAttack())
@@ -133,18 +163,66 @@ bool TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 
 class Entities : public vector<Entity*>
 {
 public:
-	vector<Entity*> conveyers;
-	vector<Entity*> movers;
+	using vector<Entity*>::vector;
 
-	void Update()
+	vector<Entity*> projectiles;
+	vector<Entity*> nonProjectiles;
+	vector<Entity*> conveyers;
+	vector<Entity*> enemies;
+	vector<Entity*> nonEnemies;
+
+	void Update(olc::PixelGameEngine* screen, int frameCount, Inputs inputs)
 	{
-#pragma region Conveyers
+		#pragma region Conveyers
 		conveyers.clear();
 		for (int i = 0; i < size(); i++)
 		{
 			if ((*this)[i]->IsConveyer())
 				conveyers.push_back((*this)[i]);
 		}
-#pragma endregion
+		#pragma endregion
+		#pragma region Enemies and Non-Enemies
+		enemies.clear();
+		nonEnemies.clear();
+		for (int i = 0; i < size(); i++)
+		{
+			if ((*this)[i]->IsEnemy())
+				enemies.push_back((*this)[i]);
+			else
+				nonEnemies.push_back((*this)[i]);
+		}
+		#pragma endregion
+		#pragma region Projectile and Non-Projectiles
+		projectiles.clear();
+		nonProjectiles.clear();
+		for (int i = 0; i < size(); i++)
+		{
+			if ((*this)[i]->IsProjectile())
+				projectiles.push_back((*this)[i]);
+			else
+				nonProjectiles.push_back((*this)[i]);
+		}
+		#pragma endregion
+		
+		for (int i = 0; i < projectiles.size(); i++)
+			projectiles[i]->Update(screen, this, frameCount, inputs);
+		for (int i = 0; i < nonProjectiles.size(); i++)
+			nonProjectiles[i]->Update(screen, this, frameCount, inputs);
+	}
+
+	void Remove(Entity* entityToRemove)
+	{
+		erase(std::find(begin(), end(), entityToRemove));
+		if (entityToRemove->IsProjectile())
+			projectiles.erase(std::find(begin(), end(), entityToRemove));
+		else
+			nonProjectiles.erase(std::find(begin(), end(), entityToRemove));
 	}
 };
+
+void Entity::DestroySelf(vector<Entity*>* entities)
+{
+	((Entities*)entities)->Remove(this);
+	OnDeath();
+	delete this;
+}
