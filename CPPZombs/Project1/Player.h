@@ -28,10 +28,14 @@ public:
 		}
 		playerPos = pos;
 
+		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
+		for (Entity* entity : incorporeals)
+			entity->DestroySelf(entities);
+
 		Entity::Update(screen, entities, frameCount, inputs);
 	}
 
-	void OnDeath() override
+	void OnDeath(vector<Entity*>* entities) override
 	{
 		playerAlive = false;
 	}

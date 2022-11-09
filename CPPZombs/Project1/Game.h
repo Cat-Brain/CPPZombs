@@ -13,8 +13,9 @@ public:
 	float currentTime = 0.0f;
 	float lastTrueFrame = 0.0f;
 	int frameCount = 0, waveCount = 0;
+	bool showUI = true;
 
-	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
+	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
 
 
 	Game()
@@ -63,6 +64,21 @@ public:
 		inputs.enter.bHeld |= temp.bHeld;
 		inputs.enter.bPressed |= temp.bPressed;
 		inputs.enter.bReleased |= temp.bReleased;
+
+		temp = GetKey(olc::C);
+		inputs.c.bHeld |= temp.bHeld;
+		inputs.c.bPressed |= temp.bPressed;
+		inputs.c.bReleased |= temp.bReleased;
+
+		temp = GetKey(olc::Q);
+		inputs.q.bHeld |= temp.bHeld;
+		inputs.q.bPressed |= temp.bPressed;
+		inputs.q.bReleased |= temp.bReleased;
+
+		temp = GetKey(olc::E);
+		inputs.e.bHeld |= temp.bHeld;
+		inputs.e.bPressed |= temp.bPressed;
+		inputs.e.bReleased |= temp.bReleased;
 
 		temp = GetKey(olc::UP);
 		inputs.up.bHeld |= temp.bHeld;
@@ -138,6 +154,18 @@ public:
 			inputs.enter.bPressed = false;
 			inputs.enter.bReleased = false;
 
+			inputs.c.bHeld = false;
+			inputs.c.bPressed = false;
+			inputs.c.bReleased = false;
+
+			inputs.q.bHeld = false;
+			inputs.q.bPressed = false;
+			inputs.q.bReleased = false;
+
+			inputs.e.bHeld = false;
+			inputs.e.bPressed = false;
+			inputs.e.bReleased = false;
+
 			inputs.up.bHeld = false;
 			inputs.up.bPressed = false;
 			inputs.up.bReleased = false;
@@ -192,17 +220,20 @@ public:
 			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, 0, olc::GREY, 1, 1, 1));
 			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
 		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities) && playerAlive)
-			entities.push_back(new DToCol(inputs.mousePosition, olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
+			entities.push_back(new Placeable(inputs.mousePosition, olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
 
 
 
 
 		entities.Update(this, frameCount, inputs); // Updates all entities.
 
-
-
-		DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
-		DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
+		if (inputs.c.bPressed)
+			showUI = !showUI;
+		if (showUI)
+		{
+			DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
+			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
+		}
 
 		if (frameCount % 6 < 4)
 			Draw(Entity::ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));

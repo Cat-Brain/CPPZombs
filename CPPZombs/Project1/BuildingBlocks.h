@@ -1,5 +1,23 @@
 #include "Entity.h"
 
+class MiniEntity : public Entity
+{
+public:
+	MiniEntity(Vec2 pos, Color color) :
+		Entity(pos, color)
+	{ }
+	
+	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	{
+		screen->Draw(ToRSpace(pos), color);
+	}
+
+	bool Corporeal() override
+	{
+		return false;
+	}
+};
+
 class DToCol : public Entity
 {
 public:
@@ -17,6 +35,17 @@ public:
 		color = Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a));
 		Entity::Update(screen, entities, frameCount, inputs);
 		color = tempColor;
+	}
+};
+
+class Placeable : public DToCol
+{
+public:
+	using DToCol::DToCol;
+
+	void OnDeath(vector<Entity*>* entities) override
+	{
+		entities->push_back(new MiniEntity(pos, color));
 	}
 };
 

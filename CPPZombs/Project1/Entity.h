@@ -30,7 +30,7 @@ public:
 		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (i != ignore && entities[i]->pos == newPos)
+				if (entities[i]->Corporeal() && i != ignore && entities[i]->pos == newPos)
 				{
 					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
 					{
@@ -52,7 +52,7 @@ public:
 		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (i != ignore && entities[i]->pos == newPos)
+				if (entities[i]->Corporeal() && i != ignore && entities[i]->pos == newPos)
 				{
 					*index = i;
 					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
@@ -81,14 +81,7 @@ public:
 
 	void DestroySelf(vector<Entity*>* entities);
 
-	void DestroySelf(vector<Entity*>::iterator position, vector<Entity*>* entities)
-	{
-		entities->erase(position);
-		OnDeath();
-		delete this;
-	}
-
-	virtual void OnDeath()
+	virtual void OnDeath(vector<Entity*>* entities)
 	{
 	}
 
@@ -115,6 +108,11 @@ public:
 	virtual bool IsProjectile()
 	{
 		return false;
+	}
+
+	virtual bool Corporeal()
+	{
+		return true;
 	}
 
 	static Vec2 ToSpace(Vec2 positionInWorldSpace)
@@ -156,6 +154,15 @@ int TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 i
 		}
 	return 2;
 }
+
+vector<Entity*> IncorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
+{
+	vector<Entity*> foundEntities = vector<Entity*>();
+	for (vector<Entity*>::iterator i = entities->begin(); i < entities->end(); i++)
+		if (!(*i)->Corporeal() && (*i)->pos == pos)
+			foundEntities.push_back(*i);
+	return foundEntities;
+}
 #pragma endregion
 
 
@@ -165,12 +172,14 @@ class Entities : public vector<Entity*>
 protected:
 	bool updatingProjectiles;
 	int index;
+	int currentUpdatingType;
 
 public:
 	using vector<Entity*>::vector;
 
 	vector<Entity*> projectiles;
 	vector<Entity*> nonProjectiles;
+	vector<Entity*> incorporeals;
 	vector<Entity*> conveyers;
 	vector<Entity*> enemies;
 	vector<Entity*> nonEnemies;
@@ -201,33 +210,50 @@ public:
 		nonProjectiles.clear();
 		for (int i = 0; i < size(); i++)
 		{
-			if ((*this)[i]->IsProjectile())
+			if (!(*this)[i]->Corporeal())
+				incorporeals.push_back((*this)[i]);
+			else if ((*this)[i]->IsProjectile())
 				projectiles.push_back((*this)[i]);
 			else
 				nonProjectiles.push_back((*this)[i]);
 		}
 		#pragma endregion
 		
+		currentUpdatingType = 0;
 		for (index = 0; index < nonProjectiles.size(); index++)
 			nonProjectiles[index]->Update(screen, this, frameCount, inputs);
+		currentUpdatingType = 1;
 		for (index = 0; index < projectiles.size(); index++)
 			projectiles[index]->Update(screen, this, frameCount, inputs);
+		currentUpdatingType = 2;
+		printf("%i", incorporeals.size());
+		for (index = 0; index < incorporeals.size(); index++)
+			incorporeals[index]->Update(screen, this, frameCount, inputs);
+		currentUpdatingType = -1;
 	}
 
 	void Remove(Entity* entityToRemove)
 	{
 		erase(std::find(begin(), end(), entityToRemove));
-		if (entityToRemove->IsProjectile())
+		if (!entityToRemove->Corporeal())
+		{
+			vector<Entity*>::iterator position = find(incorporeals.begin(), incorporeals.end(), entityToRemove);
+			if (currentUpdatingType == 2 && index >= distance(incorporeals.begin(), position)) // distance MUST be found before erasing.
+				index--;
+			printf("Hmm");
+			incorporeals.erase(position);
+		}
+		else if (entityToRemove->IsProjectile())
 		{
 			vector<Entity*>::iterator position = find(projectiles.begin(), projectiles.end(), entityToRemove);
-			if(index >= distance(projectiles.begin(), position)) // distance MUST be found before erasing.
+			if(currentUpdatingType == 1 && index >= distance(projectiles.begin(), position)) // distance MUST be found before erasing.
 				index--;
 			projectiles.erase(position);
 		}
 		else
 		{
 			vector<Entity*>::iterator position = find(nonProjectiles.begin(), nonProjectiles.end(), entityToRemove);
-			if (index >= distance(nonProjectiles.begin(), position)) // distance MUST be found before erasing.
+			if (currentUpdatingType == 0 && index >= distance(nonProjectiles.begin(), position)) // distance MUST be found before erasing.
 				index--;
 			nonProjectiles.erase(position);
 		}
@@ -237,6 +263,6 @@ public:
 void Entity::DestroySelf(vector<Entity*>* entities)
 {
 	((Entities*)entities)->Remove(this);
-	OnDeath();
+	OnDeath(entities);
 	delete this;
 }

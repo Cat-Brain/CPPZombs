@@ -44,16 +44,16 @@ Vec2 Squarmalized(Vec2 a)
 struct Inputs
 {
 	button w, a, s, d,
-		enter,
+		enter, c, q, e,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
 	Vec2 mousePosition;
 
 	Inputs(button w, button a, button s, button d,
-		button enter,
+		button enter, button c, button q, button e,
 		button up, button left, button down, button right,
 		button leftMouse, button rightMouse, button middleMouse, Vec2 mousePosition):
-		w(w), a(a), s(s), d(d), enter(enter), up(up), left(left), down(down), right(right), leftMouse(leftMouse), rightMouse(rightMouse), middleMouse(middleMouse), mousePosition(mousePosition)
+		w(w), a(a), s(s), d(d), enter(enter), c(c), q(q), e(e), up(up), left(left), down(down), right(right), leftMouse(leftMouse), rightMouse(rightMouse), middleMouse(middleMouse), mousePosition(mousePosition)
 	{ }
 };
 
