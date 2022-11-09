@@ -39,3 +39,14 @@ public:
 		}
 	}
 };
+
+class Walker : public Enemy
+{
+public:
+	using Enemy::Enemy;
+
+	int TickPer() override
+	{
+		return 6;
+	}
+};

@@ -162,6 +162,10 @@ int TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 i
 
 class Entities : public vector<Entity*>
 {
+protected:
+	bool updatingProjectiles;
+	int index;
+
 public:
 	using vector<Entity*>::vector;
 
@@ -204,19 +208,29 @@ public:
 		}
 		#pragma endregion
 		
-		for (int i = 0; i < projectiles.size(); i++)
-			projectiles[i]->Update(screen, this, frameCount, inputs);
-		for (int i = 0; i < nonProjectiles.size(); i++)
-			nonProjectiles[i]->Update(screen, this, frameCount, inputs);
+		for (index = 0; index < nonProjectiles.size(); index++)
+			nonProjectiles[index]->Update(screen, this, frameCount, inputs);
+		for (index = 0; index < projectiles.size(); index++)
+			projectiles[index]->Update(screen, this, frameCount, inputs);
 	}
 
 	void Remove(Entity* entityToRemove)
 	{
 		erase(std::find(begin(), end(), entityToRemove));
 		if (entityToRemove->IsProjectile())
-			projectiles.erase(std::find(begin(), end(), entityToRemove));
+		{
+			vector<Entity*>::iterator position = find(projectiles.begin(), projectiles.end(), entityToRemove);
+			if(index >= distance(projectiles.begin(), position)) // distance MUST be found before erasing.
+				index--;
+			projectiles.erase(position);
+		}
 		else
-			nonProjectiles.erase(std::find(begin(), end(), entityToRemove));
+		{
+			vector<Entity*>::iterator position = find(nonProjectiles.begin(), nonProjectiles.end(), entityToRemove);
+			if (index >= distance(nonProjectiles.begin(), position)) // distance MUST be found before erasing.
+				index--;
+			nonProjectiles.erase(position);
+		}
 	}
 };
 

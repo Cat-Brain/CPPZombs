@@ -1,5 +1,9 @@
 #include "Player.h"
 
+#define ticsBetweenWaves 512
+
+
+
 class Game : public olc::PixelGameEngine
 {
 public:
@@ -8,7 +12,7 @@ public:
 	float timeBetweenFrames = 0.125f;
 	float currentTime = 0.0f;
 	float lastTrueFrame = 0.0f;
-	int frameCount = 0;
+	int frameCount = 0, waveCount = 0;
 
 	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
 
@@ -125,6 +129,10 @@ public:
 			inputs.d.bPressed = false;
 			inputs.d.bReleased = false;
 
+			inputs.enter.bHeld = false;
+			inputs.enter.bPressed = false;
+			inputs.enter.bReleased = false;
+
 			inputs.up.bHeld = false;
 			inputs.up.bPressed = false;
 			inputs.up.bReleased = false;
@@ -162,16 +170,17 @@ public:
 	void Update(float deltaTime)
 	{
 		Clear(olc::Pixel(168, 92, 20));
-		DrawString(Vec2(0, 0), std::to_string(240 - frameCount % 240), olc::BLACK);
+		DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
 		DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 
 
-		if (frameCount % 240 == 0)
+		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
 		{
-			for (int i = 0; i < frameCount / 240 * 3 + 5; i++)
+			waveCount++;
+			for (int i = 0; i < waveCount * 3; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities.push_back(new Enemy(Vec2f(cosf(randomValue), sinf(randomValue)) * screenDim + playerPos, olc::CYAN, olc::BLACK, 1, 3, 3));
+				entities.push_back(new Walker(Vec2f(cosf(randomValue), sinf(randomValue)) * screenDim + playerPos, olc::CYAN, olc::BLACK, 1, 3, 3));
 			}
 		}
 

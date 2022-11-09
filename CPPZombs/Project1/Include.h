@@ -6,6 +6,8 @@ using std::map;
 using std::cin;
 using std::cout;
 using std::remove;
+using std::find;
+using std::distance;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;

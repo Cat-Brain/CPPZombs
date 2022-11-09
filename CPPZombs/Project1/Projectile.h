@@ -20,10 +20,7 @@ public:
     {
         remainingTime--;
         if (remainingTime < 0)
-        {
-            DestroySelf(entities);
-            return;
-        }
+            return DestroySelf(entities);
 
         Vec2 dir = MoveDir();
         int index;
