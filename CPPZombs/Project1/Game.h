@@ -174,7 +174,7 @@ public:
 
 	void Update(float deltaTime)
 	{
-		Clear(olc::Pixel(168, 92, 20));
+		Clear(olc::Pixel(200, 92, 20));
 
 
 		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
@@ -198,8 +198,6 @@ public:
 
 
 		entities.Update(this, frameCount, inputs); // Updates all entities.
-
-
 
 
 
