@@ -23,6 +23,7 @@ public:
 		entities = Entities(0);
 		entities.push_back(new Player(Entity::ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5));
 		playerAlive = true;
+		totalGamePoints = 0;
 		sAppName = "CPPZombs!";
 	}
 
@@ -128,7 +129,7 @@ public:
 			else
 			{
 				Clear(olc::BLACK);
-				DrawString(Vec2(0, 0), "Game over.\n\nPress esc\nto close.");
+				DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\n\nPress esc\nto close.");
 			}
 			lastTrueFrame += timeBetweenFrames;
 
@@ -233,6 +234,7 @@ public:
 		{
 			DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
+			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 		}
 
 		if (frameCount % 6 < 4)

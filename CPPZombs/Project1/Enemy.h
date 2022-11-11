@@ -30,6 +30,11 @@ public:
 		return 1;
 	}
 
+	virtual int GetPoints()
+	{
+		return 1;
+	}
+
 	virtual void TUpdate(olc::PixelGameEngine * screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 		int index;
@@ -37,6 +42,11 @@ public:
 		{
 			(*entities)[index]->DealDamage(GetDamage(), entities);
 		}
+	}
+
+	void OnDeath(vector<Entity*>* entities) override
+	{
+		totalGamePoints += GetPoints();
 	}
 };
 

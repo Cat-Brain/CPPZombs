@@ -18,10 +18,13 @@ public:
 	virtual void Start()
 	{}
 
-	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Also draws.
+	virtual void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // ONLY draws.
 	{
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
+
+	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
+	{ }
 
 	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int ignore = -1) // returns index of hit item.
 	{
@@ -206,6 +209,7 @@ public:
 		}
 		#pragma endregion
 		#pragma region Projectile and Non-Projectiles
+		incorporeals.clear();
 		projectiles.clear();
 		nonProjectiles.clear();
 		for (int i = 0; i < size(); i++)
@@ -226,9 +230,19 @@ public:
 		for (index = 0; index < projectiles.size(); index++)
 			projectiles[index]->Update(screen, this, frameCount, inputs);
 		currentUpdatingType = 2;
-		printf("%i", incorporeals.size());
 		for (index = 0; index < incorporeals.size(); index++)
 			incorporeals[index]->Update(screen, this, frameCount, inputs);
+
+
+		currentUpdatingType = 3;
+		for (index = 0; index < nonProjectiles.size(); index++)
+			nonProjectiles[index]->DUpdate(screen, this, frameCount, inputs);
+		currentUpdatingType = 4;
+		for (index = 0; index < projectiles.size(); index++)
+			projectiles[index]->DUpdate(screen, this, frameCount, inputs);
+		currentUpdatingType = 5;
+		for (index = 0; index < incorporeals.size(); index++)
+			incorporeals[index]->DUpdate(screen, this, frameCount, inputs);
 		currentUpdatingType = -1;
 	}
 

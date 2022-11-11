@@ -7,7 +7,7 @@ public:
 		Entity(pos, color)
 	{ }
 	
-	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		screen->Draw(ToRSpace(pos), color);
 	}
@@ -28,12 +28,12 @@ public:
 		color2(color2)
 	{ }
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		float t = (float)health / (float)maxHealth;
 		Color tempColor = color;
 		color = Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a));
-		Entity::Update(screen, entities, frameCount, inputs);
+		Entity::DUpdate(screen, entities, frameCount, inputs);
 		color = tempColor;
 	}
 };

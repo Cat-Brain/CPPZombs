@@ -8,6 +8,7 @@ using std::cout;
 using std::remove;
 using std::find;
 using std::distance;
+using std::to_string;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
@@ -60,3 +61,4 @@ struct Inputs
 bool playerAlive = false;
 Vec2 playerPos(0, 0);
 Vec2 playerVel(0, 0);
+int totalGamePoints;
