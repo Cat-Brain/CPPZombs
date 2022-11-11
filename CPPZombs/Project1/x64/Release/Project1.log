@@ -1,48 +1,5 @@
-﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(24,27): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(24,39): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Entity.h(96,10): warning C4305: 'return': truncation from 'int' to 'bool'
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,201): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,164): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,127): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,90): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(12,32): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(12,25): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(14,64): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(22,57): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(22,41): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(25,13): warning C4834: discarding return value of function with 'nodiscard' attribute
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(96,59): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
-          with
-          [
-              T=int32_t
-          ]
-LINK : fatal error LNK1104: cannot open file 'C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe'
+﻿  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 1786 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe
