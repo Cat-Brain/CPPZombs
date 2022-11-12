@@ -218,7 +218,7 @@ public:
 		Vec2 noisePos = Vec2(x + ToSpace(playerPos).x, y + ToSpace(playerPos).y);
 		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise1.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 10)),
 			(int)fminf(255, fmaxf(0, baseColor.g + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 3)),
-			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 2)));
+			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise3.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 2)));
 	}
 
 	void Update(float deltaTime)
