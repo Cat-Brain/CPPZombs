@@ -37,50 +37,9 @@ public:
 	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
 	{ }
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, Entity* ignore = nullptr) // returns index of hit item.
-	{
-		Vec2 newPos = pos + direction;
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore = nullptr); // returns if item was hit.
 
-		if (Squagnitude(force * direction) > 0)
-		{
-			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->Corporeal() && entities[i] != ignore && entities[i]->pos == newPos && (creator != entities[i]->creator || creator == nullptr))
-				{
-					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
-					{
-						return false;
-					}
-					break;
-				}
-		}
-		else return false;
-
-		pos = newPos;
-		return true;
-	}
-
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index, Entity* ignore = nullptr) // returns index of hit item.
-	{
-		Vec2 newPos = pos + direction;
-
-		if (Squagnitude(force * direction) > 0)
-		{
-			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->Corporeal() && entities[i] != ignore && entities[i]->pos == newPos && (creator != entities[i]->creator || creator == nullptr))
-				{
-					*index = i;
-					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
-					{
-						return false;
-					}
-					break;
-				}
-		}
-		else return false;
-
-		pos = newPos;
-		return true;
-	}
 
 	virtual int DealDamage(int damage, vector<Entity*>* entities)
 	{
@@ -204,6 +163,8 @@ public:
 	vector<Entity*> sortedEntities;
 	vector<Entity*> projectiles, nonProjectiles;
 	vector<Entity*> enemies, nonEnemies;
+	vector<Entity*> corporeals, incorporeals;
+	map<Vec2, Entity*> corporealPositions;
 
 	void push_back(Entity* entity)
 	{
@@ -253,8 +214,8 @@ public:
 		}
 		#pragma endregion
 
-		#pragma region Projectile and Non-Projectiles
-		counterOne = 0; // Enemy count
+		#pragma region Projectiles and Non-Projectiles
+		counterOne = 0; // Projectile count
 		for (Entity* entity : *this)
 			counterOne += int(entity->IsProjectile());
 
@@ -263,7 +224,7 @@ public:
 		nonProjectiles = vector<Entity*>(size() - counterOne);
 
 		counterOne = 0; // furthest empty index of projectiles.
-		counterTwo = 0; // furthest empty index of nonEnemies.
+		counterTwo = 0; // furthest empty index of nonProjectiles.
 
 		for (Entity* entity : *this)
 		{
@@ -280,7 +241,41 @@ public:
 		}
 		#pragma endregion
 
-		addedEntity = true;
+		#pragma region Corporeals, Incorporeals, and CorporealPositions
+		counterOne = 0; // Corporeal count
+		for (Entity* entity : *this)
+			counterOne += int(entity->Corporeal());
+
+
+		corporeals = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
+		incorporeals = vector<Entity*>(size() - counterOne);
+
+		counterOne = 0; // furthest empty index of projectiles.
+		counterTwo = 0; // furthest empty index of nonEnemies.
+
+		for (Entity* entity : *this)
+		{
+			if (entity->Corporeal())
+			{
+				corporeals[counterOne] = entity;
+				counterOne++;
+			}
+			else
+			{
+				incorporeals[counterTwo] = entity;
+				counterTwo++;
+			}
+		}
+
+
+		corporealPositions.clear();
+		//corporealPositions.reserve(corporeals.size());
+		for (int i = 0; i < corporeals.size(); i++)
+			if (!corporealPositions.contains(corporeals[i]->pos))
+				corporealPositions.emplace(corporeals[i]->pos, corporeals[i]);
+		#pragma endregion
+
+		addedEntity = false;
 		SortEntities();
 
 		for (index = 0; index < sortedEntities.size(); index++)
@@ -292,7 +287,7 @@ public:
 
 	void DUpdate(Screen* screen, int frameCount, Inputs inputs)
 	{
-		for (index = 0; index < size(); index++)
+		for (index = 0; index < sortedEntities.size(); index++)
 			sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
 	}
 
@@ -311,4 +306,37 @@ void Entity::DestroySelf(vector<Entity*>* entities)
 	((Entities*)entities)->Remove(this);
 	OnDeath(entities);
 	delete this;
+}
+
+bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore) // returns index of hit item.
+{
+	Vec2 newPos = pos + direction;
+
+	if (Squagnitude(force * direction) > 0)
+	{
+		map<Vec2, Entity*>::iterator entity = ((Entities*)entities)->corporealPositions.find(newPos);
+		if (entity != ((Entities*)entities)->corporealPositions.end() && (*entity).second != ignore && (creator != (*entity).second->creator || creator == nullptr) && !(*entity).second->TryMove(direction, force - (*entity).second->mass, entities, ignore))
+				return false;
+	}
+	else return false;
+
+	pos = newPos;
+	return true;
+}
+
+bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
+{
+	Vec2 newPos = pos + direction;
+
+	if (Squagnitude(force * direction) > 0)
+	{
+		map<Vec2, Entity*>::iterator entity = ((Entities*)entities)->corporealPositions.find(newPos);
+		*hitEntity = (*entity).second;
+		if (entity != ((Entities*)entities)->corporealPositions.end() && (*entity).second != ignore && (creator != (*entity).second->creator || creator == nullptr) && !(*entity).second->TryMove(direction, force - (*entity).second->mass, entities, ignore))
+			return false;
+	}
+	else return false;
+
+	pos = newPos;
+	return true;
 }

@@ -237,13 +237,6 @@ public:
 		}
 
 
-		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos && player->items.TryTake(Item(basicBullet, -1)))
-			entities.push_back(new Projectile(basicBullet, player, player->pos, inputs.mousePosition));
-			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
-		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities) && player->items.TryTake(Item(cheese, -1)))
-			entities.push_back(new Placeable(cheese, inputs.mousePosition));
-
-
 		entities.Update(this, frameCount, inputs); // Updates all entities.
 
 		Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.

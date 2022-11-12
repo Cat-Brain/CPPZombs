@@ -27,11 +27,11 @@ public:
             return DestroySelf(entities);
 
         Vec2 dir = MoveDir();
-        int index;
+        Entity* entity;
 
-        if (dir != Vec2(0, 0) && !TryMove(dir, 1, *entities, &index, creator))
+        if (dir != Vec2(0, 0) && !TryMove(dir, 1, entities, &entity, creator))
         {
-            (*entities)[index]->DealDamage(GetDamage(), entities);
+            entity->DealDamage(GetDamage(), entities);
             DestroySelf(entities);
             return;
         }

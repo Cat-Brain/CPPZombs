@@ -70,6 +70,20 @@ public:
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
+		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos && items.TryTake(Item(basicBullet, -1)))
+		{
+			Projectile* projectile = new Projectile(basicBullet, this, pos, inputs.mousePosition);
+			entities->push_back(projectile);
+			//projectile->Update(screen, entities, frameCount, inputs);
+		}
+		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, *entities) && items.TryTake(Item(cheese, -1)))
+		{
+			Placeable* placed = new Placeable(cheese, inputs.mousePosition);
+			entities->push_back(placed);
+			//placed->Update(screen, entities, frameCount, inputs);
+		}
+
+
 		if (frameCount % 2 == 0)
 		{
 			Vec2 direction(0, 0);
@@ -85,7 +99,7 @@ public:
 
 			Vec2 oldPos = pos;
 			if (direction != Vec2(0, 0))
-				Entity::TryMove(direction, 3, *entities);
+				Entity::TryMove(direction, 3, entities);
 
 			playerVel = pos - oldPos;
 		}

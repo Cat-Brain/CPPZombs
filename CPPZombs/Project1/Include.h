@@ -12,6 +12,10 @@ using std::distance;
 using std::to_string;
 #include<string>
 using std::string;
+#include<set>
+using std::set;
+#include<map>
+using std::map;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;

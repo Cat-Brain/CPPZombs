@@ -42,10 +42,10 @@ public:
 
 	virtual void TUpdate(Screen * screen, Entities* entities, int frameCount, Inputs inputs)
 	{
-		int index;
-		if (!TryMove(Squarmalized(playerPos - pos), 1, *(vector<Entity*>*)entities, &index) && std::find(entities->enemies.begin(), entities->enemies.end(), (*entities)[index]) == entities->enemies.end())
+		Entity* entity;
+		if (!TryMove(Squarmalized(playerPos - pos), 1, (vector<Entity*>*)entities, &entity) && !entity->IsEnemy())
 		{
-			(*entities)[index]->DealDamage(GetDamage(), entities);
+			entity->DealDamage(GetDamage(), entities);
 		}
 	}
 
