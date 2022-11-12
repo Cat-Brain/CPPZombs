@@ -17,7 +17,7 @@ public:
 		Start();
 	}
 
-	void Update(olc::PixelGameEngine * screen, vector<Entity*>*entities, int frameCount, Inputs inputs) override
+	void Update(Screen* screen, vector<Entity*>*entities, int frameCount, Inputs inputs) override
 	{
 		if (frameCount % tickPer == 0)
 			TUpdate(screen, (Entities*)entities, frameCount, inputs);
@@ -40,7 +40,7 @@ public:
 		return 1;
 	}
 
-	virtual void TUpdate(olc::PixelGameEngine * screen, Entities* entities, int frameCount, Inputs inputs)
+	virtual void TUpdate(Screen * screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 		int index;
 		if (!TryMove(Squarmalized(playerPos - pos), 1, *(vector<Entity*>*)entities, &index) && std::find(entities->enemies.begin(), entities->enemies.end(), (*entities)[index]) == entities->enemies.end())

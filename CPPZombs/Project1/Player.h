@@ -41,7 +41,7 @@ public:
 		return false;
 	}
 
-	void DUpdate(olc::PixelGameEngine* screen)
+	void DUpdate(Screen* screen)
 	{
 		for (int i = 0; i < size(); i++)
 		{
@@ -68,7 +68,7 @@ public:
 		items.push_back(Item(basicBullet, 100));
 	}
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		if (frameCount % 2 == 0)
 		{

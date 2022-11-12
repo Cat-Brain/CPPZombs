@@ -20,7 +20,7 @@ public:
         this->pos = pos + playerVel;
     }
 
-    void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+    void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
     {
         remainingTime--;
         if (remainingTime < 0)

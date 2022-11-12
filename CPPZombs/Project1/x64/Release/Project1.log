@@ -51,8 +51,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(127,93): warning C4244: 
               T=int32_t
           ]
   Generating code
-  316 of 1932 functions (16.4%) were compiled, the rest were copied from previous compilation.
-    160 functions were new in current compilation
-    171 functions had inline decision re-evaluated but remain unchanged
+  100 of 1932 functions ( 5.2%) were compiled, the rest were copied from previous compilation.
+    5 functions were new in current compilation
+    41 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe

@@ -5,7 +5,7 @@ class MiniEntity : public Entity
 public:
 	using Entity::Entity;
 	
-	void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		screen->Draw(ToRSpace(pos), color);
 	}
@@ -31,7 +31,7 @@ public:
 		color2(color2)
 	{ }
 
-	void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		float t = (float)health / (float)maxHealth;
 		Color tempColor = color;
@@ -66,7 +66,7 @@ class FunctionalBlock : public Entity
 public:
 	using Entity::Entity;
 
-	void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		if (frameCount % TickPer() == 0)
 			TUpdate(screen, (Entities*)entities, frameCount, inputs);
@@ -79,7 +79,7 @@ public:
 		return 2;
 	}
 
-	virtual void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs) { }
+	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) { }
 };
 
 /*class Conveyer : public FunctionalBlock
@@ -95,7 +95,7 @@ public:
 		return 3;
 	}
 
-	void TUpdate(olc::PixelGameEngine* screen, Entities* entities, int frameCount, Inputs inputs) override
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) override
 	{
 		vector<Conveyer*> nearbyFilledConveyers = vector<Conveyer*>();
 		vector<Conveyer*> nearbyEmptyConveyers = vector<Conveyer*>();

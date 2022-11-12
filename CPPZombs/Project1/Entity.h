@@ -29,12 +29,12 @@ public:
 	virtual void Start()
 	{}
 
-	virtual void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // ONLY draws.
+	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // ONLY draws.
 	{
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
 
-	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
+	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
 	{ }
 
 	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, Entity* ignore = nullptr) // returns index of hit item.
@@ -135,16 +135,6 @@ public:
 		return true;
 	}
 	#pragma endregion
-
-	static Vec2 ToSpace(Vec2 positionInWorldSpace)
-	{
-		return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
-	}
-
-	static Vec2 ToRSpace(Vec2 positionInLocalSpace)
-	{
-		return ToSpace(positionInLocalSpace - playerPos + screenDimH) * 3;
-	}
 };
 
 
@@ -233,7 +223,7 @@ public:
 			sortedEntities[i] = (*this)[unsortedToSorted[i].index];
 	}
 
-	void Update(olc::PixelGameEngine* screen, int frameCount, Inputs inputs)
+	void Update(Screen* screen, int frameCount, Inputs inputs)
 	{
 		int counterOne, counterTwo; // Will be used many times, so lets just create 'em at the start.
 		#pragma region Enemies and Non-Enemies
@@ -292,13 +282,16 @@ public:
 
 		addedEntity = true;
 		SortEntities();
-		
+
 		for (index = 0; index < sortedEntities.size(); index++)
 			sortedEntities[index]->Update(screen, this, frameCount, inputs);
 
 		if (addedEntity)
 			SortEntities();
+	}
 
+	void DUpdate(Screen* screen, int frameCount, Inputs inputs)
+	{
 		for (index = 0; index < size(); index++)
 			sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
 	}

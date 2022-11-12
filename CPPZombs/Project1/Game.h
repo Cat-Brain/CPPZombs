@@ -4,11 +4,12 @@
 
 
 
-class Game : public olc::PixelGameEngine
+class Game : public Screen
 {
 public:
 	Entities entities;
 	Player* player;
+	FastNoiseLite backgroundNoise1, backgroundNoise2, backgroundNoise3;
 
 	float timeBetweenFrames = 0.125f;
 	float currentTime = 0.0f;
@@ -16,26 +17,35 @@ public:
 	int frameCount = 0, waveCount = 0;
 	bool showUI = true;
 
-	Inputs inputs = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
+	
 
+	Game() { }
 
-	Game()
+	virtual bool OnUserCreate()
 	{
+		screen = olc::Sprite(screenWidth, screenHeight);
+		bigScreen = olc::Sprite(screenWidth * GRID_SIZE, screenHeight * GRID_SIZE);
 		entities = Entities(0);
-		player = new Player(Entity::ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
+		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
 		entities.push_back(player);
 		playerAlive = true;
 		totalGamePoints = 0;
 		sAppName = "CPPZombs!";
-	}
-
-	virtual bool OnUserCreate()
-	{
 		SetPixelMode(Color::ALPHA);
+
+		backgroundNoise1.SetFractalLacunarity(2.0f);
+		backgroundNoise1.SetFractalGain(0.5f);
+		backgroundNoise1.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+		backgroundNoise2 = backgroundNoise1;
+		backgroundNoise3 = backgroundNoise1;
 		srand(time(NULL));
+		backgroundNoise1.SetSeed(time(NULL));
+		backgroundNoise2.SetSeed(time(NULL) + 1);
+		backgroundNoise3.SetSeed(time(NULL) + 2);
+
 		return true;
 	}
-
+	
 	virtual bool OnUserUpdate(float deltaTime)
 	{
 		if (GetKey(olc::ESCAPE).bPressed)
@@ -124,7 +134,7 @@ public:
 		currentTime += deltaTime;
 		if (currentTime > lastTrueFrame + timeBetweenFrames)
 		{
-			inputs.mousePosition = Entity::ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
+			inputs.mousePosition = ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
 
 			if (playerAlive)
 				Update(currentTime - lastTrueFrame);
@@ -203,9 +213,17 @@ public:
 		return true;
 	}
 
+	Color GetBackgroundNoise(Color baseColor, int x, int y)
+	{
+		Vec2 noisePos = Vec2(x + ToSpace(playerPos).x, y + ToSpace(playerPos).y);
+		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise1.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 10)),
+			(int)fminf(255, fmaxf(0, baseColor.g + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 3)),
+			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 2)));
+	}
+
 	void Update(float deltaTime)
 	{
-		Clear(olc::Pixel(200, 92, 20));
+
 
 
 		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
@@ -228,6 +246,14 @@ public:
 
 		entities.Update(this, frameCount, inputs); // Updates all entities.
 
+		Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.
+		for (int x = 0; x < screen.width; x++)
+			for (int y = 0; y < screen.height; y++)
+				screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), x, y);
+		DrawScreen();
+		
+		entities.DUpdate(this, frameCount, inputs); // Draws all entities.
+
 
 
 		if (inputs.c.bPressed)
@@ -241,7 +267,7 @@ public:
 		}
 
 		if (frameCount % 6 < 4)
-			Draw(Entity::ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
+			Draw(ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
 
 
 

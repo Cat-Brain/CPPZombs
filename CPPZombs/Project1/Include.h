@@ -1,5 +1,6 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+#include "FastNoiseLite.h"
 
 using std::vector;
 using std::map;
@@ -21,8 +22,8 @@ typedef olc::HWButton button;
 int screenWidth = 50, screenHeight = 50,
 	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
 Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
-
 #define GRID_SIZE 3
+int pixelCount = screenWidth * screenHeight * GRID_SIZE * GRID_SIZE;
 
 int JMod(int x, int m)
 {
@@ -32,6 +33,11 @@ int JMod(int x, int m)
 int Squagnitude(Vec2 a)
 {
 	return (int)fmaxf(fabsf(a.x), fabsf(a.y));
+}
+
+int Diagnitude(Vec2 a)
+{
+	return a.x + a.y;
 }
 
 int Squistance(Vec2 a, Vec2 b)
@@ -54,15 +60,36 @@ struct Inputs
 		leftMouse, rightMouse, middleMouse;
 	Vec2 mousePosition;
 
-	Inputs(button w, button a, button s, button d,
-		button enter, button c, button q, button e,
-		button up, button left, button down, button right,
-		button leftMouse, button rightMouse, button middleMouse, Vec2 mousePosition):
-		w(w), a(a), s(s), d(d), enter(enter), c(c), q(q), e(e), up(up), left(left), down(down), right(right), leftMouse(leftMouse), rightMouse(rightMouse), middleMouse(middleMouse), mousePosition(mousePosition)
-	{ }
+	Inputs() = default;
 };
 
 bool playerAlive = false;
 Vec2 playerPos(0, 0);
 Vec2 playerVel(0, 0);
 int totalGamePoints;
+
+Vec2 ToSpace(Vec2 positionInWorldSpace)
+{
+	return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
+}
+
+Vec2 ToRSpace(Vec2 positionInLocalSpace)
+{
+	return ToSpace(positionInLocalSpace - playerPos + screenDimH) * 3;
+}
+
+class Screen : public olc::PixelGameEngine
+{
+public:
+	olc::Sprite screen;
+	olc::Sprite bigScreen;
+
+	Inputs inputs;// = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
+
+	Screen() { }
+
+	void DrawScreen()
+	{
+		DrawSprite(0, 0, &screen, GRID_SIZE);
+	}
+};
