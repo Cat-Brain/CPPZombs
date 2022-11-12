@@ -3,13 +3,16 @@
 class MiniEntity : public Entity
 {
 public:
-	MiniEntity(Vec2 pos, Color color) :
-		Entity(pos, color)
-	{ }
+	using Entity::Entity;
 	
 	void DUpdate(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		screen->Draw(ToRSpace(pos), color);
+	}
+
+	int SortOrder() override
+	{
+		return 2;
 	}
 
 	bool Corporeal() override
@@ -43,11 +46,20 @@ class Placeable : public DToCol
 public:
 	using DToCol::DToCol;
 
+	Placeable(Placeable* baseClass, Vec2 pos) :
+		Placeable(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		Start();
+	}
+
 	void OnDeath(vector<Entity*>* entities) override
 	{
-		entities->push_back(new MiniEntity(pos, color));
+		((Entities*)entities)->push_back(new MiniEntity(baseClass, pos));
 	}
 };
+Placeable* cheese = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4);
 
 class FunctionalBlock : public Entity
 {

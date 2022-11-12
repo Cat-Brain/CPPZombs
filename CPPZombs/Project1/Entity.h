@@ -3,15 +3,26 @@
 class Entity
 {
 public:
+	Entity* baseClass;
+	Entity* creator;
+	string name;
 	Vec2 pos;
 	Color color;
 	int mass;
 	int maxHealth, health;
 	vector<Entity*> containedEntities;
 
-	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1) :
-		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), containedEntities()
+	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedEntities(), baseClass(this), creator(nullptr)
 	{
+		Start();
+	}
+
+	Entity(Entity* baseClass, Vec2 pos):
+		Entity(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
 		Start();
 	}
 
@@ -26,14 +37,14 @@ public:
 	virtual void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
 	{ }
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int ignore = -1) // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, Entity* ignore = nullptr) // returns index of hit item.
 	{
 		Vec2 newPos = pos + direction;
 
 		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->Corporeal() && i != ignore && entities[i]->pos == newPos)
+				if (entities[i]->Corporeal() && entities[i] != ignore && entities[i]->pos == newPos && (creator != entities[i]->creator || creator == nullptr))
 				{
 					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
 					{
@@ -48,14 +59,14 @@ public:
 		return true;
 	}
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index, int ignore = -1) // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*> entities, int* index, Entity* ignore = nullptr) // returns index of hit item.
 	{
 		Vec2 newPos = pos + direction;
 
 		if (Squagnitude(force * direction) > 0)
 		{
 			for (int i = 0; i < entities.size(); i++)
-				if (entities[i]->Corporeal() && i != ignore && entities[i]->pos == newPos)
+				if (entities[i]->Corporeal() && entities[i] != ignore && entities[i]->pos == newPos && (creator != entities[i]->creator || creator == nullptr))
 				{
 					*index = i;
 					if (!entities[i]->TryMove(direction, force - entities[i]->mass, entities, ignore))
@@ -88,6 +99,7 @@ public:
 	{
 	}
 
+	#pragma region bool functions
 	virtual bool CanAttack()
 	{
 		return true;
@@ -101,6 +113,11 @@ public:
 	virtual bool IsConveyer()
 	{
 		return false;
+	}
+
+	virtual int SortOrder()
+	{
+		return 0;
 	}
 
 	virtual bool IsEnemy()
@@ -117,6 +134,7 @@ public:
 	{
 		return true;
 	}
+	#pragma endregion
 
 	static Vec2 ToSpace(Vec2 positionInWorldSpace)
 	{
@@ -170,6 +188,18 @@ vector<Entity*> IncorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
 
 
 
+struct EntityIndex // For sorting.
+{
+	int index, valueForSorting;
+
+	EntityIndex(int index = 0, int valueForSorting = 0) : index(index), valueForSorting(valueForSorting) {}
+
+	bool operator < (const EntityIndex& other) const
+	{
+		return (valueForSorting < other.valueForSorting);
+	}
+};
+
 class Entities : public vector<Entity*>
 {
 protected:
@@ -180,97 +210,106 @@ protected:
 public:
 	using vector<Entity*>::vector;
 
-	vector<Entity*> projectiles;
-	vector<Entity*> nonProjectiles;
-	vector<Entity*> incorporeals;
-	vector<Entity*> conveyers;
-	vector<Entity*> enemies;
-	vector<Entity*> nonEnemies;
+	bool addedEntity;
+	vector<Entity*> sortedEntities;
+	vector<Entity*> projectiles, nonProjectiles;
+	vector<Entity*> enemies, nonEnemies;
+
+	void push_back(Entity* entity)
+	{
+		addedEntity = true;
+		vector<Entity*>::push_back(entity);
+	}
+
+	void SortEntities()
+	{
+		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(size());
+		for (int i = 0; i < size(); i++)
+			unsortedToSorted[i] = EntityIndex(i, (*this)[i]->SortOrder());
+		std::sort(unsortedToSorted.begin(), unsortedToSorted.end());
+
+		sortedEntities = vector<Entity*>(size());
+		for (int i = 0; i < size(); i++)
+			sortedEntities[i] = (*this)[unsortedToSorted[i].index];
+	}
 
 	void Update(olc::PixelGameEngine* screen, int frameCount, Inputs inputs)
 	{
-		#pragma region Conveyers
-		conveyers.clear();
-		for (int i = 0; i < size(); i++)
-		{
-			if ((*this)[i]->IsConveyer())
-				conveyers.push_back((*this)[i]);
-		}
-		#pragma endregion
+		int counterOne, counterTwo; // Will be used many times, so lets just create 'em at the start.
 		#pragma region Enemies and Non-Enemies
-		enemies.clear();
-		nonEnemies.clear();
-		for (int i = 0; i < size(); i++)
+		counterOne = 0; // Enemy count
+		for (Entity* entity : *this)
+			counterOne += int(entity->IsEnemy());
+
+
+		enemies = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
+		nonEnemies = vector<Entity*>(size() - counterOne);
+
+		counterOne = 0; // furthest empty index of enemies.
+		counterTwo = 0; // furthest empty index of nonEnemies.
+
+		for (Entity* entity : *this)
 		{
-			if ((*this)[i]->IsEnemy())
-				enemies.push_back((*this)[i]);
+			if (entity->IsEnemy())
+			{
+				enemies[counterOne] = entity;
+				counterOne++;
+			}
 			else
-				nonEnemies.push_back((*this)[i]);
+			{
+				nonEnemies[counterTwo] = entity;
+				counterTwo++;
+			}
 		}
 		#pragma endregion
+
 		#pragma region Projectile and Non-Projectiles
-		incorporeals.clear();
-		projectiles.clear();
-		nonProjectiles.clear();
-		for (int i = 0; i < size(); i++)
+		counterOne = 0; // Enemy count
+		for (Entity* entity : *this)
+			counterOne += int(entity->IsProjectile());
+
+
+		projectiles = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
+		nonProjectiles = vector<Entity*>(size() - counterOne);
+
+		counterOne = 0; // furthest empty index of projectiles.
+		counterTwo = 0; // furthest empty index of nonEnemies.
+
+		for (Entity* entity : *this)
 		{
-			if (!(*this)[i]->Corporeal())
-				incorporeals.push_back((*this)[i]);
-			else if ((*this)[i]->IsProjectile())
-				projectiles.push_back((*this)[i]);
+			if (entity->IsProjectile())
+			{
+				projectiles[counterOne] = entity;
+				counterOne++;
+			}
 			else
-				nonProjectiles.push_back((*this)[i]);
+			{
+				nonProjectiles[counterTwo] = entity;
+				counterTwo++;
+			}
 		}
 		#pragma endregion
+
+		addedEntity = true;
+		SortEntities();
 		
-		currentUpdatingType = 0;
-		for (index = 0; index < nonProjectiles.size(); index++)
-			nonProjectiles[index]->Update(screen, this, frameCount, inputs);
-		currentUpdatingType = 1;
-		for (index = 0; index < projectiles.size(); index++)
-			projectiles[index]->Update(screen, this, frameCount, inputs);
-		currentUpdatingType = 2;
-		for (index = 0; index < incorporeals.size(); index++)
-			incorporeals[index]->Update(screen, this, frameCount, inputs);
+		for (index = 0; index < sortedEntities.size(); index++)
+			sortedEntities[index]->Update(screen, this, frameCount, inputs);
 
+		if (addedEntity)
+			SortEntities();
 
-		currentUpdatingType = 3;
-		for (index = 0; index < nonProjectiles.size(); index++)
-			nonProjectiles[index]->DUpdate(screen, this, frameCount, inputs);
-		currentUpdatingType = 4;
-		for (index = 0; index < projectiles.size(); index++)
-			projectiles[index]->DUpdate(screen, this, frameCount, inputs);
-		currentUpdatingType = 5;
-		for (index = 0; index < incorporeals.size(); index++)
-			incorporeals[index]->DUpdate(screen, this, frameCount, inputs);
-		currentUpdatingType = -1;
+		for (index = 0; index < size(); index++)
+			sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
 	}
 
 	void Remove(Entity* entityToRemove)
 	{
-		erase(std::find(begin(), end(), entityToRemove));
-		if (!entityToRemove->Corporeal())
-		{
-			vector<Entity*>::iterator position = find(incorporeals.begin(), incorporeals.end(), entityToRemove);
-			if (currentUpdatingType == 2 && index >= distance(incorporeals.begin(), position)) // distance MUST be found before erasing.
-				index--;
-			printf("Hmm");
-			incorporeals.erase(position);
-		}
-		else if (entityToRemove->IsProjectile())
-		{
-			vector<Entity*>::iterator position = find(projectiles.begin(), projectiles.end(), entityToRemove);
-			if(currentUpdatingType == 1 && index >= distance(projectiles.begin(), position)) // distance MUST be found before erasing.
-				index--;
-			projectiles.erase(position);
-		}
-		else
-		{
-			vector<Entity*>::iterator position = find(nonProjectiles.begin(), nonProjectiles.end(), entityToRemove);
-			if (currentUpdatingType == 0 && index >= distance(nonProjectiles.begin(), position)) // distance MUST be found before erasing.
-				index--;
-			nonProjectiles.erase(position);
-		}
+		erase(find(begin(), end(), entityToRemove));
+
+		vector<Entity*>::iterator pos = find(sortedEntities.begin(), sortedEntities.end(), entityToRemove);
+		index -= int(index >= distance(sortedEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
+		sortedEntities.erase(pos);
 	}
 };
 

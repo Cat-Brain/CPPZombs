@@ -6,14 +6,18 @@ public:
     Vec2f direction;
     Vec2f fPos;
     int remainingTime;
-    int whoDunIt;
 
-    Projectile(Vec2 pos, Vec2 direction, int maxDist, int whoDunIt, Color color, int mass, int maxHealth, int health) :
-        Entity(pos, color, mass, maxHealth, health), remainingTime(maxDist), whoDunIt(whoDunIt),
-        fPos(pos + Vec2(0.01f, 0.01f))
+    Projectile(int maxDist, Color color, int mass, int maxHealth, int health) :
+        Entity(Vec2(0, 0), color, mass, maxHealth, health), remainingTime(maxDist)
+        { }
+
+    Projectile(Projectile* baseClass, Entity* creator, Vec2 pos, Vec2 direction):
+        Projectile(*baseClass)
     {
+        this->creator = creator;
+        fPos = pos + Vec2(0.01f, 0.01f);
         this->direction = (Vec2f)(direction - pos) / Squistance(pos, direction);
-        this->pos += playerVel;
+        this->pos = pos + playerVel;
     }
 
     void Update(olc::PixelGameEngine* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
@@ -25,7 +29,7 @@ public:
         Vec2 dir = MoveDir();
         int index;
 
-        if (dir != Vec2(0, 0) && !TryMove(dir, 1, *entities, &index, whoDunIt))
+        if (dir != Vec2(0, 0) && !TryMove(dir, 1, *entities, &index, creator))
         {
             (*entities)[index]->DealDamage(GetDamage(), entities);
             DestroySelf(entities);
@@ -41,12 +45,17 @@ public:
         return Vec2(roundf(fPos.x), roundf(fPos.y)) - pos;
     }
 
-    virtual void TryAdvance(Vec2 dir)
+    void OnDeath(vector<Entity*>* entities) override
     {
-
+        ((Entities*)entities)->push_back(new MiniEntity(baseClass, pos));
     }
 
     virtual int GetDamage()
+    {
+        return 1;
+    }
+
+    int SortOrder() override
     {
         return 1;
     }
@@ -56,3 +65,5 @@ public:
         return true;
     }
 };
+
+Projectile* basicBullet = new Projectile(10, olc::GREY, 1, 1, 1);

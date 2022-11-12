@@ -8,6 +8,7 @@ class Game : public olc::PixelGameEngine
 {
 public:
 	Entities entities;
+	Player* player;
 
 	float timeBetweenFrames = 0.125f;
 	float currentTime = 0.0f;
@@ -21,7 +22,8 @@ public:
 	Game()
 	{
 		entities = Entities(0);
-		entities.push_back(new Player(Entity::ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5));
+		player = new Player(Entity::ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
+		entities.push_back(player);
 		playerAlive = true;
 		totalGamePoints = 0;
 		sAppName = "CPPZombs!";
@@ -217,24 +219,25 @@ public:
 		}
 
 
-		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos)
-			entities.push_back(new Projectile(entities[0]->pos, inputs.mousePosition, 10, 0, olc::GREY, 1, 1, 1));
+		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos && player->items.TryTake(Item(basicBullet, -1)))
+			entities.push_back(new Projectile(basicBullet, player, player->pos, inputs.mousePosition));
 			//TryAndAttack(Entity::ToSpace(GetMousePos()), 1, &entities);
-		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities) && playerAlive)
-			entities.push_back(new Placeable(inputs.mousePosition, olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4));
-
-
+		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, entities) && player->items.TryTake(Item(cheese, -1)))
+			entities.push_back(new Placeable(cheese, inputs.mousePosition));
 
 
 		entities.Update(this, frameCount, inputs); // Updates all entities.
 
+
+
 		if (inputs.c.bPressed)
 			showUI = !showUI;
-		if (showUI)
+		if (showUI && playerAlive)
 		{
 			DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
+			player->items.DUpdate(this);
 		}
 
 		if (frameCount % 6 < 4)

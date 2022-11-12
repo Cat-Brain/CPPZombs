@@ -9,6 +9,8 @@ using std::remove;
 using std::find;
 using std::distance;
 using std::to_string;
+#include<string>
+using std::string;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
@@ -19,6 +21,8 @@ typedef olc::HWButton button;
 int screenWidth = 50, screenHeight = 50,
 	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
 Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
+
+#define GRID_SIZE 3
 
 int JMod(int x, int m)
 {
