@@ -3,13 +3,23 @@
 class Enemy : public DToCol
 {
 public:
-	Enemy(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1) :
-		DToCol(pos, color, color2, mass, maxHealth, health)
+	int tickPer;
+
+	Enemy(int tickPer = 2, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1) :
+		DToCol(Vec2(0, 0), color, color2, mass, maxHealth, health), tickPer(tickPer)
 	{ }
+
+	Enemy(Enemy* baseClass, Vec2 pos) :
+		Enemy(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		Start();
+	}
 
 	void Update(olc::PixelGameEngine * screen, vector<Entity*>*entities, int frameCount, Inputs inputs) override
 	{
-		if (frameCount % TickPer() == 0)
+		if (frameCount % tickPer == 0)
 			TUpdate(screen, (Entities*)entities, frameCount, inputs);
 
 		DToCol::Update(screen, entities, frameCount, inputs);
@@ -18,11 +28,6 @@ public:
 	bool IsEnemy() override
 	{
 		return true;
-	}
-
-	virtual int TickPer()
-	{
-		return 2;
 	}
 
 	virtual int GetDamage()
@@ -47,16 +52,15 @@ public:
 	void OnDeath(vector<Entity*>* entities) override
 	{
 		totalGamePoints += GetPoints();
+		int randomValue = rand() % 4; // 0, 1, 2, 3
+		if (randomValue > 1) // 2 or 3
+		{
+			if (randomValue == 2) // 2
+				((Entities*)entities)->push_back(new MiniEntity(basicBullet, pos));
+			else // 3
+				((Entities*)entities)->push_back(new MiniEntity(cheese, pos));
+		}
 	}
 };
 
-class Walker : public Enemy
-{
-public:
-	using Enemy::Enemy;
-
-	int TickPer() override
-	{
-		return 6;
-	}
-};
+Enemy* walker = new Enemy(6, olc::CYAN, olc::BLACK, 1, 3, 3);

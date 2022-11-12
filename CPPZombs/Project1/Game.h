@@ -214,7 +214,7 @@ public:
 			for (int i = 0; i < waveCount * 3; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities.push_back(new Walker(Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.142f + playerPos, olc::CYAN, olc::BLACK, 1, 3, 3));
+				entities.push_back(new Enemy(walker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
 			}
 		}
 
