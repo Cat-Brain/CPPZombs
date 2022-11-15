@@ -16,6 +16,7 @@ using std::string;
 using std::set;
 #include<map>
 using std::map;
+using std::pair;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
