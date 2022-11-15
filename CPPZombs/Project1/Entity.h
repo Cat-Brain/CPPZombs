@@ -164,7 +164,6 @@ public:
 	vector<Entity*> projectiles, nonProjectiles;
 	vector<Entity*> enemies, nonEnemies;
 	vector<Entity*> corporeals, incorporeals;
-	map<Vec2, Entity*> corporealPositions;
 
 	void push_back(Entity* entity)
 	{
@@ -173,15 +172,15 @@ public:
 		index--;
 		sortedEntities.insert(sortedEntities.begin(), entity);
 		if (entity->Corporeal())
-			corporealPositions.emplace(entity->pos, entity);
+			corporeals.push_back(entity);
 	}
 
-	map<Vec2, Entity*>::iterator FindCorpPos(Entity* value)
+	vector<Entity*>::iterator FindCorpPos(Vec2 pos)
 	{
-		for (map<Vec2, Entity*>::iterator pos = corporealPositions.begin(); pos != corporealPositions.end(); pos++)
-			if ((*pos).second == value)
-				return pos;
-		return corporealPositions.end();
+		for (vector<Entity*>::iterator iter = corporeals.begin(); iter != corporeals.end(); iter++)
+			if ((*iter)->pos == pos)
+				return iter;
+		return corporeals.end();
 	}
 
 	void SortEntities()
@@ -278,12 +277,6 @@ public:
 				counterTwo++;
 			}
 		}
-
-
-		corporealPositions.clear();
-		//corporealPositions.reserve(corporeals.size());
-		for (int i = 0; i < corporeals.size(); i++)
-			corporealPositions.emplace(corporeals[i]->pos, corporeals[i]);
 #pragma endregion
 
 		addedEntity = false;
@@ -308,11 +301,8 @@ public:
 		vector<Entity*>::iterator pos = find(sortedEntities.begin(), sortedEntities.end(), entityToRemove);
 		index -= int(index >= distance(sortedEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
 		sortedEntities.erase(pos);
-		putchar('3');
-		map<Vec2, Entity*>::iterator corpPos;
-		if (entityToRemove->Corporeal() && (corpPos = FindCorpPos(entityToRemove)) != corporealPositions.end())
-			corporealPositions.erase(corpPos);
-		putchar('4');
+		if (entityToRemove->Corporeal())
+			corporeals.erase(find(corporeals.begin(), corporeals.end(), entityToRemove));
 	}
 };
 
@@ -329,14 +319,13 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 
 	if (force > 0 && direction != Vec2(0, 0))
 	{
-		map<Vec2, Entity*>::iterator entity = ((Entities*)entities)->corporealPositions.find(newPos);
-		if (entity != ((Entities*)entities)->corporealPositions.end() && (*entity).second != ignore && (creator != (*entity).second->creator || creator == nullptr))
-			if (!(*entity).second->TryMove(direction, force - (*entity).second->mass, entities, ignore))
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore && (creator != (*entity)->creator || creator == nullptr))
+			if (!(*entity)->TryMove(direction, force - (*entity)->mass, entities, ignore))
 				return false;
 	}
 	else return false;
 
-	*((Entities*)entities)->FindCorpPos(this) = pair(newPos, this);
 	pos = newPos;
 	return true;
 }
@@ -347,11 +336,11 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 
 	if (force > 0 && direction != Vec2(0, 0))
 	{
-		map<Vec2, Entity*>::iterator entity = ((Entities*)entities)->corporealPositions.find(newPos);
-		if (entity != ((Entities*)entities)->corporealPositions.end() && (*entity).second != ignore && (creator != (*entity).second->creator || creator == nullptr))
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore && (creator != (*entity)->creator || creator == nullptr))
 		{
-			*hitEntity = (*entity).second;
-			if (!(*entity).second->TryMove(direction, force - (*entity).second->mass, entities, ignore))
+			*hitEntity = *entity;
+			if (!(*entity)->TryMove(direction, force - (*entity)->mass, entities, ignore))
 				return false;
 		}
 	}

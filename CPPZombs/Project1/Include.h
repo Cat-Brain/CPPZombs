@@ -60,7 +60,7 @@ Vec2 Squarmalized(Vec2 a)
 struct Inputs
 {
 	button w, a, s, d,
-		enter, c, q, e,
+		enter, c, q, e, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
 	Vec2 mousePosition;
@@ -89,7 +89,7 @@ public:
 	olc::Sprite screen;
 	olc::Sprite bigScreen;
 
-	Inputs inputs;// = Inputs(button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), button(), Vec2(0, 0));
+	Inputs inputs;
 
 	Screen() { }
 

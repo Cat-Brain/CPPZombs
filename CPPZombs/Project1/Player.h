@@ -105,6 +105,10 @@ public:
 		}
 		playerPos = pos;
 
+		for (Entity* entity : ((Entities*)entities)->corporeals)
+		{
+			if(entity->pos == pos || (inputs.space.bPressed && Squistance()))
+		}
 		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
 		for (Entity* entity : incorporeals)
 		{
