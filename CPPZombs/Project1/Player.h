@@ -84,7 +84,7 @@ public:
 		}
 
 
-		if (frameCount % 2 == 0)
+		if (frameCount % 4 == 0)
 		{
 			Vec2 direction(0, 0);
 
@@ -105,10 +105,10 @@ public:
 		}
 		playerPos = pos;
 
-		for (Entity* entity : ((Entities*)entities)->corporeals)
+		/*for (Entity* entity : ((Entities*)entities)->corporeals)
 		{
 			if(entity->pos == pos || (inputs.space.bPressed && Squistance()))
-		}
+		}*/
 		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
 		for (Entity* entity : incorporeals)
 		{

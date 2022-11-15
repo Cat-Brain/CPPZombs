@@ -1,6 +1,6 @@
 #include "Player.h"
 
-#define ticsBetweenWaves 512
+#define ticsBetweenWaves 2048
 
 
 
@@ -11,7 +11,7 @@ public:
 	Player* player;
 	FastNoiseLite backgroundNoise1, backgroundNoise2, backgroundNoise3;
 
-	float timeBetweenFrames = 0.125f;
+	float timeBetweenFrames = 0.03125f;
 	float currentTime = 0.0f;
 	float lastTrueFrame = 0.0f;
 	int frameCount = 0, waveCount = 0;
@@ -255,10 +255,14 @@ public:
 
 		entities.Update(this, frameCount, inputs); // Updates all entities.
 
-		Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.
-		for (int x = 0; x < screen.width; x++)
-			for (int y = 0; y < screen.height; y++)
-				screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), x, y);
+		if (playerPos != lastPlayerPos)
+		{
+			lastPlayerPos = playerPos;
+			Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.
+			for (int x = 0; x < screen.width; x++)
+				for (int y = 0; y < screen.height; y++)
+					screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), x, y);
+		}
 		DrawScreen();
 		
 		entities.DUpdate(this, frameCount, inputs); // Draws all entities.

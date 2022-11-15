@@ -69,9 +69,15 @@ struct Inputs
 };
 
 bool playerAlive = false;
-Vec2 playerPos(0, 0);
+Vec2 playerPos(0, 0), lastPlayerPos(0, 0);
 Vec2 playerVel(0, 0);
 int totalGamePoints;
+int psuedoRandomizer = 0;
+
+int PsuedoRandom()
+{
+	return psuedoRandomizer++;
+}
 
 Vec2 ToSpace(Vec2 positionInWorldSpace)
 {
