@@ -57,7 +57,7 @@ public:
 	int vacDist;
 
 	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, mass, maxHealth, health, name), vacDist(4)
+		Entity(pos, color, mass, maxHealth, health, name), vacDist(6)
 	{
 		Start();
 	}
@@ -104,17 +104,20 @@ public:
 		}
 		playerPos = pos;
 
-		for (Entity* entity : ((Entities*)entities)->incorporeals)
-		{
-			if (entity->pos == pos || (inputs.space.bHeld && Diagnistance(pos, entity->pos) <= vacDist))
+		if(inputs.space.bHeld)
+			for (Entity* entity : ((Entities*)entities)->incorporeals)
 			{
-				items.push_back(Item(entity->baseClass, 1));
-				entity->DestroySelf(entities);
+				int distance = Diagnistance(pos, entity->pos);
+				if (distance > 0 && distance <= vacDist)
+				{
+					entity->pos += Squarmalized(pos - entity->pos);
+				}
 			}
-		}
 		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
 		for (Entity* entity : incorporeals)
 		{
+			items.push_back(Item(entity->baseClass, 1));
+			entity->DestroySelf(entities);
 		}
 
 		Entity::Update(screen, entities, frameCount, inputs);
