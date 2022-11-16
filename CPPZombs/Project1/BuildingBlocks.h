@@ -19,6 +19,11 @@ public:
 	{
 		return false;
 	}
+
+	bool CanConveyer() override
+	{
+		return true;
+	}
 };
 
 class DToCol : public Entity
@@ -64,20 +69,54 @@ Placeable* cheese = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 
 class FunctionalBlock : public Entity
 {
 public:
-	using Entity::Entity;
+	int tickPer;
+
+	FunctionalBlock(int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		tickPer(tickPer), Entity(pos, color, mass, maxHealth, health, name)
+	{
+		Start();
+	}
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
-		if (frameCount % TickPer() == 0)
+		if (frameCount % tickPer == 0)
 			TUpdate(screen, (Entities*)entities, frameCount, inputs);
 
 		Entity::Update(screen, entities, frameCount, inputs);
 	}
 
-	virtual int TickPer()
+	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) { }
+};
+
+class Duct : public FunctionalBlock
+{
+public:
+	Vec2 dir;
+
+	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		dir(dir), FunctionalBlock(tickPer, pos, color, mass, maxHealth, health, name)
 	{
-		return 2;
+		Start();
 	}
 
-	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) { }
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
+	{
+		if (containedEntities.size() > 0)
+		{
+			Entity* entity;
+			if(containedEntities[0]->TryMove(dir, 1, (vector<Entity*>*)entities, &entity, nullptr))
+				if (entity->IsConveyer())
+				{
+					entity->containedEntities.push_back(containedEntities[0]);
+					containedEntities.erase(containedEntities.begin());
+				}
+		}
+
+		vector<Entity*>::iterator entity = entities->FindIncorpPos(pos);
+		
+		if (entity != entities->incorporeals.end())
+		{
+			(*entity)->active = false;
+		}
+	}
 };

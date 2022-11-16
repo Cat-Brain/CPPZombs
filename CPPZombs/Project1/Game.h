@@ -54,6 +54,8 @@ public:
 		if (GetKey(olc::P).bPressed)
 			paused = !paused;
 
+		printf("%i\n", GetMouseWheel()); 
+
 		if (!paused)
 		{
 #pragma region Inputs 1

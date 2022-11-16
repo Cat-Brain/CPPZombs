@@ -11,6 +11,7 @@ public:
 	int mass;
 	int maxHealth, health;
 	vector<Entity*> containedEntities;
+	bool active = true;
 
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedEntities(), baseClass(this), creator(nullptr)
@@ -71,7 +72,7 @@ public:
 
 	virtual bool CanConveyer()
 	{
-		return true;
+		return false;
 	}
 
 	virtual bool IsConveyer()
@@ -183,6 +184,14 @@ public:
 		return corporeals.end();
 	}
 
+	vector<Entity*>::iterator FindIncorpPos(Vec2 pos)
+	{
+		for (vector<Entity*>::iterator iter = incorporeals.begin(); iter != incorporeals.end(); iter++)
+			if ((*iter)->pos == pos)
+				return iter;
+		return incorporeals.end();
+	}
+
 	void SortEntities()
 	{
 		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(size());
@@ -252,7 +261,7 @@ public:
 		}
 #pragma endregion
 
-#pragma region Corporeals, Incorporeals, and CorporealPositions
+		#pragma region Corporeals and Incorporeals
 		counterOne = 0; // Corporeal count
 		for (Entity* entity : *this)
 			counterOne += int(entity->Corporeal());
@@ -277,13 +286,14 @@ public:
 				counterTwo++;
 			}
 		}
-#pragma endregion
+		#pragma endregion
 
 		addedEntity = false;
 		SortEntities();
 
 		for (index = 0; index < sortedEntities.size(); index++)
-			sortedEntities[index]->Update(screen, this, frameCount, inputs);
+			if(sortedEntities[index]->active)
+				sortedEntities[index]->Update(screen, this, frameCount, inputs);
 
 		if (addedEntity)
 			SortEntities();
@@ -292,7 +302,8 @@ public:
 	void DUpdate(Screen* screen, int frameCount, Inputs inputs)
 	{
 		for (index = 0; index < sortedEntities.size(); index++)
-			sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
+			if (sortedEntities[index]->active)
+				sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
 	}
 
 	void Remove(Entity* entityToRemove)
