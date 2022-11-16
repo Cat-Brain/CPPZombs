@@ -17,7 +17,7 @@ public:
 	using vector<Item>::vector;
 	void push_back(Item item)
 	{
-		for(int i = 0; i < size(); i++)
+		for (int i = 0; i < size(); i++)
 			if ((*this)[i].type == item.type)
 			{
 				(*this)[i].count += item.count;
@@ -54,9 +54,10 @@ class Player : public Entity
 {
 public:
 	Items items;
+	int vacDist;
 
 	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, mass, maxHealth, health, name)
+		Entity(pos, color, mass, maxHealth, health, name), vacDist(4)
 	{
 		Start();
 	}
@@ -70,17 +71,15 @@ public:
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
-		if (inputs.leftMouse.bPressed && inputs.mousePosition != playerPos && items.TryTake(Item(basicBullet, -1)))
+		if (inputs.leftMouse.bPressed && !inputs.space.bHeld && inputs.mousePosition != playerPos && items.TryTake(Item(basicBullet, -1)))
 		{
 			Projectile* projectile = new Projectile(basicBullet, this, pos, inputs.mousePosition);
 			entities->push_back(projectile);
-			//projectile->Update(screen, entities, frameCount, inputs);
 		}
-		if (inputs.rightMouse.bHeld && EmptyFromEntities(inputs.mousePosition, *entities) && items.TryTake(Item(cheese, -1)))
+		if (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryTake(Item(cheese, -1)))
 		{
 			Placeable* placed = new Placeable(cheese, inputs.mousePosition);
 			entities->push_back(placed);
-			//placed->Update(screen, entities, frameCount, inputs);
 		}
 
 
@@ -105,15 +104,17 @@ public:
 		}
 		playerPos = pos;
 
-		/*for (Entity* entity : ((Entities*)entities)->corporeals)
+		for (Entity* entity : ((Entities*)entities)->incorporeals)
 		{
-			if(entity->pos == pos || (inputs.space.bPressed && Squistance()))
-		}*/
+			if (entity->pos == pos || (inputs.space.bHeld && Diagnistance(pos, entity->pos) <= vacDist))
+			{
+				items.push_back(Item(entity->baseClass, 1));
+				entity->DestroySelf(entities);
+			}
+		}
 		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
 		for (Entity* entity : incorporeals)
 		{
-			items.push_back(Item(entity->baseClass, 1));
-			entity->DestroySelf(entities);
 		}
 
 		Entity::Update(screen, entities, frameCount, inputs);

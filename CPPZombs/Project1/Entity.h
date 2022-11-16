@@ -169,7 +169,7 @@ public:
 	{
 		addedEntity = true;
 		vector<Entity*>::push_back(entity);
-		index--;
+		index++;
 		sortedEntities.insert(sortedEntities.begin(), entity);
 		if (entity->Corporeal())
 			corporeals.push_back(entity);

@@ -2,6 +2,11 @@
 #include "olcPixelGameEngine.h"
 #include "FastNoiseLite.h"
 
+#define NDEBUG false
+#ifndef DEBUG
+#define DEBUG !NDEBUG
+#endif
+
 using std::vector;
 using std::map;
 using std::cin;
@@ -42,12 +47,17 @@ int Squagnitude(Vec2 a)
 
 int Diagnitude(Vec2 a)
 {
-	return a.x + a.y;
+	return abs(a.x) + abs(a.y);
 }
 
 int Squistance(Vec2 a, Vec2 b)
 {
 	return Squagnitude(a - b);
+}
+
+int Diagnistance(Vec2 a, Vec2 b)
+{
+	return Diagnitude(a - b);
 }
 
 Vec2 Squarmalized(Vec2 a)
