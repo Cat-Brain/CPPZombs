@@ -55,6 +55,7 @@ class Player : public Entity
 public:
 	Items items;
 	int vacDist;
+	bool placedBlock;
 
 	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, color, mass, maxHealth, health, name), vacDist(6)
@@ -65,7 +66,7 @@ public:
 	void Start() override
 	{
 		items = Items(0);
-		items.push_back(Item(cheese, 50));
+		items.push_back(Item(duct, 50));
 		items.push_back(Item(basicBullet, 100));
 	}
 
@@ -76,9 +77,9 @@ public:
 			Projectile* projectile = new Projectile(basicBullet, this, pos, inputs.mousePosition);
 			entities->push_back(projectile);
 		}
-		if (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryTake(Item(cheese, -1)))
+		if (placedBlock = (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryTake(Item(cheese, -1))))
 		{
-			Placeable* placed = new Placeable(cheese, inputs.mousePosition);
+			Entity* placed = new Duct(duct, duct->dir, inputs.mousePosition);
 			entities->push_back(placed);
 		}
 
@@ -126,5 +127,11 @@ public:
 	void OnDeath(vector<Entity*>* entities) override
 	{
 		playerAlive = false;
+	}
+
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	{
+		Entity::DUpdate(screen, entities, frameCount, inputs);
+		duct->Draw(inputs.mousePosition, Color(duct->color.r, duct->color.g, duct->color.b, 63), screen, entities, frameCount, inputs);
 	}
 };

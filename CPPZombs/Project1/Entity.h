@@ -30,6 +30,17 @@ public:
 	virtual void Start()
 	{}
 
+	void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	{
+		Vec2 tempPos = this->pos;
+		this->pos = pos;
+		Color tempColor = this->color;
+		this->color = color;
+		DUpdate(screen, entities, frameCount, inputs);
+		this->pos = tempPos;
+		this->color = tempColor;
+	}
+
 	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // ONLY draws.
 	{
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);

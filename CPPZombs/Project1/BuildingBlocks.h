@@ -99,6 +99,50 @@ public:
 		Start();
 	}
 
+	Duct(Duct* baseClass, Vec2 dir, Vec2 pos) :
+		Duct(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		Start();
+	}
+
+	void Draw(Vec2 pos, Vec2 dir, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	{
+		Vec2 tempPos = this->pos;
+		this->pos = pos;
+		Vec2 tempDir = this->dir;
+		this->dir = dir;
+		Color tempColor = this->color;
+		this->color = color;
+		DUpdate(screen, entities, frameCount, inputs);
+		this->pos = tempPos;
+		this->dir = tempDir;
+		this->color = tempColor;
+	}
+
+	void RotateLeft()
+	{
+		dir = Vec2(-dir.x, dir.y);
+	}
+
+	void RotateLeft(int amount)
+	{
+		for (int i = 0; i < amount; i++)
+			dir = Vec2(-dir.x, dir.y);
+	}
+
+	void RotateRight()
+	{
+		dir = Vec2(dir.x, -dir.y);
+	}
+
+	void RotateRight(int amount)
+	{
+		for (int i = 0; i < amount; i++)
+			dir = Vec2(dir.x, -dir.y);
+	}
+
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
 	{
 		Vec2 rSpacePos = ToRSpace(pos);
@@ -135,3 +179,5 @@ public:
 		}
 	}
 };
+
+Duct* duct = new Duct(up, 2, vZero, olc::DARK_YELLOW);
