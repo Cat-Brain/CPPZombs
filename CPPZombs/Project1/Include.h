@@ -74,6 +74,7 @@ struct Inputs
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
 	Vec2 mousePosition;
+	int mouseScroll;
 
 	Inputs() = default;
 };

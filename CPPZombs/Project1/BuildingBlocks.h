@@ -99,6 +99,21 @@ public:
 		Start();
 	}
 
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	{
+		Vec2 rSpacePos = ToRSpace(pos);
+		if (dir.x == 0)
+		{
+			screen->DrawLine(rSpacePos, rSpacePos + Vec2(0, 2));
+			screen->DrawLine(rSpacePos + Vec2(2, 0), rSpacePos + Vec2(2, 2));
+		}
+		else
+		{
+			screen->DrawLine(rSpacePos, rSpacePos + Vec2(2, 0));
+			screen->DrawLine(rSpacePos + Vec2(0, 2), rSpacePos + Vec2(2, 2));
+		}
+	}
+
 	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 		if (containedEntities.size() > 0)

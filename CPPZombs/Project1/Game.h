@@ -54,7 +54,7 @@ public:
 		if (GetKey(olc::P).bPressed)
 			paused = !paused;
 
-		printf("%i\n", GetMouseWheel()); 
+		inputs.mouseScroll += GetMouseWheel() / 120;
 
 		if (!paused)
 		{
