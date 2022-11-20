@@ -47,7 +47,7 @@ public:
 
     void OnDeath(vector<Entity*>* entities) override
     {
-        ((Entities*)entities)->push_back(new MiniEntity(baseClass, pos));
+        ((Entities*)entities)->push_back(new Collectible(baseClass, ToRandomCSpace(pos), color));
     }
 
     virtual int GetDamage()

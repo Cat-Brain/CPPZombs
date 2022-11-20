@@ -57,9 +57,9 @@ public:
 		if (randomValue > 1) // 2 or 3
 		{
 			if (randomValue == 2) // 2
-				((Entities*)entities)->push_back(new MiniEntity(basicBullet, pos));
+				((Entities*)entities)->push_back(new Collectible(basicBullet, ToRandomCSpace(pos), basicBullet->color));
 			else // 3
-				((Entities*)entities)->push_back(new MiniEntity(cheese, pos));
+				((Entities*)entities)->push_back(new Collectible(cheese, ToRandomCSpace(pos), cheese->color));
 		}
 	}
 };

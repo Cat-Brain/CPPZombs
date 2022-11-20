@@ -33,8 +33,10 @@ int screenWidth = 50, screenHeight = 50,
 	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
 Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 #define GRID_SIZE 3
-int pixelCount = screenWidth * screenHeight * GRID_SIZE * GRID_SIZE;
+#define GRID_AREA GRID_SIZE * GRID_SIZE
+int pixelCount = screenWidth * screenHeight * GRID_AREA;
 
+#pragma region Math
 int JMod(int x, int m)
 {
 	return ((x % m) + m) % m;
@@ -64,6 +66,7 @@ Vec2 Squarmalized(Vec2 a)
 {
 	return a / (int)fmaxf(1, Squagnitude(a));
 }
+#pragma endregion
 
 
 
@@ -95,9 +98,34 @@ Vec2 ToSpace(Vec2 positionInWorldSpace)
 	return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
 }
 
+Vec2 ToSpace2(Vec2 positionInCSpace)
+{
+	return Vec2(positionInCSpace.x, screenHeight * GRID_SIZE - positionInCSpace.y - 1);
+}
+
 Vec2 ToRSpace(Vec2 positionInLocalSpace)
 {
-	return ToSpace(positionInLocalSpace - playerPos + screenDimH) * 3;
+	return ToSpace(positionInLocalSpace - playerPos + screenDimH) * GRID_SIZE;
+}
+
+Vec2 ToRSpace2(Vec2 positionInLocalSpace)
+{
+	return ToSpace2(positionInLocalSpace - playerPos * GRID_SIZE + screenDimH * GRID_SIZE);
+}
+
+Vec2 ToCSpace(Vec2 positionInEntitySpace)
+{
+	return positionInEntitySpace * GRID_SIZE;
+}
+
+Vec2 ToRandomCSpace(Vec2 positionInEntitySpace) // Randomized within a 3x3.
+{
+	return positionInEntitySpace * GRID_SIZE + Vec2(rand() % GRID_SIZE, rand() % GRID_SIZE);
+}
+
+Vec2 ToESpace(Vec2 positionInCollectibleSpace)
+{
+	return positionInCollectibleSpace / GRID_SIZE;
 }
 
 class Screen : public olc::PixelGameEngine

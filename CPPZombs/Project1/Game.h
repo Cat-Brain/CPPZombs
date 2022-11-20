@@ -54,11 +54,11 @@ public:
 		if (GetKey(olc::P).bPressed)
 			paused = !paused;
 
-		inputs.mouseScroll += GetMouseWheel() / 120;
-
 		if (!paused)
 		{
-#pragma region Inputs 1
+			#pragma region Inputs 1
+
+			inputs.mouseScroll += GetMouseWheel() / 120;
 
 			button temp = GetKey(olc::W);
 			inputs.w.bHeld |= temp.bHeld;
@@ -140,7 +140,7 @@ public:
 			inputs.middleMouse.bPressed |= temp.bPressed;
 			inputs.middleMouse.bReleased |= temp.bReleased;
 
-#pragma endregion
+			#pragma endregion
 
 
 
@@ -158,7 +158,9 @@ public:
 				}
 				lastTrueFrame += timeBetweenFrames;
 
-#pragma region Inputs2
+				#pragma region Inputs2
+
+				inputs.mouseScroll = 0;
 
 				inputs.w.bHeld = false;
 				inputs.w.bPressed = false;
@@ -224,7 +226,7 @@ public:
 				inputs.middleMouse.bPressed = false;
 				inputs.middleMouse.bReleased = false;
 
-#pragma endregion
+				#pragma endregion
 			}
 		}
 
@@ -234,20 +236,17 @@ public:
 	Color GetBackgroundNoise(Color baseColor, int x, int y)
 	{
 		Vec2 noisePos = Vec2(x + ToSpace(playerPos).x, y + ToSpace(playerPos).y);
-		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise1.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 10)),
+		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise1.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 5)),
 			(int)fminf(255, fmaxf(0, baseColor.g + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 3)),
-			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise3.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 2)));
+			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise3.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f)) * 2));
 	}
 
 	void Update(float deltaTime)
 	{
-
-
-
 		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
 		{
-			waveCount++;
-			for (int i = 0; i < waveCount * 3; i++)
+			waveCount += int(!inputs.enter.bPressed);
+			for (int i = 0; i < waveCount * 3 + 7; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				entities.push_back(new Enemy(walker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));

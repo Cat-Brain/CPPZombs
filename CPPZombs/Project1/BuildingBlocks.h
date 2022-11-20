@@ -1,31 +1,5 @@
 #include "Entity.h"
 
-class MiniEntity : public Entity
-{
-public:
-	using Entity::Entity;
-	
-	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
-	{
-		screen->Draw(ToRSpace(pos), color);
-	}
-
-	int SortOrder() override
-	{
-		return 2;
-	}
-
-	bool Corporeal() override
-	{
-		return false;
-	}
-
-	bool CanConveyer() override
-	{
-		return true;
-	}
-};
-
 class DToCol : public Entity
 {
 public:
@@ -59,9 +33,11 @@ public:
 		Start();
 	}
 
+	Placeable() {}
+
 	void OnDeath(vector<Entity*>* entities) override
 	{
-		((Entities*)entities)->push_back(new MiniEntity(baseClass, pos));
+		((Entities*)entities)->push_back(new Collectible(baseClass, ToRandomCSpace(pos), color));
 	}
 };
 Placeable* cheese = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4);
@@ -76,6 +52,8 @@ public:
 	{
 		Start();
 	}
+
+	FunctionalBlock() = default;
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
@@ -106,6 +84,11 @@ public:
 		this->baseClass = baseClass;
 		Start();
 	}
+	
+	Entity* Clone(Vec2 pos = vZero) override
+	{
+		return new Duct(this, this->dir, pos);
+	}
 
 	void Draw(Vec2 pos, Vec2 dir, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
 	{
@@ -123,61 +106,109 @@ public:
 
 	void RotateLeft()
 	{
-		dir = Vec2(-dir.x, dir.y);
+		dir = Vec2(-dir.y, dir.x);
 	}
 
 	void RotateLeft(int amount)
 	{
 		for (int i = 0; i < amount; i++)
-			dir = Vec2(-dir.x, dir.y);
+			dir = Vec2(-dir.y, dir.x);
 	}
 
 	void RotateRight()
 	{
-		dir = Vec2(dir.x, -dir.y);
+		dir = Vec2(dir.y, -dir.x);
 	}
 
 	void RotateRight(int amount)
 	{
 		for (int i = 0; i < amount; i++)
-			dir = Vec2(dir.x, -dir.y);
+			dir = Vec2(dir.y, -dir.x);
 	}
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
 	{
 		Vec2 rSpacePos = ToRSpace(pos);
-		if (dir.x == 0)
+		if (dir == up)
 		{
-			screen->DrawLine(rSpacePos, rSpacePos + Vec2(0, 2));
-			screen->DrawLine(rSpacePos + Vec2(2, 0), rSpacePos + Vec2(2, 2));
+			screen->Draw(rSpacePos + Vec2(1, 0), color); // Top
+			screen->Draw(rSpacePos + Vec2(0, 1), color); // Left
+			screen->Draw(rSpacePos + Vec2(2, 1), color); // Right
 		}
-		else
+		else if (dir == right)
 		{
-			screen->DrawLine(rSpacePos, rSpacePos + Vec2(2, 0));
-			screen->DrawLine(rSpacePos + Vec2(0, 2), rSpacePos + Vec2(2, 2));
+			screen->Draw(rSpacePos + Vec2(2, 1), color); // Right
+			screen->Draw(rSpacePos + Vec2(1, 0), color); // Top
+			screen->Draw(rSpacePos + Vec2(1, 2), color); // Bottom
 		}
+		else if (dir == down)
+		{
+			screen->Draw(rSpacePos + Vec2(1, 2), color); // Bottom
+			screen->Draw(rSpacePos + Vec2(0, 1), color); // Left
+			screen->Draw(rSpacePos + Vec2(2, 1), color); // Right
+		}
+		else // dir == left || dir == none of the above
+		{
+			screen->Draw(rSpacePos + Vec2(0, 1), color); // Left
+			screen->Draw(rSpacePos + Vec2(1, 2), color); // Bottom
+			screen->Draw(rSpacePos + Vec2(1, 0), color); // Top
+		}
+		if (containedCollectibles.size() != 0)
+			screen->Draw(rSpacePos + Vec2(1, 1), containedCollectibles[0]->color);
 	}
 
 	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
 	{
-		if (containedEntities.size() > 0)
+		Collectible* item = FindACollectible(pos, entities->collectibles);
+		
+		if (item != nullptr && item->active)
+		{
+			containedCollectibles.push_back(item);
+			item->active = false;
+		}
+
+		if (containedCollectibles.size() > 0)
 		{
 			Entity* entity;
-			if(containedEntities[0]->TryMove(dir, 1, (vector<Entity*>*)entities, &entity, nullptr))
-				if (entity->IsConveyer())
-				{
-					entity->containedEntities.push_back(containedEntities[0]);
-					containedEntities.erase(containedEntities.begin());
-				}
-		}
-
-		vector<Entity*>::iterator entity = entities->FindIncorpPos(pos);
-		
-		if (entity != entities->incorporeals.end())
-		{
-			(*entity)->active = false;
+			if (containedCollectibles[0]->TryMove(dir, 1, (void*)entities, (void**)&entity, nullptr))
+			{
+				containedCollectibles[0]->active = true;
+				containedCollectibles.erase(containedCollectibles.begin());
+			}
+			else if (entity->IsConveyer())
+			{
+				entity->containedCollectibles.push_back(containedCollectibles[0]);
+				containedCollectibles.erase(containedCollectibles.begin());
+			}
 		}
 	}
-};
 
-Duct* duct = new Duct(up, 2, vZero, olc::DARK_YELLOW);
+	void OnDeath(vector<Entity*>* entities) override
+	{
+		for (Collectible* collectible : containedCollectibles)
+			collectible->active = true;
+	}
+
+	bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr) override
+	{
+		if (FunctionalBlock::TryMove(direction, force, entities, ignore))
+		{
+			for (Collectible* collectible : containedCollectibles)
+				collectible->pos += direction;
+			return true;
+		}
+
+		return false;
+	}
+
+	bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore = nullptr) override
+	{
+		return FunctionalBlock::TryMove(direction, force, entities, ignore);
+	}
+
+	bool IsConveyer() override
+	{
+		return true;
+	}
+};
+Duct* duct = new Duct(up, 2, vZero, olc::GREEN);

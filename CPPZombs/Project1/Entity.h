@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "Collectible.h"
 
 class Entity
 {
@@ -10,11 +10,11 @@ public:
 	Color color;
 	int mass;
 	int maxHealth, health;
-	vector<Entity*> containedEntities;
+	vector<Collectible*> containedCollectibles;
 	bool active = true;
 
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedEntities(), baseClass(this), creator(nullptr)
+		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
 	{
 		Start();
 	}
@@ -25,6 +25,11 @@ public:
 		this->pos = pos;
 		this->baseClass = baseClass;
 		Start();
+	}
+
+	virtual Entity* Clone(Vec2 pos = vZero)
+	{
+		return new Entity(this, pos);
 	}
 
 	virtual void Start()
@@ -145,6 +150,33 @@ vector<Entity*> IncorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
 			foundEntities.push_back(*i);
 	return foundEntities;
 }
+
+vector<Entity*> CorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
+{
+	vector<Entity*> foundEntities = vector<Entity*>();
+	for (vector<Entity*>::iterator i = entities->begin(); i != entities->end(); i++)
+		if ((*i)->Corporeal() && (*i)->pos == pos)
+			foundEntities.push_back(*i);
+	return foundEntities;
+}
+
+vector<Collectible*> CollectiblesAtEPos(Vec2 pos, vector<Collectible*> collectibles)
+{
+	vector<Collectible*> foundCollectibles = vector<Collectible*>();
+	for (vector<Collectible*>::iterator i = collectibles.begin(); i != collectibles.end(); i++)
+		if (ToESpace((*i)->pos) == pos)
+			foundCollectibles.push_back(*i);
+	return foundCollectibles;
+}
+
+Collectible* FindACollectible(Vec2 pos, vector<Collectible*> collectibles)
+{
+	vector<Collectible*> foundCollectibles = vector<Collectible*>();
+	for (vector<Collectible*>::iterator i = collectibles.begin(); i != collectibles.end(); i++)
+		if (ToESpace((*i)->pos) == pos)
+			return *i;
+	return nullptr;
+}
 #pragma endregion
 
 
@@ -176,6 +208,7 @@ public:
 	vector<Entity*> projectiles, nonProjectiles;
 	vector<Entity*> enemies, nonEnemies;
 	vector<Entity*> corporeals, incorporeals;
+	vector<Collectible*> collectibles;
 
 	void push_back(Entity* entity)
 	{
@@ -185,6 +218,11 @@ public:
 		sortedEntities.insert(sortedEntities.begin(), entity);
 		if (entity->Corporeal())
 			corporeals.push_back(entity);
+	}
+
+	void push_back(Collectible* collectible)
+	{
+		collectibles.push_back(collectible);
 	}
 
 	vector<Entity*>::iterator FindCorpPos(Vec2 pos)
@@ -315,6 +353,9 @@ public:
 		for (index = 0; index < sortedEntities.size(); index++)
 			if (sortedEntities[index]->active)
 				sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
+		for (index = 0; index < collectibles.size(); index++)
+			if (collectibles[index]->active)
+				collectibles[index]->DUpdate(screen, this, frameCount, inputs);
 	}
 
 	void Remove(Entity* entityToRemove)
@@ -326,7 +367,18 @@ public:
 		if (entityToRemove->Corporeal())
 			corporeals.erase(find(corporeals.begin(), corporeals.end(), entityToRemove));
 	}
+
+	void Remove(Collectible* collectibleToRemove)
+	{
+		collectibles.erase(find(collectibles.begin(), collectibles.end(), collectibleToRemove));
+	}
 };
+
+void Collectible::DestroySelf(void* entities)
+{
+	((Entities*)entities)->Remove(this);
+	delete this;
+}
 
 void Entity::DestroySelf(vector<Entity*>* entities)
 {
@@ -369,5 +421,42 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 	else return false;
 
 	pos = newPos;
+	return true;
+}
+
+bool Collectible::TryMove(Vec2 direction, int force, void* entities, void* ignore) // returns if item was hit.
+{
+	Vec2 newPos = ToESpace(pos) + direction;
+
+	if (force > 0 && direction != Vec2(0, 0))
+	{
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore)
+			if (!(*entity)->TryMove(direction, force - (*entity)->mass, (vector<Entity*>*)entities, (Entity*)ignore))
+				return false;
+	}
+	else return false;
+
+	pos = newPos;
+	return true;
+}
+
+bool Collectible::TryMove(Vec2 direction, int force, void* entities, void** hitEntity, void* ignore) // returns if item was hit.
+{
+	Vec2 newPos = ToESpace(pos) + direction;
+
+	if (force > 0 && direction != Vec2(0, 0))
+	{
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore)
+		{
+			*hitEntity = *entity;
+			if (!(*entity)->TryMove(direction, force - (*entity)->mass, (vector<Entity*>*)entities, (Entity*)ignore))
+				return false;
+		}
+	}
+	else return false;
+
+	pos += direction * 3;
 	return true;
 }

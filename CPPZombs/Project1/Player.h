@@ -54,11 +54,12 @@ class Player : public Entity
 {
 public:
 	Items items;
+	Entity* currentPlacingItem;
 	int vacDist;
 	bool placedBlock;
 
 	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, mass, maxHealth, health, name), vacDist(6)
+		Entity(pos, color, mass, maxHealth, health, name), vacDist(6 * GRID_SIZE)
 	{
 		Start();
 	}
@@ -68,18 +69,22 @@ public:
 		items = Items(0);
 		items.push_back(Item(duct, 50));
 		items.push_back(Item(basicBullet, 100));
+		currentPlacingItem = duct;
 	}
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
+		duct->RotateLeft(inputs.mouseScroll);
+		duct->RotateRight(-inputs.mouseScroll);
+
 		if (inputs.leftMouse.bPressed && !inputs.space.bHeld && inputs.mousePosition != playerPos && items.TryTake(Item(basicBullet, -1)))
 		{
 			Projectile* projectile = new Projectile(basicBullet, this, pos, inputs.mousePosition);
 			entities->push_back(projectile);
 		}
-		if (placedBlock = (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryTake(Item(cheese, -1))))
+		if (placedBlock = (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryTake(Item(currentPlacingItem, -1))))
 		{
-			Entity* placed = new Duct(duct, duct->dir, inputs.mousePosition);
+			Entity* placed = currentPlacingItem->Clone(inputs.mousePosition);
 			entities->push_back(placed);
 		}
 
@@ -106,19 +111,19 @@ public:
 		playerPos = pos;
 
 		if(inputs.space.bHeld)
-			for (Entity* entity : ((Entities*)entities)->incorporeals)
+			for (Collectible* collectible : ((Entities*)entities)->collectibles)
 			{
-				int distance = Diagnistance(pos, entity->pos);
-				if (distance > 0 && distance <= vacDist)
+				int distance = Diagnistance(ToCSpace(pos), collectible->pos);
+				if (collectible->active && distance > 0 && distance <= vacDist)
 				{
-					entity->pos += Squarmalized(pos - entity->pos);
+					collectible->pos += Squarmalized(ToCSpace(pos) - collectible->pos);
 				}
 			}
-		vector<Entity*> incorporeals = IncorporealsAtPos(pos, entities);
-		for (Entity* entity : incorporeals)
+		vector<Collectible*> collectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
+		for (Collectible* collectible : collectibles)
 		{
-			items.push_back(Item(entity->baseClass, 1));
-			entity->DestroySelf(entities);
+			items.push_back(Item((Entity*)collectible->baseClass, 1));
+			collectible->DestroySelf(entities);
 		}
 
 		Entity::Update(screen, entities, frameCount, inputs);
@@ -132,6 +137,6 @@ public:
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
 	{
 		Entity::DUpdate(screen, entities, frameCount, inputs);
-		duct->Draw(inputs.mousePosition, Color(duct->color.r, duct->color.g, duct->color.b, 63), screen, entities, frameCount, inputs);
+		duct->Draw(inputs.mousePosition, duct->dir, Color(duct->color.r, duct->color.g, duct->color.b, 63), screen, entities, frameCount, inputs);
 	}
 };
