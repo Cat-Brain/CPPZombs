@@ -31,9 +31,10 @@ public:
 		if (items.size() > 0)
 			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
 
-		if (inputs.leftMouse.bPressed && !inputs.space.bHeld && inputs.mousePosition != playerPos && items.TryTake(items.GetCurrentItem()))
+		Item currentShootingItem = items.GetCurrentItem();
+		if (currentShootingItem != *dItem && inputs.leftMouse.bPressed && !inputs.space.bHeld && inputs.mousePosition != playerPos && items.TryTake(currentShootingItem))
 		{
-			ShotItem* shot = new ShotItem(basicShotItem, { items.GetCurrentItem() }, pos, inputs.mousePosition - pos, this);
+			ShotItem* shot = new ShotItem(basicShotItem, { currentShootingItem }, pos, inputs.mousePosition - pos, this);
 			entities->push_back(shot);
 		}
 		/*if (placedBlock = (inputs.rightMouse.bHeld && !inputs.space.bHeld && ((Entities*)entities)->FindCorpPos(inputs.mousePosition) == ((Entities*)entities)->corporeals.end() && items.TryMake(currentPlacingItem->cost)))

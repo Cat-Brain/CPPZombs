@@ -100,8 +100,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(238,53): warning C4244: 
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(239,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(240,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
-  2 of 2296 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    10 functions had inline decision re-evaluated but remain unchanged
+  87 of 2298 functions ( 3.8%) were compiled, the rest were copied from previous compilation.
+    3 functions were new in current compilation
+    36 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe

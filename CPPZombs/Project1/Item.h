@@ -40,8 +40,19 @@ public:
 		return Clone(count * multiplier);
 	}
 
+	bool operator == (Item b)
+	{
+		return name == b.name;
+	}
+
+	bool operator != (Item b)
+	{
+		return name != b.name;
+	}
+
 	virtual void OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos);
 };
+Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
 
 typedef vector<Item> Recipe;
 
@@ -111,13 +122,14 @@ public:
 
 	Item GetCurrentItem()
 	{
-		return (*this)[currentIndex].Clone(1);
+		if (size() > 0)
+			return (*this)[currentIndex].Clone(1);
+		return dItem;
 	}
 };
 
 namespace Resources
 {
-	Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
 	Item* copper = new Item("Copper", Color(232, 107, 5), 1);
 	Item* iron = new Item("Iron", Color(111, 123, 128), 3);
 }
