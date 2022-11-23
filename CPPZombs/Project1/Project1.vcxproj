@@ -152,10 +152,12 @@
   <ItemGroup>
     <ClInclude Include="BuildingBlocks.h" />
     <ClInclude Include="Collectible.h" />
+    <ClInclude Include="Defence.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FastNoiseLite.h" />
     <ClInclude Include="Include.h" />
+    <ClInclude Include="Item.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Game.h" />

@@ -1,13 +1,12 @@
-#include "Entity.h"
+#include "Projectile.h"
 
 class DToCol : public Entity
 {
 public:
 	Color color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1) :
-		Entity(pos, color, mass, maxHealth, health),
-		color2(color2)
+	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
+		Entity(pos, color, cost, mass, maxHealth, health), color2(color2)
 	{ }
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
@@ -35,20 +34,27 @@ public:
 
 	Placeable() {}
 
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	{
+		return new Placeable(this, pos);
+	}
+
 	void OnDeath(vector<Entity*>* entities) override
 	{
-		((Entities*)entities)->push_back(new Collectible(baseClass, ToRandomCSpace(pos), color));
+		if (rand() % 2)
+			for (int i = 0; i < cost.size(); i++)
+				((Entities*)entities)->push_back(new Collectible(&cost[i], ToRandomCSpace(pos)));
 	}
 };
-Placeable* cheese = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4);
+Placeable* copperWall = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), Recipes::copperWall, 1, 4, 4);
 
 class FunctionalBlock : public Entity
 {
 public:
 	int tickPer;
 
-	FunctionalBlock(int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		tickPer(tickPer), Entity(pos, color, mass, maxHealth, health, name)
+	FunctionalBlock(int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		tickPer(tickPer), Entity(pos, color, cost, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -59,20 +65,37 @@ public:
 	{
 		if (frameCount % tickPer == 0)
 			TUpdate(screen, (Entities*)entities, frameCount, inputs);
-
-		Entity::Update(screen, entities, frameCount, inputs);
 	}
 
 	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) { }
+};
+
+class OffsettedFunctionalBlock : public FunctionalBlock
+{
+public:
+	using FunctionalBlock::FunctionalBlock;
+	int offset;
+
+	void Start() override
+	{
+		offset = frameCount;
+	}
+
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	{
+		if ((frameCount + offset) % tickPer == 0)
+			TUpdate(screen, (Entities*)entities, frameCount, inputs);
+	}
 };
 
 class Duct : public FunctionalBlock
 {
 public:
 	Vec2 dir;
+	vector<Collectible*> newlyCollected;
 
-	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		dir(dir), FunctionalBlock(tickPer, pos, color, mass, maxHealth, health, name)
+	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		dir(dir), newlyCollected(), FunctionalBlock(tickPer, pos, color, cost, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -80,54 +103,40 @@ public:
 	Duct(Duct* baseClass, Vec2 dir, Vec2 pos) :
 		Duct(*baseClass)
 	{
+		this->dir = dir;
 		this->pos = pos;
 		this->baseClass = baseClass;
 		Start();
 	}
 	
-	Entity* Clone(Vec2 pos = vZero) override
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return new Duct(this, this->dir, pos);
+		return new Duct(this, dir, pos);
 	}
 
-	void Draw(Vec2 pos, Vec2 dir, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, Vec2 dir = vZero) override
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
-		Vec2 tempDir = this->dir;
-		this->dir = dir;
 		Color tempColor = this->color;
 		this->color = color;
+		Vec2 tempDir = this->dir;
+		this->dir = dir;
 		DUpdate(screen, entities, frameCount, inputs);
 		this->pos = tempPos;
-		this->dir = tempDir;
 		this->color = tempColor;
-	}
-
-	void RotateLeft()
-	{
-		dir = Vec2(-dir.y, dir.x);
-	}
-
-	void RotateLeft(int amount)
-	{
-		for (int i = 0; i < amount; i++)
-			dir = Vec2(-dir.y, dir.x);
-	}
-
-	void RotateRight()
-	{
-		dir = Vec2(dir.y, -dir.x);
-	}
-
-	void RotateRight(int amount)
-	{
-		for (int i = 0; i < amount; i++)
-			dir = Vec2(dir.y, -dir.x);
+		this->dir = tempDir;
 	}
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
 	{
+		if (newlyCollected.size() > 0)
+		{
+			containedCollectibles.reserve(containedCollectibles.size() + newlyCollected.size());
+			containedCollectibles.insert(containedCollectibles.end(), newlyCollected.begin(), newlyCollected.end());
+			newlyCollected.clear();
+		}
+
 		Vec2 rSpacePos = ToRSpace(pos);
 		if (dir == up)
 		{
@@ -163,7 +172,7 @@ public:
 		
 		if (item != nullptr && item->active)
 		{
-			containedCollectibles.push_back(item);
+			newlyCollected.push_back(item);
 			item->active = false;
 		}
 
@@ -211,4 +220,4 @@ public:
 		return true;
 	}
 };
-Duct* duct = new Duct(up, 2, vZero, olc::GREEN);
+Duct* duct = new Duct(up, 2, vZero, olc::GREEN, Recipes::conveyer);

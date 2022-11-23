@@ -14,7 +14,6 @@ public:
 	float timeBetweenFrames = 0.03125f;
 	float currentTime = 0.0f;
 	float lastTrueFrame = 0.0f;
-	int frameCount = 0, waveCount = 0;
 	bool showUI = true, paused = false;
 
 	
@@ -26,7 +25,7 @@ public:
 		screen = olc::Sprite(screenWidth, screenHeight);
 		bigScreen = olc::Sprite(screenWidth * GRID_SIZE, screenHeight * GRID_SIZE);
 		entities = Entities(0);
-		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
+		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, Recipes::dRecipe, 1, 10, 5);
 		entities.push_back(player);
 		playerAlive = true;
 		totalGamePoints = 0;
@@ -243,13 +242,30 @@ public:
 
 	void Update(float deltaTime)
 	{
+		system_clock::time_point timeStartFrame = system_clock::now();
+
+		// New wave:
 		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
 		{
-			waveCount += int(!inputs.enter.bPressed);
+			waveCount += int(!inputs.enter.bPressed); // Walker
 			for (int i = 0; i < waveCount * 3 + 7; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				entities.push_back(new Enemy(walker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
+			}
+
+			waveCount += int(!inputs.enter.bPressed); // Tanker
+			for (int i = 0; i < waveCount - 3; i++)
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities.push_back(new Enemy(tanker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
+			}
+
+			waveCount += int(!inputs.enter.bPressed); // Speedster
+			for (int i = 0; i < waveCount / 2 - 3; i++)
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities.push_back(new Enemy(speedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
 			}
 		}
 
@@ -278,13 +294,15 @@ public:
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 			player->items.DUpdate(this);
+
+
 		}
 
 		if (frameCount % 6 < 4)
 			Draw(ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
 
-
-
+		sleep_until(timeStartFrame + milliseconds(31));
+		
 		frameCount++;
 	}
 

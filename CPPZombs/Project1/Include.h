@@ -22,6 +22,10 @@ using std::set;
 #include<map>
 using std::map;
 using std::pair;
+#include <chrono>
+#include <thread>
+using namespace std::this_thread;
+using namespace std::chrono;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
@@ -87,12 +91,14 @@ Vec2 playerPos(0, 0), lastPlayerPos(0, 0);
 Vec2 playerVel(0, 0);
 int totalGamePoints;
 int psuedoRandomizer = 0;
+int frameCount = 0, waveCount = 0;
 
 int PsuedoRandom()
 {
 	return psuedoRandomizer++;
 }
 
+#pragma region Vec2 functions
 Vec2 ToSpace(Vec2 positionInWorldSpace)
 {
 	return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
@@ -127,6 +133,30 @@ Vec2 ToESpace(Vec2 positionInCollectibleSpace)
 {
 	return positionInCollectibleSpace / GRID_SIZE;
 }
+
+// Rotation:
+void RotateLeft(Vec2& dir)
+{
+	dir = Vec2(-dir.y, dir.x);
+}
+
+void RotateLeft(Vec2& dir, int amount)
+{
+	for (int i = 0; i < amount; i++)
+		dir = Vec2(-dir.y, dir.x);
+}
+
+void RotateRight(Vec2& dir)
+{
+	dir = Vec2(dir.y, -dir.x);
+}
+
+void RotateRight(Vec2& dir, int amount)
+{
+	for (int i = 0; i < amount; i++)
+		dir = Vec2(dir.y, -dir.x);
+}
+#pragma endregion
 
 class Screen : public olc::PixelGameEngine
 {

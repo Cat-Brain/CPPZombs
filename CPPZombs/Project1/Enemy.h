@@ -1,12 +1,12 @@
-#include "Projectile.h"
+#include "Defence.h"
 
 class Enemy : public DToCol
 {
 public:
 	int tickPer, moveOffset;
 
-	Enemy(int tickPer = 2, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1) :
-		DToCol(Vec2(0, 0), color, color2, mass, maxHealth, health), tickPer(tickPer)
+	Enemy(int tickPer = 2, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
+		DToCol(Vec2(0, 0), color, color2, cost, mass, maxHealth, health), tickPer(tickPer)
 	{ }
 
 	Enemy(Enemy* baseClass, Vec2 pos) :
@@ -53,15 +53,19 @@ public:
 	void OnDeath(vector<Entity*>* entities) override
 	{
 		totalGamePoints += GetPoints();
-		int randomValue = rand() % 4; // 0, 1, 2, 3
-		if (randomValue > 1) // 2 or 3
+		int randomValue = rand() % 2048; // 0-2047
+		if (randomValue > 1022) // Half of the time is true I think.
 		{
-			if (randomValue == 2) // 2
-				((Entities*)entities)->push_back(new Collectible(basicBullet, ToRandomCSpace(pos), basicBullet->color));
-			else // 3
-				((Entities*)entities)->push_back(new Collectible(cheese, ToRandomCSpace(pos), cheese->color));
+			if (randomValue > 1500) // 1501-2047 ~= 1/4
+				((Entities*)entities)->push_back(Collectibles::copper->Clone(ToRandomCSpace(pos)));
+			if (randomValue % 16 == 0) // ~1/16 of the time.
+				((Entities*)entities)->push_back(cCopperTreeSeed->Clone(ToRandomCSpace(pos)));
+			else if (randomValue % 16 == 1) // Never does this and copper tree seed.
+				((Entities*)entities)->push_back(cIronTreeSeed->Clone(ToRandomCSpace(pos)));
 		}
 	}
 };
 
-Enemy* walker = new Enemy(24, olc::CYAN, olc::BLACK, 1, 3, 3);
+Enemy* walker = new Enemy(24, olc::CYAN, olc::BLACK, Recipes::dRecipe, 1, 3, 3);
+Enemy* tanker = new Enemy(36, olc::DARK_CYAN, olc::BLACK, Recipes::dRecipe, 5, 12, 12);
+Enemy* speedster = new Enemy(12, olc::DARK_YELLOW, olc::BLACK, Recipes::dRecipe, 1, 2, 2);

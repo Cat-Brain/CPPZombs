@@ -8,13 +8,14 @@ public:
 	string name;
 	Vec2 pos;
 	Color color;
+	Recipe cost;
 	int mass;
 	int maxHealth, health;
 	vector<Collectible*> containedCollectibles;
 	bool active = true;
 
-	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
+	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		pos(pos), color(color), cost(cost), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
 	{
 		Start();
 	}
@@ -27,7 +28,7 @@ public:
 		Start();
 	}
 
-	virtual Entity* Clone(Vec2 pos = vZero)
+	virtual Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr)
 	{
 		return new Entity(this, pos);
 	}
@@ -35,7 +36,7 @@ public:
 	virtual void Start()
 	{}
 
-	void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	virtual void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
@@ -46,12 +47,12 @@ public:
 		this->color = tempColor;
 	}
 
-	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // ONLY draws.
+	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally only draws.
 	{
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
 
-	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draws.
+	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draw.
 	{ }
 
 	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
@@ -371,6 +372,19 @@ public:
 	void Remove(Collectible* collectibleToRemove)
 	{
 		collectibles.erase(find(collectibles.begin(), collectibles.end(), collectibleToRemove));
+	}
+
+	void Vacuum(Vec2 pos, int vacDist)
+	{
+		Vec2 cPos = ToCSpace(pos);
+		for (Collectible* collectible : collectibles)
+		{
+			int distance = Diagnistance(cPos, collectible->pos);
+			if (collectible->active && distance > 0 && distance <= vacDist)
+			{
+				collectible->pos += Squarmalized(cPos - collectible->pos);
+			}
+		}
 	}
 };
 
