@@ -8,11 +8,12 @@ int main()
 
 	copperTree->seed = cCopperTreeSeed;
 	ironTree->seed = cIronTreeSeed;
+	cheeseTree->seed = cCheeseTreeSeed;
 
 	#pragma endregion
 
 	Game game;
-	if (game.Construct(screenWidth * 3, screenHeight * 3, 8, 8, true))
+	if (game.Construct(screenWidth * 3, screenHeight * 3, 6, 6, true))
 		game.Start();
 
 	printf("\nFairwell universe!\n");

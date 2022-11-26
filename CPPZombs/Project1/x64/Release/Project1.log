@@ -81,27 +81,27 @@ C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,137): warni
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,100): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,63): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,26): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Player.h(32,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(40,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(41,32): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(42,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(43,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(149,107): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Player.h(36,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(37,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(38,32): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(39,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(40,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(143,106): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(149,86): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(143,85): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(238,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(239,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(240,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(198,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(199,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(200,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
-  87 of 2298 functions ( 3.8%) were compiled, the rest were copied from previous compilation.
-    3 functions were new in current compilation
-    36 functions had inline decision re-evaluated but remain unchanged
+  6 of 2301 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe

@@ -5,16 +5,16 @@ class DToCol : public Entity
 public:
 	Color color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
-		Entity(pos, color, cost, mass, maxHealth, health), color2(color2)
+	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, color, cost, mass, maxHealth, health, name), color2(color2)
 	{ }
 
-	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		float t = (float)health / (float)maxHealth;
 		Color tempColor = color;
 		color = Color(color2.r + t * (color.r - color2.r), color2.g + t * (color.g - color2.g), color2.b + t * (color.b - color2.b), color2.a + t * (color.a - color2.a));
-		Entity::DUpdate(screen, entities, frameCount, inputs);
+		Entity::DUpdate(screen, entities, frameCount, inputs, dTime);
 		color = tempColor;
 	}
 };
@@ -39,7 +39,7 @@ public:
 		return new Placeable(this, pos);
 	}
 
-	void OnDeath(vector<Entity*>* entities) override
+	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
 	{
 		if (rand() % 2)
 			for (int i = 0; i < cost.size(); i++)
@@ -47,45 +47,37 @@ public:
 	}
 };
 Placeable* copperWall = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), Recipes::copperWall, 1, 4, 4);
+Placeable* cheeseBlock = new Placeable(Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), {}, 1, 4, 4);
 
 class FunctionalBlock : public Entity
 {
 public:
-	int tickPer;
+	float timePer, lastTime;
 
-	FunctionalBlock(int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		tickPer(tickPer), Entity(pos, color, cost, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, color, cost, mass, maxHealth, health, name)
+	{
+		Start();
+	}
+
+	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, color, cost, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
 	FunctionalBlock() = default;
 
-	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		if (frameCount % tickPer == 0)
-			TUpdate(screen, (Entities*)entities, frameCount, inputs);
+		if (tTime - lastTime >= timePer)
+		{
+			TUpdate(screen, (Entities*)entities, frameCount, inputs, dTime);
+			lastTime = tTime;
+		}
 	}
 
-	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) { }
-};
-
-class OffsettedFunctionalBlock : public FunctionalBlock
-{
-public:
-	using FunctionalBlock::FunctionalBlock;
-	int offset;
-
-	void Start() override
-	{
-		offset = frameCount;
-	}
-
-	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
-	{
-		if ((frameCount + offset) % tickPer == 0)
-			TUpdate(screen, (Entities*)entities, frameCount, inputs);
-	}
+	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) { }
 };
 
 class Duct : public FunctionalBlock
@@ -114,7 +106,7 @@ public:
 		return new Duct(this, dir, pos);
 	}
 
-	void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, Vec2 dir = vZero) override
+	void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero) override
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
@@ -192,7 +184,7 @@ public:
 		}
 	}
 
-	void OnDeath(vector<Entity*>* entities) override
+	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
 	{
 		for (Collectible* collectible : containedCollectibles)
 			collectible->active = true;

@@ -7,9 +7,11 @@ public:
     Vec2f fPos;
     int remainingTime;
     int damage;
+    float speed, lastMove;
 
-    Projectile(int maxDist, int damage = 1, Color color = olc::GREY, Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), color, cost, mass, maxHealth, health), remainingTime(maxDist), damage(damage)
+    Projectile(int maxDist, int damage = 1, float speed = 0.0625f, Color color = olc::GREY, Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
+        Entity(Vec2(0, 0), color, cost, mass, maxHealth, health),
+        remainingTime(maxDist), damage(damage), speed(speed), lastMove(tTime - speed)
     {
         Start();
     }
@@ -29,23 +31,25 @@ public:
         return new Projectile(this, pos, direction, creator);
     }
 
-    void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) override
+    void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
     {
-        remainingTime--;
-        if (remainingTime < 0)
-            return DestroySelf(entities);
-
-        Vec2 dir = MoveDir();
-        Entity* entity;
-
-        if (dir != Vec2(0, 0) && !TryMove(dir, 1, entities, &entity, creator))
+        if (tTime - lastMove >= speed)
         {
-            entity->DealDamage(damage, entities);
-            DestroySelf(entities);
-            return;
-        }
+            lastMove = tTime;
+            remainingTime--;
+            if (remainingTime < 0)
+                return DestroySelf(entities, this);
 
-        Entity::Update(screen, entities, frameCount, inputs);
+            Vec2 dir = MoveDir();
+            Entity* entity;
+
+            if (dir != Vec2(0, 0) && !TryMove(dir, 1, entities, &entity, creator))
+            {
+                entity->DealDamage(damage, entities, this);
+                DestroySelf(entities, entity);
+                return;
+            }
+        }
     }
 
     virtual Vec2 MoveDir()
@@ -71,8 +75,8 @@ class ShotItem : public Projectile
 public:
     Item item;
 
-    ShotItem(Recipe cost, int maxDist = 10, int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(maxDist, cost[0].damage, cost[0].color, cost, mass, maxHealth, health)
+    ShotItem(Recipe cost, int maxDist = 10, float speed = 0.0625f, int mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(maxDist, cost[0].damage, speed, cost[0].color, cost, mass, maxHealth, health)
     {
         Start();
     }
@@ -110,18 +114,12 @@ public:
         return new ShotItem(this, pos, direction, creator);
     }
 
-    virtual Vec2 MoveDir()
-    {
-        fPos += direction;
-        return Vec2(roundf(fPos.x), roundf(fPos.y)) - pos;
-    }
-
-    void OnDeath(vector<Entity*>* entities) override
+    void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
     {
         for (int i = 0; i < cost.size(); i++)
             cost[i].baseClass->OnDeath((vector<void*>*)(&((Entities*)entities)->collectibles), (vector<void*>*)entities, pos);
     }
 };
 
-Projectile* basicBullet = new Projectile(10, 1, olc::GREY, Recipes::basicBullet, 1, 1, 1);
-ShotItem* basicShotItem = new ShotItem(Recipes::basicBullet, 10, 1, 1, 1);
+Projectile* basicBullet = new Projectile(10, 1, 0.00625f, olc::GREY, Recipes::basicBullet, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(Recipes::basicBullet, 10, 0.0625f, 1, 1, 1);

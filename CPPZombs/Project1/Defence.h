@@ -1,51 +1,19 @@
 #include "BuildingBlocks.h"
 
-class PlacedOnLanding : public Item
-{
-public:
-	Entity* entityToPlace;
-
-	PlacedOnLanding(Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1):
-		Item(name, color, damage, count), entityToPlace(entityToPlace) { }
-
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		Item(baseClass, name, color, damage, count), entityToPlace(entityToPlace) { }
-
-	Item Clone(int count) override
-	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
-	}
-
-	Item Clone() override
-	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
-	}
-
-	Item* Clone2() override
-	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
-	}
-
-	void OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos) override
-	{
-		((Entities*)entities)->push_back(entityToPlace->Clone(pos));
-	}
-};
-
-class CollectibleTree : public OffsettedFunctionalBlock
+class CollectibleTree : public FunctionalBlock
 {
 public:
 	Collectible* collectible, *seed;
 	Color deadColor;
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
-	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed, int tickPer, Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, Color deadColor = olc::BLACK, Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage), currentLifespan(0), chanceForSeed(chanceForSeed), deadColor(deadColor), OffsettedFunctionalBlock(tickPer, pos, color, cost, mass, maxHealth, health, name)
+	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
+		float timePer, Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, Color deadColor = olc::BLACK,
+		Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
+		currentLifespan(0), chanceForSeed(chanceForSeed), deadColor(deadColor),
+		FunctionalBlock(timePer, (float)rand() / RAND_MAX * timePer,
+			pos, color, cost, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -63,7 +31,7 @@ public:
 		return new CollectibleTree(this, dir, pos);
 	}
 
-	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs)
+	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		if (currentLifespan < cyclesToGrow)
 			screen->Draw(ToRSpace(pos) + Vec2(1, 1), color);
@@ -83,7 +51,7 @@ public:
 		}
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
@@ -96,16 +64,26 @@ public:
 	}
 };
 
+
+
+
 #pragma region Trees
 
 Color copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
-CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 128, vZero, copperTreeColor, deadCopperTreeColor);
+CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor);
 PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
 Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed, vZero);
 
 Color ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
-CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 256, vZero, ironTreeColor, deadIronTreeColor);
+CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, ironTreeColor, deadIronTreeColor);
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed, vZero);
+
+PlacedOnLanding* cheese = new PlacedOnLanding(cheeseBlock, "Cheese", Color(235, 178, 56), 0);
+Collectible* cCheese = new Collectible(*cheese);
+Color cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
+CollectibleTree* cheeseTree = new CollectibleTree(cCheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor);
+PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", cheeseTreeColor, 0);
+Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 
 #pragma endregion

@@ -1,9 +1,5 @@
 #include "Player.h"
 
-#define ticsBetweenWaves 2048
-
-
-
 class Game : public Screen
 {
 public:
@@ -11,10 +7,8 @@ public:
 	Player* player;
 	FastNoiseLite backgroundNoise1, backgroundNoise2, backgroundNoise3;
 
-	float timeBetweenFrames = 0.03125f;
-	float currentTime = 0.0f;
-	float lastTrueFrame = 0.0f;
 	bool showUI = true, paused = false;
+	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
 
 	
 
@@ -143,90 +137,53 @@ public:
 
 
 
-			currentTime += deltaTime;
-			if (currentTime > lastTrueFrame + timeBetweenFrames)
+			inputs.mousePosition = ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
+
+			if (playerAlive)
+				Update(deltaTime);
+			else
 			{
-				inputs.mousePosition = ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
-
-				if (playerAlive)
-					Update(currentTime - lastTrueFrame);
-				else
-				{
-					Clear(olc::BLACK);
-					DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\n\nPress esc\nto close.");
-				}
-				lastTrueFrame += timeBetweenFrames;
-
-				#pragma region Inputs2
-
-				inputs.mouseScroll = 0;
-
-				inputs.w.bHeld = false;
-				inputs.w.bPressed = false;
-				inputs.w.bReleased = false;
-
-				inputs.a.bHeld = false;
-				inputs.a.bPressed = false;
-				inputs.a.bReleased = false;
-
-				inputs.s.bHeld = false;
-				inputs.s.bPressed = false;
-				inputs.s.bReleased = false;
-
-				inputs.d.bHeld = false;
-				inputs.d.bPressed = false;
-				inputs.d.bReleased = false;
-
-				inputs.enter.bHeld = false;
-				inputs.enter.bPressed = false;
-				inputs.enter.bReleased = false;
-
-				inputs.c.bHeld = false;
-				inputs.c.bPressed = false;
-				inputs.c.bReleased = false;
-
-				inputs.q.bHeld = false;
-				inputs.q.bPressed = false;
-				inputs.q.bReleased = false;
-
-				inputs.e.bHeld = false;
-				inputs.e.bPressed = false;
-				inputs.e.bReleased = false;
-
-				inputs.space.bHeld = false;
-				inputs.space.bPressed = false;
-				inputs.space.bReleased = false;
-
-				inputs.up.bHeld = false;
-				inputs.up.bPressed = false;
-				inputs.up.bReleased = false;
-
-				inputs.left.bHeld = false;
-				inputs.left.bPressed = false;
-				inputs.left.bReleased = false;
-
-				inputs.down.bHeld = false;
-				inputs.down.bPressed = false;
-				inputs.down.bReleased = false;
-
-				inputs.right.bHeld = false;
-				inputs.right.bPressed = false;
-				inputs.right.bReleased = false;
-
-				inputs.leftMouse.bHeld = false;
-				inputs.leftMouse.bPressed = false;
-				inputs.leftMouse.bReleased = false;
-
-				inputs.rightMouse.bHeld = false;
-				inputs.rightMouse.bPressed = false;
-				inputs.rightMouse.bReleased = false;
-
-				inputs.middleMouse.bHeld = false;
-				inputs.middleMouse.bPressed = false;
-				inputs.middleMouse.bReleased = false;
-
-				#pragma endregion
+				Clear(olc::BLACK);
+				DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\nKilled by " + deathCauseName + "\nPress esc\nto close.");
 			}
+
+			#pragma region Inputs2
+
+			inputs.mouseScroll = 0;
+			// No wasd or arrow keys as that's covered by the player.
+			inputs.enter.bHeld = false;
+			inputs.enter.bPressed = false;
+			inputs.enter.bReleased = false;
+
+			inputs.c.bHeld = false;
+			inputs.c.bPressed = false;
+			inputs.c.bReleased = false;
+
+			inputs.q.bHeld = false;
+			inputs.q.bPressed = false;
+			inputs.q.bReleased = false;
+
+			inputs.e.bHeld = false;
+			inputs.e.bPressed = false;
+			inputs.e.bReleased = false;
+
+			inputs.space.bHeld = false;
+			inputs.space.bPressed = false;
+			inputs.space.bReleased = false;
+
+			inputs.leftMouse.bHeld = false;
+			inputs.leftMouse.bPressed = false;
+			inputs.leftMouse.bReleased = false;
+
+			inputs.rightMouse.bHeld = false;
+			inputs.rightMouse.bPressed = false;
+			inputs.rightMouse.bReleased = false;
+
+			inputs.middleMouse.bHeld = false;
+			inputs.middleMouse.bPressed = false;
+			inputs.middleMouse.bReleased = false;
+
+			#pragma endregion
 		}
 
 		return true;
@@ -240,37 +197,56 @@ public:
 			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise3.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f)) * 2));
 	}
 
-	void Update(float deltaTime)
+	void Update(float dTime)
 	{
+		tTime += dTime;
+
 		system_clock::time_point timeStartFrame = system_clock::now();
 
 		// New wave:
-		if (frameCount % ticsBetweenWaves == 0 && frameCount != 0 || inputs.enter.bPressed)
+		if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.enter.bPressed)
 		{
-			waveCount += int(!inputs.enter.bPressed); // Walker
-			for (int i = 0; i < waveCount * 3 + 7; i++)
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities.push_back(new Enemy(walker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
-			}
+			if (!inputs.enter.bPressed)
+				lastWave = tTime;
 
-			waveCount += int(!inputs.enter.bPressed); // Tanker
-			for (int i = 0; i < waveCount - 3; i++)
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities.push_back(new Enemy(tanker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
-			}
+			waveCount += int(!inputs.enter.bPressed);
 
-			waveCount += int(!inputs.enter.bPressed); // Speedster
-			for (int i = 0; i < waveCount / 2 - 3; i++)
+			if(waveCount == 10)
+				for (int i = 0; i < 5; i++)
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+			else
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities.push_back(new Enemy(speedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.412f + playerPos));
+				for (int i = 0; i < waveCount * 3 + 7; i++) // Walker
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(walker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+
+				for (int i = 0; i < waveCount * 2 - 4; i++) // Tanker, First two on wave 3, 2 = 2x - 4, 2x = 6, x = 3
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(tanker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+
+				for (int i = 0; i < waveCount - 4; i++) // Speedster, First on wave 5, 1 = x/2 - 1, x/2 = 2, x = 8
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(speedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+
+				for (int i = 0; i < waveCount / 5 - 1; i++) // Hyper Speedster, 5 on wave 10, First on wave 10, 1 = x/5 - 1, x/5 = 2, x = 10
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
 			}
 		}
 
 
-		entities.Update(this, frameCount, inputs); // Updates all entities.
+		entities.Update(this, frameCount, inputs, dTime); // Updates all entities.
 
 		if (playerPos != lastPlayerPos)
 		{
@@ -282,7 +258,7 @@ public:
 		}
 		DrawScreen();
 		
-		entities.DUpdate(this, frameCount, inputs); // Draws all entities.
+		entities.DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 
 
 
@@ -290,7 +266,7 @@ public:
 			showUI = !showUI;
 		if (showUI && playerAlive)
 		{
-			DrawString(Vec2(0, 0), std::to_string(ticsBetweenWaves - frameCount % ticsBetweenWaves) + " - " + std::to_string(waveCount), olc::BLACK);
+			DrawString(Vec2(0, 0), to_string_with_precision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::BLACK);
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 			player->items.DUpdate(this);
@@ -298,10 +274,8 @@ public:
 
 		}
 
-		if (frameCount % 6 < 4)
+		if ((int)(tTime * 5) % 5 < 3)
 			Draw(ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
-
-		sleep_until(timeStartFrame + milliseconds(31));
 		
 		frameCount++;
 	}

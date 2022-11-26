@@ -5,6 +5,7 @@ class Entity
 public:
 	Entity* baseClass;
 	Entity* creator;
+	Entity* holder = nullptr;
 	string name;
 	Vec2 pos;
 	Color color;
@@ -12,7 +13,7 @@ public:
 	int mass;
 	int maxHealth, health;
 	vector<Collectible*> containedCollectibles;
-	bool active = true;
+	bool active = true, dActive = true;
 
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), color(color), cost(cost), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
@@ -36,43 +37,49 @@ public:
 	virtual void Start()
 	{}
 
-	virtual void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, Vec2 dir = vZero)
+	virtual void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
 		this->color = color;
-		DUpdate(screen, entities, frameCount, inputs);
+		DUpdate(screen, entities, frameCount, inputs, dTime);
 		this->pos = tempPos;
 		this->color = tempColor;
 	}
 
-	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally only draws.
+	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally only draws.
 	{
+		Vec2 disp = ToRSpace(pos);
+		disp = Vec2(labs(disp.x), labs(disp.y));
+		if(disp.x >= 0 && disp.x <= screenWidthT && disp.y >= 0 && disp.y <= screenHeightT)
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
 
-	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs) // Normally doesn't draw.
+	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally doesn't draw.
 	{ }
 
 	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore = nullptr); // returns if item was hit.
+	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
+
+	virtual bool CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
+	virtual bool CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
 
 
-	virtual int DealDamage(int damage, vector<Entity*>* entities)
+	virtual int DealDamage(int damage, vector<Entity*>* entities, Entity* damageDealer)
 	{
 		health -= damage;
 		if (health <= 0)
 		{
-			DestroySelf(entities);
+			DestroySelf(entities, damageDealer);
 			return 1;
 		}
 		return 0;
 	}
 
-	void DestroySelf(vector<Entity*>* entities); // Always calls OnDeath;
+	void DestroySelf(vector<Entity*>* entities, Entity* damageDealer); // Always calls OnDeath;
 
-	virtual void OnDeath(vector<Entity*>* entities)
+	virtual void OnDeath(vector<Entity*>* entities, Entity* damageDealer)
 	{
 	}
 
@@ -254,7 +261,7 @@ public:
 			sortedEntities[i] = (*this)[unsortedToSorted[i].index];
 	}
 
-	void Update(Screen* screen, int frameCount, Inputs inputs)
+	void Update(Screen* screen, int frameCount, Inputs inputs, float dTime)
 	{
 		int counterOne, counterTwo; // Will be used many times, so lets just create 'em at the start.
 		#pragma region Enemies and Non-Enemies
@@ -309,7 +316,7 @@ public:
 				counterTwo++;
 			}
 		}
-#pragma endregion
+		#pragma endregion
 
 		#pragma region Corporeals and Incorporeals
 		counterOne = 0; // Corporeal count
@@ -343,17 +350,17 @@ public:
 
 		for (index = 0; index < sortedEntities.size(); index++)
 			if(sortedEntities[index]->active)
-				sortedEntities[index]->Update(screen, this, frameCount, inputs);
+				sortedEntities[index]->Update(screen, this, frameCount, inputs, dTime);
 
 		if (addedEntity)
 			SortEntities();
 	}
 
-	void DUpdate(Screen* screen, int frameCount, Inputs inputs)
+	void DUpdate(Screen* screen, int frameCount, Inputs inputs, float dTime)
 	{
 		for (index = 0; index < sortedEntities.size(); index++)
-			if (sortedEntities[index]->active)
-				sortedEntities[index]->DUpdate(screen, this, frameCount, inputs);
+			if (sortedEntities[index]->dActive)
+				sortedEntities[index]->DUpdate(screen, this, frameCount, inputs, dTime);
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->active)
 				collectibles[index]->DUpdate(screen, this, frameCount, inputs);
@@ -394,10 +401,10 @@ void Collectible::DestroySelf(void* entities)
 	delete this;
 }
 
-void Entity::DestroySelf(vector<Entity*>* entities)
+void Entity::DestroySelf(vector<Entity*>* entities, Entity* damageDealer)
 {
 	((Entities*)entities)->Remove(this);
-	OnDeath(entities);
+	OnDeath(entities, damageDealer);
 	delete this;
 }
 
@@ -438,6 +445,47 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 	return true;
 }
 
+bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore) // returns index of hit item.
+{
+	Vec2 newPos = pos + direction;
+
+	if (force > 0 && direction != Vec2(0, 0))
+	{
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore && (creator != (*entity)->creator || creator == nullptr))
+			if (!(*entity)->CheckMove(direction, force - (*entity)->mass, entities, ignore))
+				return false;
+	}
+	else return false;
+
+	if (holder != nullptr)
+		return holder->CheckMove(direction, force - holder->mass, entities, ignore);
+
+	return true;
+}
+
+bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
+{
+	Vec2 newPos = pos + direction;
+
+	if (force > 0 && direction != Vec2(0, 0))
+	{
+		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
+		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore && (creator != (*entity)->creator || creator == nullptr))
+		{
+			*hitEntity = *entity;
+			if (!(*entity)->CheckMove(direction, force - (*entity)->mass, entities, ignore))
+				return false;
+		}
+	}
+	else return false;
+
+	if (holder != nullptr)
+		return holder->CheckMove(direction, force - holder->mass, entities, ignore);
+
+	return true;
+}
+
 bool Collectible::TryMove(Vec2 direction, int force, void* entities, void* ignore) // returns if item was hit.
 {
 	Vec2 newPos = ToESpace(pos) + direction;
@@ -474,3 +522,44 @@ bool Collectible::TryMove(Vec2 direction, int force, void* entities, void** hitE
 	pos += direction * 3;
 	return true;
 }
+
+
+
+// Post entity definition items:
+
+class PlacedOnLanding : public Item
+{
+public:
+	Entity* entityToPlace;
+
+	PlacedOnLanding(Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
+		Item(name, color, damage, count), entityToPlace(entityToPlace) { }
+
+	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
+		Item(baseClass, name, color, damage, count), entityToPlace(entityToPlace) { }
+
+	Item Clone(int count) override
+	{
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+	}
+
+	Item Clone() override
+	{
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+	}
+
+	Item* Clone2(int count) override
+	{
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+	}
+
+	Item* Clone2() override
+	{
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+	}
+
+	void OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos) override
+	{
+		((Entities*)entities)->push_back(entityToPlace->Clone(pos));
+	}
+};

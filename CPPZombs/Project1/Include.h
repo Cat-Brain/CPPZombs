@@ -33,11 +33,13 @@ typedef olc::vf2d Vec2f;
 typedef olc::Pixel Color;
 typedef olc::HWButton button;
 
-int screenWidth = 50, screenHeight = 50,
-	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
-Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 #define GRID_SIZE 3
 #define GRID_AREA GRID_SIZE * GRID_SIZE
+int screenWidth = 50, screenHeight = 50,
+	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1,
+	screenWidthT = screenWidth * GRID_SIZE, screenHeightT = screenHeight * GRID_SIZE,
+	screenWidthTH = screenWidthT >> 1, screenHeightTH = screenHeightT >> 1;
+Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 int pixelCount = screenWidth * screenHeight * GRID_AREA;
 
 #pragma region Math
@@ -72,7 +74,14 @@ Vec2 Squarmalized(Vec2 a)
 }
 #pragma endregion
 
-
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 6)
+{
+	std::ostringstream out;
+	out.precision(n);
+	out << std::fixed << a_value;
+	return out.str();
+}
 
 struct Inputs
 {
@@ -92,6 +101,8 @@ Vec2 playerVel(0, 0);
 int totalGamePoints;
 int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
+float tTime = 0.0f;
+string deathCauseName = "NULL DEATH CAUSE";
 
 int PsuedoRandom()
 {
