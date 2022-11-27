@@ -144,7 +144,7 @@ public:
 			else
 			{
 				Clear(olc::BLACK);
-				DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\nKilled by " + deathCauseName + "\nPress esc\nto close.");
+				DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\n\nKilled by:\n" + deathCauseName + "\n\nPress esc\nto close.");
 			}
 
 			#pragma region Inputs2
@@ -217,6 +217,12 @@ public:
 					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 					entities.push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 				}
+			else if(waveCount == 0 || waveCount == 7)
+				for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new EnemyClasses::Deceiver(deceiver, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
 			else
 			{
 				for (int i = 0; i < waveCount * 3 + 7; i++) // Walker
@@ -241,6 +247,12 @@ public:
 				{
 					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 					entities.push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+
+				for (int i = 0; i < waveCount / 3 - 1; i++) // Deceiver, 3 on wave 6, First on wave 3, 1 = x/3 - 1, x/3 = 2, x = 6
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new EnemyClasses::Deceiver(deceiver, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 				}
 			}
 		}
@@ -270,8 +282,6 @@ public:
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 			player->items.DUpdate(this);
-
-
 		}
 
 		if ((int)(tTime * 5) % 5 < 3)
