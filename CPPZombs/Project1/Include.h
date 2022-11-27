@@ -106,9 +106,7 @@ string deathCauseName = "NULL DEATH CAUSE";
 
 int PsuedoRandom()
 {
-	psuedoRandomizer++;
-	printf("%i, ", psuedoRandomizer);
-	return psuedoRandomizer;
+	return psuedoRandomizer++;
 }
 
 #pragma region Vec2 functions
