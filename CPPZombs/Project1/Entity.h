@@ -5,7 +5,7 @@ class Entity
 public:
 	Entity* baseClass;
 	Entity* creator;
-	Entity* holder = nullptr;
+	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
 	Vec2 pos;
 	Color color;
@@ -405,6 +405,8 @@ void Entity::DestroySelf(vector<Entity*>* entities, Entity* damageDealer)
 {
 	((Entities*)entities)->Remove(this);
 	OnDeath(entities, damageDealer);
+	if (holder != nullptr)
+		holder->heldEntity = nullptr;
 	delete this;
 }
 

@@ -8,7 +8,6 @@ public:
 	int vacDist;
 	bool placedBlock;
 	Vec2 placingDir = up;
-	Entity* heldEntity = nullptr;
 	float lastMove = -1.0f, moveSpeed = 0.125f, lastBMove = -1.0f, bMoveSpeed = 0.125f, lastVac = -1.0f, vacSpeed = 0.0625f;
 
 	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -37,7 +36,10 @@ public:
 		Item currentShootingItem = items.GetCurrentItem();
 
 		if (inputs.rightMouse.bReleased && heldEntity != nullptr)
+		{
+			heldEntity->holder = nullptr;
 			heldEntity = nullptr;
+		}
 
 		if (tTime - lastBMove >= bMoveSpeed && heldEntity != nullptr && heldEntity->pos != inputs.mousePosition && heldEntity->pos != pos)
 		{
