@@ -9,14 +9,13 @@ public:
 	string name;
 	Vec2 pos;
 	Color color;
-	Recipe cost;
 	int mass;
 	int maxHealth, health;
 	vector<Collectible*> containedCollectibles;
 	bool active = true, dActive = true;
 
-	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), color(color), cost(cost), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
+	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
 	{
 		Start();
 	}

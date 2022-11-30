@@ -1,4 +1,4 @@
-#include "Enemy.h"
+#include "Recipes.h"
 
 class Player : public Entity
 {
@@ -35,11 +35,11 @@ public:
 		if (items.size() > 0)
 			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
 
-		isCrafting = isCrafting;
+		isCrafting = isCrafting ^ inputs.e.bPressed;
 
 		if (isCrafting)
 		{
-			if inputs.mo
+			recipes.Update(screen, entities, frameCount, inputs, dTime);
 		}
 		else
 		{

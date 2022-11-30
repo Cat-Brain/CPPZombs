@@ -5,8 +5,8 @@ class DToCol : public Entity
 public:
 	Color color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, cost, mass, maxHealth, health, name), color2(color2)
+	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, color, mass, maxHealth, health, name), color2(color2)
 	{ }
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
@@ -22,7 +22,11 @@ public:
 class Placeable : public DToCol
 {
 public:
-	using DToCol::DToCol;
+	Collectible toPlace;
+
+	Placeable(Collectible toPlace, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, color, color2, mass, maxHealth, health, name), toPlace(toPlace)
+	{ }
 
 	Placeable(Placeable* baseClass, Vec2 pos) :
 		Placeable(*baseClass)
@@ -42,7 +46,6 @@ public:
 	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
 	{
 		if (rand() % 2)
-			for (int i = 0; i < cost.size(); i++)
 				((Entities*)entities)->push_back(new Collectible(&cost[i], ToRandomCSpace(pos)));
 	}
 };

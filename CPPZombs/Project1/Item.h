@@ -54,7 +54,7 @@ public:
 };
 Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
 
-typedef vector<Item> Recipe;
+typedef vector<Item> Cost;
 
 class Items : public vector<Item>
 {
@@ -136,13 +136,13 @@ namespace Resources
 
 #pragma endregion
 
-namespace Recipes
+namespace Costs
 {
-	Recipe dRecipe{};
-	Recipe basicBullet{ Resources::copper->Clone(3) };
-	Recipe copperWall{ Resources::copper->Clone(9) };
-	Recipe conveyer{ Resources::copper->Clone(9), Resources::iron->Clone() };
-	Recipe vacuum{ Resources::copper->Clone(3), Resources::iron->Clone(5) };
-	Recipe largeVacuum{ Resources::copper->Clone(300), Resources::iron->Clone(50) };
-	Recipe turret{ Resources::copper->Clone(100), Resources::iron->Clone(10) };
+	Cost dRecipe{};
+	Cost basicBullet{ Resources::copper->Clone(3) };
+	Cost copperWall{ Resources::copper->Clone(9) };
+	Cost conveyer{ Resources::copper->Clone(9), Resources::iron->Clone() };
+	Cost vacuum{ Resources::copper->Clone(3), Resources::iron->Clone(5) };
+	Cost largeVacuum{ Resources::copper->Clone(300), Resources::iron->Clone(50) };
+	Cost turret{ Resources::copper->Clone(100), Resources::iron->Clone(10) };
 };
