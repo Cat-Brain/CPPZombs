@@ -19,7 +19,7 @@ public:
 		screen = olc::Sprite(screenWidth, screenHeight);
 		bigScreen = olc::Sprite(screenWidth * GRID_SIZE, screenHeight * GRID_SIZE);
 		entities = Entities(0);
-		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, Recipes::dRecipe, 1, 10, 5);
+		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
 		entities.push_back(player);
 		playerAlive = true;
 		totalGamePoints = 0;
@@ -282,6 +282,8 @@ public:
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 			player->items.DUpdate(this);
+			if (player->isCrafting)
+				recipes.DUpdate(this, &entities, frameCount, inputs, dTime);
 		}
 
 		if ((int)(tTime * 5) % 5 < 3)

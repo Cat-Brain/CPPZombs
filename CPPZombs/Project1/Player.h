@@ -4,7 +4,6 @@ class Player : public Entity
 {
 public:
 	Items items;
-	//Entity* currentPlacingItem;
 	int vacDist;
 	bool placedBlock;
 	Vec2 placingDir = up;
@@ -12,8 +11,8 @@ public:
 		lastVac = -1.0f, vacSpeed = 0.0625f, lastClick = -1.0f, clickSpeed = 0.25f;
 	bool isCrafting = false;
 
-	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, cost, mass, maxHealth, health, name), vacDist(6 * GRID_SIZE)
+	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, color, mass, maxHealth, health, name), vacDist(6 * GRID_SIZE)
 	{
 		Start();
 	}
@@ -29,50 +28,15 @@ public:
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		/*RotateLeft(placingDir, inputs.mouseScroll);
-		RotateRight(placingDir, -inputs.mouseScroll);*/
-
-		if (items.size() > 0)
-			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
-
 		isCrafting = isCrafting ^ inputs.e.bPressed;
 
 		if (isCrafting)
 		{
-			recipes.Update(screen, entities, frameCount, inputs, dTime);
+			recipes.Update(screen, (Entities*)entities, frameCount, inputs, dTime);
 		}
 		else
 		{
-
-			Item currentShootingItem = items.GetCurrentItem();
-
-			if (inputs.rightMouse.bReleased && heldEntity != nullptr)
-			{
-				heldEntity->holder = nullptr;
-				heldEntity = nullptr;
-			}
-
-			if (tTime - lastBMove >= bMoveSpeed && heldEntity != nullptr && heldEntity->pos != inputs.mousePosition && heldEntity->pos != pos)
-			{
-				lastBMove = tTime;
-				heldEntity->TryMove(Squarmalized(inputs.mousePosition - heldEntity->pos), 1, entities);
-			}
-
-			vector<Entity*>::iterator hitEntity;
-			if (heldEntity == nullptr && inputs.rightMouse.bPressed && inputs.mousePosition != pos && (hitEntity = ((Entities*)entities)->FindCorpPos(inputs.mousePosition)) != ((Entities*)entities)->corporeals.end() && *hitEntity != nullptr)
-			{
-				heldEntity = *hitEntity;
-				heldEntity->holder = this;
-			}
-			else if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentShootingItem != *dItem && inputs.leftMouse.bHeld && inputs.mousePosition != playerPos && items.TryTake(currentShootingItem))
-			{
-				lastClick = tTime;
-				ShotItem* shot = new ShotItem(basicShotItem, { currentShootingItem }, pos, inputs.mousePosition - pos, this);
-				entities->push_back(shot);
-			}
-
-
-
+			// Player movement code:
 			if (tTime - lastMove >= moveSpeed)
 			{
 				Vec2 direction(0, 0);
@@ -128,6 +92,48 @@ public:
 				}
 
 				playerVel = pos - oldPos;
+			}
+
+			RotateLeft(placingDir, inputs.mouseScroll);
+			RotateRight(placingDir, -inputs.mouseScroll);
+
+
+			if (items.size() > 0) // You can't mod by 0.
+				items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
+
+			Item currentShootingItem = items.GetCurrentItem();
+
+			if (inputs.rightMouse.bReleased && heldEntity != nullptr)
+			{
+				heldEntity->holder = nullptr;
+				heldEntity = nullptr;
+			}
+
+			if (tTime - lastBMove >= bMoveSpeed && heldEntity != nullptr && heldEntity->pos != inputs.mousePosition && heldEntity->pos != pos)
+			{
+				lastBMove = tTime;
+				heldEntity->TryMove(Squarmalized(inputs.mousePosition - heldEntity->pos), 1, entities);
+			}
+
+			vector<Entity*>::iterator hitEntity;
+			if (heldEntity == nullptr && inputs.rightMouse.bPressed && inputs.mousePosition != pos &&
+				(hitEntity = ((Entities*)entities)->FindCorpPos(inputs.mousePosition)) != ((Entities*)entities)->corporeals.end() && *hitEntity != nullptr)
+			{
+				heldEntity = *hitEntity;
+				heldEntity->holder = this;
+			}
+			else
+			{
+				Vec2 movePos = pos + Squarmalized(inputs.mousePosition - pos);
+				if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentShootingItem != *dItem &&
+					inputs.leftMouse.bHeld && inputs.mousePosition != playerPos &&
+					((Entities*)entities)->FindCorpPos(movePos) == ((Entities*)entities)->corporeals.end() &&
+					items.TryTake(currentShootingItem))
+				{
+					lastClick = tTime;
+					ShotItem* shot = new ShotItem(basicShotItem, { currentShootingItem }, pos, inputs.mousePosition - pos, this);
+					entities->push_back(shot);
+				}
 			}
 			playerPos = pos;
 

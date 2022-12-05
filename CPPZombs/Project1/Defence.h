@@ -9,11 +9,11 @@ public:
 
 	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
 		float timePer, Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, Color deadColor = olc::BLACK,
-		Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), deadColor(deadColor),
 		FunctionalBlock(timePer, (float)rand() / RAND_MAX * timePer,
-			pos, color, cost, mass, maxHealth, health, name)
+			pos, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -69,6 +69,16 @@ public:
 
 #pragma region Trees
 
+namespace Resources
+{
+	PlacedOnLanding* cheese = new PlacedOnLanding(cheeseBlock, "Cheese", Color(235, 178, 56), 0);
+}
+
+namespace Collectibles
+{
+	Collectible* cheese = new Collectible(*Resources::cheese);
+}
+
 Color copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
 CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor);
 PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
@@ -79,10 +89,8 @@ CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10,
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed, vZero);
 
-PlacedOnLanding* cheese = new PlacedOnLanding(cheeseBlock, "Cheese", Color(235, 178, 56), 0);
-Collectible* cCheese = new Collectible(*cheese);
 Color cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
-CollectibleTree* cheeseTree = new CollectibleTree(cCheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor);
+CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor);
 PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", cheeseTreeColor, 0);
 Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 

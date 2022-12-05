@@ -96,10 +96,10 @@ public:
 		return false;
 	}
 
-	bool TryMake(Recipe recipe)
+	bool TryMake(Cost cost)
 	{
 		Items clone = *this;
-		for (Item item : recipe)
+		for (Item item : cost)
 		{
 			bool successful = clone.TryTake(item);
 			if (!successful)
@@ -141,7 +141,7 @@ namespace Costs
 	Cost dRecipe{};
 	Cost basicBullet{ Resources::copper->Clone(3) };
 	Cost copperWall{ Resources::copper->Clone(9) };
-	Cost conveyer{ Resources::copper->Clone(9), Resources::iron->Clone() };
+	Cost duct{ Resources::copper->Clone(9), Resources::iron->Clone() };
 	Cost vacuum{ Resources::copper->Clone(3), Resources::iron->Clone(5) };
 	Cost largeVacuum{ Resources::copper->Clone(300), Resources::iron->Clone(50) };
 	Cost turret{ Resources::copper->Clone(100), Resources::iron->Clone(10) };

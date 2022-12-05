@@ -22,9 +22,9 @@ public:
 class Placeable : public DToCol
 {
 public:
-	Collectible toPlace;
+	Collectible* toPlace;
 
-	Placeable(Collectible toPlace, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+	Placeable(Collectible* toPlace, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, color, color2, mass, maxHealth, health, name), toPlace(toPlace)
 	{ }
 
@@ -36,8 +36,6 @@ public:
 		Start();
 	}
 
-	Placeable() {}
-
 	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return new Placeable(this, pos);
@@ -45,26 +43,31 @@ public:
 
 	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
 	{
-		if (rand() % 2)
-				((Entities*)entities)->push_back(new Collectible(&cost[i], ToRandomCSpace(pos)));
+		if (toPlace != nullptr && rand() % 2)
+				((Entities*)entities)->push_back(toPlace->Clone(ToRandomCSpace(pos)));
 	}
 };
-Placeable* copperWall = new Placeable(Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), Recipes::copperWall, 1, 4, 4);
-Placeable* cheeseBlock = new Placeable(Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), {}, 1, 4, 4);
+
+namespace Placeables
+{
+	Placeable* copperWall = new Placeable(Collectibles::copper->Clone(9), Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4);
+}
+
+Placeable* cheeseBlock = new Placeable(nullptr, Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
 
 class FunctionalBlock : public Entity
 {
 public:
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, color, cost, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, color, cost, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -89,8 +92,8 @@ public:
 	Vec2 dir;
 	vector<Collectible*> newlyCollected;
 
-	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		dir(dir), newlyCollected(), FunctionalBlock(tickPer, pos, color, cost, mass, maxHealth, health, name)
+	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		dir(dir), newlyCollected(), FunctionalBlock(tickPer, pos, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -114,12 +117,12 @@ public:
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
-		this->color = color;
+		//this->color = color;
 		Vec2 tempDir = this->dir;
 		this->dir = dir;
 		DUpdate(screen, entities, frameCount, inputs);
 		this->pos = tempPos;
-		this->color = tempColor;
+		//this->color = tempColor;
 		this->dir = tempDir;
 	}
 
@@ -215,4 +218,19 @@ public:
 		return true;
 	}
 };
-Duct* duct = new Duct(up, 2, vZero, olc::GREEN, Recipes::conveyer);
+
+class Printer : public DToCol
+{
+public:
+	using DToCol::DToCol;
+};
+
+namespace Structures
+{
+	Printer* printer = new Printer(vZero, olc::DARK_BLUE, olc::BLACK, 3, 10, 10, "Printer");
+
+	namespace Conveyers
+	{
+		Duct* duct = new Duct(up, 2, vZero, olc::GREEN);
+	}
+}

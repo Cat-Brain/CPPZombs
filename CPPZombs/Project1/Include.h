@@ -39,7 +39,8 @@ int screenWidth = 50, screenHeight = 50,
 	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1,
 	screenWidthT = screenWidth * GRID_SIZE, screenHeightT = screenHeight * GRID_SIZE,
 	screenWidthTH = screenWidthT >> 1, screenHeightTH = screenHeightT >> 1;
-Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
+Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH),
+	screenDimT(screenWidthT, screenHeightT), screenDimTH(screenWidthTH, screenHeightTH);
 int pixelCount = screenWidth * screenHeight * GRID_AREA;
 
 #pragma region Math
@@ -166,6 +167,11 @@ void RotateRight(Vec2& dir, int amount)
 {
 	for (int i = 0; i < amount; i++)
 		dir = Vec2(dir.y, -dir.x);
+}
+
+void RotateRight45(Vec2& dir)
+{
+	dir = Vec2(int((dir.x + dir.y) / 1.41f), int((dir.y - dir.x) / 1.41f));
 }
 #pragma endregion
 

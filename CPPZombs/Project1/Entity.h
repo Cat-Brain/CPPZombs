@@ -41,10 +41,10 @@ public:
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
-		this->color = color;
+		//this->color = color;
 		DUpdate(screen, entities, frameCount, inputs, dTime);
 		this->pos = tempPos;
-		this->color = tempColor;
+		//this->color = tempColor;
 	}
 
 	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally only draws.
@@ -225,6 +225,8 @@ public:
 		sortedEntities.insert(sortedEntities.begin(), entity);
 		if (entity->Corporeal())
 			corporeals.push_back(entity);
+		else
+			incorporeals.push_back(entity);
 	}
 
 	void push_back(Collectible* collectible)
@@ -344,8 +346,9 @@ public:
 		}
 		#pragma endregion
 
-		addedEntity = false;
-		SortEntities();
+
+		if (addedEntity)
+			SortEntities();
 
 		for (index = 0; index < sortedEntities.size(); index++)
 			if(sortedEntities[index]->active)

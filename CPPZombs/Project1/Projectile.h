@@ -9,8 +9,8 @@ public:
     int damage;
     float speed, lastMove;
 
-    Projectile(int maxDist, int damage = 1, float speed = 0.0625f, Color color = olc::GREY, Recipe cost = Recipes::dRecipe, int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), color, cost, mass, maxHealth, health),
+    Projectile(int maxDist, int damage = 1, float speed = 0.0625f, Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
+        Entity(Vec2(0, 0), color, mass, maxHealth, health),
         remainingTime(maxDist), damage(damage), speed(speed), lastMove(tTime - speed)
     {
         Start();
@@ -20,9 +20,9 @@ public:
         Projectile(*baseClass)
     {
         this->creator = creator;
-        fPos = pos + Vec2(0.01f, 0.01f);
         this->direction = (Vec2f)(direction) / Squagnitude(direction);
-        this->pos = pos + playerVel;
+        fPos = pos + Vec2(0.01f, 0.01f);
+        this->pos = pos;
         Start();
     }
 
@@ -40,15 +40,28 @@ public:
             if (remainingTime < 0)
                 return DestroySelf(entities, this);
 
-            Vec2 dir = MoveDir();
-            Entity* entity;
+            CheckPos((Entities*)entities);
 
-            if (dir != Vec2(0, 0) && !TryMove(dir, 1, entities, &entity, creator))
-            {
-                entity->DealDamage(damage, entities, this);
-                DestroySelf(entities, entity);
-                return;
-            }
+            fPos += direction;
+            pos = Vec2(roundf(fPos.x), roundf(fPos.y));
+        }
+
+        CheckPos((Entities*)entities);
+    }
+
+    void CheckPos(Entities* entities)
+    {
+        vector<Entity*>::iterator hitEntityPos = entities->FindCorpPos(pos);
+
+        if (hitEntityPos != entities->corporeals.end() && *hitEntityPos != creator)
+        {
+            fPos -= direction;
+            pos = Vec2(roundf(fPos.x), roundf(fPos.y));
+
+            Entity* entity = *hitEntityPos;
+            entity->DealDamage(damage, (vector<Entity*>*)entities, this);
+            DestroySelf(entities, entity);
+            return;
         }
     }
 
@@ -67,6 +80,11 @@ public:
     {
         return true;
     }
+
+    bool Corporeal() override
+    {
+        return false;
+    }
 };
 
 
@@ -75,8 +93,8 @@ class ShotItem : public Projectile
 public:
     Item item;
 
-    ShotItem(Recipe cost, int maxDist = 10, float speed = 0.0625f, int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(maxDist, cost[0].damage, speed, cost[0].color, cost, mass, maxHealth, health)
+    ShotItem(Item item, int maxDist = 10, float speed = 0.0625f, int mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(maxDist, item.damage, speed, item.color, mass, maxHealth, health), item(item)
     {
         Start();
     }
@@ -84,28 +102,28 @@ public:
     ShotItem(ShotItem* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
-        damage = cost[0].damage;
+        damage = item.damage;
         int magnitude = Squagnitude(direction);
         remainingTime = remainingTime < magnitude ? remainingTime : magnitude;
         this->creator = creator;
         fPos = pos + Vec2(0.01f, 0.01f);
         this->direction = (Vec2f)(direction) / magnitude;
-        this->pos = pos + playerVel;
+        this->pos = pos;
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Recipe cost, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
-        damage = cost[0].damage;
-        this->cost = cost;
-        this->color = cost[0].color;
+        this->item = item;
+        damage = item.damage;
+        color = item.color;
         int magnitude = Squagnitude(direction);
         remainingTime = remainingTime < magnitude ? remainingTime : magnitude;
         this->creator = creator;
         fPos = pos + Vec2(0.01f, 0.01f);
         this->direction = (Vec2f)(direction) / magnitude;
-        this->pos = pos + playerVel;
+        this->pos = pos;
         Start();
     }
 
@@ -116,10 +134,13 @@ public:
 
     void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
     {
-        for (int i = 0; i < cost.size(); i++)
-            cost[i].baseClass->OnDeath((vector<void*>*)(&((Entities*)entities)->collectibles), (vector<void*>*)entities, pos);
+        item.baseClass->OnDeath((vector<void*>*)(&((Entities*)entities)->collectibles), (vector<void*>*)entities, pos);
     }
 };
 
-Projectile* basicBullet = new Projectile(10, 1, 0.00625f, olc::GREY, Recipes::basicBullet, 1, 1, 1);
-ShotItem* basicShotItem = new ShotItem(Recipes::basicBullet, 10, 0.0625f, 1, 1, 1);
+namespace Projectiles
+{
+    Projectile* basicBullet = new Projectile(10, 1, 0.00625f, olc::GREY, 1, 1, 1);
+}
+
+ShotItem* basicShotItem = new ShotItem(*Resources::copper, 10, 0.0625f, 1, 1, 1);

@@ -19,9 +19,14 @@ public:
 		screen->Draw(ToRSpace2(pos), color);
 	}
 
+	virtual Collectible* Clone(int count)
+	{
+		return new Collectible(baseClass.Clone(count), pos, color);
+	}
+
 	virtual Collectible* Clone(Vec2 pos = vZero, Vec2 dir = vZero)
 	{
-		return new Collectible(baseClass, pos, this->color);
+		return new Collectible(baseClass, pos, color);
 	}
 
 	virtual bool TryMove(Vec2 direction, int force, void* entities, void* ignore = nullptr); // returns if item was hit.
