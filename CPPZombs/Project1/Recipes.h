@@ -26,9 +26,31 @@ public:
 
 	int index = 0;
 
+	Vec2 PosOfIndex(Vec2 topLeft, int index)
+	{
+		return topLeft + Vec2(index % 2, index / 2);
+	}
+
+	Vec2 ScreenPosOfIndex(Vec2 topLeft, int index)
+	{
+		return topLeft + Vec2(index % 2, index / 2);
+	}
+
 	void Update(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
+		Vec2 topLeft = playerPos + Vec2(-screenWidthH / 2, screenHeightH / 2);
+		Vec2 mousePos = screen->GetMousePos();
 
+		if(inputs.leftMouse.bPressed)
+			for (int i = 0; i < size(); i++)
+			{
+				Vec2 itemTopLeft = PosOfIndex(topLeft, i);
+				Vec2 itemBottomRight = itemTopLeft + Vec2(2, 2);
+
+				if (mousePos.x >= itemTopLeft.x && mousePos.y >= itemTopLeft.y &&
+					mousePos.x <= itemBottomRight.x && mousePos.y <= itemBottomRight.y)
+					printf("=]\n");
+			}
 	}
 
 	void DUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
@@ -36,7 +58,7 @@ public:
 		Vec2 topLeft = playerPos + Vec2(-screenWidthH / 2, screenHeightH / 2);
 		for (int i = 0; i < size(); i++)
 		{
-			((*this)[i]).first.second->Draw(topLeft + Vec2(i % 2, i / 2), olc::WHITE, screen, entities, frameCount, inputs, dTime);
+			((*this)[i]).first.second->Draw(PosOfIndex(topLeft, i), olc::WHITE, screen, entities, frameCount, inputs, dTime);
 		}
 	}
 };
