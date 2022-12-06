@@ -17,7 +17,6 @@ public:
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
 	{
-		Start();
 	}
 
 	Entity(Entity* baseClass, Vec2 pos):

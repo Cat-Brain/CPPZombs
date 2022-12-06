@@ -1,6 +1,6 @@
 #include "Projectile.h"
 
-class DToCol : public Entity
+class DToCol : public virtual Entity
 {
 public:
 	Color color2;
@@ -19,7 +19,7 @@ public:
 	}
 };
 
-class Placeable : public DToCol
+class Placeable : public virtual DToCol
 {
 public:
 	Collectible* toPlace;
@@ -55,7 +55,7 @@ namespace Placeables
 
 Placeable* cheeseBlock = new Placeable(nullptr, Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
 
-class FunctionalBlock : public Entity
+class FunctionalBlock : public virtual Entity
 {
 public:
 	float timePer, lastTime;

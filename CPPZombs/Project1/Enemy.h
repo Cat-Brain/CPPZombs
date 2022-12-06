@@ -1,34 +1,27 @@
 #include "Defence.h"
 
-class Enemy : public DToCol
+class Enemy : public virtual DToCol, public virtual FunctionalBlock
 {
 public:
-	float timePer, lastMove, points;
+	float points;
+	int damage;
 
-	Enemy(float timePer = 0.5f, int points = 1, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(Vec2(0, 0), color, color2, mass, maxHealth, health, name), timePer(timePer), points(points)
+	void Start() override
 	{
-		Start();
+		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
+	}
+
+	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(vZero, color, mass, maxHealth, health, name), timePer(timePer), , points(points), damage(damage)
+	{
 	}
 
 	Enemy(Enemy* baseClass, Vec2 pos) :
 		Enemy(*baseClass)
 	{
-		this->pos = pos;
 		this->baseClass = baseClass;
-		lastMove = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
+		this->pos = pos;
 		Start();
-	}
-
-	void Update(Screen* screen, vector<Entity*>*entities, int frameCount, Inputs inputs, float dTime) override
-	{
-		if (tTime - lastMove > timePer)
-		{
-			lastMove += timePer;
-			TUpdate(screen, (Entities*)entities, frameCount, inputs);
-		}
-
-		DToCol::Update(screen, entities, frameCount, inputs, dTime);
 	}
 
 	bool IsEnemy() override
@@ -36,17 +29,12 @@ public:
 		return true;
 	}
 
-	virtual int GetDamage()
-	{
-		return 1;
-	}
-
-	virtual void TUpdate(Screen * screen, Entities* entities, int frameCount, Inputs inputs)
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		Entity* entity;
 		if (!TryMove(Squarmalized(playerPos - pos), 1, (vector<Entity*>*)entities, &entity, nullptr) && !entity->IsEnemy())
 		{
-			entity->DealDamage(GetDamage(), entities, this);
+			entity->DealDamage(damage, entities, this);
 		}
 	}
 
@@ -107,8 +95,8 @@ namespace EnemyClasses
 		Color color3;
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
-		Deceiver(float timePer = 0.5f, int points = 1, Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
 		}
@@ -116,13 +104,12 @@ namespace EnemyClasses
 		Deceiver(Deceiver* baseClass, Vec2 pos) :
 			Deceiver(*baseClass)
 		{
-			this->pos = pos;
 			this->baseClass = baseClass;
-			lastMove = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
+			this->pos = pos;
+			Start();
 			noise1.SetSeed(PsuedoRandom());
 			noise2.SetSeed(PsuedoRandom());
 			noise3.SetSeed(PsuedoRandom());
-			Start();
 		}
 
 		void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime)
@@ -155,9 +142,9 @@ namespace EnemyClasses
 
 
 
-Enemy* walker = new Enemy(2.0f / 3.0f, 1, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
-Enemy* tanker = new Enemy(1.0f, 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
-Enemy* speedster = new Enemy(0.5f, 2, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
-Enemy* hyperSpeedster = new Enemy(0.25f, 10, Color(255, 127, 0), olc::BLACK, 1, 24, 24, "Hyper Speedster");
+Enemy* walker = new Enemy(2.0f / 3.0f, 1, 1, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
+Enemy* tanker = new Enemy(1.0f, 2, 1, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
+Enemy* speedster = new Enemy(0.5f, 2, 1, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
+Enemy* hyperSpeedster = new Enemy(0.25f, 10, 1, Color(255, 127, 0), olc::BLACK, 1, 24, 24, "Hyper Speedster");
 
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
