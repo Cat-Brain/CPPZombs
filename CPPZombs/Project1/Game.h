@@ -271,6 +271,7 @@ public:
 		DrawScreen();
 		
 		entities.DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+		entities.UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 
 
 

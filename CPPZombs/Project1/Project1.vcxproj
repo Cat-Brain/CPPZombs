@@ -161,8 +161,8 @@
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Printers.h" />
     <ClInclude Include="Projectile.h" />
-    <ClInclude Include="Recipes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -56,7 +56,7 @@
     <ClInclude Include="Item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Recipes.h">
+    <ClInclude Include="Printers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

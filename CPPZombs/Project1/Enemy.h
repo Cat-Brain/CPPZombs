@@ -1,18 +1,21 @@
 #include "Defence.h"
 
-class Enemy : public virtual DToCol, public virtual FunctionalBlock
+class Enemy : public DToCol
 {
 public:
+	float timePer, lastTime;
+
 	float points;
 	int damage;
 
 	void Start() override
 	{
 		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
+		printf("%f", lastTime);
 	}
 
 	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(vZero, color, mass, maxHealth, health, name), timePer(timePer), , points(points), damage(damage)
+		DToCol(vZero, color, color2, mass, maxHealth, health, name), timePer(timePer), points(points), damage(damage)
 	{
 	}
 
@@ -29,7 +32,16 @@ public:
 		return true;
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		if (tTime - lastTime >= timePer)
+		{
+			TUpdate(screen, (Entities*)entities, frameCount, inputs, dTime);
+			lastTime = tTime;
+		}
+	}
+
+	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		Entity* entity;
 		if (!TryMove(Squarmalized(playerPos - pos), 1, (vector<Entity*>*)entities, &entity, nullptr) && !entity->IsEnemy())

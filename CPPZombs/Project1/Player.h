@@ -1,4 +1,4 @@
-#include "Recipes.h"
+#include "Printers.h"
 
 class Player : public Entity
 {
@@ -23,6 +23,7 @@ public:
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone(1));
 		items.push_back(copperTreeSeed->Clone(1));
+		items.push_back(Shootables::printer->Clone());
 		items.currentIndex = 0; // Copper
 	}
 

@@ -3,6 +3,7 @@
 class Entity
 {
 public:
+	bool shouldUI = false;
 	Entity* baseClass;
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
@@ -53,6 +54,8 @@ public:
 		if(disp.x >= 0 && disp.x <= screenWidthT && disp.y >= 0 && disp.y <= screenHeightT)
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
+
+	virtual void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) { } // Draws when shouldUI is true.
 
 	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally doesn't draw.
 	{ }
@@ -367,6 +370,13 @@ public:
 				collectibles[index]->DUpdate(screen, this, frameCount, inputs);
 	}
 
+	void UIUpdate(Screen* screen, int frameCount, Inputs inputs, float dTime)
+	{
+		for (index = 0; index < sortedEntities.size(); index++)
+			if (sortedEntities[index]->dActive && sortedEntities[index]->shouldUI)
+				sortedEntities[index]->UIUpdate(screen, this, frameCount, inputs, dTime);
+	}
+
 	void Remove(Entity* entityToRemove)
 	{
 		erase(find(begin(), end(), entityToRemove));
@@ -566,3 +576,6 @@ public:
 		((Entities*)entities)->push_back(entityToPlace->Clone(pos));
 	}
 };
+
+
+typedef pair<Cost, Entity*> Recipe;
