@@ -76,7 +76,7 @@ Vec2 Squarmalized(Vec2 a)
 #pragma endregion
 
 template <typename T>
-std::string to_string_with_precision(const T a_value, const int n = 6)
+std::string ToStringWithPrecision(const T a_value, const int n = 6)
 {
 	std::ostringstream out;
 	out.precision(n);

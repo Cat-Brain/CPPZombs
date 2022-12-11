@@ -62,6 +62,34 @@ public:
 		}
 		currentLifespan++;
 	}
+
+	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(4, 1);
+		if (currentLifespan < cyclesToGrow)
+		{
+			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(32, 15), olc::VERY_DARK_GREY);
+			screen->FillRect(topLeft, Vec2(31, 14), olc::DARK_GREY);
+			screen->DrawString(topLeft, "Baby", color);
+			screen->DrawString(topLeft + Vec2(0, 7), ToStringWithPrecision(
+				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
+		}
+		else if (currentLifespan < deadStage)
+		{
+			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(40, 22), olc::VERY_DARK_GREY);
+			screen->FillRect(topLeft, Vec2(39, 21), olc::DARK_GREY);
+			screen->DrawString(topLeft, "Adult", color);
+			screen->DrawString(topLeft + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
+			screen->DrawString(topLeft + Vec2(0, 14), ToStringWithPrecision(
+				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), deadColor);
+		}
+		else
+		{
+			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(32, 8), olc::VERY_DARK_GREY);
+			screen->FillRect(topLeft, Vec2(31, 7), olc::DARK_GREY);
+			screen->DrawString(topLeft, "Dead", deadColor);
+		}
+	}
 };
 
 
@@ -71,7 +99,7 @@ public:
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(cheeseBlock, "Cheese", Color(235, 178, 56), 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", Color(235, 178, 56), 0);
 }
 
 namespace Collectibles

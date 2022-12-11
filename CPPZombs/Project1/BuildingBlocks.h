@@ -48,12 +48,10 @@ public:
 	}
 };
 
-namespace Placeables
+namespace Shootables
 {
-	Placeable* copperWall = new Placeable(Collectibles::copper->Clone(9), Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 4, 4);
+	Placeable* cheeseBlock = new Placeable(nullptr, Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
 }
-
-Placeable* cheeseBlock = new Placeable(nullptr, Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
 
 class FunctionalBlock : public Entity
 {
@@ -164,7 +162,7 @@ public:
 			screen->Draw(rSpacePos + Vec2(1, 1), containedCollectibles[0]->color);
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
+	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs)
 	{
 		Collectible* item = FindACollectible(pos, entities->collectibles);
 		
@@ -219,16 +217,34 @@ public:
 	}
 };
 
-class Printer : public DToCol
+class Vacuum : public Duct
 {
 public:
-	using DToCol::DToCol;
+	int vacDist;
+
+	Vacuum(int vacDist, Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Duct(dir, tickPer, pos, color, mass, maxHealth, health, name), vacDist(vacDist)
+	{ }
+
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) override
+	{
+		entities->Vacuum(pos, vacDist);
+
+		Duct::TUpdate(screen, entities, frameCount, inputs);
+	}
 };
 
 namespace Structures
 {
+	namespace Walls
+	{
+		Placeable* copperWall = new Placeable(Collectibles::copper->Clone(9), Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 9, 9, "Copper wall");
+	}
+
 	namespace Conveyers
 	{
 		Duct* duct = new Duct(up, 2, vZero, olc::GREEN);
+		Vacuum* vacuum = new Vacuum(6 * GRID_SIZE, up, 2, vZero, olc::DARK_GREEN);
+		Vacuum* largeVacuum = new Vacuum(25 * GRID_SIZE, up, 2, vZero, olc::VERY_DARK_GREEN);
 	}
 }

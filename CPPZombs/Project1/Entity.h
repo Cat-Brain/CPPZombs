@@ -394,7 +394,7 @@ public:
 
 	void Vacuum(Vec2 pos, int vacDist)
 	{
-		Vec2 cPos = ToCSpace(pos);
+		Vec2 cPos = ToRandomCSpace(pos);
 		for (Collectible* collectible : collectibles)
 		{
 			int distance = Diagnistance(cPos, collectible->pos);

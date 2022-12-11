@@ -1,4 +1,4 @@
-#include "Defence.h"
+#include "Printers.h"
 
 class Enemy : public DToCol
 {
@@ -11,7 +11,6 @@ public:
 	void Start() override
 	{
 		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
-		printf("%f", lastTime);
 	}
 
 	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -43,8 +42,9 @@ public:
 
 	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
-		Entity* entity;
-		if (!TryMove(Squarmalized(playerPos - pos), 1, (vector<Entity*>*)entities, &entity, nullptr) && !entity->IsEnemy())
+		Entity* entity = nullptr;
+		TryMove2(Squarmalized(playerPos - pos), mass, (vector<Entity*>*)entities, &entity, nullptr);
+		if (entity != nullptr && !entity->IsEnemy())
 		{
 			entity->DealDamage(damage, entities, this);
 		}
@@ -52,7 +52,7 @@ public:
 
 	bool TryMove2(Vec2 dir, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* avoid)
 	{
-		if (TryMove(dir, force, entities, hitEntity, avoid))
+		if (!TryMove(dir, force, entities, hitEntity, avoid))
 		{
 			if ((*hitEntity)->IsEnemy())
 			{
@@ -61,7 +61,7 @@ public:
 				RotateRight45(newDir);
 				if (randResult)
 					RotateLeft(newDir); // Total of rotating left 45 degrees.
-				if (TryMove(newDir, force, entities, hitEntity, avoid))
+				if (!TryMove(newDir, force, entities, hitEntity, avoid))
 				{
 					if ((*hitEntity)->IsEnemy())
 					{
@@ -71,13 +71,11 @@ public:
 							RotateLeft(newDir);
 						return TryMove(newDir, force, entities, hitEntity, avoid);
 					}
-					else
-						return true;
 				}
 			}
-			else
-				return true;
+			else return false;
 		}
+		return true;
 	}
 
 	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
@@ -94,6 +92,8 @@ public:
 				((Entities*)entities)->push_back(cIronTreeSeed->Clone(ToRandomCSpace(pos)));
 			else if (randomValue % 16 == 2)
 				((Entities*)entities)->push_back(cCheeseTreeSeed->Clone(ToRandomCSpace(pos)));
+			else if (randomValue % 16 == 3)
+				((Entities*)entities)->push_back(Shootables::cSmallPrinter->Clone(ToRandomCSpace(pos)));
 		}
 	}
 };

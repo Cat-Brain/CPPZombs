@@ -279,12 +279,10 @@ public:
 			showUI = !showUI;
 		if (showUI && playerAlive)
 		{
-			DrawString(Vec2(0, 0), to_string_with_precision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::BLACK);
+			DrawString(Vec2(0, 0), ToStringWithPrecision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::BLACK);
 			DrawString(Vec2(0, 9), std::to_string(entities[0]->health), olc::DARK_RED);
 			DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 			player->items.DUpdate(this);
-			if (player->isCrafting)
-				recipes.DUpdate(this, &entities, frameCount, inputs, dTime);
 		}
 
 		if ((int)(tTime * 5) % 5 < 3)
