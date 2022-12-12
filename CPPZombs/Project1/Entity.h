@@ -55,7 +55,22 @@ public:
 		screen->FillRect(ToRSpace(pos), Vec2(3, 3), color);
 	}
 
-	virtual void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) { } // Draws when shouldUI is true.
+	virtual void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Draws when shouldUI is true.
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(4, 1);
+		int width = (int)name.length() * 8;
+		screen->DrawRect(topLeft - Vec2(1, 1), Vec2(width, 8), olc::VERY_DARK_GREY);
+		screen->FillRect(topLeft, Vec2(width - 1, 7), olc::DARK_GREY);
+		screen->DrawString(topLeft, name, color);
+	}
+
+	virtual bool PosInUIBounds(Vec2 screenSpacePos)
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
+		Vec2 bottomRight = topLeft + Vec2((int)name.length() * 8 + 2, 9);
+		return pos.x >= topLeft.x && pos.x <= bottomRight.x &&
+			pos.y >= topLeft.y && pos.y <= bottomRight.y;
+	}
 
 	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally doesn't draw.
 	{ }

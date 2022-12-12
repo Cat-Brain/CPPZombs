@@ -29,6 +29,14 @@ public:
 
 	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
+		bool exitedMenu = false;
+		if (currentMenuedEntity != nullptr && (inputs.leftMouse.bPressed || inputs.rightMouse.bPressed) && !currentMenuedEntity->PosInUIBounds(screen->GetMousePos()))
+		{
+			currentMenuedEntity->shouldUI = false;
+			currentMenuedEntity = nullptr;
+			exitedMenu = true;
+		}
+
 		vector<Entity*>::iterator hitEntity;
 		if (inputs.rightMouse.bPressed && inputs.mousePosition != pos &&
 			(currentMenuedEntity == nullptr || currentMenuedEntity->pos != inputs.mousePosition)
