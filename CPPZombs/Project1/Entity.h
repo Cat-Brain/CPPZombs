@@ -63,11 +63,19 @@ public:
 		screen->DrawString(topLeft + Vec2(1, 1), text, textColor);
 	}
 
+	virtual Vec2 TopLeft()
+	{
+		return ToRSpace(pos) + Vec2(3, 0);
+	}
+
+	virtual Vec2 BottomRight()
+	{
+		return TopLeft() + Vec2((int)name.length() * 8, 8);
+	}
+
 	virtual void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Draws when shouldUI is true.
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
-		Vec2 bottomRight = topLeft + Vec2((int)name.length() * 8, 8);
-		DrawUIBox(screen, topLeft, bottomRight, name, color);
+		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
 	}
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
@@ -427,6 +435,8 @@ public:
 	}
 };
 
+#pragma region Post Entities functions
+
 void Collectible::DestroySelf(void* entities)
 {
 	((Entities*)entities)->Remove(this);
@@ -557,6 +567,7 @@ bool Collectible::TryMove(Vec2 direction, int force, void* entities, void** hitE
 	return true;
 }
 
+#pragma endregion
 
 
 // Post entity definition items:

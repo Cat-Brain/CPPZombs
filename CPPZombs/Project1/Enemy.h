@@ -50,18 +50,20 @@ public:
 		}
 	}
 
+	Vec2 BottomRight() override
+	{
+		return DToCol::BottomRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
+	}
+
 	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
-		string printStr = name + " " + to_string(health);
-		Vec2 bottomRight = topLeft + Vec2((int)printStr.length() * 8, 8);
-		DrawUIBox(screen, topLeft, bottomRight, printStr, color);
+		DrawUIBox(screen, TopLeft(), BottomRight(), name + " " + to_string(health), color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
-		Vec2 bottomRight = topLeft + Vec2(((int)name.length() + 1 + (int)to_string(health).length()) * 8, 8);
+		Vec2 topLeft = TopLeft();
+		Vec2 bottomRight = BottomRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}

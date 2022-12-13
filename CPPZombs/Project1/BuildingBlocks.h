@@ -90,7 +90,7 @@ public:
 	Vec2 dir;
 	vector<Collectible*> newlyCollected;
 
-	Duct(Vec2 dir, int timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+	Duct(Vec2 dir, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		dir(dir), newlyCollected(), FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name)
 	{
 		Start();
@@ -222,8 +222,8 @@ class Vacuum : public Duct
 public:
 	int vacDist;
 
-	Vacuum(int vacDist, Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Duct(dir, tickPer, pos, color, mass, maxHealth, health, name), vacDist(vacDist)
+	Vacuum(int vacDist, Vec2 dir, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Duct(dir, timePer, pos, color, mass, maxHealth, health, name), vacDist(vacDist)
 	{ }
 
 	Vacuum(Vacuum* baseClass, Vec2 dir, Vec2 pos) :
@@ -242,6 +242,7 @@ public:
 
 	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) override
 	{
+		printf("=?");
 		entities->Vacuum(pos, vacDist);
 
 		Duct::TUpdate(screen, entities, frameCount, inputs);
@@ -257,9 +258,9 @@ namespace Structures
 
 	namespace Conveyers
 	{
-		Duct* duct = new Duct(up, 2, vZero, olc::GREEN);
-		Vacuum* smallVacuum = new Vacuum(6 * GRID_SIZE, up, 2, vZero, olc::DARK_GREEN);
-		Vacuum* largeVacuum = new Vacuum(25 * GRID_SIZE, up, 2, vZero, olc::VERY_DARK_GREEN);
+		Duct* duct = new Duct(up, 0.25f, vZero, olc::GREEN);
+		Vacuum* smallVacuum = new Vacuum(6000 * GRID_SIZE, up, 0.25f, vZero, olc::DARK_GREEN);
+		Vacuum* largeVacuum = new Vacuum(25 * GRID_SIZE, up, 0.25f, vZero, olc::VERY_DARK_GREEN);
 	}
 }
 

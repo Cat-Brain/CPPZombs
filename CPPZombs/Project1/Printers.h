@@ -37,6 +37,11 @@ public:
 	{
 		return new Printer(this, dir, pos);
 	}
+
+	Vec2 BottomRight() override
+	{
+		return Duct::BottomRight() + Vec2(32, 0);
+	}
 };
 
 namespace Structures
@@ -49,6 +54,6 @@ namespace Structures
 
 namespace Shootables
 {
-	Item* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", Structures::Printers::smallPrinter->color, 0);
+	PlacedOnLanding* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", Structures::Printers::smallPrinter->color, 0);
 	Collectible* cSmallPrinter = new Collectible(*smallPrinter);
 }
