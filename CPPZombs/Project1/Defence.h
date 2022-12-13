@@ -65,30 +65,41 @@ public:
 
 	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(4, 1);
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
 		if (currentLifespan < cyclesToGrow)
 		{
-			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(32, 15), olc::VERY_DARK_GREY);
-			screen->FillRect(topLeft, Vec2(31, 14), olc::DARK_GREY);
-			screen->DrawString(topLeft, "Baby", color);
-			screen->DrawString(topLeft + Vec2(0, 7), ToStringWithPrecision(
+			DrawUIBox(screen, topLeft, topLeft + Vec2(40 + name.length() * 8, 15), "Baby " + name, color, deadColor, collectible->color);
+			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
 				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(40, 22), olc::VERY_DARK_GREY);
-			screen->FillRect(topLeft, Vec2(39, 21), olc::DARK_GREY);
-			screen->DrawString(topLeft, "Adult", color);
-			screen->DrawString(topLeft + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
-			screen->DrawString(topLeft + Vec2(0, 14), ToStringWithPrecision(
-				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), deadColor);
+			DrawUIBox(screen, topLeft, topLeft + Vec2(48 + name.length() * 8, 22), "Adult " + name, color, deadColor, collectible->color);
+			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
+			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
+				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), color);
+		}
+		else
+			DrawUIBox(screen, topLeft, topLeft + Vec2(40 + name.length() * 8, 8), "Dead " + name, deadColor, color, collectible->color);
+	}
+
+	bool PosInUIBounds(Vec2 screenSpacePos) override
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0), bottomRight;
+		if (currentLifespan < cyclesToGrow)
+		{
+			bottomRight = topLeft + Vec2(40 + name.length() * 8, 15);
+		}
+		else if (currentLifespan < deadStage)
+		{
+			bottomRight = topLeft + Vec2(48 + name.length() * 8, 22);
 		}
 		else
 		{
-			screen->DrawRect(topLeft - Vec2(1, 1), Vec2(32, 8), olc::VERY_DARK_GREY);
-			screen->FillRect(topLeft, Vec2(31, 7), olc::DARK_GREY);
-			screen->DrawString(topLeft, "Dead", deadColor);
+			bottomRight = topLeft + Vec2(40 + name.length() * 8, 8);
 		}
+		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
+			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 };
 
@@ -108,17 +119,17 @@ namespace Collectibles
 }
 
 Color copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
-CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor);
+CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
 PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
 Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed, vZero);
 
 Color ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
-CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, ironTreeColor, deadIronTreeColor);
+CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed, vZero);
 
 Color cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
-CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor);
+CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
 PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", cheeseTreeColor, 0);
 Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 

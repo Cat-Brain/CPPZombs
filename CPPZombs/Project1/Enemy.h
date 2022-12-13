@@ -50,6 +50,22 @@ public:
 		}
 	}
 
+	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
+		string printStr = name + " " + to_string(health);
+		Vec2 bottomRight = topLeft + Vec2((int)printStr.length() * 8, 8);
+		DrawUIBox(screen, topLeft, bottomRight, printStr, color);
+	}
+
+	bool PosInUIBounds(Vec2 screenSpacePos) override
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
+		Vec2 bottomRight = topLeft + Vec2(((int)name.length() + 1 + (int)to_string(health).length()) * 8, 8);
+		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
+			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
+	}
+
 	bool TryMove2(Vec2 dir, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* avoid)
 	{
 		if (!TryMove(dir, force, entities, hitEntity, avoid))

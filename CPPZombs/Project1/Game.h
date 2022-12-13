@@ -150,7 +150,31 @@ public:
 			#pragma region Inputs2
 
 			inputs.mouseScroll = 0;
-			// No wasd or arrow keys as that's covered by the player.
+			// Not held wasd or arrow keys as that's covered by the player.
+			inputs.a.bPressed = false;
+			inputs.a.bReleased = false;
+
+			inputs.left.bPressed = false;
+			inputs.left.bReleased = false;
+
+			inputs.d.bPressed = false;
+			inputs.d.bReleased = false;
+
+			inputs.right.bPressed = false;
+			inputs.right.bReleased = false;
+
+			inputs.s.bPressed = false;
+			inputs.s.bReleased = false;
+
+			inputs.down.bPressed = false;
+			inputs.down.bReleased = false;
+
+			inputs.w.bPressed = false;
+			inputs.w.bReleased = false;
+
+			inputs.up.bPressed = false;
+			inputs.up.bReleased = false;
+
 			inputs.enter.bHeld = false;
 			inputs.enter.bPressed = false;
 			inputs.enter.bReleased = false;

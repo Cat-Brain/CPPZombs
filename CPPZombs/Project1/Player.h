@@ -35,6 +35,7 @@ public:
 			currentMenuedEntity->shouldUI = false;
 			currentMenuedEntity = nullptr;
 			exitedMenu = true;
+			lastClick = tTime;
 		}
 
 		vector<Entity*>::iterator hitEntity;
@@ -47,7 +48,9 @@ public:
 			currentMenuedEntity = *hitEntity;
 			currentMenuedEntity->shouldUI = true;
 		}
-
+		if (inputs.w.bPressed || inputs.up.bPressed || inputs.a.bPressed || inputs.left.bPressed ||
+			inputs.s.bPressed || inputs.down.bPressed || inputs.d.bPressed || inputs.right.bPressed)
+			lastMove = tTime;
 		// Player movement code:
 		if (tTime - lastMove >= moveSpeed)
 		{
@@ -57,41 +60,25 @@ public:
 			if (inputs.a.bHeld || inputs.left.bHeld)
 			{
 				screen->inputs.a.bHeld = false;
-				screen->inputs.a.bPressed = false;
-				screen->inputs.a.bReleased = false;
 				inputs.left.bHeld = false;
-				inputs.left.bPressed = false;
-				inputs.left.bReleased = false;
 				direction.x--;
 			}
 			if (inputs.d.bHeld || inputs.right.bHeld)
 			{
 				screen->inputs.d.bHeld = false;
-				screen->inputs.d.bPressed = false;
-				screen->inputs.d.bReleased = false;
 				inputs.right.bHeld = false;
-				inputs.right.bPressed = false;
-				inputs.right.bReleased = false;
 				direction.x++;
 			}
 			if (inputs.s.bHeld || inputs.down.bHeld)
 			{
 				screen->inputs.s.bHeld = false;
-				screen->inputs.s.bPressed = false;
-				screen->inputs.s.bReleased = false;
 				inputs.down.bHeld = false;
-				inputs.down.bPressed = false;
-				inputs.down.bReleased = false;
 				direction.y--;
 			}
 			if (inputs.w.bHeld || inputs.up.bHeld)
 			{
 				screen->inputs.w.bHeld = false;
-				screen->inputs.w.bPressed = false;
-				screen->inputs.w.bReleased = false;
 				inputs.up.bHeld = false;
-				inputs.up.bPressed = false;
-				inputs.up.bReleased = false;
 				direction.y++;
 			}
 			#pragma endregion
@@ -136,7 +123,7 @@ public:
 		else
 		{
 			Vec2 movePos = pos + Squarmalized(inputs.mousePosition - pos);
-			if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentShootingItem != *dItem &&
+			if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr && currentShootingItem != *dItem &&
 				inputs.leftMouse.bHeld && inputs.mousePosition != playerPos &&
 				((Entities*)entities)->FindCorpPos(movePos) == ((Entities*)entities)->corporeals.end() &&
 				items.TryTake(currentShootingItem))
