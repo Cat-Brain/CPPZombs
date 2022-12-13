@@ -110,6 +110,8 @@ public:
 				((Entities*)entities)->push_back(cCheeseTreeSeed->Clone(ToRandomCSpace(pos)));
 			else if (randomValue % 16 == 3)
 				((Entities*)entities)->push_back(Shootables::cSmallPrinter->Clone(ToRandomCSpace(pos)));
+			else if (randomValue % 16 == 4)
+				((Entities*)entities)->push_back(Shootables::cSmallVacuum->Clone(ToRandomCSpace(pos)));
 		}
 	}
 };

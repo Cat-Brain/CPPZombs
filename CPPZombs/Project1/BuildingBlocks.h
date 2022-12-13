@@ -90,8 +90,8 @@ public:
 	Vec2 dir;
 	vector<Collectible*> newlyCollected;
 
-	Duct(Vec2 dir, int tickPer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		dir(dir), newlyCollected(), FunctionalBlock(tickPer, pos, color, mass, maxHealth, health, name)
+	Duct(Vec2 dir, int timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		dir(dir), newlyCollected(), FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -226,6 +226,20 @@ public:
 		Duct(dir, tickPer, pos, color, mass, maxHealth, health, name), vacDist(vacDist)
 	{ }
 
+	Vacuum(Vacuum* baseClass, Vec2 dir, Vec2 pos) :
+		Vacuum(*baseClass)
+	{
+		this->dir = dir;
+		this->pos = pos;
+		this->baseClass = baseClass;
+		Start();
+	}
+
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	{
+		return new Vacuum(this, dir, pos);
+	}
+
 	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs) override
 	{
 		entities->Vacuum(pos, vacDist);
@@ -244,7 +258,13 @@ namespace Structures
 	namespace Conveyers
 	{
 		Duct* duct = new Duct(up, 2, vZero, olc::GREEN);
-		Vacuum* vacuum = new Vacuum(6 * GRID_SIZE, up, 2, vZero, olc::DARK_GREEN);
+		Vacuum* smallVacuum = new Vacuum(6 * GRID_SIZE, up, 2, vZero, olc::DARK_GREEN);
 		Vacuum* largeVacuum = new Vacuum(25 * GRID_SIZE, up, 2, vZero, olc::VERY_DARK_GREEN);
 	}
+}
+
+namespace Shootables
+{
+	Item* smallVacuum = new PlacedOnLanding(Structures::Conveyers::smallVacuum, "Small vacuum", Structures::Conveyers::smallVacuum->color, 0);
+	Collectible* cSmallVacuum = new Collectible(smallVacuum->Clone());
 }
