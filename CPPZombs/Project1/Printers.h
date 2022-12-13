@@ -50,5 +50,5 @@ namespace Structures
 namespace Shootables
 {
 	Item* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", Structures::Printers::smallPrinter->color, 0);
-	Collectible* cSmallPrinter = new Collectible(smallPrinter->Clone());
+	Collectible* cSmallPrinter = new Collectible(*smallPrinter);
 }

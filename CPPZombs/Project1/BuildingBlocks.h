@@ -266,5 +266,5 @@ namespace Structures
 namespace Shootables
 {
 	Item* smallVacuum = new PlacedOnLanding(Structures::Conveyers::smallVacuum, "Small vacuum", Structures::Conveyers::smallVacuum->color, 0);
-	Collectible* cSmallVacuum = new Collectible(smallVacuum->Clone());
+	Collectible* cSmallVacuum = new Collectible(*smallVacuum);
 }
