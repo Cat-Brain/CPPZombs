@@ -1,103 +1,127 @@
 ﻿  main.cpp
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(5,1): warning C4005: 'NDEBUG': macro redefinition
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\main.cpp : message : see previous definition of 'NDEBUG'
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(53,27): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(54,27): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(53,39): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(54,39): warning C4244: 'argument': conversion from 'T' to 'float', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(73,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(23,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Include.h(79,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(24,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(23,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(24,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(24,59): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(58,43): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(55,42): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(58,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(55,26): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(91,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(66,42): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(91,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(66,26): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(92,48): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(106,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(103,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(106,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(103,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(107,48): warning C4244: 'argument': conversion from 'int' to 'const T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(119,34): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
-              T=float
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Projectile.h(119,27): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
           ]
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,137): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,100): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,63): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(16,26): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\BuildingBlocks.h(90,47): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(9,99): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(55,1): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(101,105): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(101,69): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(101,33): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Player.h(35,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(71,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(77,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(83,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(91,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(95,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Defence.h(99,1): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(17,88): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(101,1): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(150,105): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(150,69): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Enemy.h(150,33): warning C4244: 'argument': conversion from 'float' to 'uint8_t', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Player.h(99,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(34,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(35,32): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(36,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(37,39): warning C4244: 'argument': conversion from 'time_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(140,106): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(145,106): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(140,85): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(145,85): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(195,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(196,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(197,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(224,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(225,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\Project1\Game.h(226,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
-  8 of 2299 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  484 of 2427 functions (19.9%) were compiled, the rest were copied from previous compilation.
+    171 functions were new in current compilation
+    230 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\x64\Release\Project1.exe
