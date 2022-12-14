@@ -94,11 +94,8 @@ public:
 			playerVel = pos - oldPos;
 		}
 
-		RotateLeft(placingDir, inputs.mouseScroll);
-		RotateRight(placingDir, -inputs.mouseScroll);
 
-
-		if (items.size() > 0) // You can't mod by 0.
+		if (heldEntity == nullptr && items.size() > 0) // You can't mod by 0.
 			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
 
 		Item currentShootingItem = items.GetCurrentItem();
@@ -107,6 +104,12 @@ public:
 		{
 			heldEntity->holder = nullptr;
 			heldEntity = nullptr;
+		}
+
+		if (heldEntity != nullptr)
+		{
+			RotateLeft(heldEntity->dir, inputs.mouseScroll);
+			RotateRight(heldEntity->dir, -inputs.mouseScroll);
 		}
 
 		if (tTime - lastBMove >= bMoveSpeed && heldEntity != nullptr && heldEntity->pos != inputs.mousePosition && heldEntity->pos != pos)

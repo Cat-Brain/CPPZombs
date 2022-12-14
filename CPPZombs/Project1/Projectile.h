@@ -5,22 +5,22 @@ class Projectile : public Entity
 public:
     Vec2f direction;
     Vec2f fPos;
-    int remainingTime;
+    float duration;
     int damage;
-    float speed, lastMove;
+    float speed, begin;
 
-    Projectile(int maxDist, int damage = 1, float speed = 0.0625f, Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
         Entity(Vec2(0, 0), color, mass, maxHealth, health),
-        remainingTime(maxDist), damage(damage), speed(speed), lastMove(tTime - speed)
+        duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator):
+    Projectile(Projectile* baseClass, Vec2 pos, Vec2f direction, Entity* creator):
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->direction = (Vec2f)(direction) / Squagnitude(direction);
+        this->direction = Normalized(direction);
         fPos = pos + Vec2(0.01f, 0.01f);
         this->pos = pos;
         Start();
@@ -33,42 +33,37 @@ public:
 
     void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
     {
-        if (tTime - lastMove >= speed)
-        {
-            lastMove = tTime;
-            remainingTime--;
-            if (remainingTime < 0)
-                return DestroySelf(entities, this);
+        if(tTime - begin >= duration / speed)
+            return DestroySelf(entities, this);
 
+        if (CheckPos((Entities*)entities))
+            return;
+        Vec2 oldPos = pos;
+        MovePos(dTime);
+        if (oldPos != pos)
             CheckPos((Entities*)entities);
-
-            fPos += direction;
-            pos = Vec2(roundf(fPos.x), roundf(fPos.y));
-        }
-
-        CheckPos((Entities*)entities);
     }
 
-    void CheckPos(Entities* entities)
+    bool CheckPos(Entities* entities)
     {
         vector<Entity*>::iterator hitEntityPos = entities->FindCorpPos(pos);
 
-        if (hitEntityPos != entities->corporeals.end() && *hitEntityPos != creator)
-        {
-            fPos -= direction;
-            pos = Vec2(roundf(fPos.x), roundf(fPos.y));
+        if (hitEntityPos == entities->corporeals.end() || *hitEntityPos == creator)
+            return false;
 
-            Entity* entity = *hitEntityPos;
-            entity->DealDamage(damage, (vector<Entity*>*)entities, this);
-            DestroySelf(entities, entity);
-            return;
-        }
+        fPos -= direction;
+        pos = Vec2(roundf(fPos.x), roundf(fPos.y));
+
+        Entity* entity = *hitEntityPos;
+        entity->DealDamage(damage, (vector<Entity*>*)entities, this);
+        DestroySelf(entities, entity);
+        return true;
     }
 
-    virtual Vec2 MoveDir()
+    virtual void MovePos(float dTime)
     {
-        fPos += direction;
-        return Vec2(roundf(fPos.x), roundf(fPos.y)) - pos;
+        fPos += direction * dTime * speed;
+        pos = Vec2(roundf(fPos.x), roundf(fPos.y));
     }
 
     int SortOrder() override
@@ -93,36 +88,38 @@ class ShotItem : public Projectile
 public:
     Item item;
 
-    ShotItem(Item item, int maxDist = 10, float speed = 0.0625f, int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(maxDist, item.damage, speed, item.color, mass, maxHealth, health), item(item)
+    ShotItem(Item item, float duration = 10.0f, float speed = 8.0f, int mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(duration, item.damage, speed, item.color, mass, maxHealth, health), item(item)
     {
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Vec2 pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         damage = item.damage;
-        int magnitude = Squagnitude(direction);
-        remainingTime = remainingTime < magnitude ? remainingTime : magnitude;
+        begin = tTime;
         this->creator = creator;
         fPos = pos + Vec2(0.01f, 0.01f);
-        this->direction = (Vec2f)(direction) / magnitude;
+        float magnitude = Magnitude(direction);
+        this->direction = direction / magnitude;
+        duration = fminf(duration, magnitude);
         this->pos = pos;
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->item = item;
         damage = item.damage;
         color = item.color;
-        int magnitude = Squagnitude(direction);
-        remainingTime = remainingTime < magnitude ? remainingTime : magnitude;
+        begin = tTime;
         this->creator = creator;
         fPos = pos + Vec2(0.01f, 0.01f);
-        this->direction = (Vec2f)(direction) / magnitude;
+        float magnitude = Magnitude(direction);
+        this->direction = direction / magnitude;
+        duration = fminf(duration, magnitude);
         this->pos = pos;
         Start();
     }
@@ -140,7 +137,7 @@ public:
 
 namespace Projectiles
 {
-    Projectile* basicBullet = new Projectile(10, 1, 0.00625f, olc::GREY, 1, 1, 1);
+    Projectile* basicBullet = new Projectile(30, 1, 16, olc::GREY, 1, 1, 1);
 }
 
-ShotItem* basicShotItem = new ShotItem(*Resources::copper, 10, 0.0625f, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(*Resources::copper, 15, 12, 1, 1, 1);

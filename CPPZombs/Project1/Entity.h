@@ -8,7 +8,7 @@ public:
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
-	Vec2 pos;
+	Vec2 pos, dir;
 	Color color;
 	int mass;
 	int maxHealth, health;
@@ -16,7 +16,7 @@ public:
 	bool active = true, dActive = true;
 
 	Entity(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
+		pos(pos), dir(0, 0), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), containedCollectibles(), baseClass(this), creator(nullptr)
 	{
 	}
 
@@ -28,7 +28,7 @@ public:
 		Start();
 	}
 
-	virtual Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr)
+	virtual Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
 	{
 		return new Entity(this, pos);
 	}
@@ -423,11 +423,24 @@ public:
 
 	void Vacuum(Vec2 pos, int vacDist)
 	{
-		Vec2 cPos = ToRandomCSpace(pos);
 		for (Collectible* collectible : collectibles)
 		{
+			Vec2 cPos = ToRandomCSpace(pos);
 			int distance = Diagnistance(cPos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
+			{
+				collectible->pos += Squarmalized(cPos - collectible->pos);
+			}
+		}
+	}
+
+	void VacuumCone(Vec2 pos, Vec2 dir, int vacDist, float fov)
+	{
+		for (Collectible* collectible : collectibles)
+		{
+			Vec2 cPos = ToRandomCSpace(pos);
+			int distance = Diagnistance(cPos, collectible->pos);
+			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - ToCenterCSpace(pos) + dir)) >= 1 - fov)
 			{
 				collectible->pos += Squarmalized(cPos - collectible->pos);
 			}

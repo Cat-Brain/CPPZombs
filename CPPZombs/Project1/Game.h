@@ -44,8 +44,13 @@ public:
 		if (GetKey(olc::ESCAPE).bPressed)
 			bAtomActive = false;
 
-		if (GetKey(olc::P).bPressed)
+		if (GetKey(olc::P).bPressed && !IsConsoleShowing())
 			paused = !paused;
+		if (GetKey(olc::F1).bPressed)
+		{
+			paused = true;
+			ConsoleShow(olc::F1, false);
+		}
 
 		if (!paused)
 		{
@@ -319,6 +324,26 @@ public:
 	{
 		for (int i = 0; i < entities.size(); i++)
 			delete entities[i];
+		return true;
+	}
+
+	bool OnConsoleCommand(const string& text) override
+	{
+		std::stringstream stream;
+		stream << text;
+
+		string firstWord;
+		if (stream >> firstWord)
+		{
+			string secondWord;
+			if (firstWord == "SetWave")
+				if (stream >> secondWord)
+				{
+					int newWaveCount = stoi(secondWord);
+					if (newWaveCount > 0)
+						waveCount = newWaveCount;
+				}
+		}
 		return true;
 	}
 };

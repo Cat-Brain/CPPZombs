@@ -20,8 +20,8 @@ class Printer : public Duct
 public:
 	vector<Recipe> recipes;
 
-	Printer(vector<Recipe> recipes, Vec2 dir, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
-		Duct(dir, timePer, pos, color, mass, maxHealth, health, name), recipes(recipes)
+	Printer(vector<Recipe> recipes , float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
+		Duct(timePer, pos, color, mass, maxHealth, health, name), recipes(recipes)
 	{ }
 
 	Printer(Printer* baseClass, Vec2 dir, Vec2 pos) :
@@ -48,7 +48,7 @@ namespace Structures
 {
 	namespace Printers
 	{
-		Printer* smallPrinter = new Printer(Recipes::PrinterRecipes::smallPrinterRecipes, up, 30.0f, vZero, Color(74, 99, 67), 1, 10, 10, "Printer");
+		Printer* smallPrinter = new Printer(Recipes::PrinterRecipes::smallPrinterRecipes, 30.0f, vZero, Color(74, 99, 67), 1, 10, 10, "Printer");
 	}
 }
 

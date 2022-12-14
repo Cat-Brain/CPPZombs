@@ -121,12 +121,12 @@ namespace Collectibles
 Color copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
 CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
 PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
-Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed, vZero);
+Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed);
 
 Color ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
 CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
-Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed, vZero);
+Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed);
 
 Color cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
 CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");

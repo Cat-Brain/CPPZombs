@@ -59,6 +59,11 @@ int Diagnitude(Vec2 a)
 	return abs(a.x) + abs(a.y);
 }
 
+float Magnitude(Vec2f a)
+{
+	return std::sqrtf(a.x * a.x + a.y * a.y);
+}
+
 int Squistance(Vec2 a, Vec2 b)
 {
 	return Squagnitude(a - b);
@@ -72,6 +77,16 @@ int Diagnistance(Vec2 a, Vec2 b)
 Vec2 Squarmalized(Vec2 a)
 {
 	return a / (int)fmaxf(1, Squagnitude(a));
+}
+
+Vec2f Normalized(Vec2f a)
+{
+	return a / Magnitude(a);
+}
+
+float Dot(Vec2f a, Vec2f b)
+{
+	return a.x * b.x + a.y * b.y;
 }
 #pragma endregion
 
@@ -134,6 +149,11 @@ Vec2 ToRSpace2(Vec2 positionInLocalSpace)
 Vec2 ToCSpace(Vec2 positionInEntitySpace)
 {
 	return positionInEntitySpace * GRID_SIZE;
+}
+
+Vec2 ToCenterCSpace(Vec2 positionInEntitySpace)
+{
+	return positionInEntitySpace * GRID_SIZE + Vec2(1, 1);
 }
 
 Vec2 ToRandomCSpace(Vec2 positionInEntitySpace) // Randomized within a 3x3.
