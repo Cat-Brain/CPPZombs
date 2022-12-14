@@ -19,6 +19,8 @@ class Printer : public Duct
 {
 public:
 	vector<Recipe> recipes;
+	int currentRecipe = -1;
+	Items items;
 
 	Printer(vector<Recipe> recipes , float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
 		Duct(timePer, pos, color, mass, maxHealth, health, name), recipes(recipes)
@@ -38,9 +40,45 @@ public:
 		return new Printer(this, dir, pos);
 	}
 
+	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		vector<Collectible*> newCollectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
+		for (Collectible* collectible : newCollectibles)
+		{
+			items.push_back(collectible->baseClass);
+			((Entities*)entities)->Remove(collectible);
+		}
+
+		Duct::Update(screen, entities, frameCount, inputs, dTime);
+	}
+
+	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		if(currentRecipe != -1 && items.TryMake(recipes[currentRecipe].first))
+			entities->push_back(recipes[currentRecipe].second);
+	}
+
+	Vec2 TopLeft() override
+	{
+		return ToRSpace(pos) + Vec2(3, 0);
+	}
+
 	Vec2 BottomRight() override
 	{
-		return Duct::BottomRight() + Vec2(32, 0);
+		return TopLeft() + Vec2((int)fmaxf(name.length() * 8.0f, recipes.size() * 3.0f), 12);
+	}
+
+	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
+	}
+
+	bool PosInUIBounds(Vec2 screenSpacePos) override
+	{
+		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
+		Vec2 bottomRight = topLeft + Vec2((int)name.length() * 8, 8);
+		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
+			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 };
 
