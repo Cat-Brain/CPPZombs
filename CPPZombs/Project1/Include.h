@@ -166,6 +166,11 @@ Vec2 ToESpace(Vec2 positionInCollectibleSpace)
 	return positionInCollectibleSpace / GRID_SIZE;
 }
 
+Vec2 ToESpaceFromR(Vec2 positionInRenderSpace) // May not work.
+{
+	return ToSpace(positionInRenderSpace / GRID_SIZE) + playerPos - screenDim;
+}
+
 // Rotation:
 void RotateLeft(Vec2& dir)
 {

@@ -22,7 +22,8 @@ public:
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone());
-		items.push_back(copperTreeSeed->Clone());
+		items.push_back(copperTreeSeed->Clone(3));
+		items.push_back(ironTreeSeed->Clone());
 		items.push_back(Shootables::smallPrinter->Clone());
 		items.push_back(Shootables::smallVacuum->Clone());
 		items.currentIndex = 0; // Copper

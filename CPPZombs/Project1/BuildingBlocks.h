@@ -76,12 +76,12 @@ public:
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			TUpdate(screen, (Entities*)entities, frameCount, inputs, dTime);
-			lastTime = tTime;
+			if (TUpdate(screen, (Entities*)entities, frameCount, inputs, dTime))
+				lastTime = tTime;
 		}
 	}
 
-	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) { }
+	virtual bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) { return true; }
 };
 
 class Duct : public FunctionalBlock
@@ -161,7 +161,7 @@ public:
 			screen->Draw(rSpacePos + Vec2(1, 1), containedCollectibles[0]->color);
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		Collectible* item = FindACollectible(pos, entities->collectibles);
 		
@@ -185,6 +185,7 @@ public:
 				containedCollectibles.erase(containedCollectibles.begin());
 			}
 		}
+		return true;
 	}
 
 	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
@@ -240,11 +241,11 @@ public:
 		return new Vacuum(this, dir, pos);
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		entities->VacuumCone(pos, -dir, vacDist, fov);
 
-		Duct::TUpdate(screen, entities, frameCount, inputs, dTime);
+		return Duct::TUpdate(screen, entities, frameCount, inputs, dTime);
 	}
 };
 
@@ -259,7 +260,7 @@ namespace Structures
 	{
 		Duct* duct = new Duct(0.25f, vZero, olc::GREEN);
 		Vacuum* smallVacuum = new Vacuum(6 * GRID_SIZE, 0.75f, 0.25f, vZero, olc::DARK_GREEN, 1, 1, 1, "Small vacuum");
-		Vacuum* largeVacuum = new Vacuum(25 * GRID_SIZE, 1.0f, 0.25f, vZero, olc::VERY_DARK_GREEN, 1, 1, 1, "Large vacuum");
+		Vacuum* largeVacuum = new Vacuum(50 * GRID_SIZE, 1.5f, 0.25f, vZero, olc::VERY_DARK_GREEN, 1, 1, 1, "Large vacuum");
 	}
 }
 

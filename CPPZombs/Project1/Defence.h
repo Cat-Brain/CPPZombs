@@ -51,7 +51,7 @@ public:
 		}
 	}
 
-	void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
@@ -61,6 +61,7 @@ public:
 				entities->push_back(collectible->Clone(ToCSpace(pos) + Vec2((rand() % 2) * 2, (rand() % 2) * 2)));
 		}
 		currentLifespan++;
+		return true;
 	}
 
 	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
