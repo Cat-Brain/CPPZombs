@@ -135,3 +135,23 @@ PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree s
 Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 
 #pragma endregion
+
+class Turret : public FunctionalBlock
+{
+public:
+	using FunctionalBlock::FunctionalBlock; // Add range.
+
+	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		Entity* entity = entities->FindNearestEnemy(pos);
+
+		if()
+
+		return true;
+	}
+
+	bool IsConveyer() override
+	{
+		return true;
+	}
+};
