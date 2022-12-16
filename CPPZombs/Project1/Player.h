@@ -134,7 +134,7 @@ public:
 				items.TryTake(currentShootingItem))
 			{
 				lastClick = tTime;
-				ShotItem* shot = new ShotItem(basicShotItem, { currentShootingItem }, pos, inputs.mousePosition - pos, this);
+				ShotItem* shot = new ShotItem(basicShotItem, currentShootingItem, pos, inputs.mousePosition - pos, this);
 				entities->push_back(shot);
 			}
 		}

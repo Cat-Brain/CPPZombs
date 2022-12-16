@@ -139,13 +139,27 @@ Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 class Turret : public FunctionalBlock
 {
 public:
-	using FunctionalBlock::FunctionalBlock; // Add range.
+	float range;
+
+	Turret(float range, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name), range(range)
+	{ }
+
+	void Update(Screen * screen, vector<Entity*>*entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		vector<Collectible*> newCollectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
+		containedCollectibles.insert(containedCollectibles.end(), newCollectibles.begin(), newCollectibles.end());
+
+		FunctionalBlock::Update(screen, entities, frameCount, inputs, dTime);
+	}
 
 	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		Entity* entity = entities->FindNearestEnemy(pos);
 
-		if()
+		if (Distance(pos, entity->pos) > range || containedCollectibles.size() == 0)
+			return false;
+		
 
 		return true;
 	}
@@ -155,3 +169,11 @@ public:
 		return true;
 	}
 };
+
+namespace Structures
+{
+	namespace Defence
+	{
+		Turret* basicTurret = new Turret(30.0f, 0.5f, vZero, Color(194, 107, 54), 1, 3, 3);
+	}
+}

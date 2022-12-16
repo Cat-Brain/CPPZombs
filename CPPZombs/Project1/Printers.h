@@ -1,29 +1,39 @@
 #include "Defence.h"
 
+namespace Shootables
+{
+	namespace Conveyers
+	{
+		PlacedOnLanding* duct = new PlacedOnLanding(Structures::Conveyers::duct);
+	}
+}
+
 namespace Recipes
 {
-	Recipe basicBullet(Costs::basicBullet, Projectiles::basicBullet);
-	Recipe copperWall(Costs::copperWall, Structures::Walls::copperWall);
-	Recipe duct(Costs::duct, Structures::Conveyers::duct);
-	Recipe smallVacuum(Costs::smallVacuum, Structures::Conveyers::smallVacuum);
-	Recipe largeVacuum(Costs::largeVacuum, Structures::Conveyers::largeVacuum);
-	Recipe turret(Costs::turret, Projectiles::basicBullet);
+	RecipeA basicBullet(Costs::basicBullet, Projectiles::basicBullet);
+	RecipeB copperWall(Costs::copperWall, Structures::Walls::copperWall);
+	RecipeA duct(Costs::duct, Shootables::Conveyers::duct);
+	RecipeA smallVacuum(Costs::smallVacuum, Shootables::smallVacuum);
+	RecipeB largeVacuum(Costs::largeVacuum, Structures::Conveyers::largeVacuum);
+	RecipeB basicTurret(Costs::turret, Structures::Defence::basicTurret);
 
 	namespace PrinterRecipes
 	{
-		vector<Recipe> smallPrinterRecipes{ basicBullet, copperWall, duct, smallVacuum, largeVacuum, turret };
+		vector<RecipeA> smallPrinterRecipeAs{ basicBullet, duct, smallVacuum };
+		vector<RecipeB> smallPrinterRecipeBs{ copperWall, largeVacuum, basicTurret };
 	}
 };
 
 class Printer : public Duct
 {
 public:
-	vector<Recipe> recipes;
+	vector<RecipeA> recipeAs;
+	vector<RecipeB> recipeBs;
 	int currentRecipe = -1;
 	Items items;
 
-	Printer(vector<Recipe> recipes , float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
-		Duct(timePer, pos, color, mass, maxHealth, health, name), recipes(recipes)
+	Printer(vector<RecipeA> recipeAs, vector<RecipeB> recipeBs, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
+		Duct(timePer, pos, color, mass, maxHealth, health, name), recipeAs(recipeAs), recipeBs(recipeBs)
 	{ }
 
 	Printer(Printer* baseClass, Vec2 dir, Vec2 pos) :
@@ -60,10 +70,13 @@ public:
 
 	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		if (currentRecipe >= 0 && items.TryMake(recipes[currentRecipe].first))
+		if (currentRecipe >= 0 && items.TryMake(currentRecipe < recipeAs.size() ? recipeAs[currentRecipe].first : recipeBs[currentRecipe - recipeAs.size()].first))
 		{
 			printf("=[");
-			entities->push_back(recipes[currentRecipe].second->Clone(pos + dir, dir, this));
+			if (currentRecipe < recipeAs.size())
+				entities->push_back(new Collectible(*recipeAs[currentRecipe].second, ToRandomCSpace(pos + dir)));
+			 else
+				entities->push_back(recipeBs[currentRecipe - recipeAs.size()].second->Clone(pos + dir, dir, this));
 		}
 		else
 			return false;
@@ -77,16 +90,20 @@ public:
 
 	Vec2 BottomRight() override
 	{
-		return TopLeft() + Vec2((int)fmaxf(name.length() * 8.0f, recipes.size() * 3.0f + 2), 12);
+		return TopLeft() + Vec2((int)fmaxf(name.length() * 8.0f, (recipeAs.size() + recipeBs.size()) * 3.0f + 2), 12);
 	}
 
 	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
-		Vec2 tilePos = pos + Vec2(2, 0);
-		for (int i = 0; i < recipes.size(); i++)
+
+		for (int i = 0; i < recipeAs.size(); i++)
+			screen->Draw(ToRSpace(pos) + Vec2(3 * (i + 2), 1), recipeAs[i].second->color);
+
+		Vec2 tilePos = pos + Vec2(2 + recipeAs.size(), 0);
+		for (int i = 0; i < recipeBs.size(); i++)
 		{
-			recipes[i].second->Draw(tilePos, recipes[i].second->color, screen, entities, frameCount, inputs, dTime, dir);
+			recipeBs[i].second->Draw(tilePos, recipeBs[i].second->color, screen, entities, frameCount, inputs, dTime, dir);
 			tilePos.x += 1;
 		}
 		if (currentRecipe >= 0)
@@ -111,7 +128,8 @@ namespace Structures
 {
 	namespace Printers
 	{
-		Printer* smallPrinter = new Printer(Recipes::PrinterRecipes::smallPrinterRecipes, 3.0f, vZero, Color(74, 99, 67), 1, 10, 10, "Printer");
+		Printer* smallPrinter = new Printer(Recipes::PrinterRecipes::smallPrinterRecipeAs,
+			Recipes::PrinterRecipes::smallPrinterRecipeBs, 3.0f, vZero, Color(74, 99, 67), 1, 10, 10, "Printer");
 	}
 }
 

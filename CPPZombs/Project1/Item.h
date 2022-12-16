@@ -8,31 +8,32 @@ public:
 	Color color;
 	int damage;
 	int count;
+	float range;
 
-	Item(string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		baseClass(this), name(name), color(color), damage(damage), count(count) { }
+	Item(string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		baseClass(this), name(name), color(color), damage(damage), count(count), range(range) { }
 
-	Item(Item* baseClass, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		baseClass(baseClass), name(name), color(color), damage(damage), count(count) { }
+	Item(Item* baseClass, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		baseClass(baseClass), name(name), color(color), damage(damage), count(count), range(range) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, color, damage, count);
+		return Item(baseClass, name, color, damage, count, range);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, color, damage, count);
+		return Item(baseClass, name, color, damage, count, range);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, color, damage, count);
+		return new Item(baseClass, name, color, damage, count, range);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, color, damage, count);
+		return new Item(baseClass, name, color, damage, count, range);
 	}
 
 	Item operator * (int multiplier)
@@ -94,6 +95,38 @@ public:
 			}
 		}
 		return false;
+	}
+
+	bool TryTakeIndex(int index)
+	{
+		if (index >= size())
+			return false;
+		if ((*this)[index].count == 1)
+		{
+			erase(begin() + index);
+			if (index >= currentIndex)
+				currentIndex--;
+		}
+		else
+			(*this)[index].count -= 1;
+		return true;
+	}
+
+	bool TryTakeIndex(int index, Item& result)
+	{
+		if (index >= size())
+			return false;
+
+		result = (*this)[index];
+		if ((*this)[index].count == 1)
+		{
+			erase(begin() + index);
+			if (index >= currentIndex)
+				currentIndex--;
+		}
+		else
+			(*this)[index].count -= 1;
+		return true;
 	}
 
 	bool TryMake(Cost cost)

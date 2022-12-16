@@ -84,6 +84,11 @@ Vec2f Normalized(Vec2f a)
 	return a / Magnitude(a);
 }
 
+float Distance(Vec2f a, Vec2f b)
+{
+	return Magnitude(a - b);
+}
+
 float Dot(Vec2f a, Vec2f b)
 {
 	return a.x * b.x + a.y * b.y;

@@ -23,6 +23,7 @@ public:
         this->direction = Normalized(direction);
         fPos = pos + Vec2(0.01f, 0.01f);
         this->pos = pos;
+        begin = tTime;
         Start();
     }
 
@@ -88,8 +89,8 @@ class ShotItem : public Projectile
 public:
     Item item;
 
-    ShotItem(Item item, float duration = 10.0f, float speed = 8.0f, int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(duration, item.damage, speed, item.color, mass, maxHealth, health), item(item)
+    ShotItem(Item item, float speed = 8.0f, int mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(item.range, item.damage, speed, item.color, mass, maxHealth, health), item(item)
     {
         Start();
     }
@@ -103,7 +104,7 @@ public:
         fPos = pos + Vec2(0.01f, 0.01f);
         float magnitude = Magnitude(direction);
         this->direction = direction / magnitude;
-        duration = fminf(duration, magnitude);
+        duration = fminf(item.range, magnitude);
         this->pos = pos;
         Start();
     }
@@ -119,7 +120,7 @@ public:
         fPos = pos + Vec2(0.01f, 0.01f);
         float magnitude = Magnitude(direction);
         this->direction = direction / magnitude;
-        duration = fminf(duration, magnitude);
+        duration = fminf(item.range, magnitude);
         this->pos = pos;
         Start();
     }
@@ -137,7 +138,7 @@ public:
 
 namespace Projectiles
 {
-    Projectile* basicBullet = new Projectile(30, 1, 16, olc::GREY, 1, 1, 1);
+    Item* basicBullet = new Item("Basic bullet", olc::VERY_DARK_GREY, 2, 1, 30.0f);
 }
 
-ShotItem* basicShotItem = new ShotItem(*Resources::copper, 15, 12, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 1, 1, 1);

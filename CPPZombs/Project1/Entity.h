@@ -265,6 +265,22 @@ public:
 		collectibles.push_back(collectible);
 	}
 
+	Entity* FindNearestEnemy(Vec2 pos)
+	{
+		float currentBestDist = 9999.0f;
+		Entity* currentBest = nullptr;
+		for (Entity* entity : *this)
+		{
+			float dist;
+			if ((dist = Distance(pos, entity->pos)) < currentBestDist)
+			{
+				currentBestDist = dist;
+				currentBest = entity;
+			}
+		}
+		return currentBest;
+	}
+
 	vector<Entity*>::iterator FindCorpPos(Vec2 pos)
 	{
 		for (vector<Entity*>::iterator iter = corporeals.begin(); iter != corporeals.end(); iter++)
@@ -590,7 +606,10 @@ class PlacedOnLanding : public Item
 public:
 	Entity* entityToPlace;
 
-	PlacedOnLanding(Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
+	PlacedOnLanding(Entity* entityToPlace, int damage = 0, int count = 1) :
+		Item(entityToPlace->name, entityToPlace->color, damage, count), entityToPlace(entityToPlace) { }
+
+	PlacedOnLanding(Entity* entityToPlace, string name, Color color = olc::MAGENTA, int damage = 1, int count = 1) :
 		Item(name, color, damage, count), entityToPlace(entityToPlace) { }
 
 	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
@@ -623,4 +642,5 @@ public:
 };
 
 
-typedef pair<Cost, Entity*> Recipe;
+typedef pair<Cost, Item*> RecipeA;
+typedef pair<Cost, Entity*> RecipeB;
