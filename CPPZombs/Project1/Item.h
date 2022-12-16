@@ -177,5 +177,5 @@ namespace Costs
 	Cost duct{ Resources::copper->Clone(9), Resources::iron->Clone() };
 	Cost smallVacuum{ Resources::copper->Clone(3), Resources::iron->Clone(5) };
 	Cost largeVacuum{ Resources::copper->Clone(300), Resources::iron->Clone(50) };
-	Cost turret{ Resources::copper->Clone(100), Resources::iron->Clone(10) };
+	Cost turret{ Resources::copper->Clone() };//Resources::copper->Clone(100), Resources::iron->Clone(10) };
 };

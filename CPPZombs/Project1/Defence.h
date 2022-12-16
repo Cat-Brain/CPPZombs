@@ -139,16 +139,29 @@ Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 class Turret : public FunctionalBlock
 {
 public:
+	Items items;
 	float range;
+	bool overShoot;
 
-	Turret(float range, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name), range(range)
+	Turret(float range, bool overShoot, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
 	{ }
 
 	void Update(Screen * screen, vector<Entity*>*entities, int frameCount, Inputs inputs, float dTime) override
 	{
+		printf("?");
 		vector<Collectible*> newCollectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
-		containedCollectibles.insert(containedCollectibles.end(), newCollectibles.begin(), newCollectibles.end());
+		for (Collectible* collectible : newCollectibles)
+		{
+			items.push_back(collectible->baseClass);
+			((Entities*)entities)->Remove(collectible);
+		}
+		for (Collectible* collectible : containedCollectibles)
+		{
+			items.push_back(collectible->baseClass);
+			((Entities*)entities)->Remove(collectible);
+		}
+		containedCollectibles.clear();
 
 		FunctionalBlock::Update(screen, entities, frameCount, inputs, dTime);
 	}
@@ -157,9 +170,11 @@ public:
 	{
 		Entity* entity = entities->FindNearestEnemy(pos);
 
-		if (Distance(pos, entity->pos) > range || containedCollectibles.size() == 0)
+		Item shotItem;
+		if (Distance(pos, entity->pos) > range || !items.TryTakeIndex(0, shotItem))
 			return false;
 		
+		entities->push_back(new ShotItem(basicShotItem, shotItem, pos, overShoot ? (Vec2)(Normalized(entity->pos - pos) * range) : entity->pos - pos, this));
 
 		return true;
 	}
@@ -174,6 +189,6 @@ namespace Structures
 {
 	namespace Defence
 	{
-		Turret* basicTurret = new Turret(30.0f, 0.5f, vZero, Color(194, 107, 54), 1, 3, 3);
+		Turret* basicTurret = new Turret(30.0f, false, 0.5f, vZero, Color(194, 107, 54), 1, 3, 3, "Basic turret");
 	}
 }

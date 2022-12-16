@@ -98,7 +98,7 @@ public:
 		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
 
 		for (int i = 0; i < recipeAs.size(); i++)
-			screen->Draw(ToRSpace(pos) + Vec2(3 * (i + 2), 1), recipeAs[i].second->color);
+			screen->Draw(ToRSpace(pos) + Vec2(3 * (i + 2) + 1, 1), recipeAs[i].second->color);
 
 		Vec2 tilePos = pos + Vec2(2 + recipeAs.size(), 0);
 		for (int i = 0; i < recipeBs.size(); i++)
