@@ -24,7 +24,7 @@ namespace Recipes
 	}
 };
 
-class Printer : public Duct
+class Printer : public FunctionalBlock
 {
 public:
 	vector<RecipeA> recipeAs;
@@ -32,8 +32,8 @@ public:
 	int currentRecipe = -1;
 	Items items;
 
-	Printer(vector<RecipeA> recipeAs, vector<RecipeB> recipeBs, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
-		Duct(timePer, pos, color, mass, maxHealth, health, name), recipeAs(recipeAs), recipeBs(recipeBs)
+	Printer(vector<RecipeA> recipeAs, vector<RecipeB> recipeBs, float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
+		FunctionalBlock(timePer, pos, dimensions, color, mass, maxHealth, health, name), recipeAs(recipeAs), recipeBs(recipeBs)
 	{ }
 
 	Printer(Printer* baseClass, Vec2 dir, Vec2 pos) :
@@ -65,16 +65,15 @@ public:
 		}
 		containedCollectibles.clear();
 
-		Duct::Update(screen, entities, frameCount, inputs, dTime);
+		FunctionalBlock::Update(screen, entities, frameCount, inputs, dTime);
 	}
 
 	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		if (currentRecipe >= 0 && items.TryMake(currentRecipe < recipeAs.size() ? recipeAs[currentRecipe].first : recipeBs[currentRecipe - recipeAs.size()].first))
 		{
-			printf("=[");
 			if (currentRecipe < recipeAs.size())
-				entities->push_back(new Collectible(*recipeAs[currentRecipe].second, ToRandomCSpace(pos + dir)));
+				entities->push_back(new Collectible(*recipeAs[currentRecipe].second, pos + dir));
 			 else
 				entities->push_back(recipeBs[currentRecipe - recipeAs.size()].second->Clone(pos + dir, dir, this));
 		}
@@ -85,7 +84,7 @@ public:
 
 	Vec2 TopLeft() override
 	{
-		return Duct::TopLeft() + Vec2(0, -9);
+		return FunctionalBlock::TopLeft() + Vec2(0, -9);
 	}
 
 	Vec2 BottomRight() override
@@ -108,8 +107,8 @@ public:
 		}
 		if (currentRecipe >= 0)
 		{
-			Vec2 tl = Duct::TopLeft() + Vec2(3 + currentRecipe * GRID_SIZE, -1);
-			screen->DrawLine(tl, tl + Vec2(GRID_SIZE - 1, 0), olc::BLACK);
+			Vec2 tl = FunctionalBlock::TopLeft() + Vec2(3 + currentRecipe, -1);
+			screen->Draw(tl, olc::BLACK);
 		}
 	}
 
@@ -118,9 +117,14 @@ public:
 		Vec2 topLeft = TopLeft();
 		Vec2 bottomRight = BottomRight();
 		if (screenSpacePos.y <= bottomRight.y && screenSpacePos.y >= bottomRight.y - 4)
-			currentRecipe = (screenSpacePos.x - topLeft.x - 3) / GRID_SIZE;
+			currentRecipe = (screenSpacePos.x - topLeft.x - 3);
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
+	}
+
+	bool IsConveyer() override
+	{
+		return true;
 	}
 };
 
@@ -129,7 +133,7 @@ namespace Structures
 	namespace Printers
 	{
 		Printer* smallPrinter = new Printer(Recipes::PrinterRecipes::smallPrinterRecipeAs,
-			Recipes::PrinterRecipes::smallPrinterRecipeBs, 3.0f, vZero, Color(74, 99, 67), 1, 10, 10, "Printer");
+			Recipes::PrinterRecipes::smallPrinterRecipeBs, 3.0f, vZero, vOne, Color(74, 99, 67), 1, 10, 10, "Printer");
 	}
 }
 

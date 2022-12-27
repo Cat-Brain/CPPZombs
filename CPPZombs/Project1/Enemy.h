@@ -13,8 +13,8 @@ public:
 		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
 	}
 
-	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(vZero, color, color2, mass, maxHealth, health, name), timePer(timePer), points(points), damage(damage)
+	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(vZero, dimensions, color, color2, mass, maxHealth, health, name), timePer(timePer), points(points), damage(damage)
 	{
 	}
 
@@ -72,7 +72,7 @@ public:
 	{
 		if (!TryMove(dir, force, entities, hitEntity, avoid))
 		{
-			if ((*hitEntity)->IsEnemy())
+			if (*hitEntity != nullptr && (*hitEntity)->IsEnemy())
 			{
 				Vec2 newDir = dir;
 				bool randResult = PsuedoRandom() % 2;
@@ -81,7 +81,7 @@ public:
 					RotateLeft(newDir); // Total of rotating left 45 degrees.
 				if (!TryMove(newDir, force, entities, hitEntity, avoid))
 				{
-					if ((*hitEntity)->IsEnemy())
+					if (*hitEntity != nullptr && (*hitEntity)->IsEnemy())
 					{
 						if (randResult)
 							RotateRight(newDir);
@@ -103,17 +103,17 @@ public:
 		if (randomValue > 1022) // Half of the time is true I think.
 		{
 			if (randomValue > 1500) // 1501-2047 ~= 1/4
-				((Entities*)entities)->push_back(Collectibles::copper->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(Collectibles::copper->Clone(pos));
 			if (randomValue % 16 == 0) // ~1/16 of the time. The following and these can only have one of them happen
-				((Entities*)entities)->push_back(cCopperTreeSeed->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(cCopperTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 1)
-				((Entities*)entities)->push_back(cIronTreeSeed->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(cIronTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 2)
-				((Entities*)entities)->push_back(cCheeseTreeSeed->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(cCheeseTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 3)
-				((Entities*)entities)->push_back(Shootables::cSmallPrinter->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(Shootables::cSmallPrinter->Clone(pos));
 			else if (randomValue % 16 == 4)
-				((Entities*)entities)->push_back(Shootables::cSmallVacuum->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(Shootables::cSmallVacuum->Clone(pos));
 		}
 	}
 };
@@ -127,8 +127,8 @@ namespace EnemyClasses
 		Color color3;
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
-		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
 		}
@@ -174,9 +174,10 @@ namespace EnemyClasses
 
 
 
-Enemy* walker = new Enemy(2.0f / 3.0f, 1, 1, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
-Enemy* tanker = new Enemy(1.0f, 2, 1, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
-Enemy* speedster = new Enemy(0.5f, 2, 1, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
-Enemy* hyperSpeedster = new Enemy(0.25f, 10, 1, Color(255, 127, 0), olc::BLACK, 1, 24, 24, "Hyper Speedster");
+Enemy* walker = new Enemy(0.75f, 1, 1, vOne, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
+Enemy* tanker = new Enemy(1.0f, 2, 1, vOne * 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
+Enemy* speedster = new Enemy(0.5f, 2, 1, vOne, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
+Enemy* hyperSpeedster = new Enemy(0.25f, 10, 1, vOne, Color(255, 127, 0), olc::BLACK, 1, 24, 24, "Hyper Speedster");
+Enemy* megaTanker = new Enemy(1.0f, 20, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
 
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");

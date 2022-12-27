@@ -11,8 +11,8 @@ public:
 	float lastMove = -1.0f, moveSpeed = 0.125f, lastBMove = -1.0f, bMoveSpeed = 0.125f,
 		lastVac = -1.0f, vacSpeed = 0.0625f, lastClick = -1.0f, clickSpeed = 0.25f;
 
-	Player(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, mass, maxHealth, health, name), vacDist(6 * GRID_SIZE)
+	Player(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), int vacDist = 6, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, dimensions, color, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}
@@ -129,9 +129,11 @@ public:
 		else
 		{
 			Vec2 movePos = pos + Squarmalized(inputs.mousePosition - pos);
-			if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr && currentShootingItem != *dItem &&
-				inputs.leftMouse.bHeld && inputs.mousePosition != playerPos &&
-				((Entities*)entities)->FindCorpPos(movePos) == ((Entities*)entities)->corporeals.end() &&
+			if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
+				currentShootingItem != *dItem && inputs.leftMouse.bHeld &&
+				(inputs.mousePosition.x <= pos.x - dimensions.x || inputs.mousePosition.x >= pos.x + dimensions.x ||
+					inputs.mousePosition.y <= pos.y - dimensions.y || inputs.mousePosition.y >= pos.y + dimensions.y) &&
+				//((Entities*)entities)->FindCorpOverlaps(movePos, dimensions).size() == 0 &&
 				items.TryTake(currentShootingItem))
 			{
 				lastClick = tTime;

@@ -32,16 +32,10 @@ typedef olc::vi2d Vec2;
 typedef olc::vf2d Vec2f;
 typedef olc::Pixel Color;
 typedef olc::HWButton button;
-
-#define GRID_SIZE 3
-#define GRID_AREA GRID_SIZE * GRID_SIZE
-int screenWidth = 50, screenHeight = 50,
-	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1,
-	screenWidthT = screenWidth * GRID_SIZE, screenHeightT = screenHeight * GRID_SIZE,
-	screenWidthTH = screenWidthT >> 1, screenHeightTH = screenHeightT >> 1;
-Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH),
-	screenDimT(screenWidthT, screenHeightT), screenDimTH(screenWidthTH, screenHeightTH);
-int pixelCount = screenWidth * screenHeight * GRID_AREA;
+int screenWidth = 152, screenHeight = 152,
+	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
+Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
+int pixelCount = screenWidth * screenHeight;
 
 #pragma region Math
 int JMod(int x, int m)
@@ -131,49 +125,19 @@ int PsuedoRandom()
 }
 
 #pragma region Vec2 functions
-Vec2 ToSpace(Vec2 positionInWorldSpace)
+Vec2 ToSpace(Vec2 positionInSpace)
 {
-	return Vec2(positionInWorldSpace.x, screenHeight - positionInWorldSpace.y - 1);
-}
-
-Vec2 ToSpace2(Vec2 positionInCSpace)
-{
-	return Vec2(positionInCSpace.x, screenHeight * GRID_SIZE - positionInCSpace.y - 1);
+	return Vec2(positionInSpace.x, screenHeight - positionInSpace.y - 1);
 }
 
 Vec2 ToRSpace(Vec2 positionInLocalSpace)
 {
-	return ToSpace(positionInLocalSpace - playerPos + screenDimH) * GRID_SIZE;
+	return ToSpace(positionInLocalSpace - playerPos + screenDimH);
 }
 
-Vec2 ToRSpace2(Vec2 positionInLocalSpace)
+Vec2 ToSpaceFromR(Vec2 positionInRenderSpace) // May not work.
 {
-	return ToSpace2(positionInLocalSpace - playerPos * GRID_SIZE + screenDimH * GRID_SIZE);
-}
-
-Vec2 ToCSpace(Vec2 positionInEntitySpace)
-{
-	return positionInEntitySpace * GRID_SIZE;
-}
-
-Vec2 ToCenterCSpace(Vec2 positionInEntitySpace)
-{
-	return positionInEntitySpace * GRID_SIZE + Vec2(1, 1);
-}
-
-Vec2 ToRandomCSpace(Vec2 positionInEntitySpace) // Randomized within a 3x3.
-{
-	return positionInEntitySpace * GRID_SIZE + Vec2(rand() % GRID_SIZE, rand() % GRID_SIZE);
-}
-
-Vec2 ToESpace(Vec2 positionInCollectibleSpace)
-{
-	return positionInCollectibleSpace / GRID_SIZE;
-}
-
-Vec2 ToESpaceFromR(Vec2 positionInRenderSpace) // May not work.
-{
-	return ToSpace(positionInRenderSpace / GRID_SIZE) + playerPos - screenDim;
+	return ToSpace(positionInRenderSpace) + playerPos - screenDim;
 }
 
 // Rotation:
@@ -209,7 +173,6 @@ class Screen : public olc::PixelGameEngine
 {
 public:
 	olc::Sprite screen;
-	olc::Sprite bigScreen;
 
 	Inputs inputs;
 
@@ -217,8 +180,8 @@ public:
 
 	void DrawScreen()
 	{
-		DrawSprite(0, 0, &screen, GRID_SIZE);
+		DrawSprite(0, 0, &screen, screenWidth / screen.width);
 	}
 };
 
-Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0);
+Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);

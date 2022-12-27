@@ -4,16 +4,16 @@ class CollectibleTree : public FunctionalBlock
 {
 public:
 	Collectible* collectible, *seed;
-	Color deadColor;
+	Color adultColor, deadColor;
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
 	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, Color deadColor = olc::BLACK,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA, Color deadColor = olc::BLACK,
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
-		currentLifespan(0), chanceForSeed(chanceForSeed), deadColor(deadColor),
+		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		FunctionalBlock(timePer, (float)rand() / RAND_MAX * timePer,
-			pos, color, mass, maxHealth, health, name)
+			pos, dimensions, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -33,22 +33,12 @@ public:
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime)
 	{
-		if (currentLifespan < cyclesToGrow)
-			screen->Draw(ToRSpace(pos) + Vec2(1, 1), color);
-		else if(currentLifespan < deadStage)
-		{
-			Vec2 rSpacePos = ToRSpace(pos);
-			//						\/Up is down\/
-			screen->DrawLine(rSpacePos + up, rSpacePos + Vec2(2, 1), color);
-			screen->DrawLine(rSpacePos + right, rSpacePos + Vec2(1, 2), color);
-		}
-		else
-		{
-			Vec2 rSpacePos = ToRSpace(pos);
-			//						\/Up is down\/
-			screen->DrawLine(rSpacePos + up, rSpacePos + Vec2(2, 1), deadColor);
-			screen->DrawLine(rSpacePos + right, rSpacePos + Vec2(1, 2), deadColor);
-		}
+		Color oldColor = color;
+		if (currentLifespan >= deadStage)
+			color = deadColor;
+		else if (currentLifespan >= cyclesToGrow)
+			color = adultColor;
+		FunctionalBlock::DUpdate(screen, entities, frameCount, inputs, dTime);
 	}
 
 	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
@@ -56,9 +46,9 @@ public:
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			if (rand() % 100 < chanceForSeed)
-				entities->push_back(seed->Clone(ToCSpace(pos) + Vec2((rand() % 2) * 2, (rand() % 2) * 2)));
+				entities->push_back(seed->Clone(pos + Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
-				entities->push_back(collectible->Clone(ToCSpace(pos) + Vec2((rand() % 2) * 2, (rand() % 2) * 2)));
+				entities->push_back(collectible->Clone(pos + Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}
 		currentLifespan++;
 		return true;
@@ -119,18 +109,18 @@ namespace Collectibles
 	Collectible* cheese = new Collectible(*Resources::cheese);
 }
 
-Color copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
-CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
+Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
+CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
 PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
 Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed);
 
-Color ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
-CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
+Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
+CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed);
 
-Color cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
-CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
+Color babyCheeseTreeColor = Color(255, 210, 112), cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
+CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
 PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", cheeseTreeColor, 0);
 Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 
@@ -143,8 +133,8 @@ public:
 	float range;
 	bool overShoot;
 
-	Turret(float range, bool overShoot, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
+	Turret(float range, bool overShoot, float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		FunctionalBlock(timePer, pos, dimensions, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
 	{ }
 
 	void Update(Screen * screen, vector<Entity*>*entities, int frameCount, Inputs inputs, float dTime) override
@@ -189,6 +179,6 @@ namespace Structures
 {
 	namespace Defence
 	{
-		Turret* basicTurret = new Turret(30.0f, false, 0.5f, vZero, Color(194, 107, 54), 1, 3, 3, "Basic turret");
+		Turret* basicTurret = new Turret(30.0f, false, 0.5f, vZero, vOne, Color(194, 107, 54), 1, 3, 3, "Basic turret");
 	}
 }

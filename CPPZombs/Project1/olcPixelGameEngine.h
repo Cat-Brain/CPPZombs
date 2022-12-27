@@ -664,6 +664,10 @@ namespace olc
 		v2d_generic& operator /= (const v2d_generic& rhs) { this->x /= rhs.x; this->y /= rhs.y; return *this; }
 		v2d_generic  operator +  () const { return { +x, +y }; }
 		v2d_generic  operator -  () const { return { -x, -y }; }
+		bool operator > (v2d_generic& rhs) const { return this->x > x && this->y > y; }
+		bool operator >= (v2d_generic& rhs) const { return this->x >= x && this->y >= y; }
+		bool operator < (v2d_generic& rhs) const { return this->x < x && this->y < y; }
+		bool operator <= (v2d_generic& rhs) const { return this->x <= x && this->y <= y; }
 		bool operator == (const v2d_generic& rhs) const { return (this->x == rhs.x && this->y == rhs.y); }
 		bool operator != (const v2d_generic& rhs) const { return (this->x != rhs.x || this->y != rhs.y); }
 		const std::string str() const { return std::string("(") + std::to_string(this->x) + "," + std::to_string(this->y) + ")"; }

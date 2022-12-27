@@ -1,4 +1,4 @@
-#include "Entity.h"
+#include "Collectible.h"
 
 class Projectile : public Entity
 {
@@ -9,8 +9,8 @@ public:
     int damage;
     float speed, begin;
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), color, mass, maxHealth, health),
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
+        Entity(Vec2(0, 0), dimensions, color, mass, maxHealth, health),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
@@ -37,28 +37,36 @@ public:
         if(tTime - begin >= duration / speed)
             return DestroySelf(entities, this);
 
-        if (CheckPos((Entities*)entities))
+        Entity* entity;
+
+        if (CheckPos((Entities*)entities, dTime, entity))
+        {
+            DestroySelf(entities, entity);
             return;
+        }
         Vec2 oldPos = pos;
         MovePos(dTime);
-        if (oldPos != pos)
-            CheckPos((Entities*)entities);
+        if (oldPos != pos && CheckPos((Entities*)entities, dTime, entity))
+        {
+            pos = oldPos;
+            DestroySelf(entities, entity);
+        }
     }
 
-    bool CheckPos(Entities* entities)
+    bool CheckPos(Entities* entities, float dTime, Entity*& hitEntity)
     {
-        vector<Entity*>::iterator hitEntityPos = entities->FindCorpPos(pos);
+        vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, dimensions);
 
-        if (hitEntityPos == entities->corporeals.end() || *hitEntityPos == creator)
-            return false;
+        for (Entity* entity : hitEntities)
+        {
+            if (entity == creator || entity == this)
+                return false;
 
-        fPos -= direction;
-        pos = Vec2(roundf(fPos.x), roundf(fPos.y));
-
-        Entity* entity = *hitEntityPos;
-        entity->DealDamage(damage, (vector<Entity*>*)entities, this);
-        DestroySelf(entities, entity);
-        return true;
+            entity->DealDamage(damage, (vector<Entity*>*)entities, this);
+            hitEntity = entity;
+            return true;
+        }
+        return false;
     }
 
     virtual void MovePos(float dTime)
@@ -89,8 +97,8 @@ class ShotItem : public Projectile
 public:
     Item item;
 
-    ShotItem(Item item, float speed = 8.0f, int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item.range, item.damage, speed, item.color, mass, maxHealth, health), item(item)
+    ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(item.range, item.damage, speed, dimensions, item.color, mass, maxHealth, health), item(item)
     {
         Start();
     }
@@ -141,4 +149,4 @@ namespace Projectiles
     Item* basicBullet = new Item("Basic bullet", olc::VERY_DARK_GREY, 2, 1, 30.0f);
 }
 
-ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, vOne, 1, 1, 1);

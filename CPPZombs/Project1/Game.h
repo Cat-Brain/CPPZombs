@@ -5,7 +5,7 @@ class Game : public Screen
 public:
 	Entities entities;
 	Player* player;
-	FastNoiseLite backgroundNoise1, backgroundNoise2, backgroundNoise3;
+	FastNoiseLite backgroundNoise;
 
 	bool showUI = true, paused = false;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
@@ -16,25 +16,21 @@ public:
 
 	virtual bool OnUserCreate()
 	{
-		screen = olc::Sprite(screenWidth, screenHeight);
-		bigScreen = olc::Sprite(screenWidth * GRID_SIZE, screenHeight * GRID_SIZE);
+		screen = olc::Sprite(screenWidth / 4, screenHeight / 4);
 		entities = Entities(0);
-		player = new Player(ToSpace(Vec2(screenWidth / 2, screenHeight / 2)), olc::BLUE, 1, 10, 5);
+		player = new Player(ToSpace(screenDimH), vOne, 6, olc::BLUE, 1, 10, 5);
 		entities.push_back(player);
 		playerAlive = true;
 		totalGamePoints = 0;
 		sAppName = "CPPZombs!";
 		SetPixelMode(Color::ALPHA);
 
-		backgroundNoise1.SetFractalLacunarity(2.0f);
-		backgroundNoise1.SetFractalGain(0.5f);
-		backgroundNoise1.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-		backgroundNoise2 = backgroundNoise1;
-		backgroundNoise3 = backgroundNoise1;
+		backgroundNoise.SetFrequency(0.06125f);
+		backgroundNoise.SetFractalLacunarity(2.0f);
+		backgroundNoise.SetFractalGain(0.5f);
+		backgroundNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
 		srand(time(NULL));
-		backgroundNoise1.SetSeed(time(NULL));
-		backgroundNoise2.SetSeed(time(NULL) + 1);
-		backgroundNoise3.SetSeed(time(NULL) + 2);
+		backgroundNoise.SetSeed(time(NULL));
 
 		return true;
 	}
@@ -142,7 +138,7 @@ public:
 
 
 
-			inputs.mousePosition = ToSpace(GetMousePos() / 3) + playerPos - Vec2(screenWidth * 0.5f, screenHeight * 0.5f);
+			inputs.mousePosition = ToSpace(GetMousePos()) + playerPos - screenDimH;
 
 			if (playerAlive)
 				Update(deltaTime);
@@ -218,12 +214,9 @@ public:
 		return true;
 	}
 
-	Color GetBackgroundNoise(Color baseColor, int x, int y)
+	Color GetBackgroundNoise(Color baseColor, Vec2f noisePos)
 	{
-		Vec2 noisePos = Vec2(x + ToSpace(playerPos).x, y + ToSpace(playerPos).y);
-		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise1.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 5)),
-			(int)fminf(255, fmaxf(0, baseColor.g + (int)roundf(backgroundNoise2.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f) * 3)),
-			(int)fminf(255, fmaxf(0, baseColor.b + (int)roundf(backgroundNoise3.GetNoise((float)noisePos.x, (float)noisePos.y) * 5.0f)) * 2));
+		return Color((int)fminf(255, fmaxf(0, baseColor.r + (int)roundf(backgroundNoise.GetNoise(noisePos.x, noisePos.y) * 5.0f) * 5)), baseColor.g, baseColor.b);
 	}
 
 	void Update(float dTime)
@@ -246,11 +239,17 @@ public:
 					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 					entities.push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 				}
-			else if(waveCount == 0 || waveCount == 7)
+			else if(/*waveCount == 0 || */waveCount == 7)
 				for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6
 				{
 					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 					entities.push_back(new EnemyClasses::Deceiver(deceiver, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				}
+			else if(waveCount == 0 || waveCount == 15)
+				for (int i = 0; i < 30; i++)
+				{
+					float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+					entities.push_back(new Enemy(megaTanker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 				}
 			else
 			{
@@ -292,10 +291,11 @@ public:
 		if (playerPos != lastPlayerPos)
 		{
 			lastPlayerPos = playerPos;
+			Vec2f spacePlayerPos = (Vec2f)ToSpace(playerPos) / 4.0f;
 			Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.
 			for (int x = 0; x < screen.width; x++)
 				for (int y = 0; y < screen.height; y++)
-					screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), x, y);
+					screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), spacePlayerPos + Vec2(x, y));
 		}
 		DrawScreen();
 		
@@ -315,7 +315,7 @@ public:
 		}
 
 		if ((int)(tTime * 5) % 5 < 3)
-			Draw(ToRSpace(inputs.mousePosition) + Vec2(1, 1), Color(0, 0, 0, 127));
+			Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, 127));
 		
 		frameCount++;
 	}
@@ -335,14 +335,31 @@ public:
 		string firstWord;
 		if (stream >> firstWord)
 		{
-			string secondWord;
 			if (firstWord == "SetWave")
+			{
+				string secondWord;
 				if (stream >> secondWord)
 				{
 					int newWaveCount = stoi(secondWord);
 					if (newWaveCount > 0)
 						waveCount = newWaveCount;
 				}
+			}
+			else if (firstWord == "SetPlayerSize")
+			{
+				string secondWord;
+				if (stream >> secondWord)
+				{
+					int newWidth = stoi(secondWord);
+					string thirdWord;
+					if (newWidth != -1 && stream >> thirdWord)
+					{
+						int newHeight = stoi(thirdWord);
+						if (newHeight != -1)
+							player->dimensions = Vec2(newWidth, newHeight);
+					}
+				}
+			}
 		}
 		return true;
 	}

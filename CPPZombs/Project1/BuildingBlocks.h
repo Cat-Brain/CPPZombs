@@ -5,8 +5,8 @@ class DToCol : public Entity
 public:
 	Color color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, color, mass, maxHealth, health, name), color2(color2)
+	DToCol(Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, dimensions, color, mass, maxHealth, health, name), color2(color2)
 	{ }
 
 	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
@@ -24,8 +24,8 @@ class Placeable : public DToCol
 public:
 	Collectible* toPlace;
 
-	Placeable(Collectible* toPlace, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, color, color2, mass, maxHealth, health, name), toPlace(toPlace)
+	Placeable(Collectible* toPlace, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), toPlace(toPlace)
 	{ }
 
 	Placeable(Placeable* baseClass, Vec2 pos) :
@@ -44,28 +44,29 @@ public:
 	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
 	{
 		if (toPlace != nullptr && rand() % 2)
-				((Entities*)entities)->push_back(toPlace->Clone(ToRandomCSpace(pos)));
+				((Entities*)entities)->push_back(toPlace->Clone(pos));
 	}
 };
 
 namespace Shootables
 {
-	Placeable* cheeseBlock = new Placeable(nullptr, Vec2(0, 0), Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
+	Placeable* cheeseBlock = new Placeable(nullptr, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
 }
 
 class FunctionalBlock : public Entity
 {
 public:
 	float timePer, lastTime;
+	vector<Collectible*> containedCollectibles;
 
-	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, color, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, color, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -89,8 +90,8 @@ class Duct : public FunctionalBlock
 public:
 	vector<Collectible*> newlyCollected;
 
-	Duct(float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		newlyCollected(), FunctionalBlock(timePer, pos, color, mass, maxHealth, health, name)
+	Duct(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		newlyCollected(), FunctionalBlock(timePer, pos, dimensions, color, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -181,7 +182,7 @@ public:
 			}
 			else if (entity->IsConveyer())
 			{
-				entity->containedCollectibles.push_back(containedCollectibles[0]);
+				((FunctionalBlock*)entity)->containedCollectibles.push_back(containedCollectibles[0]);
 				containedCollectibles.erase(containedCollectibles.begin());
 			}
 		}
@@ -223,8 +224,8 @@ public:
 	int vacDist;
 	float fov;
 
-	Vacuum(int vacDist, float fov, float timePer, Vec2 pos = Vec2(0, 0), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Duct(timePer, pos, color, mass, maxHealth, health, name), vacDist(vacDist), fov(fov)
+	Vacuum(int vacDist, float fov, float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Duct(timePer, pos, dimensions, color, mass, maxHealth, health, name), vacDist(vacDist), fov(fov)
 	{ }
 
 	Vacuum(Vacuum* baseClass, Vec2 dir, Vec2 pos) :
@@ -253,14 +254,14 @@ namespace Structures
 {
 	namespace Walls
 	{
-		Placeable* copperWall = new Placeable(Collectibles::copper->Clone(9), Vec2(0, 0), olc::YELLOW, Color(0, 0, 0, 127), 1, 9, 9, "Copper wall");
+		Placeable* copperWall = new Placeable(Collectibles::copper->Clone(9), vZero, vOne, olc::YELLOW, Color(0, 0, 0, 127), 1, 9, 9, "Copper wall");
 	}
 
 	namespace Conveyers
 	{
-		Duct* duct = new Duct(0.25f, vZero, olc::GREEN);
-		Vacuum* smallVacuum = new Vacuum(6 * GRID_SIZE, 0.75f, 0.25f, vZero, olc::DARK_GREEN, 1, 1, 1, "Small vacuum");
-		Vacuum* largeVacuum = new Vacuum(50 * GRID_SIZE, 1.5f, 0.25f, vZero, olc::VERY_DARK_GREEN, 1, 1, 1, "Large vacuum");
+		Duct* duct = new Duct(0.25f, vZero, vOne, olc::GREEN);
+		Vacuum* smallVacuum = new Vacuum(6, 0.75f, 0.25f, vZero, vOne, olc::DARK_GREEN, 1, 1, 1, "Small vacuum");
+		Vacuum* largeVacuum = new Vacuum(50, 1.5f, 0.25f, vZero, vOne, olc::VERY_DARK_GREEN, 1, 1, 1, "Large vacuum");
 	}
 }
 
