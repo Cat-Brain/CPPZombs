@@ -16,12 +16,12 @@ public:
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2f direction, Entity* creator):
+    Projectile(Projectile* baseClass, Vec2f pos, Vec2f direction, Entity* creator):
         Projectile(*baseClass)
     {
         this->creator = creator;
         this->direction = Normalized(direction);
-        fPos = pos + Vec2(0.01f, 0.01f);
+        fPos = pos + Vec2f(0.01f, 0.01f);
         this->pos = pos;
         begin = tTime;
         Start();
@@ -32,21 +32,21 @@ public:
         return new Projectile(this, pos, direction, creator);
     }
 
-    void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+    void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
     {
         if(tTime - begin >= duration / speed)
             return DestroySelf(entities, this);
 
         Entity* entity;
 
-        if (CheckPos((Entities*)entities, dTime, entity))
+        if (CheckPos(entities, dTime, entity))
         {
             DestroySelf(entities, entity);
             return;
         }
         Vec2 oldPos = pos;
         MovePos(dTime);
-        if (oldPos != pos && CheckPos((Entities*)entities, dTime, entity))
+        if (oldPos != pos && CheckPos(entities, dTime, entity))
         {
             pos = oldPos;
             DestroySelf(entities, entity);
@@ -62,7 +62,7 @@ public:
             if (entity == creator || entity == this)
                 return false;
 
-            entity->DealDamage(damage, (vector<Entity*>*)entities, this);
+            entity->DealDamage(damage, entities, this);
             hitEntity = entity;
             return true;
         }
@@ -72,7 +72,7 @@ public:
     virtual void MovePos(float dTime)
     {
         fPos += direction * dTime * speed;
-        pos = Vec2(roundf(fPos.x), roundf(fPos.y));
+        pos = Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y)));
     }
 
     int SortOrder() override
@@ -109,7 +109,7 @@ public:
         damage = item.damage;
         begin = tTime;
         this->creator = creator;
-        fPos = pos + Vec2(0.01f, 0.01f);
+        fPos = pos + Vec2f(0.01f, 0.01f);
         float magnitude = Magnitude(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
@@ -125,11 +125,12 @@ public:
         color = item.color;
         begin = tTime;
         this->creator = creator;
-        fPos = pos + Vec2(0.01f, 0.01f);
+        fPos = pos + Vec2f(0.01f, 0.01f);
         float magnitude = Magnitude(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
         this->pos = pos;
+        name = item.name;
         Start();
     }
 
@@ -138,9 +139,14 @@ public:
         return new ShotItem(this, pos, direction, creator);
     }
 
-    void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
+    Entity* Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
     {
-        item.baseClass->OnDeath((vector<void*>*)(&((Entities*)entities)->collectibles), (vector<void*>*)entities, pos);
+        return new ShotItem(this, baseItem, pos, direction, creator);
+    }
+
+    void OnDeath(Entities* entities, Entity* damageDealer) override
+    {
+        item.baseClass->OnDeath(entities, pos);
     }
 };
 

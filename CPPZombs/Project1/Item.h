@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "Game1.h"
 
 class Item
 {
@@ -51,7 +51,7 @@ public:
 		return name != b.name;
 	}
 
-	virtual void OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos);
+	virtual void OnDeath(Entities* entities, Vec2 pos);
 };
 Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
 
@@ -142,15 +142,15 @@ public:
 		return true;
 	}
 
-	void DUpdate(Screen* screen)
+	void DUpdate(Game* game)
 	{
 		for (int i = 0; i < size(); i++)
 		{
-			screen->FillRect(Vec2(0, screen->ScreenHeight() - 7 * (i + 1)), Vec2(7, 7), (*this)[i].color);
-			screen->DrawString(Vec2(3, screen->ScreenHeight() - 7 * (i + 1)), "-" + to_string((*this)[i].count), (*this)[i].color);
+			game->FillRect(Vec2(0, game->ScreenHeight() - 7 * (i + 1)), Vec2(7, 7), (*this)[i].color);
+			game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)), "-" + to_string((*this)[i].count), (*this)[i].color);
 		}
 		if (size() > 0)
-			screen->DrawRect(Vec2(0, screen->ScreenHeight() - 7 * (currentIndex + 1)), Vec2(6, 6), olc::BLACK);
+			game->DrawRect(Vec2(0, game->ScreenHeight() - 7 * (currentIndex + 1)), Vec2(6, 6), olc::BLACK);
 	}
 
 	Item GetCurrentItem()

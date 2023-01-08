@@ -30,10 +30,10 @@ public:
 		items.currentIndex = 0; // Copper
 	}
 
-	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		bool exitedMenu = false;
-		if (currentMenuedEntity != nullptr && (inputs.leftMouse.bPressed || inputs.rightMouse.bPressed) && !currentMenuedEntity->PosInUIBounds(screen->GetMousePos()))
+		if (currentMenuedEntity != nullptr && (inputs.leftMouse.bPressed || inputs.rightMouse.bPressed) && !currentMenuedEntity->PosInUIBounds(game->GetMousePos()))
 		{
 			currentMenuedEntity->shouldUI = false;
 			currentMenuedEntity = nullptr;
@@ -41,14 +41,14 @@ public:
 			lastClick = tTime;
 		}
 
-		vector<Entity*>::iterator hitEntity;
+		vector<Entity*> hitEntity;
 		if (inputs.rightMouse.bPressed && inputs.mousePosition != pos &&
 			(currentMenuedEntity == nullptr || currentMenuedEntity->pos != inputs.mousePosition)
-			&& (hitEntity = ((Entities*)entities)->FindCorpPos(inputs.mousePosition)) != ((Entities*)entities)->corporeals.end())
+			&& (hitEntity = entities->FindCorpOverlaps(inputs.mousePosition, dimensions)).size())
 		{
 			if (currentMenuedEntity != nullptr)
 				currentMenuedEntity->shouldUI = false;
-			currentMenuedEntity = *hitEntity;
+			currentMenuedEntity = hitEntity[0];
 			currentMenuedEntity->shouldUI = true;
 		}
 		if (inputs.w.bPressed || inputs.up.bPressed || inputs.a.bPressed || inputs.left.bPressed ||
@@ -62,26 +62,26 @@ public:
 			#pragma region Inputs
 			if (inputs.a.bHeld || inputs.left.bHeld)
 			{
-				screen->inputs.a.bHeld = false;
-				inputs.left.bHeld = false;
+				game->inputs.a.bHeld = false;
+				game->inputs.left.bHeld = false;
 				direction.x--;
 			}
 			if (inputs.d.bHeld || inputs.right.bHeld)
 			{
-				screen->inputs.d.bHeld = false;
-				inputs.right.bHeld = false;
+				game->inputs.d.bHeld = false;
+				game->inputs.right.bHeld = false;
 				direction.x++;
 			}
 			if (inputs.s.bHeld || inputs.down.bHeld)
 			{
-				screen->inputs.s.bHeld = false;
-				inputs.down.bHeld = false;
+				game->inputs.s.bHeld = false;
+				game->inputs.down.bHeld = false;
 				direction.y--;
 			}
 			if (inputs.w.bHeld || inputs.up.bHeld)
 			{
-				screen->inputs.w.bHeld = false;
-				inputs.up.bHeld = false;
+				game->inputs.w.bHeld = false;
+				game->inputs.up.bHeld = false;
 				direction.y++;
 			}
 			#pragma endregion
@@ -98,7 +98,7 @@ public:
 
 
 		if (heldEntity == nullptr && items.size() > 0) // You can't mod by 0.
-			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, items.size());
+			items.currentIndex = JMod(items.currentIndex + inputs.mouseScroll, static_cast<int>(items.size()));
 
 		Item currentShootingItem = items.GetCurrentItem();
 
@@ -121,43 +121,35 @@ public:
 		}
 
 		if (heldEntity == nullptr && inputs.middleMouse.bPressed && inputs.mousePosition != pos &&
-			(hitEntity = ((Entities*)entities)->FindCorpPos(inputs.mousePosition)) != ((Entities*)entities)->corporeals.end() && *hitEntity != nullptr)
+			(hitEntity = entities->FindCorpOverlaps(inputs.mousePosition, dimensions)).size())
 		{
-			heldEntity = *hitEntity;
+			heldEntity = hitEntity[0];
 			heldEntity->holder = this;
 		}
-		else
+		else if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
+			currentShootingItem != *dItem && inputs.leftMouse.bHeld && items.TryTake(currentShootingItem))
 		{
-			Vec2 movePos = pos + Squarmalized(inputs.mousePosition - pos);
-			if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
-				currentShootingItem != *dItem && inputs.leftMouse.bHeld &&
-				(inputs.mousePosition.x <= pos.x - dimensions.x || inputs.mousePosition.x >= pos.x + dimensions.x ||
-					inputs.mousePosition.y <= pos.y - dimensions.y || inputs.mousePosition.y >= pos.y + dimensions.y) &&
-				//((Entities*)entities)->FindCorpOverlaps(movePos, dimensions).size() == 0 &&
-				items.TryTake(currentShootingItem))
-			{
-				lastClick = tTime;
-				ShotItem* shot = new ShotItem(basicShotItem, currentShootingItem, pos, inputs.mousePosition - pos, this);
-				entities->push_back(shot);
-			}
+			lastClick = tTime;
+			Entity* shot = basicShotItem->Clone(currentShootingItem.Clone(), pos, inputs.mousePosition - pos, this);
+			entities->push_back(shot);
 		}
 		playerPos = pos;
 
 		if (tTime - lastVac >= vacSpeed && heldEntity == nullptr && inputs.space.bHeld)
 		{
 			lastVac = tTime;
-			((Entities*)entities)->Vacuum(pos, vacDist);
+			entities->Vacuum(pos, vacDist);
 		}
 
-		vector<Collectible*> collectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
-		for (Collectible* collectible : collectibles)
+		vector<Entity*> collectibles = EntitiesAtPos(pos, entities->collectibles);
+		for (Entity* collectible : collectibles)
 		{
-			items.push_back(collectible->baseClass);
-			collectible->DestroySelf(entities);
+			items.push_back(((Collectible*)collectible)->baseItem);
+			collectible->DestroySelf(entities, this);
 		}
 	}
 
-	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
+	void OnDeath(Entities* entities, Entity* damageDealer) override
 	{
 		playerAlive = false;
 		deathCauseName = damageDealer->name;

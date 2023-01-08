@@ -5,16 +5,11 @@ class Enemy : public DToCol
 public:
 	float timePer, lastTime;
 
-	float points;
+	int points;
 	int damage;
 
-	void Start() override
-	{
-		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime; // Randomly offsetted.
-	}
-
 	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(vZero, dimensions, color, color2, mass, maxHealth, health, name), timePer(timePer), points(points), damage(damage)
+		DToCol(vZero, dimensions, color, color2, mass, maxHealth, health, name), timePer(timePer), lastTime(0.0f), points(points), damage(damage)
 	{
 	}
 
@@ -23,7 +18,7 @@ public:
 	{
 		this->baseClass = baseClass;
 		this->pos = pos;
-		Start();
+		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime;
 	}
 
 	bool IsEnemy() override
@@ -31,19 +26,19 @@ public:
 		return true;
 	}
 
-	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			TUpdate(screen, (Entities*)entities, frameCount, inputs, dTime);
+			TUpdate(game, entities, frameCount, inputs, dTime);
 			lastTime = tTime;
 		}
 	}
 
-	virtual void TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	virtual void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		Entity* entity = nullptr;
-		TryMove2(Squarmalized(playerPos - pos), mass, (vector<Entity*>*)entities, &entity, nullptr);
+		TryMove2(Squarmalized(playerPos - pos), mass, entities, &entity, nullptr);
 		if (entity != nullptr && !entity->IsEnemy())
 		{
 			entity->DealDamage(damage, entities, this);
@@ -55,9 +50,9 @@ public:
 		return DToCol::BottomRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
 	}
 
-	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		DrawUIBox(screen, TopLeft(), BottomRight(), name + " " + to_string(health), color);
+		DrawUIBox(game, TopLeft(), BottomRight(), name + " " + to_string(health), color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
@@ -68,7 +63,7 @@ public:
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 
-	bool TryMove2(Vec2 dir, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* avoid)
+	bool TryMove2(Vec2 dir, int force, Entities* entities, Entity** hitEntity, Entity* avoid)
 	{
 		if (!TryMove(dir, force, entities, hitEntity, avoid))
 		{
@@ -96,7 +91,7 @@ public:
 		return true;
 	}
 
-	void OnDeath(vector<Entity*>* entities, Entity* damageDealer) override
+	void OnDeath(Entities* entities, Entity* damageDealer) override
 	{
 		totalGamePoints += points;
 		int randomValue = rand() % 2048; // 0-2047
@@ -144,13 +139,14 @@ namespace EnemyClasses
 			noise3.SetSeed(PsuedoRandom());
 		}
 
-		void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime)
+		void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
 		{
 			Color tempColor = color;
-			Color multiplier = Color(255 * noise1.GetNoise(tTime, 0.0f), 255 * noise2.GetNoise(tTime, 0.0f), 255 * noise3.GetNoise(tTime, 0.0f));
+			Color multiplier = Color(static_cast<int>(255 * noise1.GetNoise(tTime, 0.0f)),
+				static_cast<int>(255 * noise2.GetNoise(tTime, 0.0f)), static_cast<int>(255 * noise3.GetNoise(tTime, 0.0f)));
 			color = Color(color.r * multiplier.r, color.g * multiplier.g, color.b * multiplier.b, color.a);
 
-			Enemy::DUpdate(screen, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
 
 			float healthRatio = (float)health / maxHealth;
 			color = Color(color3.r * multiplier.r, color3.g * multiplier.g, color3.b * multiplier.b, color3.a);
@@ -158,11 +154,11 @@ namespace EnemyClasses
 			Vec2 tempPos = pos;
 
 			pos = Vec2(playerPos.x * 2 - pos.x, pos.y);
-			Enemy::DUpdate(screen, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
 			pos = Vec2(pos.x, playerPos.y * 2 - pos.y);
-			Enemy::DUpdate(screen, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
 			pos = Vec2(playerPos.x * 2 - pos.x, pos.y);
-			Enemy::DUpdate(screen, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
 
 			color = tempColor;
 			pos = tempPos;

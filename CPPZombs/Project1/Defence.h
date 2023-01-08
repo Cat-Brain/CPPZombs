@@ -31,17 +31,17 @@ public:
 		return new CollectibleTree(this, dir, pos);
 	}
 
-	void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime)
+	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		Color oldColor = color;
 		if (currentLifespan >= deadStage)
 			color = deadColor;
 		else if (currentLifespan >= cyclesToGrow)
 			color = adultColor;
-		FunctionalBlock::DUpdate(screen, entities, frameCount, inputs, dTime);
+		FunctionalBlock::DUpdate(game, entities, frameCount, inputs, dTime);
 	}
 
-	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
 	{
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
@@ -54,24 +54,24 @@ public:
 		return true;
 	}
 
-	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(screen, topLeft, topLeft + Vec2(40 + name.length() * 8, 15), "Baby " + name, color, deadColor, collectible->color);
-			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
+			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
+			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
 				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(screen, topLeft, topLeft + Vec2(48 + name.length() * 8, 22), "Adult " + name, color, deadColor, collectible->color);
-			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
-			screen->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
+			DrawUIBox(game, topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
+			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
+			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
 				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), color);
 		}
 		else
-			DrawUIBox(screen, topLeft, topLeft + Vec2(40 + name.length() * 8, 8), "Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
@@ -79,15 +79,15 @@ public:
 		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0), bottomRight;
 		if (currentLifespan < cyclesToGrow)
 		{
-			bottomRight = topLeft + Vec2(40 + name.length() * 8, 15);
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			bottomRight = topLeft + Vec2(48 + name.length() * 8, 22);
+			bottomRight = topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 22);
 		}
 		else
 		{
-			bottomRight = topLeft + Vec2(40 + name.length() * 8, 8);
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 8);
 		}
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
@@ -126,7 +126,7 @@ Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 
 #pragma endregion
 
-class Turret : public FunctionalBlock
+class Turret : public Duct
 {
 public:
 	Items items;
@@ -134,29 +134,29 @@ public:
 	bool overShoot;
 
 	Turret(float range, bool overShoot, float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		FunctionalBlock(timePer, pos, dimensions, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
+		Duct(timePer, pos, dimensions, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
 	{ }
 
-	void Update(Screen * screen, vector<Entity*>*entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		printf("?");
-		vector<Collectible*> newCollectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
-		for (Collectible* collectible : newCollectibles)
+		vector<Entity*> newCollectibles = EntitiesAtPos(pos, entities->collectibles);
+		for (Entity* collectible : newCollectibles)
 		{
-			items.push_back(collectible->baseClass);
+			items.push_back(((Collectible*)collectible)->baseItem);
 			((Entities*)entities)->Remove(collectible);
 		}
-		for (Collectible* collectible : containedCollectibles)
+		for (Entity* collectible : containedEntities)
 		{
-			items.push_back(collectible->baseClass);
+			items.push_back(((Collectible*)collectible)->baseItem);
 			((Entities*)entities)->Remove(collectible);
 		}
-		containedCollectibles.clear();
+		containedEntities.clear();
 
-		FunctionalBlock::Update(screen, entities, frameCount, inputs, dTime);
+		FunctionalBlock::Update(game, entities, frameCount, inputs, dTime);
 	}
 
-	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		Entity* entity = entities->FindNearestEnemy(pos);
 
@@ -166,11 +166,6 @@ public:
 		
 		entities->push_back(new ShotItem(basicShotItem, shotItem, pos, overShoot ? (Vec2)(Normalized(entity->pos - pos) * range) : entity->pos - pos, this));
 
-		return true;
-	}
-
-	bool IsConveyer() override
-	{
 		return true;
 	}
 };

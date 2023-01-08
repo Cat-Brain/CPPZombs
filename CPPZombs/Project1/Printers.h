@@ -24,7 +24,7 @@ namespace Recipes
 	}
 };
 
-class Printer : public FunctionalBlock
+class Printer : public Duct
 {
 public:
 	vector<RecipeA> recipeAs;
@@ -33,7 +33,7 @@ public:
 	Items items;
 
 	Printer(vector<RecipeA> recipeAs, vector<RecipeB> recipeBs, float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME"):
-		FunctionalBlock(timePer, pos, dimensions, color, mass, maxHealth, health, name), recipeAs(recipeAs), recipeBs(recipeBs)
+		Duct(timePer, pos, dimensions, color, mass, maxHealth, health, name), recipeAs(recipeAs), recipeBs(recipeBs)
 	{ }
 
 	Printer(Printer* baseClass, Vec2 dir, Vec2 pos) :
@@ -50,25 +50,25 @@ public:
 		return new Printer(this, dir, pos);
 	}
 
-	void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		vector<Collectible*> newCollectibles = CollectiblesAtEPos(pos, ((Entities*)entities)->collectibles);
-		for (Collectible* collectible : newCollectibles)
+		vector<Entity*> newCollectibles = EntitiesAtPos(pos, entities->collectibles);
+		for (Entity* collectible : newCollectibles)
 		{
-			items.push_back(collectible->baseClass);
+			items.push_back(((Collectible*)collectible)->baseItem);
 			((Entities*)entities)->Remove(collectible);
 		}
-		for (Collectible* collectible : containedCollectibles)
+		for (Entity* collectible : containedEntities)
 		{
-			items.push_back(collectible->baseClass);
+			items.push_back(((Collectible*)collectible)->baseItem);
 			((Entities*)entities)->Remove(collectible);
 		}
-		containedCollectibles.clear();
+		containedEntities.clear();
 
-		FunctionalBlock::Update(screen, entities, frameCount, inputs, dTime);
+		FunctionalBlock::Update(game, entities, frameCount, inputs, dTime);
 	}
 
-	bool TUpdate(Screen* screen, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		if (currentRecipe >= 0 && items.TryMake(currentRecipe < recipeAs.size() ? recipeAs[currentRecipe].first : recipeBs[currentRecipe - recipeAs.size()].first))
 		{
@@ -92,23 +92,23 @@ public:
 		return TopLeft() + Vec2((int)fmaxf(name.length() * 8.0f, (recipeAs.size() + recipeBs.size()) * 3.0f + 2), 12);
 	}
 
-	void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
+		DrawUIBox(game, TopLeft(), BottomRight(), name, color);
 
 		for (int i = 0; i < recipeAs.size(); i++)
-			screen->Draw(ToRSpace(pos) + Vec2(3 * (i + 2) + 1, 1), recipeAs[i].second->color);
+			game->Draw(ToRSpace(pos) + Vec2(3 * (i + 2) + 1, 1), recipeAs[i].second->color);
 
-		Vec2 tilePos = pos + Vec2(2 + recipeAs.size(), 0);
+		Vec2 tilePos = pos + Vec2(2 + static_cast<int>(recipeAs.size()), 0);
 		for (int i = 0; i < recipeBs.size(); i++)
 		{
-			recipeBs[i].second->Draw(tilePos, recipeBs[i].second->color, screen, entities, frameCount, inputs, dTime, dir);
+			recipeBs[i].second->Draw(tilePos, recipeBs[i].second->color, game, entities, frameCount, inputs, dTime, dir);
 			tilePos.x += 1;
 		}
 		if (currentRecipe >= 0)
 		{
 			Vec2 tl = FunctionalBlock::TopLeft() + Vec2(3 + currentRecipe, -1);
-			screen->Draw(tl, olc::BLACK);
+			game->Draw(tl, olc::BLACK);
 		}
 	}
 
@@ -120,11 +120,6 @@ public:
 			currentRecipe = (screenSpacePos.x - topLeft.x - 3);
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
-	}
-
-	bool IsConveyer() override
-	{
-		return true;
 	}
 };
 

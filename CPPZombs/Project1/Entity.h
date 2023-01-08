@@ -1,5 +1,6 @@
 #include "Item.h"
 
+class Entities;
 class Entity
 {
 public:
@@ -33,34 +34,33 @@ public:
 		return new Entity(this, pos);
 	}
 
-	virtual void Start()
-	{}
+	virtual void Start() { }
 
-	virtual void Draw(Vec2 pos, Color color, Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero)
+	virtual void Draw(Vec2 pos, Color color, Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
 		//this->color = color;
-		DUpdate(screen, entities, frameCount, inputs, dTime);
+		DUpdate(game, entities, frameCount, inputs, dTime);
 		this->pos = tempPos;
 		//this->color = tempColor;
 	}
 
-	virtual void DUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally only draws.
+	virtual void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) // Normally only draws.
 	{
 		Vec2 disp = ToRSpace(pos);
 		disp = Vec2(labs(disp.x), labs(disp.y));
-		if(disp.x >= 0 && disp.x <= screenWidth && disp.y >= 0 && disp.y <= screenHeight)
-		screen->FillRect(ToRSpace(pos) - dimensions + vOne, dimensions * 2 - vOne, color);
+		if(disp.x >= 0 && disp.x <= game->ScreenWidth() && disp.y >= 0 && disp.y <= game->ScreenWidth())
+			game->FillRect(ToRSpace(pos) - dimensions + vOne, dimensions * 2 - vOne, color);
 	}
 
-	void DrawUIBox(Screen* screen, Vec2 topLeft, Vec2 bottomRight, string text, Color textColor,
+	void DrawUIBox(Game* game, Vec2 topLeft, Vec2 bottomRight, string text, Color textColor,
 		Color borderColor = olc::VERY_DARK_GREY, Color fillColor = olc::DARK_GREY)
 	{
-		screen->DrawRect(topLeft, bottomRight - topLeft, borderColor);
-		screen->FillRect(topLeft + Vec2(1, 1), bottomRight - topLeft - Vec2(1, 1), fillColor);
-		screen->DrawString(topLeft + Vec2(1, 1), text, textColor);
+		game->DrawRect(topLeft, bottomRight - topLeft, borderColor);
+		game->FillRect(topLeft + Vec2(1, 1), bottomRight - topLeft - Vec2(1, 1), fillColor);
+		game->DrawString(topLeft + Vec2(1, 1), text, textColor);
 	}
 
 	virtual Vec2 TopLeft()
@@ -73,9 +73,9 @@ public:
 		return TopLeft() + Vec2((int)name.length() * 8, 8);
 	}
 
-	virtual void UIUpdate(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Draws when shouldUI is true.
+	virtual void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) // Draws when shouldUI is true.
 	{
-		DrawUIBox(screen, TopLeft(), BottomRight(), name, color);
+		DrawUIBox(game, TopLeft(), BottomRight(), name, color);
 	}
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
@@ -86,17 +86,16 @@ public:
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 
-	virtual void Update(Screen* screen, vector<Entity*>* entities, int frameCount, Inputs inputs, float dTime) // Normally doesn't draw.
-	{ }
+	virtual void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) { } // Normally doesn't draw.
+	
+	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
+	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
 
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
-	virtual bool TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
-
-	virtual bool CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore = nullptr); // returns if item was hit.
-	virtual bool CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
+	virtual bool CheckMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
+	virtual bool CheckMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
 
 
-	virtual int DealDamage(int damage, vector<Entity*>* entities, Entity* damageDealer)
+	virtual int DealDamage(int damage, Entities* entities, Entity* damageDealer)
 	{
 		health -= damage;
 		if (health <= 0)
@@ -107,11 +106,9 @@ public:
 		return 0;
 	}
 
-	void DestroySelf(vector<Entity*>* entities, Entity* damageDealer); // Always calls OnDeath;
+	void DestroySelf(Entities* entities, Entity* damageDealer); // Always calls OnDeath;
 
-	virtual void OnDeath(vector<Entity*>* entities, Entity* damageDealer)
-	{
-	}
+	virtual void OnDeath(Entities* entities, Entity* damageDealer) { }
 
 	virtual int SortOrder()
 	{
@@ -119,6 +116,7 @@ public:
 	}
 
 	#pragma region bool functions
+
 	virtual bool CanAttack()
 	{
 		return true;
@@ -148,6 +146,12 @@ public:
 	{
 		return true;
 	}
+
+	virtual bool IsCollectible()
+	{
+		return false;
+	}
+
 	#pragma endregion
 };
 
@@ -161,23 +165,6 @@ bool EmptyFromEntities(Vec2 pos, vector<Entity*> entities)
 		if (entities[i]->pos == pos)
 			return false;
 	return true;
-}
-
-int TryAndAttack(Vec2 pos, int damage, vector<Entity*>* entities) // Returns 0 if successful, 1 if damaged, 2 if missed.
-{
-	for (int i = 0; i < entities->size(); i++)
-		if ((*entities)[i]->pos == pos && (*entities)[i]->CanAttack())
-		{
-			(*entities)[i]->health -= damage;
-			if ((*entities)[i]->health < 1)
-			{
-				delete (*entities)[i];
-				entities->erase(entities->begin() + i);
-				return 0;
-			}
-			return 1;
-		}
-	return 2;
 }
 
 vector<Entity*> IncorporealsAtPos(Vec2 pos, vector<Entity*>* entities)

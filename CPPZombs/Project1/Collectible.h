@@ -1,44 +1,44 @@
 #include "Entity.h"
 
-class Collectible
+class Collectible : public Entity
 {
 public:
-	Item baseClass;
-	Vec2 pos;
-	Color color;
-	bool active;
+	Item baseItem;
 
-	Collectible(Item baseClass, Vec2 pos = vZero) :
-		baseClass(baseClass), pos(pos), color(baseClass.color), active(true) { }
+	Collectible(Item baseItem, Vec2 pos = vZero) :
+		Entity(pos, vOne, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
-	Collectible(Item baseClass, Vec2 pos, Color color) :
-		baseClass(baseClass), pos(pos), color(color), active(true) { }
+	Collectible(Item baseItem, Vec2 pos, Color color) :
+		Entity(pos, vOne, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
-	virtual void DUpdate(Screen* screen, void* entities, int frameCount, Inputs inputs)
+	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
+
+	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		screen->Draw(ToRSpace(pos), color);
+		game->Draw(ToRSpace(pos), color);
 	}
+
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	{
+		return new Collectible(this, pos);
+	}
+
 
 	virtual Collectible* Clone(int count)
 	{
-		return new Collectible(baseClass.Clone(count), pos, color);
+		return new Collectible(baseItem.Clone(count), pos, color);
 	}
 
-	virtual Collectible* Clone(Vec2 pos = vZero, Vec2 dir = vZero)
+	bool Corporeal() override
 	{
-		return new Collectible(baseClass, pos, color);
+		return false;
 	}
 
-	virtual bool TryMove(Vec2 direction, int force, void* entities, void* ignore = nullptr); // returns if item was hit.
-	virtual bool TryMove(Vec2 direction, int force, void* entities, void** hitEntity, void* ignore = nullptr); // returns if item was hit.
-
-	void DestroySelf(void* entities);
+	bool IsCollectible() override
+	{
+		return true;
+	}
 };
-
-void Item::OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos)
-{
-	((vector<Collectible*>*)collectibles)->push_back(new Collectible(*this, pos));
-}
 
 namespace Collectibles
 {
@@ -48,19 +48,18 @@ namespace Collectibles
 
 
 #pragma region Other Collectible funcitons
-vector<Collectible*> CollectiblesAtEPos(Vec2 pos, vector<Collectible*> collectibles)
+vector<Entity*> EntitiesAtPos(Vec2 pos, vector<Entity*> entities)
 {
-	vector<Collectible*> foundCollectibles = vector<Collectible*>();
-	for (vector<Collectible*>::iterator i = collectibles.begin(); i != collectibles.end(); i++)
+	vector<Entity*> foundCollectibles(0);
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
 			foundCollectibles.push_back(*i);
 	return foundCollectibles;
 }
 
-Collectible* FindACollectible(Vec2 pos, vector<Collectible*> collectibles)
+Entity* FindAEntity(Vec2 pos, vector<Entity*> entities)
 {
-	vector<Collectible*> foundCollectibles = vector<Collectible*>();
-	for (vector<Collectible*>::iterator i = collectibles.begin(); i != collectibles.end(); i++)
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
 			return *i;
 	return nullptr;
@@ -92,27 +91,25 @@ public:
 	using vector<Entity*>::vector;
 
 	bool addedEntity;
-	vector<Entity*> sortedEntities;
+	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
+	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
 	vector<Entity*> projectiles, nonProjectiles;
 	vector<Entity*> enemies, nonEnemies;
 	vector<Entity*> corporeals, incorporeals;
-	vector<Collectible*> collectibles;
 
 	void push_back(Entity* entity)
 	{
 		addedEntity = true;
 		vector<Entity*>::push_back(entity);
-		index++;
-		sortedEntities.insert(sortedEntities.begin(), entity);
-		if (entity->Corporeal())
-			corporeals.push_back(entity);
+		if (entity->IsCollectible())
+			collectibles.push_back(entity);
 		else
-			incorporeals.push_back(entity);
-	}
-
-	void push_back(Collectible* collectible)
-	{
-		collectibles.push_back(collectible);
+		{
+			index++;
+			sortedNCEntities.insert(sortedNCEntities.begin(), entity);
+			if (entity->Corporeal())
+				corporeals.push_back(entity);
+		}
 	}
 
 	Entity* FindNearestEnemy(Vec2 pos)
@@ -122,7 +119,7 @@ public:
 		for (Entity* entity : *this)
 		{
 			float dist;
-			if ((dist = Distance(pos, entity->pos)) < currentBestDist)
+			if (entity->IsEnemy() && (dist = Distance(pos, entity->pos)) < currentBestDist)
 			{
 				currentBestDist = dist;
 				currentBest = entity;
@@ -157,18 +154,39 @@ public:
 
 	void SortEntities()
 	{
-		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(size());
-		for (int i = 0; i < size(); i++)
-			unsortedToSorted[i] = EntityIndex(i, (*this)[i]->SortOrder());
+		int length = static_cast<int>(size());
+		for (Entity* entity : *this)
+			length -= int(entity->IsCollectible());
+		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(length);
+		for (int i = 0, j = 0; i < size(); i++)
+			if (!(*this)[i]->IsCollectible())
+			{
+				unsortedToSorted[j] = EntityIndex(i, (*this)[i]->SortOrder());
+				j++;
+			}
 		std::sort(unsortedToSorted.begin(), unsortedToSorted.end());
 
-		sortedEntities = vector<Entity*>(size());
-		for (int i = 0; i < size(); i++)
-			sortedEntities[i] = (*this)[unsortedToSorted[i].index];
+		sortedNCEntities = vector<Entity*>(length);
+		for (int i = 0, j = 0; i < size(); i++)
+			if (!(*this)[i]->IsCollectible())
+			{
+				sortedNCEntities[j] = (*this)[unsortedToSorted[j].index];
+				j++;
+			}
+
+		collectibles = vector<Entity*>(size() - length);
+		length = 0;
+		for (Entity* entity : *this)
+			if (entity->IsCollectible())
+				collectibles[length++] = entity;
+		addedEntity = false;
 	}
 
-	void Update(Screen* screen, int frameCount, Inputs inputs, float dTime)
+	void Update(Game* game, int frameCount, Inputs inputs, float dTime)
 	{
+		if (addedEntity)
+			SortEntities();
+
 		int counterOne, counterTwo; // Will be used many times, so lets just create 'em at the start.
 #pragma region Enemies and Non-Enemies
 		counterOne = 0; // Enemy count
@@ -252,52 +270,61 @@ public:
 #pragma endregion
 
 
-		if (addedEntity)
-			SortEntities();
+		for (int i = 0; i < collectibles.size(); i++)
+			if (collectibles[i]->active)
+				collectibles[i]->Update(game, this, frameCount, inputs, dTime);
 
-		for (index = 0; index < sortedEntities.size(); index++)
-			if (sortedEntities[index]->active)
-				sortedEntities[index]->Update(screen, this, frameCount, inputs, dTime);
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			if (sortedNCEntities[index]->active)
+				sortedNCEntities[index]->Update(game, this, frameCount, inputs, dTime);
 
 		if (addedEntity)
 			SortEntities();
 	}
 
-	void DUpdate(Screen* screen, int frameCount, Inputs inputs, float dTime)
+	void DUpdate(Game* game, int frameCount, Inputs inputs, float dTime)
 	{
 		for (index = 0; index < collectibles.size(); index++)
-			if (collectibles[index]->active)
-				collectibles[index]->DUpdate(screen, this, frameCount, inputs);
-		for (index = 0; index < sortedEntities.size(); index++)
-			if (sortedEntities[index]->dActive)
-				sortedEntities[index]->DUpdate(screen, this, frameCount, inputs, dTime);
+			if (collectibles[index]->dActive)
+				collectibles[index]->DUpdate(game, this, frameCount, inputs, dTime);
+
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			if (sortedNCEntities[index]->dActive)
+				sortedNCEntities[index]->DUpdate(game, this, frameCount, inputs, dTime);
 	}
 
-	void UIUpdate(Screen* screen, int frameCount, Inputs inputs, float dTime)
+	void UIUpdate(Game* game, int frameCount, Inputs inputs, float dTime)
 	{
-		for (index = 0; index < sortedEntities.size(); index++)
-			if (sortedEntities[index]->dActive && sortedEntities[index]->shouldUI)
-				sortedEntities[index]->UIUpdate(screen, this, frameCount, inputs, dTime);
+		for (index = 0; index < collectibles.size(); index++)
+			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
+				collectibles[index]->UIUpdate(game, this, frameCount, inputs, dTime);
+
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
+				sortedNCEntities[index]->UIUpdate(game, this, frameCount, inputs, dTime);
 	}
 
 	void Remove(Entity* entityToRemove)
 	{
 		erase(find(begin(), end(), entityToRemove));
-		vector<Entity*>::iterator pos = find(sortedEntities.begin(), sortedEntities.end(), entityToRemove);
-		index -= int(index >= distance(sortedEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
-		sortedEntities.erase(pos);
-		if (entityToRemove->Corporeal())
-			corporeals.erase(find(corporeals.begin(), corporeals.end(), entityToRemove));
-	}
-
-	void Remove(Collectible* collectibleToRemove)
-	{
-		collectibles.erase(find(collectibles.begin(), collectibles.end(), collectibleToRemove));
+		if (!entityToRemove->IsCollectible())
+		{
+			vector<Entity*>::iterator pos = find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove);
+			index -= int(index >= distance(sortedNCEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
+			sortedNCEntities.erase(pos);
+			if (entityToRemove->Corporeal())
+				corporeals.erase(find(corporeals.begin(), corporeals.end(), entityToRemove));
+		}
+		else
+		{
+			vector<Entity*>::iterator pos = find(collectibles.begin(), collectibles.end(), entityToRemove);
+			collectibles.erase(pos);
+		}
 	}
 
 	void Vacuum(Vec2 pos, int vacDist)
 	{
-		for (Collectible* collectible : collectibles)
+		for (Entity* collectible : collectibles)
 		{
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
@@ -309,7 +336,7 @@ public:
 
 	void VacuumCone(Vec2 pos, Vec2 dir, int vacDist, float fov)
 	{
-		for (Collectible* collectible : collectibles)
+		for (Entity* collectible : collectibles)
 		{
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - pos + dir)) >= 1 - fov)
@@ -322,28 +349,27 @@ public:
 
 #pragma region Post Entities functions
 
-void Collectible::DestroySelf(void* entities)
+void Item::OnDeath(Entities* entities, Vec2 pos)
 {
-	((Entities*)entities)->Remove(this);
-	delete this;
+	entities->push_back(new Collectible(*this, pos));
 }
 
-void Entity::DestroySelf(vector<Entity*>* entities, Entity* damageDealer)
+void Entity::DestroySelf(Entities* entities, Entity* damageDealer)
 {
-	((Entities*)entities)->Remove(this);
+	entities->Remove(this);
 	OnDeath(entities, damageDealer);
 	if (holder != nullptr)
 		holder->heldEntity = nullptr;
 	delete this;
 }
 
-bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 
-	if (force > 0 && direction != Vec2(0, 0))
+	if (force >= mass && direction != Vec2(0, 0))
 	{
-		vector<Entity*> overlaps = ((Entities*)entities)->FindCorpOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for(Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
 				if (!(entity)->TryMove(direction, force - (entity)->mass, entities, ignore))
@@ -355,14 +381,14 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 	return true;
 }
 
-bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 
-	if (force > 0 && direction != Vec2(0, 0))
+	if (force >= mass && direction != Vec2(0, 0))
 	{
 
-		vector<Entity*> overlaps = ((Entities*)entities)->FindCorpOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for (Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
 			{
@@ -377,13 +403,13 @@ bool Entity::TryMove(Vec2 direction, int force, vector<Entity*>* entities, Entit
 	return true;
 }
 
-bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity* ignore) // returns index of hit item.
+bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 
-	if (force > 0 && direction != Vec2(0, 0))
+	if (force >= mass && direction != Vec2(0, 0))
 	{
-		vector<Entity*> overlaps = ((Entities*)entities)->FindCorpOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for (Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
 				if (!entity->CheckMove(direction, force - entity->mass, entities, ignore))
@@ -397,14 +423,14 @@ bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Ent
 	return true;
 }
 
-bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
+bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 
-	if (force > 0 && direction != Vec2(0, 0))
+	if (force >= mass && direction != Vec2(0, 0))
 	{
 
-		vector<Entity*> overlaps = ((Entities*)entities)->FindCorpOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for (Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
 			{
@@ -418,43 +444,6 @@ bool Entity::CheckMove(Vec2 direction, int force, vector<Entity*>* entities, Ent
 	if (holder != nullptr)
 		return holder->CheckMove(direction, force - holder->mass, entities, ignore);
 
-	return true;
-}
-
-bool Collectible::TryMove(Vec2 direction, int force, void* entities, void* ignore) // returns if item was hit.
-{
-	Vec2 newPos = pos + direction;
-
-	if (force > 0 && direction != Vec2(0, 0))
-	{
-		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
-		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore)
-			if (!(*entity)->TryMove(direction, force - (*entity)->mass, (vector<Entity*>*)entities, (Entity*)ignore))
-				return false;
-	}
-	else return false;
-
-	pos = newPos;
-	return true;
-}
-
-bool Collectible::TryMove(Vec2 direction, int force, void* entities, void** hitEntity, void* ignore) // returns if item was hit.
-{
-	Vec2 newPos = pos + direction;
-
-	if (force > 0 && direction != Vec2(0, 0))
-	{
-		vector<Entity*>::iterator entity = ((Entities*)entities)->FindCorpPos(newPos);
-		if (entity != ((Entities*)entities)->corporeals.end() && *entity != ignore)
-		{
-			*hitEntity = *entity;
-			if (!(*entity)->TryMove(direction, force - (*entity)->mass, (vector<Entity*>*)entities, (Entity*)ignore))
-				return false;
-		}
-	}
-	else return false;
-
-	pos += direction * 3;
 	return true;
 }
 
@@ -497,9 +486,9 @@ public:
 		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
 	}
 
-	void OnDeath(vector<void*>* collectibles, vector<void*>* entities, Vec2 pos) override
+	void OnDeath(Entities* entities, Vec2 pos) override
 	{
-		((Entities*)entities)->push_back(entityToPlace->Clone(pos));
+		entities->push_back(entityToPlace->Clone(pos));
 	}
 };
 
