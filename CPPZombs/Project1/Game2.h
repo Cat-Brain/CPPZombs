@@ -2,7 +2,9 @@
 
 bool Game::OnUserCreate()
 {
-	screen = olc::Sprite(screenWidth / 4, screenHeight / 4);
+	lowResScreen = olc::Sprite(screenWidth / 4, screenHeight / 4);
+	midResScreen = olc::Sprite(screenWidth, screenHeight);
+	SetDrawTarget(&midResScreen);
 	entities = new Entities(0);
 	player = new Player(ToSpace(screenDimH), vOne, 6, olc::BLUE, 1, 10, 5, "Player");
 	entities->push_back(player);
@@ -284,15 +286,17 @@ void Game::Update(float dTime)
 	{
 		lastPlayerPos = playerPos;
 		Vec2f spacePlayerPos = (Vec2f)ToSpace(playerPos) / 4.0f;
-		Color* screenColors = screen.GetData(); // Background draw must be after player gets updated.
-		for (int x = 0; x < screen.width; x++)
-			for (int y = 0; y < screen.height; y++)
-				screenColors[y * screen.width + x] = GetBackgroundNoise(Color(150, 92, 20), spacePlayerPos + Vec2(x, y));
+		Color* screenColors = lowResScreen.GetData(); // Background draw must be after player gets updated.
+		for (int x = 0; x < lowResScreen.width; x++)
+			for (int y = 0; y < lowResScreen.height; y++)
+				screenColors[y * lowResScreen.width + x] = GetBackgroundNoise(Color(150, 92, 20), spacePlayerPos + Vec2(x, y));
 	}
-	DrawSprite({ 0, 0 }, &screen, 4);
-		
+	DrawSprite({ 0, 0 }, &lowResScreen, 16);
 	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	SetDrawTarget(nullptr);
+	DrawSprite({ 0, 0 }, &midResScreen, 4);
 	entities->UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	SetDrawTarget(&midResScreen);
 
 
 

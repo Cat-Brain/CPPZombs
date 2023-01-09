@@ -13,7 +13,7 @@ int main()
 	#pragma endregion
 
 	Game game;
-	if (game.Construct(screenWidth, screenHeight, 6, 6, true))
+	if (game.Construct(screenWidth * 4, screenHeight * 4, 2, 2, true))
 		game.Start();
 
 	printf("\nFairwell universe!\n");

@@ -10,7 +10,7 @@ public:
 	Entities* entities;
 	Player* player;
 	FastNoiseLite backgroundNoise;
-	olc::Sprite lowResScreen, highResScreen;
+	olc::Sprite lowResScreen, midResScreen;
 	Inputs inputs;
 
 	bool showUI = true, paused = false;
