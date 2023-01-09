@@ -140,7 +140,7 @@ public:
 	{
 		vector<Entity*> overlaps(0);
 		for (vector<Entity*>::iterator iter = corporeals.begin(); iter != corporeals.end(); iter++)
-			if (labs(pos.x - (*iter)->pos.x) < (hDim.x + (*iter)->dimensions.x) - 1 && labs(pos.y - (*iter)->pos.y) < (hDim.y + (*iter)->dimensions.y) - 1) overlaps.push_back(*iter);
+			if ((*iter)->Overlaps(pos, hDim)) overlaps.push_back(*iter);
 		return overlaps;
 	}
 
@@ -371,9 +371,23 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* igno
 	{
 		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for(Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
-				if (!(entity)->TryMove(direction, force - (entity)->mass, entities, ignore))
-					return false;
+			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr) &&
+				!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
+			{
+				// something in front of them, however if they're stuck, we want to let them move anyways.
+				vector<Entity*> overlaps2 = entities->FindCorpOverlaps(pos, dimensions);
+				bool successful = false;
+				for (Entity* entity2 : overlaps2)
+					if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
+						force - mass > entity2->mass)
+					{
+						successful = true;
+						break;
+					}
+				if (successful)
+					break;
+				return false; // The entity is not stuck inside another entity and are blocked.
+			}
 	}
 	else return false;
 
@@ -387,14 +401,27 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hit
 
 	if (force >= mass && direction != Vec2(0, 0))
 	{
-
 		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
-		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
+		for(Entity* entity : overlaps)
+			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
 			{
 				*hitEntity = entity;
-				if (!entity->TryMove(direction, force - entity->mass, entities, ignore))
-					return false;
+				if (!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
+				{
+					// something in front of them, however if they're stuck, we want to let them move anyways.
+					vector<Entity*> overlaps2 = entities->FindCorpOverlaps(pos, dimensions);
+					bool successful = false;
+					for (Entity* entity2 : overlaps2)
+						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
+							force - mass > entity2->mass)
+						{
+							successful = true;
+							break;
+						}
+					if (successful)
+						break;
+					return false; // The entity is not stuck inside another entity and are blocked.
+				}
 			}
 	}
 	else return false;
@@ -411,9 +438,11 @@ bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity* ig
 	{
 		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
-				if (!entity->CheckMove(direction, force - entity->mass, entities, ignore))
-					return false;
+			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr) &&
+				!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
+			{
+				return false; // The entity is not stuck inside another entity and are blocked.
+			}
 	}
 	else return false;
 
@@ -429,20 +458,30 @@ bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity** h
 
 	if (force >= mass && direction != Vec2(0, 0))
 	{
-
 		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
 		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != (entity)->creator || creator == nullptr))
+			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
 			{
 				*hitEntity = entity;
-				if (!entity->CheckMove(direction, force - entity->mass, entities, ignore))
-					return false;
+				if (!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
+				{
+					// something in front of them, however if they're stuck, we want to let them move anyways.
+					vector<Entity*> overlaps2 = entities->FindCorpOverlaps(pos, dimensions);
+					bool successful = false;
+					for (Entity* entity2 : overlaps2)
+						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
+							force - mass > entity2->mass)
+						{
+							successful = true;
+							break;
+						}
+					if (successful)
+						break;
+					return false; // The entity is not stuck inside another entity and are blocked.
+				}
 			}
 	}
 	else return false;
-
-	if (holder != nullptr)
-		return holder->CheckMove(direction, force - holder->mass, entities, ignore);
 
 	return true;
 }

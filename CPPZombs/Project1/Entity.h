@@ -115,6 +115,11 @@ public:
 		return 0;
 	}
 
+	virtual bool Overlaps(Vec2 pos, Vec2 hDim)
+	{
+		return labs(this->pos.x - pos.x) < (dimensions.x + hDim.x) - 1 && labs(this->pos.y - pos.y) < (dimensions.y + hDim.y) - 1;
+	}
+
 	#pragma region bool functions
 
 	virtual bool CanAttack()

@@ -21,6 +21,11 @@ public:
 		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime;
 	}
 
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	{
+		return new Enemy(this, pos);
+	}
+
 	bool IsEnemy() override
 	{
 		return true;
@@ -122,7 +127,9 @@ namespace EnemyClasses
 		Color color3;
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
-		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne,
+			Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
@@ -165,6 +172,36 @@ namespace EnemyClasses
 		}
 
 	};
+
+	class Parent : public Enemy
+	{
+	public:
+		Enemy* child;
+
+		Parent(Enemy* child, float timePer = 0.5f, int points = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), child(child)
+		{
+			Start();
+		}
+
+		Parent(Parent* baseClass, Vec2 pos) :
+			Parent(*baseClass)
+		{
+			this->baseClass = baseClass;
+			this->pos = pos;
+			Start();
+		}
+
+		void OnDeath(Entities* entities, Entity* damageDealer) override
+		{
+			entities->push_back(child->Clone(pos + up));
+			entities->push_back(child->Clone(pos + right));
+			entities->push_back(child->Clone(pos + down));
+			entities->push_back(child->Clone(pos + left));
+		}
+	};
 }
 
 
@@ -177,3 +214,6 @@ Enemy* hyperSpeedster = new Enemy(0.25f, 10, 1, vOne, Color(255, 127, 0), olc::B
 Enemy* megaTanker = new Enemy(1.0f, 20, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
 
 EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
+
+Enemy* child = new Enemy(0.125f, 10, 1, vOne, olc::MAGENTA, olc::BLACK, 1, 1, 1, "Child");
+EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
