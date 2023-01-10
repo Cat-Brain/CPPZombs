@@ -349,7 +349,7 @@ public:
 
 #pragma region Post Entities functions
 
-void Item::OnDeath(Entities* entities, Vec2 pos)
+void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator)
 {
 	entities->push_back(new Collectible(*this, pos));
 }
@@ -525,11 +525,64 @@ public:
 		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
 	{
 		entities->push_back(entityToPlace->Clone(pos));
 	}
 };
+
+class ExplodeOnLanding : public Item
+{
+public:
+	Vec2 explosionDimensions;
+
+	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		Item(name, color, damage, count), explosionDimensions(explosionDimensions) { }
+
+	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		Item(baseClass, name, color, damage, count), explosionDimensions(explosionDimensions) { }
+
+	virtual Item Clone(int count)
+	{
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+	}
+
+	virtual Item Clone()
+	{
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+	}
+
+	virtual Item* Clone2(int count)
+	{
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+	}
+
+	virtual Item* Clone2()
+	{
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+	}
+
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
+	{
+		vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
+		for (Entity* entity : hitEntities)
+			if (entity != creator)
+				entity->DealDamage(damage, entities, nullptr);
+		entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
+	}
+};
+
+namespace Resources
+{
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 2, "Ruby", Color(168, 50, 100), 2);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 4, "Emerald", Color(65, 224, 150), 1);
+}
+
+namespace Collectibles
+{
+	Collectible* ruby = new Collectible(*Resources::ruby, vZero);
+	Collectible* emerald = new Collectible(*Resources::emerald, vZero);
+}
 
 
 typedef pair<Cost, Item*> RecipeA;

@@ -103,17 +103,21 @@ public:
 		if (randomValue > 1022) // Half of the time is true I think.
 		{
 			if (randomValue > 1500) // 1501-2047 ~= 1/4
-				((Entities*)entities)->push_back(Collectibles::copper->Clone(pos));
+				entities->push_back(Collectibles::copper->Clone(pos));
 			if (randomValue % 16 == 0) // ~1/16 of the time. The following and these can only have one of them happen
-				((Entities*)entities)->push_back(cCopperTreeSeed->Clone(pos));
+				entities->push_back(cCopperTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 1)
-				((Entities*)entities)->push_back(cIronTreeSeed->Clone(pos));
+				entities->push_back(cIronTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 2)
-				((Entities*)entities)->push_back(cCheeseTreeSeed->Clone(pos));
+				entities->push_back(cCheeseTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 3)
-				((Entities*)entities)->push_back(Shootables::cSmallPrinter->Clone(pos));
+				entities->push_back(cRubyTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 4)
-				((Entities*)entities)->push_back(Shootables::cSmallVacuum->Clone(pos));
+				entities->push_back(cEmeraldTreeSeed->Clone(pos));
+			/*else if (randomValue % 16 == 5)
+				entities->push_back(Shootables::cSmallPrinter->Clone(pos));
+			else if (randomValue % 16 == 6)
+				entities->push_back(Shootables::cSmallVacuum->Clone(pos));*/
 		}
 	}
 };
@@ -196,6 +200,8 @@ namespace EnemyClasses
 
 		void OnDeath(Entities* entities, Entity* damageDealer) override
 		{
+			Enemy::OnDeath(entities, damageDealer);
+
 			entities->push_back(child->Clone(pos + up));
 			entities->push_back(child->Clone(pos + right));
 			entities->push_back(child->Clone(pos + down));

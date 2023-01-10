@@ -51,9 +51,17 @@ public:
 		return name != b.name;
 	}
 
-	virtual void OnDeath(Entities* entities, Vec2 pos);
+	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator);
 };
 Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
+
+class GoneOnLandItem : public Item
+{
+public:
+	using Item::Item;
+
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override { }
+};
 
 typedef vector<Item> Cost;
 

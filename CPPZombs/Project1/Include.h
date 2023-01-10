@@ -1,9 +1,4 @@
 #pragma region Basic include stuff
-#define NDEBUG false
-#ifndef DEBUG
-#define DEBUG !NDEBUG
-#endif
-
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 #include "FastNoiseLite.h"
@@ -35,7 +30,7 @@ typedef olc::HWButton button;
 #pragma endregion
 
 // Global variables:
-int screenWidth = 100, screenHeight = 100,
+int screenWidth = 80, screenHeight = screenWidth,
 	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
 Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 int pixelCount = screenWidth * screenHeight;

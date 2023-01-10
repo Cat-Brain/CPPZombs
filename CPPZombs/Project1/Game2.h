@@ -126,7 +126,7 @@ bool Game::OnUserUpdate(float deltaTime)
 
 
 
-		inputs.mousePosition = ToSpace(GetMousePos()) + playerPos - screenDimH;
+		inputs.mousePosition = ToSpace(GetMousePos() / 4) + playerPos - screenDimH;
 
 		if (playerAlive)
 			Update(deltaTime);
@@ -291,12 +291,16 @@ void Game::Update(float dTime)
 			for (int y = 0; y < lowResScreen.height; y++)
 				screenColors[y * lowResScreen.width + x] = GetBackgroundNoise(Color(150, 92, 20), spacePlayerPos + Vec2(x, y));
 	}
-	DrawSprite({ 0, 0 }, &lowResScreen, 16);
-	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
-	SetDrawTarget(nullptr);
-	DrawSprite({ 0, 0 }, &midResScreen, 4);
-	entities->UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 	SetDrawTarget(&midResScreen);
+	DrawSprite({ 0, 0 }, &lowResScreen, 4);
+	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	// Draw mouse.
+	if ((int)(tTime * 5) % 5 < 3)
+		Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, 127));
+	// Reset screen to high-res screen.
+	SetDrawTarget(nullptr); // nullptr means default here.
+	DrawSprite({ 0, 0 }, &midResScreen, 4); // Apply the mid-res screen onto the big one before use.
+	entities->UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 
 
 
@@ -310,9 +314,6 @@ void Game::Update(float dTime)
 		player->items.DUpdate(this);
 	}
 
-	if ((int)(tTime * 5) % 5 < 3)
-		Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, 127));
-		
 	frameCount++;
 }
 

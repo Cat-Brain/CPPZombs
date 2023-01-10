@@ -8,6 +8,8 @@ int main()
 
 	copperTree->seed = cCopperTreeSeed;
 	ironTree->seed = cIronTreeSeed;
+	rubyTree->seed = cRubyTreeSeed;
+	emeraldTree->seed = cEmeraldTreeSeed;
 	cheeseTree->seed = cCheeseTreeSeed;
 
 	#pragma endregion

@@ -56,7 +56,7 @@ public:
 
 	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
+		Vec2 topLeft = TopLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
 			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
@@ -118,6 +118,16 @@ Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99)
 CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
 PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed);
+
+Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88);
+CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 1, 1, 1, "Ruby tree");
+PlacedOnLanding* rubyTreeSeed = new PlacedOnLanding(rubyTree, "Ruby tree seed", rubyTreeColor, 0);
+Collectible* cRubyTreeSeed = new Collectible(*rubyTreeSeed);
+
+Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
+CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
+PlacedOnLanding* emeraldTreeSeed = new PlacedOnLanding(emeraldTree, "Emerald tree seed", emeraldTreeColor, 0);
+Collectible* cEmeraldTreeSeed = new Collectible(*emeraldTreeSeed);
 
 Color babyCheeseTreeColor = Color(255, 210, 112), cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
 CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");

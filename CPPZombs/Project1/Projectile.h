@@ -146,7 +146,7 @@ public:
 
     void OnDeath(Entities* entities, Entity* damageDealer) override
     {
-        item.baseClass->OnDeath(entities, pos);
+        item.baseClass->OnDeath(entities, pos, creator);
     }
 };
 
