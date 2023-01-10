@@ -239,11 +239,17 @@ void Game::Update(float dTime)
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				entities->push_back(new Enemy(megaTanker, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 			}
-		else if (waveCount == 0 || waveCount == 9)
+		else if (waveCount == 9)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				entities->push_back(new EnemyClasses::Parent(parent, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+			}
+		else if (waveCount == 0 || waveCount == 13)
+			for (int i = 0; i < 5; i++)
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities->push_back(new EnemyClasses::Exploder(gigaExploder, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 			}
 		else
 		{
@@ -275,6 +281,18 @@ void Game::Update(float dTime)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				entities->push_back(new EnemyClasses::Deceiver(deceiver, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+			}
+
+			for (int i = 0; i < waveCount / 3 - 2; i++) // Parent, 5 on wave 9, First on wave 9
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities->push_back(new EnemyClasses::Parent(parent, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+			}
+
+			for (int i = 0; i < waveCount / 2 - 2; i++) // Exploder, First on wave 7
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				entities->push_back(new EnemyClasses::Exploder(exploder, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 			}
 		}
 	}

@@ -208,6 +208,39 @@ namespace EnemyClasses
 			entities->push_back(child->Clone(pos + left));
 		}
 	};
+
+	class Exploder : public Enemy
+	{
+	public:
+		Vec2 explosionDimensions;
+
+		Exploder(Vec2 explosionDimensions, float timePer = 0.5f, int points = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
+		{
+			Start();
+		}
+
+		Exploder(Exploder* baseClass, Vec2 pos) :
+			Exploder(*baseClass)
+		{
+			this->baseClass = baseClass;
+			this->pos = pos;
+			Start();
+		}
+
+		void OnDeath(Entities* entities, Entity* damageDealer) override
+		{
+			Enemy::OnDeath(entities, damageDealer);
+
+			vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
+			for (Entity* entity : hitEntities)
+				if (entity != this)
+					entity->DealDamage(damage, entities, this);
+			entities->push_back(new FadeOut(1.5f, pos, explosionDimensions, color));
+		}
+	};
 }
 
 
@@ -223,3 +256,6 @@ EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, vOne, 
 
 Enemy* child = new Enemy(0.125f, 10, 1, vOne, olc::MAGENTA, olc::BLACK, 1, 1, 1, "Child");
 EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
+
+EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
+EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");

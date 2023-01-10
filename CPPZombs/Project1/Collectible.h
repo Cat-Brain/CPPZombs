@@ -489,7 +489,31 @@ bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity** h
 #pragma endregion
 
 
-// Post entity definition items:
+// Post entities definition entities:
+
+/*class ExplodeNextFrame : public Entity
+{
+public:
+	float startTime, totalFadeTime;
+
+	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
+		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
+
+
+	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	{
+		if (tTime - startTime > totalFadeTime)
+			DestroySelf(entities, nullptr);
+		color.a = 255 - 255 * (tTime - startTime) / totalFadeTime;
+	}
+
+	bool Corporeal() override
+	{
+		return false;
+	}
+};*/
+
+// Post entities definition items:
 
 class PlacedOnLanding : public Item
 {
