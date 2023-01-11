@@ -225,7 +225,7 @@ void Game::Update(float dTime)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				entities->push_back(new Enemy(hyperSpeedster, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
+				entities->push_back(hyperSpeedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos));
 			}
 		else if(waveCount == 7)
 			for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6

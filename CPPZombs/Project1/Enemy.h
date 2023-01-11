@@ -26,6 +26,11 @@ public:
 		return new Enemy(this, pos);
 	}
 
+	void BetterClone(Game* game, Entities* entities, Vec2 pos)
+	{
+		entities->push_back(new Enemy(this, pos));
+	}
+
 	bool IsEnemy() override
 	{
 		return true;
@@ -66,6 +71,35 @@ public:
 		Vec2 bottomRight = BottomRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
+	}
+
+	bool TryMove2(Vec2 dir, int force, Entities* entities, Entity* avoid)
+	{
+		Entity** hitEntity = nullptr;
+		if (!TryMove(dir, force, entities, hitEntity, avoid))
+		{
+			if (*hitEntity != nullptr && (*hitEntity)->IsEnemy())
+			{
+				Vec2 newDir = dir;
+				bool randResult = PsuedoRandom() % 2;
+				RotateRight45(newDir);
+				if (randResult)
+					RotateLeft(newDir); // Total of rotating left 45 degrees.
+				if (!TryMove(newDir, force, entities, hitEntity, avoid))
+				{
+					if (*hitEntity != nullptr && (*hitEntity)->IsEnemy())
+					{
+						if (randResult)
+							RotateRight(newDir);
+						else
+							RotateLeft(newDir);
+						return TryMove(newDir, force, entities, hitEntity, avoid);
+					}
+				}
+			}
+			else return false;
+		}
+		return true;
 	}
 
 	bool TryMove2(Vec2 dir, int force, Entities* entities, Entity** hitEntity, Entity* avoid)
@@ -139,15 +173,16 @@ namespace EnemyClasses
 			Start();
 		}
 
-		Deceiver(Deceiver* baseClass, Vec2 pos) :
-			Deceiver(*baseClass)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos)
 		{
-			this->baseClass = baseClass;
-			this->pos = pos;
-			Start();
-			noise1.SetSeed(PsuedoRandom());
-			noise2.SetSeed(PsuedoRandom());
-			noise3.SetSeed(PsuedoRandom());
+			EnemyClasses::Deceiver* newEnemy = new EnemyClasses::Deceiver(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			newEnemy->noise1.SetSeed(PsuedoRandom());
+			newEnemy->noise2.SetSeed(PsuedoRandom());
+			newEnemy->noise3.SetSeed(PsuedoRandom());
+			entities->push_back(newEnemy);
 		}
 
 		void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
@@ -190,12 +225,13 @@ namespace EnemyClasses
 			Start();
 		}
 
-		Parent(Parent* baseClass, Vec2 pos) :
-			Parent(*baseClass)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos)
 		{
-			this->baseClass = baseClass;
-			this->pos = pos;
-			Start();
+			EnemyClasses::Parent* newEnemy = new EnemyClasses::Parent(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			entities->push_back(newEnemy);
 		}
 
 		void OnDeath(Entities* entities, Entity* damageDealer) override
@@ -222,12 +258,13 @@ namespace EnemyClasses
 			Start();
 		}
 
-		Exploder(Exploder* baseClass, Vec2 pos) :
-			Exploder(*baseClass)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos)
 		{
-			this->baseClass = baseClass;
-			this->pos = pos;
-			Start();
+			EnemyClasses::Exploder* newEnemy = new EnemyClasses::Exploder(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			entities->push_back(newEnemy);
 		}
 
 		void OnDeath(Entities* entities, Entity* damageDealer) override
@@ -235,6 +272,81 @@ namespace EnemyClasses
 			Enemy::OnDeath(entities, damageDealer);
 			entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos));
 			entities->push_back(new FadeOut(1.5f, pos, explosionDimensions, color));
+		}
+	};
+
+	class Snake : public Enemy
+	{
+	public:
+		Snake* back = nullptr, *front = nullptr;
+		int length;
+
+		Snake(int length, float timePer = 0.5f, int points = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), length(length)
+		{
+			Start();
+		}
+
+		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		{
+			Snake* newEnemy;
+			Snake** enemies = new Snake * [length];
+			for (int i = 0; i < length; i++)
+			{
+				enemies[i] = new Snake(*this);
+				enemies[i]->baseClass = baseClass;
+				enemies[i]->pos = pos;
+				enemies[i]->Start();
+			}
+			
+			enemies[0]->front = enemies[1];
+			for (int i = 1; i < length - 1; i++)
+			{
+				enemies[i]->back = enemies[i - 1];
+				enemies[i]->front = enemies[i + 1];
+			}
+			enemies[length - 1]->front = enemies[length - 2];
+
+			for (int i = 0; i < length; i++)
+				entities->push_back(enemies[i]);
+		}
+
+		void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		{
+			Enemy::TUpdate(game, entities, frameCount, inputs, dTime);
+			if (front != nullptr)
+				TryMove2(Squarmalized(front->pos - pos), 1, entities, nullptr);
+		}
+
+		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		{
+			if (front == nullptr)
+			{
+				Entity* entity = nullptr;
+				TryMove2(Squarmalized(playerPos - pos), mass, entities, &entity, nullptr);
+				if (entity != nullptr && !entity->IsEnemy())
+				{
+					entity->DealDamage(damage, entities, this);
+				}
+			}
+			else
+			{
+				vector<Entity*> nearbyEnemies = entities->FindCorpOverlaps(pos, vOne * 2);
+				for (Entity* entity : nearbyEnemies)
+					if (!entity->IsEnemy())
+						entity->DealDamage(damage, entities, this);
+			}
+		}
+
+		void OnDeath(Entities* entities, Entity* damageDealer) override
+		{
+			Enemy::OnDeath(entities, damageDealer);
+			if (back != nullptr)
+				back->front = nullptr;
+			if (front != nullptr)
+				front->back = nullptr;
 		}
 	};
 }
@@ -255,3 +367,4 @@ EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 1, vOne
 
 EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
 EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(10, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
