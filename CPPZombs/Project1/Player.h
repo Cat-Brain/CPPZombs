@@ -154,6 +154,9 @@ public:
 	void OnDeath(Entities* entities, Entity* damageDealer) override
 	{
 		playerAlive = false;
-		deathCauseName = damageDealer->name;
+		if (damageDealer != nullptr)
+			deathCauseName = damageDealer->name;
+		else
+			deathCauseName = "The planet";
 	}
 };

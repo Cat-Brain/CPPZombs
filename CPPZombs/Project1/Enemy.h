@@ -233,11 +233,7 @@ namespace EnemyClasses
 		void OnDeath(Entities* entities, Entity* damageDealer) override
 		{
 			Enemy::OnDeath(entities, damageDealer);
-
-			vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
-			for (Entity* entity : hitEntities)
-				if (entity != this)
-					entity->DealDamage(damage, entities, this);
+			entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos));
 			entities->push_back(new FadeOut(1.5f, pos, explosionDimensions, color));
 		}
 	};

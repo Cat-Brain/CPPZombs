@@ -214,7 +214,7 @@ void Game::Update(float dTime)
 	system_clock::time_point timeStartFrame = system_clock::now();
 
 	// New wave:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.enter.bPressed)
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || (inputs.enter.bPressed && waveCount != 13))
 	{
 		if (!inputs.enter.bPressed)
 			lastWave = tTime;

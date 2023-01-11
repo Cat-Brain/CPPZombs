@@ -491,27 +491,34 @@ bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity** h
 
 // Post entities definition entities:
 
-/*class ExplodeNextFrame : public Entity
+class ExplodeNextFrame : public Entity
 {
 public:
-	float startTime, totalFadeTime;
+	int damage;
+	Vec2 explosionDimensions;
+	float startTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
-		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
+	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Vec2 pos = vZero) :
+		Entity(pos), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime) { }
 
 
 	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
-		if (tTime - startTime > totalFadeTime)
-			DestroySelf(entities, nullptr);
-		color.a = 255 - 255 * (tTime - startTime) / totalFadeTime;
+		if (tTime != startTime)
+		{
+			vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
+			for (Entity* entity : hitEntities)
+				if (entity != this)
+					entity->DealDamage(damage, entities, nullptr);
+			DestroySelf(entities, this);
+		}
 	}
 
 	bool Corporeal() override
 	{
 		return false;
 	}
-};*/
+};
 
 // Post entities definition items:
 
