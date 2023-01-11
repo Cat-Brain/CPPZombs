@@ -75,7 +75,8 @@ public:
 
 	bool TryMove2(Vec2 dir, int force, Entities* entities, Entity* avoid)
 	{
-		Entity** hitEntity = nullptr;
+		Entity* hitEntityValue = nullptr;
+		Entity** hitEntity = &hitEntityValue;
 		if (!TryMove(dir, force, entities, hitEntity, avoid))
 		{
 			if (*hitEntity != nullptr && (*hitEntity)->IsEnemy())
@@ -278,15 +279,24 @@ namespace EnemyClasses
 	class Snake : public Enemy
 	{
 	public:
+		Vec2 lastPos;
+		Color color3, color4;
 		Snake* back = nullptr, *front = nullptr;
 		int length;
 
 		Snake(int length, float timePer = 0.5f, int points = 1, int damage = 1,
 			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
+			Color color3 = olc::RED, Color color4 = olc::DARK_GREEN,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), length(length)
+			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
 		{
 			Start();
+		}
+
+		void Start() override
+		{
+			Enemy::Start();
+			lastPos = pos;
 		}
 
 		void BetterClone(Game* game, Entities* entities, Vec2 pos)
@@ -299,6 +309,8 @@ namespace EnemyClasses
 				enemies[i]->baseClass = baseClass;
 				enemies[i]->pos = pos;
 				enemies[i]->Start();
+				enemies[i]->color = olc::PixelLerp(color, color4, sinf(i) * 0.5f + 0.5f);
+				enemies[i]->lastTime = tTime;
 			}
 			
 			enemies[0]->front = enemies[1];
@@ -307,17 +319,21 @@ namespace EnemyClasses
 				enemies[i]->back = enemies[i - 1];
 				enemies[i]->front = enemies[i + 1];
 			}
-			enemies[length - 1]->front = enemies[length - 2];
+			enemies[length - 1]->back = enemies[length - 2];
 
-			for (int i = 0; i < length; i++)
+			for (int i = length - 1; i > -1; i--)
 				entities->push_back(enemies[i]);
 		}
 
 		void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 		{
-			Enemy::TUpdate(game, entities, frameCount, inputs, dTime);
-			if (front != nullptr)
-				TryMove2(Squarmalized(front->pos - pos), 1, entities, nullptr);
+			Enemy::Update(game, entities, frameCount, inputs, dTime);
+			//if (oldPos != pos && back != nullptr)
+				//back->pos = oldPos;
+			//if (front != nullptr)
+				//TryMove2(Squarmalized(front->pos - pos), mass, entities, nullptr);
+			if (front == nullptr)
+				color = color3;
 		}
 
 		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
@@ -337,6 +353,12 @@ namespace EnemyClasses
 				for (Entity* entity : nearbyEnemies)
 					if (!entity->IsEnemy())
 						entity->DealDamage(damage, entities, this);
+			}
+			if (lastPos != pos)
+			{
+				if (back != nullptr)
+					back->pos = lastPos;
+				lastPos = pos;
 			}
 		}
 
@@ -367,4 +389,4 @@ EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 1, vOne
 
 EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
 EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
-EnemyClasses::Snake* snake = new EnemyClasses::Snake(10, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 3, 1, vOne, olc::GREEN, olc::BLACK, olc::RED, olc::DARK_GREEN, 2, 3, 3, "Snake");
