@@ -295,10 +295,16 @@ void Game::Update(float dTime)
 				parent->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 
-			for (int i = 0; i < waveCount / 2 - 2; i++) // Exploder, First on wave 7
+			for (int i = 0; i < waveCount / 2 - 2; i++) // Exploder, First on wave 6
 			{
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
 				exploder->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+			}
+
+			for (int i = 0; i < waveCount / 2 - 3; i++) // Exploder, First on wave 8
+			{
+				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				snake->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		}
 	}
