@@ -527,33 +527,33 @@ class PlacedOnLanding : public Item
 public:
 	Entity* entityToPlace;
 
-	PlacedOnLanding(Entity* entityToPlace, int damage = 0, int count = 1) :
-		Item(entityToPlace->name, entityToPlace->color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1) :
+		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count), entityToPlace(entityToPlace) { }
 
-	PlacedOnLanding(Entity* entityToPlace, string name, Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		Item(name, color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, Color color = olc::MAGENTA, int damage = 1, int count = 1) :
+		Item(name, typeName, color, damage, count), entityToPlace(entityToPlace) { }
 
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		Item(baseClass, name, color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
+		Item(baseClass, name, typeName, color, damage, count), entityToPlace(entityToPlace) { }
 
 	Item Clone(int count) override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
 	}
 
 	Item Clone() override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
 	}
 
 	Item* Clone2() override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, color, damage, count);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
 	}
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
@@ -567,30 +567,30 @@ class ExplodeOnLanding : public Item
 public:
 	Vec2 explosionDimensions;
 
-	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		Item(name, color, damage, count), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		Item(name, typeName, color, damage, count), explosionDimensions(explosionDimensions) { }
 
-	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		Item(baseClass, name, color, damage, count), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		Item(baseClass, name, typeName, color, damage, count), explosionDimensions(explosionDimensions) { }
 
 	virtual Item Clone(int count)
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item Clone()
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, color, damage, count, range);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
 	}
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
@@ -605,8 +605,8 @@ public:
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 2, "Ruby", Color(168, 50, 100), 2);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 4, "Emerald", Color(65, 224, 150), 1);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 2, "Ruby", "Ammo", Color(168, 50, 100), 2);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 4, "Emerald", "Ammo", Color(65, 224, 150), 1);
 }
 
 namespace Collectibles

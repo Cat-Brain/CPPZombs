@@ -43,14 +43,14 @@ public:
 			lastClick = tTime;
 		}
 
-		vector<Entity*> hitEntity;
+		vector<Entity*> hitEntities;
 		if (inputs.rightMouse.bPressed && inputs.mousePosition != pos &&
 			(currentMenuedEntity == nullptr || currentMenuedEntity->pos != inputs.mousePosition)
-			&& (hitEntity = entities->FindCorpOverlaps(inputs.mousePosition, dimensions)).size())
+			&& (hitEntities = entities->FindCorpOverlaps(inputs.mousePosition, dimensions)).size())
 		{
 			if (currentMenuedEntity != nullptr)
 				currentMenuedEntity->shouldUI = false;
-			currentMenuedEntity = hitEntity[0];
+			currentMenuedEntity = hitEntities[0];
 			currentMenuedEntity->shouldUI = true;
 		}
 		if (inputs.w.bPressed || inputs.up.bPressed || inputs.a.bPressed || inputs.left.bPressed ||
@@ -123,12 +123,13 @@ public:
 		}
 
 		if (heldEntity == nullptr && inputs.middleMouse.bPressed && inputs.mousePosition != pos &&
-			(hitEntity = entities->FindCorpOverlaps(inputs.mousePosition, dimensions)).size())
+			(hitEntities = entities->FindCorpOverlaps(inputs.mousePosition, vOne)).size())
 		{
-			heldEntity = hitEntity[0];
+			heldEntity = hitEntities[0];
 			heldEntity->holder = this;
 		}
 		else if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
+			(!bool(entities->FindCorpOverlaps(pos + Squarmalized(inputs.mousePosition - pos), vOne).size()) || currentShootingItem.typeName == "Ammo") &&
 			currentShootingItem != *dItem && inputs.leftMouse.bHeld && items.TryTake(currentShootingItem))
 		{
 			lastClick = tTime;

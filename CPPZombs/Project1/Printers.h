@@ -4,7 +4,7 @@ namespace Shootables
 {
 	namespace Conveyers
 	{
-		PlacedOnLanding* duct = new PlacedOnLanding(Structures::Conveyers::duct);
+		PlacedOnLanding* duct = new PlacedOnLanding(Structures::Conveyers::duct, "Structure");
 	}
 }
 
@@ -134,6 +134,6 @@ namespace Structures
 
 namespace Shootables
 {
-	PlacedOnLanding* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", Structures::Printers::smallPrinter->color, 0);
+	PlacedOnLanding* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", "Structure", Structures::Printers::smallPrinter->color, 0);
 	Collectible* cSmallPrinter = new Collectible(*smallPrinter);
 }

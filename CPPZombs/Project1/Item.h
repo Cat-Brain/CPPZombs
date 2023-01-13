@@ -5,35 +5,36 @@ class Item
 public:
 	Item* baseClass;
 	string name;
+	string typeName;
 	Color color;
 	int damage;
 	int count;
 	float range;
 
-	Item(string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		baseClass(this), name(name), color(color), damage(damage), count(count), range(range) { }
+	Item(string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range) { }
 
-	Item(Item* baseClass, string name = "NULL", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		baseClass(baseClass), name(name), color(color), damage(damage), count(count), range(range) { }
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
+		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, color, damage, count, range);
+		return Item(baseClass, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, color, damage, count, range);
+		return Item(baseClass, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, color, damage, count, range);
+		return new Item(baseClass, name, typeName, color, damage, count, range);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, color, damage, count, range);
+		return new Item(baseClass, name, typeName, color, damage, count, range);
 	}
 
 	Item operator * (int multiplier)
@@ -53,7 +54,7 @@ public:
 
 	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator);
 };
-Item* dItem = new Item("NULL", olc::MAGENTA, 0, 0);
+Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
 
 class GoneOnLandItem : public Item
 {
@@ -155,7 +156,8 @@ public:
 		for (int i = 0; i < size(); i++)
 		{
 			game->FillRect(Vec2(0, game->ScreenHeight() - 7 * (i + 1)), Vec2(7, 7), (*this)[i].color);
-			game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)), "-" + to_string((*this)[i].count), (*this)[i].color);
+			game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)),
+				"-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName), (*this)[i].color);
 		}
 		if (size() > 0)
 			game->DrawRect(Vec2(0, game->ScreenHeight() - 7 * (currentIndex + 1)), Vec2(6, 6), olc::BLACK);
@@ -171,8 +173,8 @@ public:
 
 namespace Resources
 {
-	Item* copper = new Item("Copper", Color(232, 107, 5), 1);
-	Item* iron = new Item("Iron", Color(111, 123, 128), 3);
+	Item* copper = new Item("Copper", "Ammo", Color(232, 107, 5), 1);
+	Item* iron = new Item("Iron", "Ammo", Color(111, 123, 128), 3);
 }
 
 #pragma endregion

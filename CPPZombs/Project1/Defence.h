@@ -101,7 +101,7 @@ public:
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", Color(235, 178, 56), 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Wall", Color(235, 178, 56), 0);
 }
 
 namespace Collectibles
@@ -111,27 +111,27 @@ namespace Collectibles
 
 Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
 CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
-PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", copperTreeColor, 0);
+PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(copperTree, "Copper seed", "Seed", copperTreeColor, 0);
 Collectible* cCopperTreeSeed = new Collectible(*copperTreeSeed);
 
 Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
 CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
-PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", ironTreeColor, 0);
+PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(ironTree, "Iron tree seed", "Seed", ironTreeColor, 0);
 Collectible* cIronTreeSeed = new Collectible(*ironTreeSeed);
 
 Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88);
 CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 1, 1, 1, "Ruby tree");
-PlacedOnLanding* rubyTreeSeed = new PlacedOnLanding(rubyTree, "Ruby tree seed", rubyTreeColor, 0);
+PlacedOnLanding* rubyTreeSeed = new PlacedOnLanding(rubyTree, "Ruby tree seed", "Seed", rubyTreeColor, 0);
 Collectible* cRubyTreeSeed = new Collectible(*rubyTreeSeed);
 
 Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
 CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
-PlacedOnLanding* emeraldTreeSeed = new PlacedOnLanding(emeraldTree, "Emerald tree seed", emeraldTreeColor, 0);
+PlacedOnLanding* emeraldTreeSeed = new PlacedOnLanding(emeraldTree, "Emerald tree seed", "Seed", emeraldTreeColor, 0);
 Collectible* cEmeraldTreeSeed = new Collectible(*emeraldTreeSeed);
 
 Color babyCheeseTreeColor = Color(255, 210, 112), cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
 CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
-PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", cheeseTreeColor, 0);
+PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(cheeseTree, "Cheese tree seed", "Seed", cheeseTreeColor, 0);
 Collectible* cCheeseTreeSeed = new Collectible(*cheeseTreeSeed);
 
 #pragma endregion
