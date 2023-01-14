@@ -2,7 +2,7 @@
 
 int main()
 {
-	printf("Greetings universe!\n");
+	printf("Greetings universe!\nDo you want to use fullscreen? 'y' or 'n'");
 
 	#pragma region Trees
 
@@ -14,8 +14,13 @@ int main()
 
 	#pragma endregion
 
+	string fullscreen;
+	std::cin >> fullscreen;
+	while (fullscreen != "y" && fullscreen != "n")
+		std::cin >> fullscreen;
+
 	Game game;
-	if (game.Construct(screenWidth * 4, screenHeight * 4, 2, 2, true))
+	if (game.Construct(screenWidth * 4, screenHeight * 4, 2, 2, fullscreen == "y", true))
 		game.Start();
 
 	printf("\nFairwell universe!\n");

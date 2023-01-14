@@ -76,7 +76,7 @@ public:
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0), bottomRight;
+		Vec2 topLeft = TopLeft(), bottomRight;
 		if (currentLifespan < cyclesToGrow)
 		{
 			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);

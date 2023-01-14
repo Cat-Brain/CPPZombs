@@ -49,8 +49,6 @@ bool Game::OnUserUpdate(float deltaTime)
 	{
 		inputs.Update1(this);
 
-		inputs.mousePosition = ToSpace(GetMousePos() / 4) + playerPos - screenDimH;
-
 		if (playerAlive)
 			Update(deltaTime);
 		else
@@ -59,67 +57,7 @@ bool Game::OnUserUpdate(float deltaTime)
 			DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\n\nKilled by:\n" + deathCauseName + "\n\nPress esc\nto close.");
 		}
 
-		#pragma region Inputs2
-
-		inputs.mouseScroll = 0;
-		// Not held wasd or arrow keys as that's covered by the player.
-		inputs.a.bPressed = false;
-		inputs.a.bReleased = false;
-
-		inputs.left.bPressed = false;
-		inputs.left.bReleased = false;
-
-		inputs.d.bPressed = false;
-		inputs.d.bReleased = false;
-
-		inputs.right.bPressed = false;
-		inputs.right.bReleased = false;
-
-		inputs.s.bPressed = false;
-		inputs.s.bReleased = false;
-
-		inputs.down.bPressed = false;
-		inputs.down.bReleased = false;
-
-		inputs.w.bPressed = false;
-		inputs.w.bReleased = false;
-
-		inputs.up.bPressed = false;
-		inputs.up.bReleased = false;
-
-		inputs.enter.bHeld = false;
-		inputs.enter.bPressed = false;
-		inputs.enter.bReleased = false;
-
-		inputs.c.bHeld = false;
-		inputs.c.bPressed = false;
-		inputs.c.bReleased = false;
-
-		inputs.q.bHeld = false;
-		inputs.q.bPressed = false;
-		inputs.q.bReleased = false;
-
-		inputs.e.bHeld = false;
-		inputs.e.bPressed = false;
-		inputs.e.bReleased = false;
-
-		inputs.space.bHeld = false;
-		inputs.space.bPressed = false;
-		inputs.space.bReleased = false;
-
-		inputs.leftMouse.bHeld = false;
-		inputs.leftMouse.bPressed = false;
-		inputs.leftMouse.bReleased = false;
-
-		inputs.rightMouse.bHeld = false;
-		inputs.rightMouse.bPressed = false;
-		inputs.rightMouse.bReleased = false;
-
-		inputs.middleMouse.bHeld = false;
-		inputs.middleMouse.bPressed = false;
-		inputs.middleMouse.bReleased = false;
-
-		#pragma endregion
+		inputs.Update2();
 	}
 
 	return true;
@@ -251,11 +189,19 @@ void Game::Update(float dTime)
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
 	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 	// Draw mouse.
-	Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, (sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64));
+	Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));
 	// Reset screen to high-res screen.
 	SetDrawTarget(nullptr); // nullptr means default here.
 	DrawSprite({ 0, 0 }, &midResScreen, 4); // Apply the mid-res screen onto the big one before use.
 	entities->UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	
+	if (tTime < 2.0f)
+	{
+		uint8_t opacity = static_cast<uint8_t>((2.0 - tTime) * 128 - 1);
+		FillRect(vZero, Vec2(ScreenWidth(), ScreenHeight()), Color(0, 0, 0, opacity));
+		DrawString(vZero, "OneLoneCoder.com\nPixel Game Engine",
+			Color(255, 255, 255, opacity), 2);
+	}
 
 
 

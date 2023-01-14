@@ -301,7 +301,6 @@ namespace EnemyClasses
 
 		void BetterClone(Game* game, Entities* entities, Vec2 pos)
 		{
-			Snake* newEnemy;
 			Snake** enemies = new Snake * [length];
 			for (int i = 0; i < length; i++)
 			{
@@ -309,7 +308,7 @@ namespace EnemyClasses
 				enemies[i]->baseClass = baseClass;
 				enemies[i]->pos = pos;
 				enemies[i]->Start();
-				enemies[i]->color = olc::PixelLerp(color, color4, sinf(i) * 0.5f + 0.5f);
+				enemies[i]->color = olc::PixelLerp(color, color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
 			
@@ -374,6 +373,45 @@ namespace EnemyClasses
 				front->back = nullptr;
 		}
 	};
+
+	class ColorCycler : public Enemy
+	{
+	public:
+		vector<Color> colorsToCycle;
+		float colorOffset, colorCycleSpeed;
+
+		ColorCycler(vector<Color> colorsToCycle, float colorCycleSpeed = 1.0f, float timePer = 0.5f, int points = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color2 = olc::BLACK,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, damage, dimensions, colorsToCycle[0], color2, mass, maxHealth, health, name),
+			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
+		{ }
+
+		void Start() override
+		{
+			Enemy::Start();
+			colorOffset = RandFloat() * colorCycleSpeed;
+		}
+
+		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		{
+			EnemyClasses::ColorCycler* newEnemy = new EnemyClasses::ColorCycler(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			entities->push_back(newEnemy);
+		}
+
+		void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		{
+			float currentPlace = (tTime * colorCycleSpeed + colorOffset);
+			int intCurrentPlace = static_cast<int>(currentPlace);
+			color = olc::PixelLerp(colorsToCycle[intCurrentPlace % colorsToCycle.size()],
+				colorsToCycle[(intCurrentPlace + 1) % colorsToCycle.size()], currentPlace - floorf(currentPlace));
+
+			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+		}
+	};
 }
 
 
@@ -382,7 +420,7 @@ namespace EnemyClasses
 Enemy* walker = new Enemy(0.75f, 1, 1, vOne, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
 Enemy* tanker = new Enemy(1.0f, 2, 1, vOne * 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
 Enemy* speedster = new Enemy(0.5f, 2, 1, vOne, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
-Enemy* hyperSpeedster = new Enemy(0.25f, 10, 1, vOne, Color(255, 127, 0), olc::BLACK, 1, 24, 24, "Hyper Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 20, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
 
 EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");

@@ -35,7 +35,8 @@ public:
 	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
 	{
 		bool exitedMenu = false;
-		if (currentMenuedEntity != nullptr && (inputs.leftMouse.bPressed || inputs.rightMouse.bPressed) && !currentMenuedEntity->PosInUIBounds(game->GetMousePos()))
+		if (currentMenuedEntity != nullptr && (inputs.leftMouse.bPressed || inputs.rightMouse.bPressed) &&
+			!currentMenuedEntity->PosInUIBounds(game->GetMousePos()))
 		{
 			currentMenuedEntity->shouldUI = false;
 			currentMenuedEntity = nullptr;
@@ -128,7 +129,7 @@ public:
 			heldEntity = hitEntities[0];
 			heldEntity->holder = this;
 		}
-		else if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
+		else if (!inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&inputs.mousePosition != pos &&
 			(!bool(entities->FindCorpOverlaps(pos + Squarmalized(inputs.mousePosition - pos), vOne).size()) || currentShootingItem.typeName == "Ammo") &&
 			currentShootingItem != *dItem && inputs.leftMouse.bHeld && items.TryTake(currentShootingItem))
 		{

@@ -45,6 +45,11 @@ float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
 
 #pragma region Math
+float RandFloat()
+{
+	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+}
+
 int JMod(int x, int m)
 {
 	return ((x % m) + m) % m;
@@ -115,56 +120,6 @@ std::string ToStringWithPrecision(const T a_value, const int n = 6)
 	return out.str();
 }
 
-struct Inputs
-{
-	Key w, a, s, d,
-		enter, c, q, e, space,
-		up, left, down, right,
-		leftMouse, rightMouse, middleMouse;
-	Vec2 mousePosition;
-	int mouseScroll = 0;
-
-	Inputs() = default;
-
-	static void ReadIntoKey(Key& key, Key newPressings)
-	{
-		key.bHeld |= newPressings.bHeld;
-		key.bPressed |= newPressings.bPressed;
-		key.bReleased |= newPressings.bReleased;
-	}
-
-	static void UpdateKey(olc::PixelGameEngine* game, Key& key, olc::Key keycode)
-	{
-		Key newPressings = game->GetKey(keycode);
-		ReadIntoKey(key, newPressings);
-	}
-
-	void Update1(olc::PixelGameEngine* game)
-	{
-		mouseScroll += game->GetMouseWheel() / 120;
-
-		UpdateKey(game, w, olc::W);
-		UpdateKey(game, a, olc::A);
-		UpdateKey(game, s, olc::S);
-		UpdateKey(game, d, olc::D);
-
-		UpdateKey(game, enter, olc::ENTER);
-		UpdateKey(game, c, olc::C);
-		UpdateKey(game, q, olc::Q);
-		UpdateKey(game, e, olc::E);
-		UpdateKey(game, space, olc::SPACE);
-
-		UpdateKey(game, up, olc::UP);
-		UpdateKey(game, left, olc::LEFT);
-		UpdateKey(game, down, olc::DOWN);
-		UpdateKey(game, right, olc::RIGHT);
-
-		ReadIntoKey(leftMouse, game->GetMouse(0));
-		ReadIntoKey(rightMouse, game->GetMouse(1));
-		ReadIntoKey(middleMouse, game->GetMouse(2));
-	}
-};
-
 int PsuedoRandom()
 {
 	return psuedoRandomizer++;
@@ -214,5 +169,101 @@ void RotateRight45(Vec2& dir)
 	dir = Vec2(int((dir.x + dir.y) / 1.41f), int((dir.y - dir.x) / 1.41f));
 }
 #pragma endregion
+
+struct Inputs
+{
+	Key w, a, s, d,
+		enter, c, q, e, space,
+		up, left, down, right,
+		leftMouse, rightMouse, middleMouse;
+	Vec2 mousePosition;
+	int mouseScroll = 0;
+
+	Inputs() = default;
+
+	static void ResetKey(Key& key)
+	{
+		key.bHeld = false;
+		key.bPressed = false;
+		key.bReleased = false;
+	}
+
+	static void ReadIntoKey(Key& key, Key newPressings)
+	{
+		key.bHeld |= newPressings.bHeld;
+		key.bPressed |= newPressings.bPressed;
+		key.bReleased |= newPressings.bReleased;
+	}
+
+	static void UpdateKey(olc::PixelGameEngine* game, Key& key, olc::Key keycode)
+	{
+		Key newPressings = game->GetKey(keycode);
+		ReadIntoKey(key, newPressings);
+	}
+
+	void Update1(olc::PixelGameEngine* game)
+	{
+		mouseScroll += game->GetMouseWheel() / 120;
+		mousePosition = ToSpace(game->GetMousePos() / 4) + playerPos - screenDimH;
+
+		UpdateKey(game, w, olc::W);
+		UpdateKey(game, a, olc::A);
+		UpdateKey(game, s, olc::S);
+		UpdateKey(game, d, olc::D);
+
+		UpdateKey(game, enter, olc::ENTER);
+		UpdateKey(game, c, olc::C);
+		UpdateKey(game, q, olc::Q);
+		UpdateKey(game, e, olc::E);
+		UpdateKey(game, space, olc::SPACE);
+
+		UpdateKey(game, up, olc::UP);
+		UpdateKey(game, left, olc::LEFT);
+		UpdateKey(game, down, olc::DOWN);
+		UpdateKey(game, right, olc::RIGHT);
+
+		ReadIntoKey(leftMouse, game->GetMouse(0));
+		ReadIntoKey(rightMouse, game->GetMouse(1));
+		ReadIntoKey(middleMouse, game->GetMouse(2));
+	}
+
+	void Update2()
+	{
+		mouseScroll = 0;
+
+		// No resetting of bHeld for wasd or arrow keys as that's covered by the player.
+		w.bPressed = false;
+		w.bReleased = false;
+
+		up.bPressed = false;
+		up.bReleased = false;
+		a.bPressed = false;
+		a.bReleased = false;
+
+		left.bPressed = false;
+		left.bReleased = false;
+
+		d.bPressed = false;
+		d.bReleased = false;
+
+		right.bPressed = false;
+		right.bReleased = false;
+
+		s.bPressed = false;
+		s.bReleased = false;
+
+		down.bPressed = false;
+		down.bReleased = false;
+
+		Inputs::ResetKey(enter);
+		Inputs::ResetKey(c);
+		Inputs::ResetKey(q);
+		Inputs::ResetKey(e);
+		Inputs::ResetKey(space);
+		Inputs::ResetKey(leftMouse);
+		Inputs::ResetKey(rightMouse);
+		Inputs::ResetKey(middleMouse);
+	}
+};
 
 Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);

@@ -80,8 +80,8 @@ public:
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
 	{
-		Vec2 topLeft = ToRSpace(pos) + Vec2(3, 0);
-		Vec2 bottomRight = topLeft + Vec2((int)name.length() * 8, 8);
+		Vec2 topLeft = TopLeft();
+		Vec2 bottomRight = BottomRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
@@ -206,7 +206,7 @@ public:
 	{
 		if (tTime - startTime > totalFadeTime)
 			DestroySelf(entities, nullptr);
-		color.a = 255 - 255 * (tTime - startTime) / totalFadeTime;
+		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
 	}
 
 	bool Corporeal() override
