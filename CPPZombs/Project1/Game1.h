@@ -9,9 +9,12 @@ class Game : public olc::PixelGameEngine
 public:
 	Entities* entities;
 	Player* player;
-	FastNoiseLite backgroundNoise;
 	olc::Sprite lowResScreen, midResScreen;
 	Inputs inputs;
+
+	Color backgroundBaseColor;
+	Color backgroundColorWidth;
+	FastNoiseLite backgroundNoise;
 
 	bool showUI = true, paused = false;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
@@ -24,7 +27,7 @@ public:
 
 	bool OnUserUpdate(float deltaTime) override;
 
-	Color GetBackgroundNoise(Color baseColor, Vec2f noisePos);
+	Color GetBackgroundNoise(Vec2f noisePos);
 
 	void Update(float dTime);
 

@@ -26,7 +26,7 @@ typedef unsigned int uint;
 typedef olc::vi2d Vec2;
 typedef olc::vf2d Vec2f;
 typedef olc::Pixel Color;
-typedef olc::HWButton button;
+typedef olc::HWButton Key;
 #pragma endregion
 
 // Global variables:
@@ -48,6 +48,16 @@ string deathCauseName = "NULL DEATH CAUSE";
 int JMod(int x, int m)
 {
 	return ((x % m) + m) % m;
+}
+
+int Clamp(int value, int minimum, int maximum)
+{
+	return max(min(value, maximum), minimum);
+}
+
+int ModClamp(int value, int minimum, int maximum)
+{
+	return value % (maximum - minimum) + minimum;
 }
 
 int Squagnitude(Vec2 a)
@@ -107,7 +117,7 @@ std::string ToStringWithPrecision(const T a_value, const int n = 6)
 
 struct Inputs
 {
-	button w, a, s, d,
+	Key w, a, s, d,
 		enter, c, q, e, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
@@ -115,6 +125,44 @@ struct Inputs
 	int mouseScroll = 0;
 
 	Inputs() = default;
+
+	static void ReadIntoKey(Key& key, Key newPressings)
+	{
+		key.bHeld |= newPressings.bHeld;
+		key.bPressed |= newPressings.bPressed;
+		key.bReleased |= newPressings.bReleased;
+	}
+
+	static void UpdateKey(olc::PixelGameEngine* game, Key& key, olc::Key keycode)
+	{
+		Key newPressings = game->GetKey(keycode);
+		ReadIntoKey(key, newPressings);
+	}
+
+	void Update1(olc::PixelGameEngine* game)
+	{
+		mouseScroll += game->GetMouseWheel() / 120;
+
+		UpdateKey(game, w, olc::W);
+		UpdateKey(game, a, olc::A);
+		UpdateKey(game, s, olc::S);
+		UpdateKey(game, d, olc::D);
+
+		UpdateKey(game, enter, olc::ENTER);
+		UpdateKey(game, c, olc::C);
+		UpdateKey(game, q, olc::Q);
+		UpdateKey(game, e, olc::E);
+		UpdateKey(game, space, olc::SPACE);
+
+		UpdateKey(game, up, olc::UP);
+		UpdateKey(game, left, olc::LEFT);
+		UpdateKey(game, down, olc::DOWN);
+		UpdateKey(game, right, olc::RIGHT);
+
+		ReadIntoKey(leftMouse, game->GetMouse(0));
+		ReadIntoKey(rightMouse, game->GetMouse(1));
+		ReadIntoKey(middleMouse, game->GetMouse(2));
+	}
 };
 
 int PsuedoRandom()

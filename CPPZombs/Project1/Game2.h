@@ -13,11 +13,20 @@ bool Game::OnUserCreate()
 	sAppName = "CPPZombs!";
 	SetPixelMode(Color::ALPHA);
 
+	srand(static_cast<uint>(time(NULL)));
+	backgroundBaseColor.r = rand() % 128 + 64;
+	backgroundBaseColor.g = rand() % 128 + 64;
+	backgroundBaseColor.b = rand() % 128 + 64;
+
+	int randChoice = rand();
+	backgroundColorWidth.r = rand() % 2 + 2 + 4 * int(randChoice == 0);
+	backgroundColorWidth.g = rand() % 2 + 2 + 4 * int(randChoice == 1);
+	backgroundColorWidth.b = rand() % 2 + 2 + 4 * int(randChoice == 2);
+
 	backgroundNoise.SetFrequency(0.06125f);
 	backgroundNoise.SetFractalLacunarity(2.0f);
 	backgroundNoise.SetFractalGain(0.5f);
 	backgroundNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-	srand(static_cast<uint>(time(NULL)));
 	backgroundNoise.SetSeed(static_cast<int>(time(NULL)));
 
 	return true;
@@ -38,93 +47,7 @@ bool Game::OnUserUpdate(float deltaTime)
 
 	if (!paused)
 	{
-		#pragma region Inputs 1
-
-		inputs.mouseScroll += GetMouseWheel() / 120;
-
-		button temp = GetKey(olc::W);
-		inputs.w.bHeld |= temp.bHeld;
-		inputs.w.bPressed |= temp.bPressed;
-		inputs.w.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::A);
-		inputs.a.bHeld |= temp.bHeld;
-		inputs.a.bPressed |= temp.bPressed;
-		inputs.a.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::S);
-		inputs.s.bHeld |= temp.bHeld;
-		inputs.s.bPressed |= temp.bPressed;
-		inputs.s.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::D);
-		inputs.d.bHeld |= temp.bHeld;
-		inputs.d.bPressed |= temp.bPressed;
-		inputs.d.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::ENTER);
-		inputs.enter.bHeld |= temp.bHeld;
-		inputs.enter.bPressed |= temp.bPressed;
-		inputs.enter.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::C);
-		inputs.c.bHeld |= temp.bHeld;
-		inputs.c.bPressed |= temp.bPressed;
-		inputs.c.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::Q);
-		inputs.q.bHeld |= temp.bHeld;
-		inputs.q.bPressed |= temp.bPressed;
-		inputs.q.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::E);
-		inputs.e.bHeld |= temp.bHeld;
-		inputs.e.bPressed |= temp.bPressed;
-		inputs.e.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::SPACE);
-		inputs.space.bHeld |= temp.bHeld;
-		inputs.space.bPressed |= temp.bPressed;
-		inputs.space.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::UP);
-		inputs.up.bHeld |= temp.bHeld;
-		inputs.up.bPressed |= temp.bPressed;
-		inputs.up.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::LEFT);
-		inputs.left.bHeld |= temp.bHeld;
-		inputs.left.bPressed |= temp.bPressed;
-		inputs.left.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::DOWN);
-		inputs.down.bHeld |= temp.bHeld;
-		inputs.down.bPressed |= temp.bPressed;
-		inputs.down.bReleased |= temp.bReleased;
-
-		temp = GetKey(olc::RIGHT);
-		inputs.right.bHeld |= temp.bHeld;
-		inputs.right.bPressed |= temp.bPressed;
-		inputs.right.bReleased |= temp.bReleased;
-
-		temp = GetMouse(0);
-		inputs.leftMouse.bHeld |= temp.bHeld;
-		inputs.leftMouse.bPressed |= temp.bPressed;
-		inputs.leftMouse.bReleased |= temp.bReleased;
-
-		temp = GetMouse(1);
-		inputs.rightMouse.bHeld |= temp.bHeld;
-		inputs.rightMouse.bPressed |= temp.bPressed;
-		inputs.rightMouse.bReleased |= temp.bReleased;
-
-		temp = GetMouse(2);
-		inputs.middleMouse.bHeld |= temp.bHeld;
-		inputs.middleMouse.bPressed |= temp.bPressed;
-		inputs.middleMouse.bReleased |= temp.bReleased;
-
-		#pragma endregion
-
-
+		inputs.Update1(this);
 
 		inputs.mousePosition = ToSpace(GetMousePos() / 4) + playerPos - screenDimH;
 
@@ -202,9 +125,12 @@ bool Game::OnUserUpdate(float deltaTime)
 	return true;
 }
 
-Color Game::GetBackgroundNoise(Color baseColor, Vec2f noisePos)
+Color Game::GetBackgroundNoise(Vec2f noisePos)
 {
-	return Color(min(255, max(0, baseColor.r + (int)roundf(backgroundNoise.GetNoise(noisePos.x, noisePos.y) * 5.0f) * 5)), baseColor.g, baseColor.b);
+	float randomNoiseValue = backgroundNoise.GetNoise(noisePos.x, noisePos.y);
+	return Color(Clamp(backgroundBaseColor.r + (int)roundf(randomNoiseValue * backgroundColorWidth.r) * 5, 0, 255),
+		Clamp(backgroundBaseColor.g + (int)roundf(randomNoiseValue * backgroundColorWidth.g) * 5, 0, 255),
+		Clamp(backgroundBaseColor.b + (int)roundf(randomNoiseValue * backgroundColorWidth.b) * 5, 0, 255));
 }
 
 void Game::Update(float dTime)
@@ -319,14 +245,13 @@ void Game::Update(float dTime)
 		Color* screenColors = lowResScreen.GetData(); // Background draw must be after player gets updated.
 		for (int x = 0; x < lowResScreen.width; x++)
 			for (int y = 0; y < lowResScreen.height; y++)
-				screenColors[y * lowResScreen.width + x] = GetBackgroundNoise(Color(150, 92, 20), spacePlayerPos + Vec2(x, y));
+				screenColors[y * lowResScreen.width + x] = GetBackgroundNoise(spacePlayerPos + Vec2(x, y));
 	}
 	SetDrawTarget(&midResScreen);
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
 	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
 	// Draw mouse.
-	if ((int)(tTime * 5) % 5 < 3)
-		Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, 127));
+	Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, (sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64));
 	// Reset screen to high-res screen.
 	SetDrawTarget(nullptr); // nullptr means default here.
 	DrawSprite({ 0, 0 }, &midResScreen, 4); // Apply the mid-res screen onto the big one before use.

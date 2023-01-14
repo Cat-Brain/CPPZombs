@@ -313,13 +313,16 @@ namespace EnemyClasses
 				enemies[i]->lastTime = tTime;
 			}
 			
-			enemies[0]->front = enemies[1];
+			if (length > 1)
+			{
+				enemies[0]->front = enemies[1];
+				enemies[length - 1]->back = enemies[length - 2];
+			}
 			for (int i = 1; i < length - 1; i++)
 			{
 				enemies[i]->back = enemies[i - 1];
 				enemies[i]->front = enemies[i + 1];
 			}
-			enemies[length - 1]->back = enemies[length - 2];
 
 			for (int i = length - 1; i > -1; i--)
 				entities->push_back(enemies[i]);
