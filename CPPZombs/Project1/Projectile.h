@@ -60,7 +60,7 @@ public:
         for (Entity* entity : hitEntities)
         {
             if (entity == creator || entity == this)
-                return false;
+                continue;
 
             entity->DealDamage(damage, entities, this);
             hitEntity = entity;
@@ -130,7 +130,10 @@ public:
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
         this->pos = pos;
-        name = item.name;
+        if (creator == nullptr)
+            name = item.name;
+        else
+            name = item.name + " shot by " + creator->name;
         Start();
     }
 

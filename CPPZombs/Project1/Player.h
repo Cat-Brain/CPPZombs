@@ -22,11 +22,11 @@ public:
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone());
-		items.push_back(copperTreeSeed->Clone(3));
-		items.push_back(ironTreeSeed->Clone());
-		items.push_back(rubyTreeSeed->Clone());
-		items.push_back(emeraldTreeSeed->Clone());
-		items.push_back(cheeseTreeSeed->Clone());
+		items.push_back(Resources::Seeds::copperTreeSeed->Clone(3));
+		items.push_back(Resources::Seeds::ironTreeSeed->Clone());
+		items.push_back(Resources::Seeds::rubyTreeSeed->Clone());
+		items.push_back(Resources::Seeds::emeraldTreeSeed->Clone());
+		items.push_back(Resources::Seeds::cheeseTreeSeed->Clone());
 		//items.push_back(Shootables::smallPrinter->Clone());
 		//items.push_back(Shootables::smallVacuum->Clone());
 		items.currentIndex = 0; // Copper
@@ -134,8 +134,7 @@ public:
 			currentShootingItem != *dItem && inputs.leftMouse.bHeld && items.TryTake(currentShootingItem))
 		{
 			lastClick = tTime;
-			Entity* shot = basicShotItem->Clone(currentShootingItem.Clone(), pos, inputs.mousePosition - pos, this);
-			entities->push_back(shot);
+			entities->push_back(basicShotItem->Clone(currentShootingItem, pos, inputs.mousePosition - pos, this));
 		}
 		playerPos = pos;
 

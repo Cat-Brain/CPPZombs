@@ -65,7 +65,7 @@ public:
 
 	virtual Vec2 TopLeft()
 	{
-		return ToRSpace(pos) * 4 + Vec2(4, 0);
+		return ToRSpace(pos + dimensions - vOne) * 4 + Vec2(4, 0);
 	}
 
 	virtual Vec2 BottomRight()

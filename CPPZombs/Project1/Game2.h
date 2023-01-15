@@ -78,97 +78,67 @@ void Game::Update(float dTime)
 	system_clock::time_point timeStartFrame = system_clock::now();
 
 	// New wave:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || (inputs.enter.bPressed && waveCount != 13))
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || (inputs.enter.bPressed))
 	{
 		if (!inputs.enter.bPressed)
 			lastWave = tTime;
 
 		waveCount += int(!inputs.enter.bPressed);
 
-		if(waveCount == 10)
+		if (waveCount == 0)
 			for (int i = 0; i < 5; i++)
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				hyperSpeedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				float randomValue = RandFloat() * 6.283184f;
+				ranger->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if(waveCount == 7)
 			for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				float randomValue = RandFloat() * 6.283184f;
 				deceiver->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-		else if(waveCount == 15)
-			for (int i = 0; i < 30; i++)
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				megaTanker->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if (waveCount == 9)
 			for (int i = 0; i < 5; i++)
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				float randomValue = RandFloat() * 6.283184f;
 				parent->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+			}
+		else if(waveCount == 10)
+			for (int i = 0; i < 5; i++)
+			{
+				float randomValue = RandFloat() * 6.283184f;
+				hyperSpeedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if (waveCount == 13)
 			for (int i = 0; i < 5; i++)
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				float randomValue = RandFloat() * 6.283184f;
 				gigaExploder->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
-		else if (waveCount == 0)
-			for (int i = 0; i < 5; i++)
+		else if(waveCount == 15)
+			for (int i = 0; i < 30; i++)
 			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				snake->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				float randomValue = RandFloat() * 6.283184f;
+				megaTanker->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else
 		{
-			for (int i = 0; i < waveCount * 3 + 7; i++) // Walker
+			int totalCost = 0;
+			int costToAchieve = static_cast<int>(pow(1.2, waveCount)) + waveCount * 3 - 1;
+			int currentlySpawnableEnemyCount = 0;
+			for (int i = 0; i < spawnableEnemyTypes.size(); i++)
+				currentlySpawnableEnemyCount += int(spawnableEnemyTypes[i]->firstWave <= waveCount && spawnableEnemyTypes[i]->Cost() <= costToAchieve);
+			vector<Enemy*> currentlySpawnableEnemies(currentlySpawnableEnemyCount);
+			for (int i = 0, j = 0; j < currentlySpawnableEnemyCount; i++)
+				if (spawnableEnemyTypes[i]->firstWave <= waveCount && spawnableEnemyTypes[i]->Cost() <= costToAchieve)
+					currentlySpawnableEnemies[j++] = spawnableEnemyTypes[i];
+			
+			while (totalCost < costToAchieve)
 			{
+				int currentIndex = rand() % currentlySpawnableEnemyCount;
 				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				walker->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount * 2 - 4; i++) // Tanker, First two on wave 3, 2 = 2x - 4, 2x = 6, x = 3
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				tanker->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount - 4; i++) // Speedster, First on wave 5, 1 = x/2 - 1, x/2 = 2, x = 8
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				speedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount / 5 - 1; i++) // Hyper Speedster, 5 on wave 10, First on wave 10, 1 = x/5 - 1, x/5 = 2, x = 10
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				hyperSpeedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount / 3 - 1; i++) // Deceiver, 3 on wave 6, First on wave 3, 1 = x/3 - 1, x/3 = 2, x = 6
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				deceiver->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount / 3 - 2; i++) // Parent, 5 on wave 9, First on wave 9
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				parent->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount / 2 - 2; i++) // Exploder, First on wave 6
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				exploder->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
-
-			for (int i = 0; i < waveCount / 2 - 3; i++) // Exploder, First on wave 8
-			{
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
-				snake->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				currentlySpawnableEnemies[currentIndex]->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
 			}
 		}
 	}

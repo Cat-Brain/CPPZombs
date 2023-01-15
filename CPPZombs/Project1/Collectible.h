@@ -64,6 +64,15 @@ Entity* FindAEntity(Vec2 pos, vector<Entity*> entities)
 			return *i;
 	return nullptr;
 }
+
+vector<Entity*> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<Entity*> entities)
+{
+	vector<Entity*> foundCollectibles(0);
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
+		if ((*i)->Overlaps(pos, dimensions))
+			foundCollectibles.push_back(*i);
+	return foundCollectibles;
+}
 #pragma endregion
 
 
@@ -498,8 +507,11 @@ public:
 	Vec2 explosionDimensions;
 	float startTime;
 
-	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Vec2 pos = vZero) :
-		Entity(pos), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime) { }
+	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+		Entity(pos, vOne, olc::WHITE, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
+	{
+		this->creator = creator;
+	}
 
 
 	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
@@ -508,8 +520,8 @@ public:
 		{
 			vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
 			for (Entity* entity : hitEntities)
-				if (entity != this)
-					entity->DealDamage(damage, entities, nullptr);
+				if (entity != this && entity != creator)
+					entity->DealDamage(damage, entities, this);
 			DestroySelf(entities, this);
 		}
 	}
@@ -595,10 +607,7 @@ public:
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
 	{
-		vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
-		for (Entity* entity : hitEntities)
-			if (entity != creator)
-				entity->DealDamage(damage, entities, nullptr);
+		entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creator->name, creator));
 		entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
 	}
 };

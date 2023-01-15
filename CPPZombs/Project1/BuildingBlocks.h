@@ -50,7 +50,17 @@ public:
 
 namespace Shootables
 {
-	Placeable* cheeseBlock = new Placeable(nullptr, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4);
+	Placeable* cheeseBlock = new Placeable(nullptr, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
+}
+
+namespace Resources
+{
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Wall", Color(235, 178, 56), 0);
+}
+
+namespace Collectibles
+{
+	Collectible* cheese = new Collectible(*Resources::cheese);
 }
 
 class FunctionalBlock : public Entity

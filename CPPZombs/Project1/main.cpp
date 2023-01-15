@@ -6,11 +6,11 @@ int main()
 
 	#pragma region Trees
 
-	copperTree->seed = cCopperTreeSeed;
-	ironTree->seed = cIronTreeSeed;
-	rubyTree->seed = cRubyTreeSeed;
-	emeraldTree->seed = cEmeraldTreeSeed;
-	cheeseTree->seed = cCheeseTreeSeed;
+	Trees::copperTree->seed = Collectibles::Seeds::copperTreeSeed;
+	Trees::ironTree->seed = Collectibles::Seeds::ironTreeSeed;
+	Trees::rubyTree->seed = Collectibles::Seeds::rubyTreeSeed;
+	Trees::emeraldTree->seed = Collectibles::Seeds::emeraldTreeSeed;
+	Trees::cheeseTree->seed = Collectibles::Seeds::cheeseTreeSeed;
 
 	#pragma endregion
 

@@ -5,11 +5,11 @@ class Enemy : public DToCol
 public:
 	float timePer, lastTime;
 
-	int points;
+	int points, firstWave;
 	int damage;
 
-	Enemy(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(vZero, dimensions, color, color2, mass, maxHealth, health, name), timePer(timePer), lastTime(0.0f), points(points), damage(damage)
+	Enemy(float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(vZero, dimensions, color, color2, mass, maxHealth, health, name), timePer(timePer), lastTime(0.0f), points(points), firstWave(firstWave), damage(damage)
 	{
 	}
 
@@ -21,14 +21,21 @@ public:
 		lastTime = (float)rand() / (float)RAND_MAX * timePer + tTime;
 	}
 
+	void Start() override
+	{
+		lastTime = tTime + RandFloat() * timePer;
+	}
+
 	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return new Enemy(this, pos);
 	}
 
-	void BetterClone(Game* game, Entities* entities, Vec2 pos)
+	virtual void BetterClone(Game* game, Entities* entities, Vec2 pos)
 	{
-		entities->push_back(new Enemy(this, pos));
+		Enemy* newEnemy = new Enemy(this, pos);
+		newEnemy->Start();
+		entities->push_back(newEnemy);
 	}
 
 	bool IsEnemy() override
@@ -140,23 +147,27 @@ public:
 			if (randomValue > 1500) // 1501-2047 ~= 1/4
 				entities->push_back(Collectibles::copper->Clone(pos));
 			if (randomValue % 16 == 0) // ~1/16 of the time. The following and these can only have one of them happen
-				entities->push_back(cCopperTreeSeed->Clone(pos));
+				entities->push_back(Collectibles::Seeds::copperTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 1)
-				entities->push_back(cIronTreeSeed->Clone(pos));
+				entities->push_back(Collectibles::Seeds::ironTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 2)
-				entities->push_back(cCheeseTreeSeed->Clone(pos));
+				entities->push_back(Collectibles::Seeds::cheeseTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 3)
-				entities->push_back(cRubyTreeSeed->Clone(pos));
+				entities->push_back(Collectibles::Seeds::rubyTreeSeed->Clone(pos));
 			else if (randomValue % 16 == 4)
-				entities->push_back(cEmeraldTreeSeed->Clone(pos));
+				entities->push_back(Collectibles::Seeds::emeraldTreeSeed->Clone(pos));
 			/*else if (randomValue % 16 == 5)
 				entities->push_back(Shootables::cSmallPrinter->Clone(pos));
 			else if (randomValue % 16 == 6)
 				entities->push_back(Shootables::cSmallVacuum->Clone(pos));*/
 		}
 	}
-};
 
+	virtual int Cost()
+	{
+		return points;
+	}
+};
 
 namespace EnemyClasses
 {
@@ -166,15 +177,15 @@ namespace EnemyClasses
 		Color color3;
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
-		Deceiver(float timePer = 0.5f, int points = 1, int damage = 1, Vec2 dimensions = vOne,
+		Deceiver(float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne,
 			Color color = olc::WHITE, Color color2 = olc::BLACK, Color color3 = olc::WHITE,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
 		{
 			EnemyClasses::Deceiver* newEnemy = new EnemyClasses::Deceiver(*this);
 			newEnemy->baseClass = baseClass;
@@ -218,15 +229,15 @@ namespace EnemyClasses
 	public:
 		Enemy* child;
 
-		Parent(Enemy* child, float timePer = 0.5f, int points = 1, int damage = 1,
+		Parent(Enemy* child, float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), child(child)
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name), child(child)
 		{
 			Start();
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
 		{
 			EnemyClasses::Parent* newEnemy = new EnemyClasses::Parent(*this);
 			newEnemy->baseClass = baseClass;
@@ -251,15 +262,13 @@ namespace EnemyClasses
 	public:
 		Vec2 explosionDimensions;
 
-		Exploder(Vec2 explosionDimensions, float timePer = 0.5f, int points = 1, int damage = 1,
+		Exploder(Vec2 explosionDimensions, float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
-		{
-			Start();
-		}
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
+		{ }
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
 		{
 			EnemyClasses::Exploder* newEnemy = new EnemyClasses::Exploder(*this);
 			newEnemy->baseClass = baseClass;
@@ -271,7 +280,7 @@ namespace EnemyClasses
 		void OnDeath(Entities* entities, Entity* damageDealer) override
 		{
 			Enemy::OnDeath(entities, damageDealer);
-			entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos));
+			entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name));
 			entities->push_back(new FadeOut(1.5f, pos, explosionDimensions, color));
 		}
 	};
@@ -284,11 +293,11 @@ namespace EnemyClasses
 		Snake* back = nullptr, *front = nullptr;
 		int length;
 
-		Snake(int length, float timePer = 0.5f, int points = 1, int damage = 1,
+		Snake(int length, float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
 			Color color3 = olc::RED, Color color4 = olc::DARK_GREEN,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, color, color2, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
 		{
 			Start();
 		}
@@ -299,7 +308,7 @@ namespace EnemyClasses
 			lastPos = pos;
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
 		{
 			Snake** enemies = new Snake * [length];
 			for (int i = 0; i < length; i++)
@@ -372,6 +381,11 @@ namespace EnemyClasses
 			if (front != nullptr)
 				front->back = nullptr;
 		}
+		
+		int Cost() override
+		{
+			return points * length;
+		}
 	};
 
 	class ColorCycler : public Enemy
@@ -380,10 +394,10 @@ namespace EnemyClasses
 		vector<Color> colorsToCycle;
 		float colorOffset, colorCycleSpeed;
 
-		ColorCycler(vector<Color> colorsToCycle, float colorCycleSpeed = 1.0f, float timePer = 0.5f, int points = 1, int damage = 1,
-			Vec2 dimensions = vOne, Color color2 = olc::BLACK,
+		ColorCycler(vector<Color> colorsToCycle, float colorCycleSpeed = 1.0f, float timePer = 0.5f, int points = 1,
+			int firstWave = 1, int damage = 1, Vec2 dimensions = vOne, Color color2 = olc::BLACK,
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, points, damage, dimensions, colorsToCycle[0], color2, mass, maxHealth, health, name),
+			Enemy(timePer, points, firstWave, damage, dimensions, colorsToCycle[0], color2, mass, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
 		{ }
 
@@ -393,7 +407,7 @@ namespace EnemyClasses
 			colorOffset = RandFloat() * colorCycleSpeed;
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos)
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
 		{
 			EnemyClasses::ColorCycler* newEnemy = new EnemyClasses::ColorCycler(*this);
 			newEnemy->baseClass = baseClass;
@@ -412,22 +426,108 @@ namespace EnemyClasses
 			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
 		}
 	};
+
+	class Vacuumer : public Enemy
+	{
+	public:
+		int vacDist, desiredDistance;
+		Items items;
+
+		Vacuumer(int vacDist, int desiredDistance, float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name),
+			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
+		{ }
+
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		{
+			EnemyClasses::Vacuumer* newEnemy = new EnemyClasses::Vacuumer(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			entities->push_back(newEnemy);
+		}
+
+		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		{
+			float currentDistance = 0;
+			if (fabsf((currentDistance = Distance(playerPos, pos)) - desiredDistance) > 1.0f)
+			{
+				Entity* entity = nullptr;
+				TryMove2(Squarmalized((int(currentDistance > desiredDistance) * 2 - 1) * (playerPos - pos)), mass, entities, &entity, nullptr);
+				if (entity != nullptr && !entity->IsEnemy())
+				{
+					entity->DealDamage(damage, entities, this);
+				}
+			}
+			entities->Vacuum(pos, vacDist);
+			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, entities->collectibles);
+			for (Entity* collectible : collectibles)
+			{
+				items.push_back(((Collectible*)collectible)->baseItem);
+				collectible->DestroySelf(entities, this);
+			}
+		}
+
+		void OnDeath(Entities* entities, Entity* damageDealer) override
+		{
+			Enemy::OnDeath(entities, damageDealer);
+			for (Item item : items)
+			{
+				entities->push_back(new Collectible(item, pos));
+			}
+		}
+	};
+
+	class Ranger : public Vacuumer
+	{
+	public:
+		using Vacuumer::Vacuumer;
+
+		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		{
+			EnemyClasses::Ranger* newEnemy = new EnemyClasses::Ranger(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			entities->push_back(newEnemy);
+		}
+
+		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		{
+			Vacuumer::TUpdate(game, entities, frameCount, inputs, dTime);
+
+			if (items.size() > 0)
+			{
+				Item shotItem = items[0].Clone(1);
+				items.TryTakeIndex(0);
+				entities->push_back(basicShotItem->Clone(shotItem, pos, (playerPos - pos) * shotItem.range, this));
+			}
+		}
+	};
 }
 
 
 
 
-Enemy* walker = new Enemy(0.75f, 1, 1, vOne, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
-Enemy* tanker = new Enemy(1.0f, 2, 1, vOne * 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
-Enemy* speedster = new Enemy(0.5f, 2, 1, vOne, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
-EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
-Enemy* megaTanker = new Enemy(1.0f, 20, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
+Enemy* walker = new Enemy(0.75f, 1, 1, 1, vOne, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
+Enemy* tanker = new Enemy(1.0f, 2, 2, 1, vOne * 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
+Enemy* speedster = new Enemy(0.5f, 2, 3, 1, vOne, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 4, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
+Enemy* megaTanker = new Enemy(1.0f, 20, 15, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
 
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 4, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
 
-Enemy* child = new Enemy(0.125f, 10, 1, vOne, olc::MAGENTA, olc::BLACK, 1, 1, 1, "Child");
-EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
+Enemy* child = new Enemy(0.125f, 10, 0, 1, vOne, olc::MAGENTA, olc::BLACK, 1, 1, 1, "Child");
+EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 6, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
 
-EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
-EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
-EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 3, 1, vOne, olc::GREEN, olc::BLACK, olc::RED, olc::DARK_GREEN, 2, 3, 3, "Snake");
+EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 5, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
+EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 13, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 1, 7, 1, vOne, olc::GREEN, olc::BLACK, olc::RED, olc::DARK_GREEN, 2, 3, 3, "Snake");
+
+EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 6, 5, 0, vOne, olc::GREY, olc::BLACK, 1, 3, 3, "Vacuumer");
+EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 12, 13, 0, vOne * 3, olc::GREY, olc::BLACK, 1, 12, 12, "Ranger");
+
+vector<Enemy*> spawnableEnemyTypes{ walker, tanker, speedster, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
+snake, vacuumer, ranger };
