@@ -8,6 +8,7 @@ public:
     float duration;
     int damage;
     float speed, begin;
+    int callType = 0;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
         Entity(Vec2(0, 0), dimensions, color, mass, maxHealth, health),
@@ -41,6 +42,7 @@ public:
 
         if (CheckPos(entities, dTime, entity))
         {
+            callType = 1 + int(entity == nullptr);
             DestroySelf(entities, entity);
             return;
         }
@@ -48,7 +50,9 @@ public:
         MovePos(dTime);
         if (oldPos != pos && CheckPos(entities, dTime, entity))
         {
-            pos = oldPos;
+            if (entity != nullptr)
+                pos = oldPos;
+            callType = 1 + int(entity == nullptr);
             DestroySelf(entities, entity);
         }
     }
@@ -62,8 +66,9 @@ public:
             if (entity == creator || entity == this)
                 continue;
 
-            entity->DealDamage(damage, entities, this);
             hitEntity = entity;
+            if (entity->DealDamage(damage, entities, this) == 1)
+                hitEntity = nullptr;
             return true;
         }
         return false;
@@ -149,7 +154,7 @@ public:
 
     void OnDeath(Entities* entities, Entity* damageDealer) override
     {
-        item.baseClass->OnDeath(entities, pos, creator);
+        item.baseClass->OnDeath(entities, pos, creator, damageDealer, callType);
     }
 };
 

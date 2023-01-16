@@ -115,16 +115,13 @@ namespace Trees
 	CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
 }
 
-namespace Resources
+namespace Resources::Seeds
 {
-	namespace Seeds
-	{
-		PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Trees::copperTree, "Copper tree seed", "Seed", Trees::copperTreeColor, 0);
-		PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Trees::ironTree, "Iron tree seed", "Seed", Trees::ironTreeColor, 0);
-		PlacedOnLanding* rubyTreeSeed = new PlacedOnLanding(Trees::rubyTree, "Ruby tree seed", "Seed", Trees::rubyTreeColor, 0);
-		PlacedOnLanding* emeraldTreeSeed = new PlacedOnLanding(Trees::emeraldTree, "Emerald tree seed", "Seed", Trees::emeraldTreeColor, 0);
-		PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Trees::cheeseTree, "Cheese tree seed", "Seed", Trees::cheeseTreeColor, 0);
-	}
+	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Trees::copperTree, "Copper tree seed", "Seed", Trees::copperTreeColor, 0);
+	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Trees::ironTree, "Iron tree seed", "Seed", Trees::ironTreeColor, 0);
+	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Trees::rubyTree, "Ruby tree seed", "Seed", Trees::rubyTreeColor, 1);
+	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Trees::emeraldTree, "Emerald tree seed", "Seed", Trees::emeraldTreeColor, 1);
+	PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Trees::cheeseTree, "Cheese tree seed", "Seed", Trees::cheeseTreeColor, 0);
 }
 
 namespace Collectibles::Seeds

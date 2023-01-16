@@ -136,7 +136,7 @@ void Game::Update(float dTime)
 			while (totalCost < costToAchieve)
 			{
 				int currentIndex = rand() % currentlySpawnableEnemyCount;
-				float randomValue = ((float)rand() / (float)RAND_MAX) * 6.283184f;
+				float randomValue = RandFloat() * 6.283184f;
 				currentlySpawnableEnemies[currentIndex]->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 				totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
 			}

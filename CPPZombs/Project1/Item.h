@@ -52,7 +52,7 @@ public:
 		return name != b.name;
 	}
 
-	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator);
+	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType);
 };
 Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
 
@@ -61,7 +61,7 @@ class GoneOnLandItem : public Item
 public:
 	using Item::Item;
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override { }
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override { }
 };
 
 typedef vector<Item> Cost;

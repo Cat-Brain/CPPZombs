@@ -358,7 +358,7 @@ public:
 
 #pragma region Post Entities functions
 
-void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator)
+void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType)
 {
 	entities->push_back(new Collectible(*this, pos));
 }
@@ -568,7 +568,7 @@ public:
 		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
 	{
 		entities->push_back(entityToPlace->Clone(pos));
 	}
@@ -605,17 +605,31 @@ public:
 		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
 	{
 		entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creator->name, creator));
 		entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
 	}
 };
 
+class CorruptOnKill : public PlacedOnLanding
+{
+public:
+	using PlacedOnLanding::PlacedOnLanding;
+
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
+	{
+		if (callType == 2)
+			PlacedOnLanding::OnDeath(entities, pos, creator, callReason, callType);
+		else
+			Item::OnDeath(entities, pos, creator, callReason, callType);
+	}
+};
+
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 2, "Ruby", "Ammo", Color(168, 50, 100), 2);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 4, "Emerald", "Ammo", Color(65, 224, 150), 1);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 3, "Ruby", "Ammo", Color(168, 50, 100), 3);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 5, "Emerald", "Ammo", Color(65, 224, 150), 2);
 }
 
 namespace Collectibles
