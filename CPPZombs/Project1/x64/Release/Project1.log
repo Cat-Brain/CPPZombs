@@ -5,8 +5,8 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(505,
               T=int32_t
           ]
   Generating code
-  151 of 2762 functions ( 5.5%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  227 of 2765 functions ( 8.2%) were compiled, the rest were copied from previous compilation.
+    6 functions were new in current compilation
+    51 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
