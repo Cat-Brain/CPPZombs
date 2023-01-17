@@ -121,7 +121,7 @@ public:
 			while (placementPos == pos)
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
-			if (!hitEntities.size())
+			if (!hitEntities.size() && game->entities->size() < 3600)
 				game->entities->push_back(baseClass->Clone(placementPos));
 		}
 		if (currentLifespan > 50)
