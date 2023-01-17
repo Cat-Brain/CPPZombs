@@ -89,37 +89,37 @@ void Game::Update(float dTime)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				ranger->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				ranger->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if(waveCount == 7)
 			for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				deceiver->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				deceiver->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if (waveCount == 9)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				parent->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				parent->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if(waveCount == 10)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				hyperSpeedster->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				hyperSpeedster->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if (waveCount == 13)
 			for (int i = 0; i < 5; i++)
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				gigaExploder->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				gigaExploder->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else if(waveCount == 15)
 			for (int i = 0; i < 30; i++)
 			{
 				float randomValue = RandFloat() * 6.283184f;
-				megaTanker->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				megaTanker->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 			}
 		else
 		{
@@ -137,14 +137,14 @@ void Game::Update(float dTime)
 			{
 				int currentIndex = rand() % currentlySpawnableEnemyCount;
 				float randomValue = RandFloat() * 6.283184f;
-				currentlySpawnableEnemies[currentIndex]->BetterClone(this, entities, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+				currentlySpawnableEnemies[currentIndex]->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
 				totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
 			}
 		}
 	}
 
 
-	entities->Update(this, frameCount, inputs, dTime); // Updates all entities.
+	entities->Update(this, dTime); // Updates all entities.
 
 	if (playerPos != lastPlayerPos)
 	{
@@ -157,13 +157,13 @@ void Game::Update(float dTime)
 	}
 	SetDrawTarget(&midResScreen);
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
-	entities->DUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	entities->DUpdate(this, dTime); // Draws all entities.
 	// Draw mouse.
 	Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));
 	// Reset screen to high-res screen.
 	SetDrawTarget(nullptr); // nullptr means default here.
 	DrawSprite({ 0, 0 }, &midResScreen, 4); // Apply the mid-res screen onto the big one before use.
-	entities->UIUpdate(this, frameCount, inputs, dTime); // Draws all entities.
+	entities->UIUpdate(this, dTime); // Draws all entities.
 	
 	if (tTime < 2.0f)
 	{
@@ -186,6 +186,12 @@ void Game::Update(float dTime)
 	}
 
 	frameCount++;
+}
+
+void Game::MenuedEntityDied(Entity* entity)
+{
+	if (player->currentMenuedEntity == entity)
+		player->currentMenuedEntity = nullptr;
 }
 
 bool Game::OnUserDestroy()

@@ -33,33 +33,33 @@ public:
         return new Projectile(this, pos, direction, creator);
     }
 
-    void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+    void Update(Game* game, float dTime) override
     {
         if(tTime - begin >= duration / speed)
-            return DestroySelf(entities, this);
+            return DestroySelf(game, this);
 
         Entity* entity;
 
-        if (CheckPos(entities, dTime, entity))
+        if (CheckPos(game, dTime, entity))
         {
             callType = 1 + int(entity == nullptr);
-            DestroySelf(entities, entity);
+            DestroySelf(game, entity);
             return;
         }
         Vec2 oldPos = pos;
         MovePos(dTime);
-        if (oldPos != pos && CheckPos(entities, dTime, entity))
+        if (oldPos != pos && CheckPos(game, dTime, entity))
         {
             if (entity != nullptr)
                 pos = oldPos;
             callType = 1 + int(entity == nullptr);
-            DestroySelf(entities, entity);
+            DestroySelf(game, entity);
         }
     }
 
-    bool CheckPos(Entities* entities, float dTime, Entity*& hitEntity)
+    bool CheckPos(Game* game, float dTime, Entity*& hitEntity)
     {
-        vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, dimensions);
+        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
 
         for (Entity* entity : hitEntities)
         {
@@ -67,7 +67,7 @@ public:
                 continue;
 
             hitEntity = entity;
-            if (entity->DealDamage(damage, entities, this) == 1)
+            if (entity->DealDamage(damage, game, this) == 1)
                 hitEntity = nullptr;
             return true;
         }
@@ -134,6 +134,7 @@ public:
         float magnitude = Magnitude(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
+        this->dimensions = item.dimensions;
         this->pos = pos;
         if (creator == nullptr)
             name = item.name;

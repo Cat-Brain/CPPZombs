@@ -50,32 +50,32 @@ public:
 		return new Printer(this, dir, pos);
 	}
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
-		vector<Entity*> newCollectibles = EntitiesAtPos(pos, entities->collectibles);
+		vector<Entity*> newCollectibles = EntitiesAtPos(pos, game->entities->collectibles);
 		for (Entity* collectible : newCollectibles)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);
-			((Entities*)entities)->Remove(collectible);
+			game->entities->Remove(collectible);
 		}
 		for (Entity* collectible : containedEntities)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);
-			((Entities*)entities)->Remove(collectible);
+			game->entities->Remove(collectible);
 		}
 		containedEntities.clear();
 
-		FunctionalBlock::Update(game, entities, frameCount, inputs, dTime);
+		FunctionalBlock::Update(game, dTime);
 	}
 
-	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, float dTime) override
 	{
 		if (currentRecipe >= 0 && items.TryMake(currentRecipe < recipeAs.size() ? recipeAs[currentRecipe].first : recipeBs[currentRecipe - recipeAs.size()].first))
 		{
 			if (currentRecipe < recipeAs.size())
-				entities->push_back(new Collectible(*recipeAs[currentRecipe].second, pos + dir));
+				game->entities->push_back(new Collectible(*recipeAs[currentRecipe].second, pos + dir));
 			 else
-				entities->push_back(recipeBs[currentRecipe - recipeAs.size()].second->Clone(pos + dir, dir, this));
+				game->entities->push_back(recipeBs[currentRecipe - recipeAs.size()].second->Clone(pos + dir, dir, this));
 		}
 		else
 			return false;
@@ -92,7 +92,7 @@ public:
 		return TopLeft() + Vec2((int)fmaxf(name.length() * 8.0f, (recipeAs.size() + recipeBs.size()) * 3.0f + 2), 12);
 	}
 
-	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, float dTime) override
 	{
 		DrawUIBox(game, TopLeft(), BottomRight(), name, color);
 
@@ -102,7 +102,7 @@ public:
 		Vec2 tilePos = pos + Vec2(2 + static_cast<int>(recipeAs.size()), 0);
 		for (int i = 0; i < recipeBs.size(); i++)
 		{
-			recipeBs[i].second->Draw(tilePos, recipeBs[i].second->color, game, entities, frameCount, inputs, dTime, dir);
+			recipeBs[i].second->Draw(tilePos, recipeBs[i].second->color, game, dTime, dir);
 			tilePos.x += 1;
 		}
 		if (currentRecipe >= 0)

@@ -9,12 +9,12 @@ public:
 		Entity(pos, dimensions, color, mass, maxHealth, health, name), color2(color2)
 	{ }
 
-	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void DUpdate(Game* game, float dTime) override
 	{
 		float t = (float)health / (float)maxHealth;
 		Color tempColor = color;
 		color = Color(int(color2.r + t * (color.r - color2.r)), int(color2.g + t * (color.g - color2.g)), int(color2.b + t * (color.b - color2.b)), int(color2.a + t * (color.a - color2.a)));
-		Entity::DUpdate(game, entities, frameCount, inputs, dTime);
+		Entity::DUpdate(game, dTime);
 		color = tempColor;
 	}
 };
@@ -82,16 +82,16 @@ public:
 
 	FunctionalBlock() = default;
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			if (TUpdate(game, entities, frameCount, inputs, dTime))
+			if (TUpdate(game, dTime))
 				lastTime = tTime;
 		}
 	}
 
-	virtual bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) { return true; }
+	virtual bool TUpdate(Game* game, float dTime) { return true; }
 };
 
 class Duct : public FunctionalBlock
@@ -120,7 +120,7 @@ public:
 		return new Duct(this, dir, pos);
 	}
 
-	void Draw(Vec2 pos, Color color, Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero) override
+	void Draw(Vec2 pos, Color color, Game* game, float dTime, Vec2 dir = vZero) override
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
@@ -128,13 +128,13 @@ public:
 		//this->color = color;
 		Vec2 tempDir = this->dir;
 		this->dir = dir;
-		DUpdate(game, entities, frameCount, inputs, dTime);
+		DUpdate(game, dTime);
 		this->pos = tempPos;
 		//this->color = tempColor;
 		this->dir = tempDir;
 	}
 
-	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void DUpdate(Game* game, float dTime) override
 	{
 		if (newlyCollected.size() > 0)
 		{
@@ -172,9 +172,9 @@ public:
 			game->Draw(rSpacePos + Vec2(1, 1), containedEntities[0]->color);
 	}
 
-	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, float dTime) override
 	{
-		Entity* entity = FindAEntity(pos, entities->collectibles);
+		Entity* entity = FindAEntity(pos, game->entities->collectibles);
 		
 		if (entity != nullptr && entity->active)
 		{
@@ -185,7 +185,7 @@ public:
 		if (containedEntities.size() > 0)
 		{
 			Entity* entity;
-			if (containedEntities[0]->TryMove(dir, 1, entities, &entity, nullptr))
+			if (containedEntities[0]->TryMove(dir, 1, game->entities, &entity, nullptr))
 			{
 				containedEntities[0]->active = true;
 				containedEntities.erase(containedEntities.begin());
@@ -235,11 +235,11 @@ public:
 		return new Vacuum(this, dir, pos);
 	}
 
-	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, float dTime) override
 	{
-		entities->VacuumCone(pos, -dir, vacDist, fov);
+		game->entities->VacuumCone(pos, -dir, vacDist, fov);
 
-		return Duct::TUpdate(game, entities, frameCount, inputs, dTime);
+		return Duct::TUpdate(game, dTime);
 	}
 };
 

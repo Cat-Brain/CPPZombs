@@ -36,18 +36,18 @@ public:
 
 	virtual void Start() { }
 
-	virtual void Draw(Vec2 pos, Color color, Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime, Vec2 dir = vZero)
+	virtual void Draw(Vec2 pos, Color color, Game* game, float dTime, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
 		//this->color = color;
-		DUpdate(game, entities, frameCount, inputs, dTime);
+		DUpdate(game, dTime);
 		this->pos = tempPos;
 		//this->color = tempColor;
 	}
 
-	virtual void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) // Normally only draws.
+	virtual void DUpdate(Game* game, float dTime) // Normally only draws.
 	{
 		Vec2 disp = ToRSpace(pos);
 		disp = Vec2(labs(disp.x), labs(disp.y));
@@ -73,7 +73,7 @@ public:
 		return TopLeft() + Vec2((int)name.length() * 8, 8);
 	}
 
-	virtual void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) // Draws when shouldUI is true.
+	virtual void UIUpdate(Game* game, float dTime) // Draws when shouldUI is true.
 	{
 		DrawUIBox(game, TopLeft(), BottomRight(), name, color);
 	}
@@ -86,7 +86,7 @@ public:
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 
-	virtual void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) { } // Normally doesn't draw.
+	virtual void Update(Game* game, float dTime) { } // Normally doesn't draw.
 	
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
@@ -95,18 +95,18 @@ public:
 	virtual bool CheckMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
 
 
-	virtual int DealDamage(int damage, Entities* entities, Entity* damageDealer)
+	virtual int DealDamage(int damage, Game* game, Entity* damageDealer)
 	{
 		health -= damage;
 		if (health <= 0)
 		{
-			DestroySelf(entities, damageDealer);
+			DestroySelf(game, damageDealer);
 			return 1;
 		}
 		return 0;
 	}
 
-	void DestroySelf(Entities* entities, Entity* damageDealer); // Always calls OnDeath;
+	void DestroySelf(Game* game, Entity* damageDealer); // Always calls OnDeath;
 
 	virtual void OnDeath(Entities* entities, Entity* damageDealer) { }
 
@@ -202,11 +202,15 @@ public:
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
 
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
 		if (tTime - startTime > totalFadeTime)
-			DestroySelf(entities, nullptr);
+			DestroySelf(game, nullptr);
+	}
+	void DUpdate(Game* game, float dTime) override
+	{
 		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
+		Entity::DUpdate(game, dTime);
 	}
 
 	bool Corporeal() override

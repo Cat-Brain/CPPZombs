@@ -29,30 +29,30 @@ public:
 		return new CollectibleTree(this, dir, pos);
 	}
 
-	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	void DUpdate(Game* game, float dTime) override
 	{
 		Color oldColor = color;
 		if (currentLifespan >= deadStage)
 			color = deadColor;
 		else if (currentLifespan >= cyclesToGrow)
 			color = adultColor;
-		FunctionalBlock::DUpdate(game, entities, frameCount, inputs, dTime);
+		FunctionalBlock::DUpdate(game, dTime);
 	}
 
-	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	bool TUpdate(Game* game, float dTime) override
 	{
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			if (rand() % 100 < chanceForSeed)
-				entities->push_back(seed->Clone(pos + Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(seed->Clone(pos + (dimensions + collectible->dimensions - vOne) * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
-				entities->push_back(collectible->Clone(pos + Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(collectible->Clone(pos + (dimensions + seed->dimensions - vOne) * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}
 		currentLifespan++;
 		return true;
 	}
 
-	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, float dTime) override
 	{
 		Vec2 topLeft = TopLeft();
 		if (currentLifespan < cyclesToGrow)
@@ -95,42 +95,119 @@ public:
 
 
 
+class Vine : public CollectibleTree
+{
+public:
+	using CollectibleTree::CollectibleTree;
+
+	void Start() override
+	{
+		lastTime = tTime + RandFloat() * timePer;
+	}
+
+
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	{
+		Vine* newVine = new Vine(this, dir, pos);
+		newVine->Start();
+		return newVine;
+	}
+
+	bool TUpdate(Game* game, float dTime) override
+	{
+		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
+		{
+			Vec2 placementPos = pos;
+			while (placementPos == pos)
+				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
+			if (!hitEntities.size())
+				game->entities->push_back(baseClass->Clone(placementPos));
+		}
+		if (currentLifespan > 50)
+			DestroySelf(game, this);
+		currentLifespan++;
+		return true;
+	}
+
+	void OnDeath(Entities* entities, Entity* damageDealer) override
+	{
+		CollectibleTree::OnDeath(entities, damageDealer);
+		if (rand() % 100 < chanceForSeed)
+			entities->push_back(seed->Clone(pos));
+		else
+			entities->push_back(collectible->Clone(pos));
+	}
+};
+
+
+
+
+
 #pragma region Trees
 
-namespace Trees
+namespace Plants
 {
-	Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
-	CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
+	namespace Trees
+	{
+		Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
+		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
 
-	Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
-	CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 500, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
+		Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 100, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
 
-	Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88);
-	CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 1, 1, 1, "Ruby tree");
+		Color babyCheeseTreeColor = Color(255, 210, 112), cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
+		CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
 
-	Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
-	CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
+		Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88);
+		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 1, 1, 1, "Ruby tree");
 
-	Color babyCheeseTreeColor = Color(255, 210, 112), cheeseTreeColor = Color(200, 160, 75), deadCheeseTreeColor = Color(140, 110, 50);
-	CollectibleTree* cheeseTree = new CollectibleTree(Collectibles::cheese, nullptr, 5, 25, 10, 2.0f, vZero, vOne, babyCheeseTreeColor, cheeseTreeColor, deadCheeseTreeColor, 1, 1, 1, "Cheese tree");
+		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
+		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
+		// 3x3 but not a corruption seed.
+		Color babyTopazTreeColor = Color(255, 218, 84), topazTreeColor = Color(181, 142, 0), deadTopazTreeColor = Color(107, 84, 0);
+		CollectibleTree* topazTree = new CollectibleTree(Collectibles::topaz, nullptr, 5, 50, 10, 4.0f, vZero, vOne * 2, babyTopazTreeColor, topazTreeColor, deadTopazTreeColor, 5, 6, 6, "Topaz tree");
+	}
+
+
+	namespace Vines
+	{
+		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61);
+		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
+	}
+
+	// Keep a list of all of the plants.
+	vector<CollectibleTree*> plants{ Trees::copperTree, Trees::ironTree, Trees::cheeseTree,
+		Trees::rubyTree, Trees::emeraldTree, Trees::topazTree,
+	Vines::leadVine };
 }
 
 namespace Resources::Seeds
 {
-	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Trees::copperTree, "Copper tree seed", "Seed", Trees::copperTreeColor, 0);
-	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Trees::ironTree, "Iron tree seed", "Seed", Trees::ironTreeColor, 0);
-	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Trees::rubyTree, "Ruby tree seed", "Seed", Trees::rubyTreeColor, 1);
-	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Trees::emeraldTree, "Emerald tree seed", "Seed", Trees::emeraldTreeColor, 1);
-	PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Trees::cheeseTree, "Cheese tree seed", "Seed", Trees::cheeseTreeColor, 0);
+	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", Plants::Trees::copperTreeColor, 0);
+	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", Plants::Trees::ironTreeColor, 0);
+	PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Plants::Trees::cheeseTree, "Cheese tree seed", "Seed", Plants::Trees::cheeseTreeColor, 0);
+	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", Plants::Trees::rubyTreeColor, 1);
+	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, 1);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Trees::topazTree, "Topaz tree seed", "Seed", Plants::Trees::topazTreeColor, 0, 1, 15.0f, vOne * 2);
+	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
+
+	// Keep a list of all of the seeds.
+	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, topazTreeSeed, leadVineSeed };
 }
 
 namespace Collectibles::Seeds
 {
 	Collectible* copperTreeSeed = new Collectible(*Resources::Seeds::copperTreeSeed);
 	Collectible* ironTreeSeed = new Collectible(*Resources::Seeds::ironTreeSeed);
+	Collectible* cheeseTreeSeed = new Collectible(*Resources::Seeds::cheeseTreeSeed);
 	Collectible* rubyTreeSeed = new Collectible(*Resources::Seeds::rubyTreeSeed);
 	Collectible* emeraldTreeSeed = new Collectible(*Resources::Seeds::emeraldTreeSeed);
-	Collectible* cheeseTreeSeed = new Collectible(*Resources::Seeds::cheeseTreeSeed);
+	Collectible* topazTreeSeed = new Collectible(*Resources::Seeds::topazTreeSeed);
+	Collectible* leadVindSeed = new Collectible(*Resources::Seeds::leadVineSeed);
+
+	// Keep a list of all of the seeds.
+	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, topazTreeSeed, leadVindSeed };
 }
 #pragma endregion
 
@@ -145,34 +222,34 @@ public:
 		Duct(timePer, pos, dimensions, color, mass, maxHealth, health, name), range(range), overShoot(overShoot)
 	{ }
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
 		printf("?");
-		vector<Entity*> newCollectibles = EntitiesAtPos(pos, entities->collectibles);
+		vector<Entity*> newCollectibles = EntitiesAtPos(pos, game->entities->collectibles);
 		for (Entity* collectible : newCollectibles)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);
-			((Entities*)entities)->Remove(collectible);
+			game->entities->Remove(collectible);
 		}
 		for (Entity* collectible : containedEntities)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);
-			((Entities*)entities)->Remove(collectible);
+			game->entities->Remove(collectible);
 		}
 		containedEntities.clear();
 
-		FunctionalBlock::Update(game, entities, frameCount, inputs, dTime);
+		FunctionalBlock::Update(game, dTime);
 	}
 
-	bool TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	bool TUpdate(Game* game, float dTime) override
 	{
-		Entity* entity = entities->FindNearestEnemy(pos);
+		Entity* entity = game->entities->FindNearestEnemy(pos);
 
 		Item shotItem;
 		if (Distance(pos, entity->pos) > range || !items.TryTakeIndex(0, shotItem))
 			return false;
 		
-		entities->push_back(new ShotItem(basicShotItem, shotItem, pos, overShoot ? (Vec2)(Normalized(entity->pos - pos) * range) : entity->pos - pos, this));
+		game->entities->push_back(new ShotItem(basicShotItem, shotItem, pos, overShoot ? (Vec2)(Normalized(entity->pos - pos) * range) : entity->pos - pos, this));
 
 		return true;
 	}

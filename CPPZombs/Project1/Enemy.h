@@ -31,11 +31,11 @@ public:
 		return new Enemy(this, pos);
 	}
 
-	virtual void BetterClone(Game* game, Entities* entities, Vec2 pos)
+	virtual void BetterClone(Game* game, Vec2 pos)
 	{
 		Enemy* newEnemy = new Enemy(this, pos);
 		newEnemy->Start();
-		entities->push_back(newEnemy);
+		game->entities->push_back(newEnemy);
 	}
 
 	bool IsEnemy() override
@@ -43,22 +43,22 @@ public:
 		return true;
 	}
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			TUpdate(game, entities, frameCount, inputs, dTime);
+			TUpdate(game, dTime);
 			lastTime = tTime;
 		}
 	}
 
-	virtual void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
+	virtual void TUpdate(Game* game, float dTime)
 	{
 		Entity* entity = nullptr;
-		TryMove2(Squarmalized(playerPos - pos), mass, entities, &entity, nullptr);
+		TryMove2(Squarmalized(playerPos - pos), mass, game->entities, &entity, nullptr);
 		if (entity != nullptr && !entity->IsEnemy())
 		{
-			entity->DealDamage(damage, entities, this);
+			entity->DealDamage(damage, game, this);
 		}
 	}
 
@@ -67,7 +67,7 @@ public:
 		return DToCol::BottomRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
 	}
 
-	void UIUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void UIUpdate(Game* game, float dTime) override
 	{
 		DrawUIBox(game, TopLeft(), BottomRight(), name + " " + to_string(health), color);
 	}
@@ -146,20 +146,8 @@ public:
 		{
 			if (randomValue > 1500) // 1501-2047 ~= 1/4
 				entities->push_back(Collectibles::copper->Clone(pos));
-			if (randomValue % 16 == 0) // ~1/16 of the time. The following and these can only have one of them happen
-				entities->push_back(Collectibles::Seeds::copperTreeSeed->Clone(pos));
-			else if (randomValue % 16 == 1)
-				entities->push_back(Collectibles::Seeds::ironTreeSeed->Clone(pos));
-			else if (randomValue % 16 == 2)
-				entities->push_back(Collectibles::Seeds::cheeseTreeSeed->Clone(pos));
-			else if (randomValue % 16 == 3)
-				entities->push_back(Collectibles::Seeds::rubyTreeSeed->Clone(pos));
-			else if (randomValue % 16 == 4)
-				entities->push_back(Collectibles::Seeds::emeraldTreeSeed->Clone(pos));
-			/*else if (randomValue % 16 == 5)
-				entities->push_back(Shootables::cSmallPrinter->Clone(pos));
-			else if (randomValue % 16 == 6)
-				entities->push_back(Shootables::cSmallVacuum->Clone(pos));*/
+			else if (randomValue % 16 < Collectibles::Seeds::plantSeeds.size()) // This system will work until there's > 16 plants.
+				entities->push_back(Collectibles::Seeds::plantSeeds[randomValue % 16]->Clone(pos));
 		}
 	}
 
@@ -185,7 +173,7 @@ namespace EnemyClasses
 			Start();
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::Deceiver* newEnemy = new EnemyClasses::Deceiver(*this);
 			newEnemy->baseClass = baseClass;
@@ -194,17 +182,17 @@ namespace EnemyClasses
 			newEnemy->noise1.SetSeed(PsuedoRandom());
 			newEnemy->noise2.SetSeed(PsuedoRandom());
 			newEnemy->noise3.SetSeed(PsuedoRandom());
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
-		void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime)
+		void DUpdate(Game* game, float dTime)
 		{
 			Color tempColor = color;
 			Color multiplier = Color(static_cast<int>(255 * noise1.GetNoise(tTime, 0.0f)),
 				static_cast<int>(255 * noise2.GetNoise(tTime, 0.0f)), static_cast<int>(255 * noise3.GetNoise(tTime, 0.0f)));
 			color = Color(color.r * multiplier.r, color.g * multiplier.g, color.b * multiplier.b, color.a);
 
-			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, dTime);
 
 			float healthRatio = (float)health / maxHealth;
 			color = Color(color3.r * multiplier.r, color3.g * multiplier.g, color3.b * multiplier.b, color3.a);
@@ -212,11 +200,11 @@ namespace EnemyClasses
 			Vec2 tempPos = pos;
 
 			pos = Vec2(playerPos.x * 2 - pos.x, pos.y);
-			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, dTime);
 			pos = Vec2(pos.x, playerPos.y * 2 - pos.y);
-			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, dTime);
 			pos = Vec2(playerPos.x * 2 - pos.x, pos.y);
-			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, dTime);
 
 			color = tempColor;
 			pos = tempPos;
@@ -237,13 +225,13 @@ namespace EnemyClasses
 			Start();
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::Parent* newEnemy = new EnemyClasses::Parent(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
 		void OnDeath(Entities* entities, Entity* damageDealer) override
@@ -268,13 +256,13 @@ namespace EnemyClasses
 			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{ }
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::Exploder* newEnemy = new EnemyClasses::Exploder(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
 		void OnDeath(Entities* entities, Entity* damageDealer) override
@@ -308,7 +296,7 @@ namespace EnemyClasses
 			lastPos = pos;
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			Snake** enemies = new Snake * [length];
 			for (int i = 0; i < length; i++)
@@ -333,37 +321,33 @@ namespace EnemyClasses
 			}
 
 			for (int i = length - 1; i > -1; i--)
-				entities->push_back(enemies[i]);
+				game->entities->push_back(enemies[i]);
 		}
 
-		void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		void DUpdate(Game* game, float dTime) override
 		{
-			Enemy::Update(game, entities, frameCount, inputs, dTime);
-			//if (oldPos != pos && back != nullptr)
-				//back->pos = oldPos;
-			//if (front != nullptr)
-				//TryMove2(Squarmalized(front->pos - pos), mass, entities, nullptr);
 			if (front == nullptr)
 				color = color3;
+			Enemy::DUpdate(game, dTime);
 		}
 
-		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		void TUpdate(Game* game, float dTime) override
 		{
 			if (front == nullptr)
 			{
 				Entity* entity = nullptr;
-				TryMove2(Squarmalized(playerPos - pos), mass, entities, &entity, nullptr);
+				TryMove2(Squarmalized(playerPos - pos), mass, game->entities, &entity, nullptr);
 				if (entity != nullptr && !entity->IsEnemy())
 				{
-					entity->DealDamage(damage, entities, this);
+					entity->DealDamage(damage, game, this);
 				}
 			}
 			else
 			{
-				vector<Entity*> nearbyEnemies = entities->FindCorpOverlaps(pos, vOne * 2);
+				vector<Entity*> nearbyEnemies = game->entities->FindCorpOverlaps(pos, vOne * 2);
 				for (Entity* entity : nearbyEnemies)
 					if (!entity->IsEnemy())
-						entity->DealDamage(damage, entities, this);
+						entity->DealDamage(damage, game, this);
 			}
 			if (lastPos != pos)
 			{
@@ -407,23 +391,23 @@ namespace EnemyClasses
 			colorOffset = RandFloat() * colorCycleSpeed;
 		}
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::ColorCycler* newEnemy = new EnemyClasses::ColorCycler(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
-		void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		void DUpdate(Game* game, float dTime) override
 		{
 			float currentPlace = (tTime * colorCycleSpeed + colorOffset);
 			int intCurrentPlace = static_cast<int>(currentPlace);
 			color = olc::PixelLerp(colorsToCycle[intCurrentPlace % colorsToCycle.size()],
 				colorsToCycle[(intCurrentPlace + 1) % colorsToCycle.size()], currentPlace - floorf(currentPlace));
 
-			Enemy::DUpdate(game, entities, frameCount, inputs, dTime);
+			Enemy::DUpdate(game, dTime);
 		}
 	};
 
@@ -440,33 +424,33 @@ namespace EnemyClasses
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{ }
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::Vacuumer* newEnemy = new EnemyClasses::Vacuumer(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
-		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		void TUpdate(Game* game, float dTime) override
 		{
 			float currentDistance = 0;
 			if (fabsf((currentDistance = Distance(playerPos, pos)) - desiredDistance) > 1.0f)
 			{
 				Entity* entity = nullptr;
-				TryMove2(Squarmalized((int(currentDistance > desiredDistance) * 2 - 1) * (playerPos - pos)), mass, entities, &entity, nullptr);
+				TryMove2(Squarmalized((int(currentDistance > desiredDistance) * 2 - 1) * (playerPos - pos)), mass, game->entities, &entity, nullptr);
 				if (entity != nullptr && !entity->IsEnemy())
 				{
-					entity->DealDamage(damage, entities, this);
+					entity->DealDamage(damage, game, this);
 				}
 			}
-			entities->Vacuum(pos, vacDist);
-			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, entities->collectibles);
+			game->entities->Vacuum(pos, vacDist);
+			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
 			for (Entity* collectible : collectibles)
 			{
 				items.push_back(((Collectible*)collectible)->baseItem);
-				collectible->DestroySelf(entities, this);
+				collectible->DestroySelf(game, this);
 			}
 		}
 
@@ -485,24 +469,24 @@ namespace EnemyClasses
 	public:
 		using Vacuumer::Vacuumer;
 
-		void BetterClone(Game* game, Entities* entities, Vec2 pos) override
+		void BetterClone(Game* game, Vec2 pos) override
 		{
 			EnemyClasses::Ranger* newEnemy = new EnemyClasses::Ranger(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
-			entities->push_back(newEnemy);
+			game->entities->push_back(newEnemy);
 		}
 
-		void TUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+		void TUpdate(Game* game, float dTime) override
 		{
-			Vacuumer::TUpdate(game, entities, frameCount, inputs, dTime);
+			Vacuumer::TUpdate(game, dTime);
 
 			if (items.size() > 0)
 			{
 				Item shotItem = items[0].Clone(1);
 				items.TryTakeIndex(0);
-				entities->push_back(basicShotItem->Clone(shotItem, pos, (playerPos - pos) * shotItem.range, this));
+				game->entities->push_back(basicShotItem->Clone(shotItem, pos, (playerPos - pos) * shotItem.range, this));
 			}
 		}
 	};

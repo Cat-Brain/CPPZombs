@@ -6,17 +6,12 @@ public:
 	Item baseItem;
 
 	Collectible(Item baseItem, Vec2 pos = vZero) :
-		Entity(pos, vOne, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Item baseItem, Vec2 pos, Color color) :
-		Entity(pos, vOne, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
-
-	void DUpdate(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
-	{
-		game->Draw(ToRSpace(pos), color);
-	}
 
 	Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
@@ -191,7 +186,7 @@ public:
 		addedEntity = false;
 	}
 
-	void Update(Game* game, int frameCount, Inputs inputs, float dTime)
+	void Update(Game* game, float dTime)
 	{
 		if (addedEntity)
 			SortEntities();
@@ -281,36 +276,36 @@ public:
 
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
-				collectibles[i]->Update(game, this, frameCount, inputs, dTime);
+				collectibles[i]->Update(game, dTime);
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
-				sortedNCEntities[index]->Update(game, this, frameCount, inputs, dTime);
+				sortedNCEntities[index]->Update(game, dTime);
 
 		if (addedEntity)
 			SortEntities();
 	}
 
-	void DUpdate(Game* game, int frameCount, Inputs inputs, float dTime)
+	void DUpdate(Game* game, float dTime)
 	{
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive)
-				collectibles[index]->DUpdate(game, this, frameCount, inputs, dTime);
+				collectibles[index]->DUpdate(game, dTime);
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive)
-				sortedNCEntities[index]->DUpdate(game, this, frameCount, inputs, dTime);
+				sortedNCEntities[index]->DUpdate(game, dTime);
 	}
 
-	void UIUpdate(Game* game, int frameCount, Inputs inputs, float dTime)
+	void UIUpdate(Game* game, float dTime)
 	{
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
-				collectibles[index]->UIUpdate(game, this, frameCount, inputs, dTime);
+				collectibles[index]->UIUpdate(game, dTime);
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
-				sortedNCEntities[index]->UIUpdate(game, this, frameCount, inputs, dTime);
+				sortedNCEntities[index]->UIUpdate(game, dTime);
 	}
 
 	void Remove(Entity* entityToRemove)
@@ -363,10 +358,12 @@ void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callRe
 	entities->push_back(new Collectible(*this, pos));
 }
 
-void Entity::DestroySelf(Entities* entities, Entity* damageDealer)
+void Entity::DestroySelf(Game* game, Entity* damageDealer)
 {
-	entities->Remove(this);
-	OnDeath(entities, damageDealer);
+	if (shouldUI)
+		game->MenuedEntityDied(this);
+	game->entities->Remove(this);
+	OnDeath(game->entities, damageDealer);
 	if (holder != nullptr)
 		holder->heldEntity = nullptr;
 	delete this;
@@ -514,16 +511,65 @@ public:
 	}
 
 
-	void Update(Game* game, Entities* entities, int frameCount, Inputs inputs, float dTime) override
+	void Update(Game* game, float dTime) override
 	{
 		if (tTime != startTime)
 		{
-			vector<Entity*> hitEntities = entities->FindCorpOverlaps(pos, explosionDimensions);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
 			for (Entity* entity : hitEntities)
 				if (entity != this && entity != creator)
-					entity->DealDamage(damage, entities, this);
-			DestroySelf(entities, this);
+					entity->DealDamage(damage, game, this);
+			DestroySelf(game, this);
 		}
+	}
+
+	bool Corporeal() override
+	{
+		return false;
+	}
+};
+
+class FadeOutPuddle : public Entity
+{
+public:
+	int damage;
+	float startTime, totalFadeTime, timePer, lastTime;
+
+	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec2 pos = Vec2(0, 0),
+		Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
+		Entity(pos, dimensions, color, 1, 1, 1, "Puddle from "),
+			totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime) { }
+
+	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2 pos):
+		FadeOutPuddle(*baseClass) {
+		this->pos = pos;
+		startTime = tTime;
+	}
+
+	Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	{
+		FadeOutPuddle* newPuddle = new FadeOutPuddle(this, pos);
+		newPuddle->name += creator->name;
+		return newPuddle;
+	}
+
+
+	void Update(Game* game, float dTime) override
+	{
+		if (tTime - lastTime > timePer)
+		{
+			lastTime = tTime;
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
+			for (Entity* entity : hitEntities)
+				entity->DealDamage(damage, game, this);
+		}
+		if (tTime - startTime > totalFadeTime)
+			DestroySelf(game, nullptr);
+	}
+	void DUpdate(Game* game, float dTime) override
+	{
+		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
+		Entity::DUpdate(game, dTime);
 	}
 
 	bool Corporeal() override
@@ -539,38 +585,38 @@ class PlacedOnLanding : public Item
 public:
 	Entity* entityToPlace;
 
-	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1) :
-		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count, range, dimensions), entityToPlace(entityToPlace) { }
 
-	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		Item(name, typeName, color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		Item(name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace) { }
 
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1) :
-		Item(baseClass, name, typeName, color, damage, count), entityToPlace(entityToPlace) { }
+	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		Item(baseClass, name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace) { }
 
 	Item Clone(int count) override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	Item Clone() override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	Item* Clone2() override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
 	{
-		entities->push_back(entityToPlace->Clone(pos));
+		entities->push_back(entityToPlace->Clone(pos, up, creator));
 	}
 };
 
@@ -579,30 +625,30 @@ class ExplodeOnLanding : public Item
 public:
 	Vec2 explosionDimensions;
 
-	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		Item(name, typeName, color, damage, count), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		Item(name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
 
-	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		Item(baseClass, name, typeName, color, damage, count), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		Item(baseClass, name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
 
 	virtual Item Clone(int count)
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
+		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
@@ -626,16 +672,25 @@ public:
 	}
 };
 
+namespace Hazards
+{
+	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 3, Color(80, 43, 92));
+}
+
 namespace Resources
 {
 	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 3, "Ruby", "Ammo", Color(168, 50, 100), 3);
 	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 5, "Emerald", "Ammo", Color(65, 224, 150), 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 4, "Topaz", "Ammo", Color(255, 200, 0), 1, 1, 15.0f, vOne * 2);
+	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", Color(80, 43, 92), 0);
 }
 
 namespace Collectibles
 {
 	Collectible* ruby = new Collectible(*Resources::ruby, vZero);
 	Collectible* emerald = new Collectible(*Resources::emerald, vZero);
+	Collectible* topaz = new Collectible(*Resources::topaz, vZero);
+	Collectible* lead = new Collectible(*Resources::lead, vZero);
 }
 
 

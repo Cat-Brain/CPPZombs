@@ -6,11 +6,8 @@ int main()
 
 	#pragma region Trees
 
-	Trees::copperTree->seed = Collectibles::Seeds::copperTreeSeed;
-	Trees::ironTree->seed = Collectibles::Seeds::ironTreeSeed;
-	Trees::rubyTree->seed = Collectibles::Seeds::rubyTreeSeed;
-	Trees::emeraldTree->seed = Collectibles::Seeds::emeraldTreeSeed;
-	Trees::cheeseTree->seed = Collectibles::Seeds::cheeseTreeSeed;
+	for (int i = 0; i < Plants::plants.size(); i++)
+		Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
 
 	#pragma endregion
 

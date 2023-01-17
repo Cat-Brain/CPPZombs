@@ -10,31 +10,32 @@ public:
 	int damage;
 	int count;
 	float range;
+	Vec2 dimensions;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range) { }
+	Item(string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f) :
-		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range) { }
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range);
+		return Item(baseClass, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range);
+		return Item(baseClass, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range);
+		return new Item(baseClass, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range);
+		return new Item(baseClass, name, typeName, color, damage, count, range, dimensions);
 	}
 
 	Item operator * (int multiplier)
@@ -62,6 +63,26 @@ public:
 	using Item::Item;
 
 	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override { }
+
+	virtual Item Clone(int count)
+	{
+		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+	}
+
+	virtual Item Clone()
+	{
+		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+	}
+
+	virtual Item* Clone2(int count)
+	{
+		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+	}
+
+	virtual Item* Clone2()
+	{
+		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+	}
 };
 
 typedef vector<Item> Cost;

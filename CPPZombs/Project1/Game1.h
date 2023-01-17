@@ -31,6 +31,8 @@ public:
 
 	void Update(float dTime);
 
+	void MenuedEntityDied(Entity* entity);
+
 	bool OnUserDestroy() override;
 
 	bool OnConsoleCommand(const string& text) override;
