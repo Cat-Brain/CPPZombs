@@ -125,7 +125,8 @@ public:
 		}
 		
 		
-		Vec2 shootOffset = (dimensions + currentShootingItem.dimensions - vOne) * Squarmalized(game->inputs.mousePosition - pos);
+		Vec2f normalizedDir = Normalized(game->inputs.mousePosition - pos);
+		Vec2 shootOffset = (dimensions + currentShootingItem.dimensions - vOne) * Vec2(roundf(normalizedDir.x), roundf(normalizedDir.y));
 		if (heldEntity == nullptr && game->inputs.middleMouse.bPressed && game->inputs.mousePosition != pos &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition, vOne)).size())
 		{

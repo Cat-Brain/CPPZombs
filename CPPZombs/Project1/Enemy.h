@@ -368,7 +368,7 @@ namespace EnemyClasses
 		
 		int Cost() override
 		{
-			return points * length;
+			return points * length / 3;
 		}
 	};
 
@@ -498,20 +498,20 @@ namespace EnemyClasses
 Enemy* walker = new Enemy(0.75f, 1, 1, 1, vOne, olc::CYAN, olc::BLACK, 1, 3, 3, "Walker");
 Enemy* tanker = new Enemy(1.0f, 2, 2, 1, vOne * 2, olc::RED, olc::BLACK, 5, 12, 12, "Tanker");
 Enemy* speedster = new Enemy(0.5f, 2, 3, 1, vOne, olc::YELLOW, olc::BLACK, 1, 2, 2, "Speedster");
-EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 4, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 8, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 20, 15, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, 10, 48, 48, "Mega Tanker");
 
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 5, 4, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 3, 4, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 200), 1, 3, 3, "Deceiver");
 
 Enemy* child = new Enemy(0.125f, 10, 0, 1, vOne, olc::MAGENTA, olc::BLACK, 1, 1, 1, "Child");
-EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 10, 6, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
+EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 4, 6, 1, vOne * 3, olc::DARK_MAGENTA, olc::BLACK, 5, 10, 10, "Parent");
 
-EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 10, 5, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
-EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 25, 13, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
+EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 3, 0.25f, 4, 5, 1, vOne, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Exploder");
+EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 8, 0.25f, 8, 13, 1, vOne * 2, Color(153, 255, 0), olc::BLACK, 1, 3, 3, "Giga Exploder");
 EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 1, 7, 1, vOne, olc::GREEN, olc::BLACK, olc::RED, olc::DARK_GREEN, 2, 3, 3, "Snake");
 
-EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 6, 5, 0, vOne, olc::GREY, olc::BLACK, 1, 3, 3, "Vacuumer");
-EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 12, 13, 0, vOne * 3, olc::GREY, olc::BLACK, 1, 12, 12, "Ranger");
+EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 3, 5, 0, vOne, olc::GREY, olc::BLACK, 1, 3, 3, "Vacuumer");
+EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 6, 13, 0, vOne * 3, olc::GREY, olc::BLACK, 1, 12, 12, "Ranger");
 
 vector<Enemy*> spawnableEnemyTypes{ walker, tanker, speedster, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
 snake, vacuumer, ranger };

@@ -124,7 +124,7 @@ void Game::Update(float dTime)
 		else
 		{
 			int totalCost = 0;
-			int costToAchieve = static_cast<int>(pow(1.2, waveCount)) + waveCount * 3 - 1;
+			int costToAchieve = static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
 			int currentlySpawnableEnemyCount = 0;
 			for (int i = 0; i < spawnableEnemyTypes.size(); i++)
 				currentlySpawnableEnemyCount += int(spawnableEnemyTypes[i]->firstWave <= waveCount && spawnableEnemyTypes[i]->Cost() <= costToAchieve);
