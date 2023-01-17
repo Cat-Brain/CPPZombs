@@ -1,3 +1,3 @@
-A farming tower defense roguelike with an atari art style set on Mars.
+A farming roguelike with an atari art style set on alien infested planets.
 
-Fight off an infinite onslought of aliens with both plants and machines.
+Fight off an infinite onslought of aliens with resources harvested from many wacky plants.
