@@ -1,12 +1,12 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(505,89): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(489,95): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
           with
           [
               T=int32_t
           ]
   Generating code
-  227 of 2765 functions ( 8.2%) were compiled, the rest were copied from previous compilation.
-    6 functions were new in current compilation
-    51 functions had inline decision re-evaluated but remain unchanged
+  614 of 2943 functions (20.9%) were compiled, the rest were copied from previous compilation.
+    257 functions were new in current compilation
+    284 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
