@@ -24,8 +24,8 @@ public:
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
-		return labs(this->pos.x - pos.x) < (CHUNK_WIDTH + dimensions.x) - 1 &&
-			labs(this->pos.y - pos.y) < (CHUNK_WIDTH + dimensions.y) - 1;
+		return pos.x - dimensions.x >= this->pos.x + dimensions.x && pos.x < this->pos.x + CHUNK_WIDTH &&
+			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
 	}
 };
 
@@ -112,7 +112,7 @@ public:
 
 	vector<Entity*> FindCorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
-		vector<Entity*> overlaps(0);
+		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<Entity*>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*iter)->Corporeal() && (*iter)->Overlaps(pos, hDim)) overlaps.push_back(*iter);
@@ -300,6 +300,9 @@ public:
 			vector<Entity*>::iterator pos = find(collectibles.begin(), collectibles.end(), entityToRemove);
 			collectibles.erase(pos);
 		}
+		vector<Chunk*> chunks = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
+		for (Chunk* chunk : chunks)
+			chunk->erase(find(chunk->begin(), chunk->end(), entityToRemove));
 	}
 
 	void Vacuum(Vec2 pos, int vacDist)
@@ -389,46 +392,7 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hit
 
 bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
 {
-	TryMove(direction, force, entities, nullptr, ignore);
-}
-
-bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
-{
-	Vec2 newPos = pos + direction;
-
-	if (force >= mass && direction != Vec2(0, 0))
-	{
-		vector<Entity*> overlaps = entities->FindCorpOverlaps(newPos, dimensions);
-		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
-			{
-				*hitEntity = entity;
-				if (!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
-				{
-					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = entities->FindCorpOverlaps(pos, dimensions);
-					bool successful = false;
-					for (Entity* entity2 : overlaps2)
-						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
-							force - mass > entity2->mass)
-						{
-							successful = true;
-							break;
-						}
-					if (successful)
-						break;
-					return false; // The entity is not stuck inside another entity and are blocked.
-				}
-			}
-	}
-	else return false;
-
-	return true;
-}
-
-bool Entity::CheckMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
-{
-	CheckMove(direction, force, entities, nullptr, ignore);
+	return TryMove(direction, force, entities, nullptr, ignore);
 }
 
 #pragma endregion

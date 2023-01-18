@@ -5,8 +5,8 @@ bool Game::OnUserCreate()
 	lowResScreen = olc::Sprite(screenWidth / 4, screenHeight / 4);
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
-	entities = new Entities(0);
-	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH), vOne, 6, olc::BLUE, 1, 10, 5, "Player");
+	entities = new Entities();
+	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;

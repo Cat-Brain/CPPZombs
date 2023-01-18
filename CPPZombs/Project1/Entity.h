@@ -91,10 +91,6 @@ public:
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
 
-	virtual bool CheckMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
-	virtual bool CheckMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
-
-
 	virtual int DealDamage(int damage, Game* game, Entity* damageDealer)
 	{
 		health -= damage;
