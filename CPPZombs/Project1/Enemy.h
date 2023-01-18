@@ -513,5 +513,48 @@ EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 1, 7, 1, vOne, o
 EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 3, 5, 0, vOne, olc::GREY, olc::BLACK, 1, 3, 3, "Vacuumer");
 EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 6, 13, 0, vOne * 3, olc::GREY, olc::BLACK, 1, 12, 12, "Ranger");
 
-vector<Enemy*> spawnableEnemyTypes{ walker, tanker, speedster, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
+class Enemies : public vector<Enemy*>
+{
+public:
+	using vector<Enemy*>::vector;
+
+	int GetRoundPoints(Game* game)
+	{
+		return static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
+	}
+
+	void SpawnEnemyType(Game* game, vector<Enemy*> allowedTypes)
+	{
+		int totalCost = 0, costToAchieve = GetRoundPoints(game);
+		while (totalCost < costToAchieve)
+		{
+			int currentIndex = rand() % allowedTypes.size();
+			float randomValue = RandFloat() * 6.283184f;
+			allowedTypes[currentIndex]->BetterClone(game, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+			totalCost += allowedTypes[currentIndex]->Cost();
+		}
+	}
+
+	void SpawnRandomEnemies(Game* game)
+	{
+		int totalCost = 0, costToAchieve = GetRoundPoints(game);
+		int currentlySpawnableEnemyCount = 0;
+		for (int i = 0; i < (*this).size(); i++)
+			currentlySpawnableEnemyCount += int((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() <= costToAchieve);
+		vector<Enemy*> currentlySpawnableEnemies(currentlySpawnableEnemyCount);
+		for (int i = 0, j = 0; j < currentlySpawnableEnemyCount; i++)
+			if ((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() <= costToAchieve)
+				currentlySpawnableEnemies[j++] = (*this)[i];
+
+		while (totalCost < costToAchieve)
+		{
+			int currentIndex = rand() % currentlySpawnableEnemyCount;
+			float randomValue = RandFloat() * 6.283184f;
+			currentlySpawnableEnemies[currentIndex]->BetterClone(game, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
+			totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
+		}
+	}
+};
+
+Enemies spawnableEnemies{ walker, tanker, speedster, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
 snake, vacuumer, ranger };

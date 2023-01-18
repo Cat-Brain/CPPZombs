@@ -218,3 +218,7 @@ public:
 		return false;
 	}
 };
+
+
+typedef pair<Cost, Item*> RecipeA;
+typedef pair<Cost, Entity*> RecipeB;

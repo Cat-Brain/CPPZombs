@@ -1,4 +1,4 @@
-#include "Collectible.h"
+#include "Entities.h"
 
 class Projectile : public Entity
 {

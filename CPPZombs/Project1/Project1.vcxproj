@@ -155,6 +155,7 @@
     <ClInclude Include="Collectible.h" />
     <ClInclude Include="Defence.h" />
     <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Entities.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FastNoiseLite.h" />
     <ClInclude Include="Game1.h" />

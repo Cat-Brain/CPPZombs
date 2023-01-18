@@ -6,7 +6,7 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = new Entities(0);
-	player = new Player(ToSpace(screenDimH), vOne, 6, olc::BLUE, 1, 10, 5, "Player");
+	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH), vOne, 6, olc::BLUE, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -86,60 +86,24 @@ void Game::Update(float dTime)
 		waveCount += int(!inputs.enter.bPressed);
 
 		if (waveCount == 0)
-			for (int i = 0; i < 5; i++)
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				ranger->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+		{
+			waveCount = 10;
+			spawnableEnemies.SpawnEnemyType(this, { ranger });
+			waveCount = 0;
+		}
 		else if(waveCount == 7)
-			for (int i = 0; i < 5; i++) // Deceiver, 5 on wave 7, First on wave 6, 1 = x/3 - 1, x/3 = 2, x = 6
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				deceiver->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+			spawnableEnemies.SpawnEnemyType(this, { deceiver });
 		else if (waveCount == 9)
-			for (int i = 0; i < 5; i++)
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				parent->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+			spawnableEnemies.SpawnEnemyType(this, { parent });
 		else if(waveCount == 10)
-			for (int i = 0; i < 5; i++)
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				hyperSpeedster->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+			spawnableEnemies.SpawnEnemyType(this, { hyperSpeedster });
 		else if (waveCount == 13)
-			for (int i = 0; i < 5; i++)
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				gigaExploder->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+			spawnableEnemies.SpawnEnemyType(this, { gigaExploder });
 		else if(waveCount == 15)
-			for (int i = 0; i < 30; i++)
-			{
-				float randomValue = RandFloat() * 6.283184f;
-				megaTanker->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-			}
+			spawnableEnemies.SpawnEnemyType(this, { megaTanker });
 		else
 		{
-			int totalCost = 0;
-			int costToAchieve = static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
-			int currentlySpawnableEnemyCount = 0;
-			for (int i = 0; i < spawnableEnemyTypes.size(); i++)
-				currentlySpawnableEnemyCount += int(spawnableEnemyTypes[i]->firstWave <= waveCount && spawnableEnemyTypes[i]->Cost() <= costToAchieve);
-			vector<Enemy*> currentlySpawnableEnemies(currentlySpawnableEnemyCount);
-			for (int i = 0, j = 0; j < currentlySpawnableEnemyCount; i++)
-				if (spawnableEnemyTypes[i]->firstWave <= waveCount && spawnableEnemyTypes[i]->Cost() <= costToAchieve)
-					currentlySpawnableEnemies[j++] = spawnableEnemyTypes[i];
-			
-			while (totalCost < costToAchieve)
-			{
-				int currentIndex = rand() % currentlySpawnableEnemyCount;
-				float randomValue = RandFloat() * 6.283184f;
-				currentlySpawnableEnemies[currentIndex]->BetterClone(this, Vec2f(cosf(randomValue), sinf(randomValue)) * screenDimH * 1.415f + playerPos);
-				totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
-			}
+			spawnableEnemies.SpawnRandomEnemies(this);
 		}
 	}
 
