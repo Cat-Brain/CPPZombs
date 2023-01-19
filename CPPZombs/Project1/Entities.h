@@ -14,12 +14,12 @@ struct EntityIndex // For sorting.
 #define CHUNK_WIDTH 16
 #define MAP_WIDTH 100 // Defined in chunks.
 #define MAP_WIDTH_TRUE CHUNK_WIDTH * MAP_WIDTH
-class Chunk : public vector<Entity*>
+class Chunk : public vector<int>
 {
 public:
 	Vec2 pos;
 
-	Chunk(vector<Entity*> entities = {}, Vec2 pos = vZero) :
+	Chunk(vector<int> entities = {}, Vec2 pos = vZero) :
 		vector(entities), pos(pos) { }
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
@@ -48,15 +48,15 @@ public:
 	bool addedEntity;
 	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
 	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
-	vector<Entity*> projectiles, nonProjectiles;
-	vector<Entity*> enemies, nonEnemies;
-	vector<Entity*> corporeals, incorporeals;
+	//vector<Entity*> projectiles, nonProjectiles;
+	//vector<Entity*> enemies, nonEnemies;
+	//vector<Entity*> corporeals, incorporeals;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
 
 	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
 	{
-		Vec2 minPos = Vec2(max((pos.x - dimensions.x) / CHUNK_WIDTH, 0), max((pos.y - dimensions.y) / CHUNK_WIDTH, 0)),
-			maxPos = Vec2(min((pos.x + dimensions.x) / CHUNK_WIDTH, MAP_WIDTH), min((pos.y + dimensions.y) / CHUNK_WIDTH, MAP_WIDTH));
+		Vec2 minPos = Vec2(max((pos.x - dimensions.x + 1) / CHUNK_WIDTH, 0), max((pos.y - dimensions.y + 1) / CHUNK_WIDTH, 0)),
+			maxPos = Vec2(min((pos.x + dimensions.x - 1) / CHUNK_WIDTH, MAP_WIDTH), min((pos.y + dimensions.y - 1) / CHUNK_WIDTH, MAP_WIDTH));
 		vector<Chunk*> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
 		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
@@ -66,8 +66,8 @@ public:
 
 	void push_back(Entity* entity)
 	{
-		entity->pos.x = Clamp(entity->pos.x, 0, MAP_WIDTH_TRUE);
-		entity->pos.y = Clamp(entity->pos.y, 0, MAP_WIDTH_TRUE);
+		entity->pos.x = Clamp(entity->pos.x, entity->dimensions.x - 1, MAP_WIDTH_TRUE - entity->dimensions.x + 1);
+		entity->pos.y = Clamp(entity->pos.y, entity->dimensions.y - 1, MAP_WIDTH_TRUE - entity->dimensions.y + 1);
 
 		addedEntity = true;
 		vector<Entity*>::push_back(entity);
@@ -77,20 +77,19 @@ public:
 		{
 			index++;
 			sortedNCEntities.insert(sortedNCEntities.begin(), entity);
-			if (entity->Corporeal())
-				corporeals.push_back(entity);
 		}
 
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entity->pos, entity->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
-			chunk->push_back(entity);
+			chunk->push_back(size() - 1);
 	}
 
-	Entity* FindNearestEnemy(Vec2 pos)
+	Entity* FindNearestEnemy(Vec2 pos, Vec2 farthestDimensions)
 	{
+		vector<Entity*> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
 		float currentBestDist = 9999.0f;
 		Entity* currentBest = nullptr;
-		for (Entity* entity : *this)
+		for (Entity* entity : nearbyEntities)
 		{
 			float dist;
 			if (entity->IsEnemy() && (dist = Distance(pos, entity->pos)) < currentBestDist)
@@ -102,20 +101,12 @@ public:
 		return currentBest;
 	}
 
-	vector<Entity*>::iterator FindCorpPos(Vec2 pos)
-	{
-		for (vector<Entity*>::iterator iter = corporeals.begin(); iter != corporeals.end(); iter++)
-			if ((*iter)->pos == pos)
-				return iter;
-		return corporeals.end();
-	}
-
 	vector<Entity*> FindCorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
-			for (vector<Entity*>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*iter)->Corporeal() && (*iter)->Overlaps(pos, hDim)) overlaps.push_back(*iter);
+			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim)) overlaps.push_back((*this)[*iter]);
 		return overlaps;
 	}
 
@@ -124,12 +115,18 @@ public:
 		return FindCorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
-	vector<Entity*>::iterator FindIncorpPos(Vec2 pos)
+	vector<Entity*> FindIncorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
-		for (vector<Entity*>::iterator iter = incorporeals.begin(); iter != incorporeals.end(); iter++)
-			if ((*iter)->pos == pos)
-				return iter;
-		return incorporeals.end();
+		vector<Entity*> overlaps{};
+		for (Chunk* chunk : chunkOverlaps)
+			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim)) overlaps.push_back((*this)[*iter]);
+		return overlaps;
+	}
+
+	vector<Entity*> FindIncorpOverlaps(Vec2 pos, Vec2 hDim)
+	{
+		return FindIncorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
 	void SortEntities()
@@ -167,92 +164,12 @@ public:
 		if (addedEntity)
 			SortEntities();
 
-		int counterOne, counterTwo; // Will be used many times, so lets just create 'em at the start.
-#pragma region Enemies and Non-Enemies
-		counterOne = 0; // Enemy count
-		for (Entity* entity : *this)
-			counterOne += int(entity->IsEnemy());
-
-
-		enemies = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
-		nonEnemies = vector<Entity*>(size() - counterOne);
-
-		counterOne = 0; // furthest empty index of enemies.
-		counterTwo = 0; // furthest empty index of nonEnemies.
-
-		for (Entity* entity : *this)
-		{
-			if (entity->IsEnemy())
-			{
-				enemies[counterOne] = entity;
-				counterOne++;
-			}
-			else
-			{
-				nonEnemies[counterTwo] = entity;
-				counterTwo++;
-			}
-		}
-#pragma endregion
-
-#pragma region Projectiles and Non-Projectiles
-		counterOne = 0; // Projectile count
-		for (Entity* entity : *this)
-			counterOne += int(entity->IsProjectile());
-
-
-		projectiles = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
-		nonProjectiles = vector<Entity*>(size() - counterOne);
-
-		counterOne = 0; // furthest empty index of projectiles.
-		counterTwo = 0; // furthest empty index of nonProjectiles.
-
-		for (Entity* entity : *this)
-		{
-			if (entity->IsProjectile())
-			{
-				projectiles[counterOne] = entity;
-				counterOne++;
-			}
-			else
-			{
-				nonProjectiles[counterTwo] = entity;
-				counterTwo++;
-			}
-		}
-#pragma endregion
-
-#pragma region Corporeals and Incorporeals
-		counterOne = 0; // Corporeal count
-		for (Entity* entity : *this)
-			counterOne += int(entity->Corporeal());
-
-
-		corporeals = vector<Entity*>(counterOne); // Only one malloc per sorted list per frame =]
-		incorporeals = vector<Entity*>(size() - counterOne);
-
-		counterOne = 0; // furthest empty index of projectiles.
-		counterTwo = 0; // furthest empty index of nonEnemies.
-
-		for (Entity* entity : *this)
-		{
-			if (entity->Corporeal())
-			{
-				corporeals[counterOne] = entity;
-				counterOne++;
-			}
-			else
-			{
-				incorporeals[counterTwo] = entity;
-				counterTwo++;
-			}
-		}
-#pragma endregion
-
-
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
 				collectibles[i]->Update(game, dTime);
+
+		if (addedEntity)
+			SortEntities();
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
@@ -286,23 +203,28 @@ public:
 
 	void Remove(Entity* entityToRemove)
 	{
-		erase(find(begin(), end(), entityToRemove));
+		// Remove from sortedNCEntities or from collectibles.
 		if (!entityToRemove->IsCollectible())
 		{
 			vector<Entity*>::iterator pos = find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove);
 			index -= int(index >= distance(sortedNCEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
 			sortedNCEntities.erase(pos);
-			if (entityToRemove->Corporeal())
-				corporeals.erase(find(corporeals.begin(), corporeals.end(), entityToRemove));
 		}
 		else
-		{
-			vector<Entity*>::iterator pos = find(collectibles.begin(), collectibles.end(), entityToRemove);
-			collectibles.erase(pos);
-		}
+			collectibles.erase(find(collectibles.begin(), collectibles.end(), entityToRemove));
+		// Remove from every chunk that this object overlaps.
+		vector<Entity*>::iterator mainPos = find(begin(), end(), entityToRemove);
+		int removalIndex = distance(begin(), mainPos);
 		vector<Chunk*> chunks = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
 		for (Chunk* chunk : chunks)
-			chunk->erase(find(chunk->begin(), chunk->end(), entityToRemove));
+		{
+			chunk->erase(find(chunk->begin(), chunk->end(), removalIndex));
+			for (int i = 0; i < chunk->size(); i++)
+				if ((*chunk)[i] >= removalIndex)
+					(*chunk)[i]--;
+		}
+		// Remove from main list from which the rest derive.
+		erase(mainPos);
 	}
 
 	void Vacuum(Vec2 pos, int vacDist)
@@ -381,18 +303,30 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hit
 	}
 	else return false;
 
-	vector<Chunk*> currentChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
-	for (Chunk* chunk : currentChunkOverlaps)
-		chunk->erase(find(chunk->begin(), chunk->end(), this));
-	pos = newPos;
-	for (Chunk* chunk : chunkOverlaps)
-		chunk->push_back(this);
+	SetPos(newPos, entities);
+
 	return true;
 }
 
 bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
 {
 	return TryMove(direction, force, entities, nullptr, ignore);
+}
+
+void Entity::SetPos(Vec2 newPos, Entities* entities)
+{
+	if (pos / 16 != newPos / 16)
+	{
+		int position = distance(entities->begin(), find(entities->begin(), entities->end(), this));
+		vector<Chunk*> oldChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
+		for (Chunk* chunk : oldChunkOverlaps)
+			chunk->erase(find(chunk->begin(), chunk->end(), position));
+		pos = newPos;
+		vector<Chunk*> newChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
+		for (Chunk* chunk : newChunkOverlaps)
+			chunk->push_back(position);
+	}
+	else pos = newPos;
 }
 
 #pragma endregion

@@ -15,12 +15,11 @@ namespace Recipes
 	RecipeA duct(Costs::duct, Shootables::Conveyers::duct);
 	RecipeA smallVacuum(Costs::smallVacuum, Shootables::smallVacuum);
 	RecipeB largeVacuum(Costs::largeVacuum, Structures::Conveyers::largeVacuum);
-	RecipeB basicTurret(Costs::turret, Structures::Defence::basicTurret);
 
 	namespace PrinterRecipes
 	{
 		vector<RecipeA> smallPrinterRecipeAs{ basicBullet, duct, smallVacuum };
-		vector<RecipeB> smallPrinterRecipeBs{ copperWall, largeVacuum, basicTurret };
+		vector<RecipeB> smallPrinterRecipeBs{ copperWall, largeVacuum };
 	}
 };
 

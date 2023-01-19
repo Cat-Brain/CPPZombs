@@ -41,10 +41,10 @@ public:
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
-		//this->color = color;
+		this->color = color;
 		DUpdate(game, dTime);
 		this->pos = tempPos;
-		//this->color = tempColor;
+		this->color = tempColor;
 	}
 
 	virtual void DUpdate(Game* game, float dTime) // Normally only draws.
@@ -90,6 +90,7 @@ public:
 	
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
 	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
+	virtual void SetPos(Vec2 newPos, Entities* entities);
 
 	virtual int DealDamage(int damage, Game* game, Entity* damageDealer)
 	{

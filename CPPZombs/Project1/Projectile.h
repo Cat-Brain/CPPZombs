@@ -47,11 +47,11 @@ public:
             return;
         }
         Vec2 oldPos = pos;
-        MovePos(dTime);
+        MovePos(dTime, game->entities);
         if (oldPos != pos && CheckPos(game, dTime, entity))
         {
             if (entity != nullptr)
-                pos = oldPos;
+                SetPos(oldPos, game->entities);
             callType = 1 + int(entity == nullptr);
             DestroySelf(game, entity);
         }
@@ -74,10 +74,10 @@ public:
         return false;
     }
 
-    virtual void MovePos(float dTime)
+    virtual void MovePos(float dTime, Entities* entities)
     {
         fPos += direction * dTime * speed;
-        pos = Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y)));
+        SetPos(Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y))), entities);
     }
 
     int SortOrder() override
