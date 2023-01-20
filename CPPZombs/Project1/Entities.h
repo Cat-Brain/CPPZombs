@@ -71,6 +71,7 @@ public:
 
 		addedEntity = true;
 		vector<Entity*>::push_back(entity);
+
 		if (entity->IsCollectible())
 			collectibles.push_back(entity);
 		else
@@ -215,14 +216,15 @@ public:
 		// Remove from every chunk that this object overlaps.
 		vector<Entity*>::iterator mainPos = find(begin(), end(), entityToRemove);
 		int removalIndex = distance(begin(), mainPos);
-		vector<Chunk*> chunks = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
-		for (Chunk* chunk : chunks)
-		{
+		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
+		for (Chunk* chunk : chunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), removalIndex));
-			for (int i = 0; i < chunk->size(); i++)
-				if ((*chunk)[i] >= removalIndex)
-					(*chunk)[i]--;
-		}
+
+		for (int x = 0; x < MAP_WIDTH; x++)
+			for (int y = 0; y < MAP_WIDTH; y++)
+				for (int i = 0; i < chunks[x][y].size(); i++)
+					chunks[x][y][i] -= int(chunks[x][y][i] > removalIndex);
+
 		// Remove from main list from which the rest derive.
 		erase(mainPos);
 	}
@@ -234,7 +236,7 @@ public:
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
 			{
-				collectible->pos += Squarmalized(pos - collectible->pos);
+				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos), this);
 			}
 		}
 	}
@@ -246,7 +248,7 @@ public:
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - pos + dir)) >= 1 - fov)
 			{
-				collectible->pos += Squarmalized(pos - collectible->pos);
+				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos), this);
 			}
 		}
 	}
@@ -315,18 +317,19 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* igno
 
 void Entity::SetPos(Vec2 newPos, Entities* entities)
 {
-	if (pos / 16 != newPos / 16)
+	if (pos / CHUNK_WIDTH != newPos / CHUNK_WIDTH)
 	{
 		int position = distance(entities->begin(), find(entities->begin(), entities->end(), this));
 		vector<Chunk*> oldChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
 		for (Chunk* chunk : oldChunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), position));
-		pos = newPos;
-		vector<Chunk*> newChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
+		vector<Chunk*> newChunkOverlaps = entities->ChunkOverlaps(newPos, dimensions);
 		for (Chunk* chunk : newChunkOverlaps)
 			chunk->push_back(position);
+		if (oldChunkOverlaps.size() != 1 || newChunkOverlaps.size() != 1)
+			printf("%i - %i\n", oldChunkOverlaps.size(), newChunkOverlaps.size());
 	}
-	else pos = newPos;
+	pos = newPos;
 }
 
 #pragma endregion

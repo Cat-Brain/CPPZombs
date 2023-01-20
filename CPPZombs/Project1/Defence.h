@@ -164,9 +164,6 @@ namespace Plants
 
 		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
 		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
-		// 3x3 but not a corruption seed.
-		Color babyTopazTreeColor = Color(255, 218, 84), topazTreeColor = Color(181, 142, 0), deadTopazTreeColor = Color(107, 84, 0);
-		CollectibleTree* topazTree = new CollectibleTree(Collectibles::topaz, nullptr, 5, 50, 10, 4.0f, vZero, vOne * 2, babyTopazTreeColor, topazTreeColor, deadTopazTreeColor, 5, 6, 6, "Topaz tree");
 	}
 
 
@@ -174,12 +171,15 @@ namespace Plants
 	{
 		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61);
 		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
+		// 3x3 but not a corruption seed.
+		Color babyTopazVineColor = Color(255, 218, 84), topazVineColor = Color(181, 142, 0), deadTopazVineColor = Color(107, 84, 0);
+		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
 	}
 
-	// Keep a list of all of the plants.
+	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.
 	vector<CollectibleTree*> plants{ Trees::copperTree, Trees::ironTree, Trees::cheeseTree,
-		Trees::rubyTree, Trees::emeraldTree, Trees::topazTree,
-	Vines::leadVine };
+		Trees::rubyTree, Trees::emeraldTree,
+		Vines::topazVine, Vines::leadVine };
 }
 
 namespace Resources::Seeds
@@ -189,7 +189,7 @@ namespace Resources::Seeds
 	PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Plants::Trees::cheeseTree, "Cheese tree seed", "Seed", Plants::Trees::cheeseTreeColor, 0);
 	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", Plants::Trees::rubyTreeColor, 1);
 	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, 1);
-	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Trees::topazTree, "Topaz tree seed", "Seed", Plants::Trees::topazTreeColor, 0, 1, 15.0f, vOne * 2);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, vOne * 2);
 	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
 
 	// Keep a list of all of the seeds.
