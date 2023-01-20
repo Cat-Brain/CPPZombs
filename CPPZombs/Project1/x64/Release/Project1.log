@@ -1,15 +1,11 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(85,1): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(95,1): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
           with
           [
               _Ty=int
           ]
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(218,20): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(322,16): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(330,11): warning C4477: 'printf' : format string '%i' requires an argument of type 'int', but variadic argument 1 has type 'unsigned __int64'
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(330,11): message : consider using '%zi' in the format string
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(330,11): warning C4477: 'printf' : format string '%i' requires an argument of type 'int', but variadic argument 2 has type 'unsigned __int64'
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(330,11): message : consider using '%zi' in the format string
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(229,20): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(335,16): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(489,95): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
           with
           [
@@ -26,8 +22,8 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Player.h(129
               T=int32_t
           ]
   Generating code
-  522 of 3103 functions (16.8%) were compiled, the rest were copied from previous compilation.
-    181 functions were new in current compilation
-    464 functions had inline decision re-evaluated but remain unchanged
+  261 of 3106 functions ( 8.4%) were compiled, the rest were copied from previous compilation.
+    4 functions were new in current compilation
+    152 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
