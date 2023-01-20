@@ -27,6 +27,12 @@ public:
 		return pos.x - dimensions.x >= this->pos.x + dimensions.x && pos.x < this->pos.x + CHUNK_WIDTH &&
 			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
 	}
+
+	static std::pair<Vec2, Vec2> MinMaxPos(Vec2 pos, Vec2 dimensions)
+	{
+		return { Vec2(max((pos.x - dimensions.x + 1) / CHUNK_WIDTH, 0), max((pos.y - dimensions.y + 1) / CHUNK_WIDTH, 0)),
+			Vec2(min((pos.x + dimensions.x - 1) / CHUNK_WIDTH, MAP_WIDTH), min((pos.y + dimensions.y - 1) / CHUNK_WIDTH, MAP_WIDTH)) };
+	}
 };
 
 class Entities : public vector<Entity*>
@@ -53,15 +59,19 @@ public:
 	//vector<Entity*> corporeals, incorporeals;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
 
-	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
+	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
 	{
-		Vec2 minPos = Vec2(max((pos.x - dimensions.x + 1) / CHUNK_WIDTH, 0), max((pos.y - dimensions.y + 1) / CHUNK_WIDTH, 0)),
-			maxPos = Vec2(min((pos.x + dimensions.x - 1) / CHUNK_WIDTH, MAP_WIDTH), min((pos.y + dimensions.y - 1) / CHUNK_WIDTH, MAP_WIDTH));
 		vector<Chunk*> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
 		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
 				result[i++] = &chunks[x][y];
 		return result;
+	}
+
+	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
+	{
+		std::pair<Vec2, Vec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
+		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
 	void push_back(Entity* entity)
@@ -107,7 +117,8 @@ public:
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim)) overlaps.push_back((*this)[*iter]);
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim) &&
+					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter]);
 		return overlaps;
 	}
 
@@ -317,17 +328,17 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* igno
 
 void Entity::SetPos(Vec2 newPos, Entities* entities)
 {
-	if (pos / CHUNK_WIDTH != newPos / CHUNK_WIDTH || dimensions != vOne) // Write a better algorithm!!!
+	std::pair<Vec2, Vec2> minMaxOldPos = Chunk::MinMaxPos(pos, dimensions);
+	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(newPos, dimensions);
+	if (minMaxOldPos != minMaxNewPos)
 	{
 		int position = distance(entities->begin(), find(entities->begin(), entities->end(), this));
-		vector<Chunk*> oldChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
+		vector<Chunk*> oldChunkOverlaps = entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
 		for (Chunk* chunk : oldChunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), position));
-		vector<Chunk*> newChunkOverlaps = entities->ChunkOverlaps(newPos, dimensions);
+		vector<Chunk*> newChunkOverlaps = entities->MainChunkOverlaps(minMaxNewPos.first, minMaxNewPos.second);
 		for (Chunk* chunk : newChunkOverlaps)
 			chunk->push_back(position);
-		if (oldChunkOverlaps.size() != 1 || newChunkOverlaps.size() != 1)
-			printf("%i - %i\n", oldChunkOverlaps.size(), newChunkOverlaps.size());
 	}
 	pos = newPos;
 }
