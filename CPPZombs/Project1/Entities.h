@@ -317,7 +317,7 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* igno
 
 void Entity::SetPos(Vec2 newPos, Entities* entities)
 {
-	if (pos / CHUNK_WIDTH != newPos / CHUNK_WIDTH)
+	if (pos / CHUNK_WIDTH != newPos / CHUNK_WIDTH || dimensions != vOne) // Write a better algorithm!!!
 	{
 		int position = distance(entities->begin(), find(entities->begin(), entities->end(), this));
 		vector<Chunk*> oldChunkOverlaps = entities->ChunkOverlaps(pos, dimensions);
@@ -522,7 +522,7 @@ namespace Resources
 {
 	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 3, "Ruby", "Ammo", Color(168, 50, 100), 3);
 	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 5, "Emerald", "Ammo", Color(65, 224, 150), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 4, "Topaz", "Ammo", Color(255, 200, 0), 1, 1, 15.0f, vOne * 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 4, "Topaz", "Ammo", Color(255, 200, 0), 3, 1, 15.0f, vOne * 2);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", Color(80, 43, 92), 0);
 }
 
