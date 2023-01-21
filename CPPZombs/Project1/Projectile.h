@@ -101,6 +101,7 @@ class ShotItem : public Projectile
 {
 public:
     Item item;
+    string creatorName;
 
     ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, dimensions, item.color, mass, maxHealth, health), item(item)
@@ -119,6 +120,7 @@ public:
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
         this->pos = pos;
+        creatorName = creator->name;
         Start();
     }
 
@@ -139,7 +141,10 @@ public:
         if (creator == nullptr)
             name = item.name;
         else
+        {
             name = item.name + " shot by " + creator->name;
+            creatorName = creator->name;
+        }
         Start();
     }
 
@@ -155,7 +160,7 @@ public:
 
     void OnDeath(Entities* entities, Entity* damageDealer) override
     {
-        item.baseClass->OnDeath(entities, pos, creator, damageDealer, callType);
+        item.baseClass->OnDeath(entities, pos, creator, creatorName, damageDealer, callType);
     }
 };
 

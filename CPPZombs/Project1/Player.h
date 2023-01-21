@@ -22,13 +22,9 @@ public:
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone());
-		items.push_back(Resources::Seeds::copperTreeSeed->Clone(3));
-		items.push_back(Resources::Seeds::ironTreeSeed->Clone());
-		items.push_back(Resources::Seeds::cheeseTreeSeed->Clone());
-		items.push_back(Resources::Seeds::rubyTreeSeed->Clone());
-		items.push_back(Resources::Seeds::emeraldTreeSeed->Clone());
-		items.push_back(Resources::Seeds::topazTreeSeed->Clone());
-		items.push_back(Resources::Seeds::leadVineSeed->Clone());
+		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
+		for (Item* item : Resources::Seeds::plantSeeds)
+			items.push_back(item->Clone());
 		items.currentIndex = 0; // Copper
 	}
 

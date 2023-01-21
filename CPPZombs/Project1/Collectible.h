@@ -39,6 +39,7 @@ namespace Collectibles
 {
 	Collectible* copper = new Collectible(*Resources::copper, vZero);
 	Collectible* iron = new Collectible(*Resources::iron, vZero);
+	Collectible* rock = new Collectible(*Resources::rock, vZero);
 }
 
 

@@ -53,7 +53,7 @@ public:
 		return name != b.name;
 	}
 
-	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType);
+	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
 };
 Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
 
@@ -62,7 +62,7 @@ class GoneOnLandItem : public Item
 public:
 	using Item::Item;
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override { }
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override { }
 
 	virtual Item Clone(int count)
 	{
@@ -196,6 +196,7 @@ namespace Resources
 {
 	Item* copper = new Item("Copper", "Ammo", Color(232, 107, 5), 1);
 	Item* iron = new Item("Iron", "Ammo", Color(111, 123, 128), 3);
+	Item* rock = new Item("Rock", "Ammo", Color(145, 141, 118), 6, 1, 5.0f);
 }
 
 #pragma endregion

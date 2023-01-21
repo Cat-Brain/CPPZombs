@@ -352,7 +352,7 @@ namespace EnemyClasses
 			if (lastPos != pos)
 			{
 				if (back != nullptr)
-					back->pos = lastPos;
+					back->SetPos(lastPos, game->entities);
 				lastPos = pos;
 			}
 		}

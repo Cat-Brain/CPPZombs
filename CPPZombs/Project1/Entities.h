@@ -267,7 +267,7 @@ public:
 
 #pragma region Post Entities functions
 
-void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType)
+void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 {
 	entities->push_back(new Collectible(*this, pos));
 }
@@ -388,7 +388,7 @@ public:
 
 	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec2 pos = Vec2(0, 0),
 		Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
-		Entity(pos, dimensions, color, 1, 1, 1, "Puddle from "),
+		Entity(pos, dimensions, color, 1, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime) { }
 
 	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2 pos) :
@@ -400,8 +400,6 @@ public:
 	Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
 		FadeOutPuddle* newPuddle = new FadeOutPuddle(this, pos);
-		if (creator != nullptr)
-			newPuddle->name += creator->name;
 		return newPuddle;
 	}
 
@@ -436,6 +434,7 @@ class PlacedOnLanding : public Item
 {
 public:
 	Entity* entityToPlace;
+	string creatorName;
 
 	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
 		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count, range, dimensions), entityToPlace(entityToPlace) { }
@@ -466,9 +465,11 @@ public:
 		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		entities->push_back(entityToPlace->Clone(pos, up, creator));
+		Entity* placedEntity = entityToPlace->Clone(pos, up, creator);
+		placedEntity->name += " from " + creatorName;
+		entities->push_back(placedEntity);
 	}
 };
 
@@ -503,7 +504,7 @@ public:
 		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
 		entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creator->name, creator));
 		entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
@@ -515,12 +516,12 @@ class CorruptOnKill : public PlacedOnLanding
 public:
 	using PlacedOnLanding::PlacedOnLanding;
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, Entity* callReason, int callType) override
+	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
 		if (callType == 2)
-			PlacedOnLanding::OnDeath(entities, pos, creator, callReason, callType);
+			PlacedOnLanding::OnDeath(entities, pos, creator, creatorName, callReason, callType);
 		else
-			Item::OnDeath(entities, pos, creator, callReason, callType);
+			Item::OnDeath(entities, pos, creator, creatorName, callReason, callType);
 	}
 };
 

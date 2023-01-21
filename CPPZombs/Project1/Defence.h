@@ -98,7 +98,22 @@ public:
 class Vine : public CollectibleTree
 {
 public:
-	using CollectibleTree::CollectibleTree;
+	int maxGenerations, generation;
+
+	Vine(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA, Color deadColor = olc::BLACK,
+		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
+		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, mass, maxHealth, health, name),
+		maxGenerations(maxGenerations), generation(0)
+	{ }
+
+	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
+		Vine(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		Start();
+	}
 
 	void Start() override
 	{
@@ -110,22 +125,21 @@ public:
 	{
 		Vine* newVine = new Vine(this, dir, pos);
 		newVine->Start();
+		newVine->generation = ((Vine*)creator)->generation + 1;
 		return newVine;
 	}
 
 	bool TUpdate(Game* game, float dTime) override
 	{
-		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
+		if (generation < maxGenerations && currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			Vec2 placementPos = pos;
 			while (placementPos == pos)
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
-			if (!hitEntities.size() && game->entities->size() < 3600)
-				game->entities->push_back(baseClass->Clone(placementPos));
+			if (!hitEntities.size())
+				game->entities->push_back(baseClass->Clone(placementPos, up, this));
 		}
-		if (currentLifespan > 50)
-			DestroySelf(game, this);
 		currentLifespan++;
 		return true;
 	}
@@ -137,6 +151,50 @@ public:
 			entities->push_back(seed->Clone(pos));
 		else
 			entities->push_back(collectible->Clone(pos));
+	}
+
+	void UIUpdate(Game* game, float dTime) override
+	{
+		Vec2 topLeft = TopLeft();
+		if (currentLifespan < cyclesToGrow)
+		{
+			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
+			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(
+				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
+			game->DrawString(topLeft + Vec2(1, 15), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
+		}
+		else if (currentLifespan < deadStage)
+		{
+			DrawUIBox(game, topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
+			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
+			game->DrawString(topLeft + Vec2(1, 15), ToStringWithPrecision(
+				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), color);
+			game->DrawString(topLeft + Vec2(1, 22), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
+		}
+		else
+		{
+			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
+			game->DrawString(topLeft + Vec2(1, 8), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), deadColor);
+		}
+	}
+
+	bool PosInUIBounds(Vec2 screenSpacePos) override
+	{
+		Vec2 topLeft = TopLeft(), bottomRight;
+		if (currentLifespan < cyclesToGrow)
+		{
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22);
+		}
+		else if (currentLifespan < deadStage)
+		{
+			bottomRight = topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29);
+		}
+		else
+		{
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
+		}
+		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
+			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 };
 
@@ -164,21 +222,24 @@ namespace Plants
 
 		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
 		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
+
+		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78);
+		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, 1, 1, 1, "Rock tree");
 	}
 
 
 	namespace Vines
 	{
 		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61);
-		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
+		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
 		// 3x3 but not a corruption seed.
 		Color babyTopazVineColor = Color(255, 218, 84), topazVineColor = Color(181, 142, 0), deadTopazVineColor = Color(107, 84, 0);
-		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
+		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
 	}
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.
 	vector<CollectibleTree*> plants{ Trees::copperTree, Trees::ironTree, Trees::cheeseTree,
-		Trees::rubyTree, Trees::emeraldTree,
+		Trees::rubyTree, Trees::emeraldTree, Trees::rockTree,
 		Vines::topazVine, Vines::leadVine };
 }
 
@@ -189,11 +250,12 @@ namespace Resources::Seeds
 	PlacedOnLanding* cheeseTreeSeed = new PlacedOnLanding(Plants::Trees::cheeseTree, "Cheese tree seed", "Seed", Plants::Trees::cheeseTreeColor, 0);
 	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", Plants::Trees::rubyTreeColor, 1);
 	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, 1);
+	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", Plants::Trees::rockTreeColor, 0);
 	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, vOne * 2);
 	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
 
 	// Keep a list of all of the seeds.
-	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, topazTreeSeed, leadVineSeed };
+	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, topazTreeSeed, leadVineSeed };
 }
 
 namespace Collectibles::Seeds
@@ -203,10 +265,11 @@ namespace Collectibles::Seeds
 	Collectible* cheeseTreeSeed = new Collectible(*Resources::Seeds::cheeseTreeSeed);
 	Collectible* rubyTreeSeed = new Collectible(*Resources::Seeds::rubyTreeSeed);
 	Collectible* emeraldTreeSeed = new Collectible(*Resources::Seeds::emeraldTreeSeed);
+	Collectible* rockTreeSeed = new Collectible(*Resources::Seeds::rockTreeSeed);
 	Collectible* topazTreeSeed = new Collectible(*Resources::Seeds::topazTreeSeed);
 	Collectible* leadVindSeed = new Collectible(*Resources::Seeds::leadVineSeed);
 
 	// Keep a list of all of the seeds.
-	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, topazTreeSeed, leadVindSeed };
+	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, cheeseTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, topazTreeSeed, leadVindSeed };
 }
 #pragma endregion
