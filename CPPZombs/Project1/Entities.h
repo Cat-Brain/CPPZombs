@@ -54,9 +54,7 @@ public:
 	bool addedEntity;
 	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
 	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
-	//vector<Entity*> projectiles, nonProjectiles;
-	//vector<Entity*> enemies, nonEnemies;
-	//vector<Entity*> corporeals, incorporeals;
+	vector<LightSource*> lightSources;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
 
 	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
@@ -171,46 +169,46 @@ public:
 		addedEntity = false;
 	}
 
-	void Update(Game* game, float dTime)
+	void Update()
 	{
 		if (addedEntity)
 			SortEntities();
 
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
-				collectibles[i]->Update(game, dTime);
+				collectibles[i]->Update();
 
 		if (addedEntity)
 			SortEntities();
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
-				sortedNCEntities[index]->Update(game, dTime);
+				sortedNCEntities[index]->Update();
 
 		if (addedEntity)
 			SortEntities();
 	}
 
-	void DUpdate(Game* game, float dTime)
+	void DUpdate()
 	{
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive)
-				collectibles[index]->DUpdate(game, dTime);
+				collectibles[index]->DUpdate();
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive)
-				sortedNCEntities[index]->DUpdate(game, dTime);
+				sortedNCEntities[index]->DUpdate();
 	}
 
-	void UIUpdate(Game* game, float dTime)
+	void UIUpdate()
 	{
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
-				collectibles[index]->UIUpdate(game, dTime);
+				collectibles[index]->UIUpdate();
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
-				sortedNCEntities[index]->UIUpdate(game, dTime);
+				sortedNCEntities[index]->UIUpdate();
 	}
 
 	void Remove(Entity* entityToRemove)
@@ -238,6 +236,12 @@ public:
 
 		// Remove from main list from which the rest derive.
 		erase(mainPos);
+		
+	}
+
+	void Remove(LightSource* lightSourceToRemove)
+	{
+		lightSources.erase(find(lightSources.begin(), lightSources.end(), lightSourceToRemove));
 	}
 
 	void Vacuum(Vec2 pos, int vacDist)
@@ -247,7 +251,7 @@ public:
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
 			{
-				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos), this);
+				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos));
 			}
 		}
 	}
@@ -259,7 +263,7 @@ public:
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - pos + dir)) >= 1 - fov)
 			{
-				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos), this);
+				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos));
 			}
 		}
 	}
@@ -267,39 +271,39 @@ public:
 
 #pragma region Post Entities functions
 
-void Item::OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+void Item::OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 {
-	entities->push_back(new Collectible(*this, pos));
+	game->entities->push_back(new Collectible(*this, pos));
 }
 
-void Entity::DestroySelf(Game* game, Entity* damageDealer)
+void Entity::DestroySelf(Entity* damageDealer)
 {
 	if (shouldUI)
 		game->MenuedEntityDied(this);
 	game->entities->Remove(this);
-	OnDeath(game->entities, damageDealer);
+	OnDeath(damageDealer);
 	if (holder != nullptr)
 		holder->heldEntity = nullptr;
 	delete this;
 }
 
-bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 	vector<Chunk*> chunkOverlaps;
 	if (newPos.x >= 0 && newPos.x < MAP_WIDTH_TRUE && newPos.y >= 0 && newPos.y < MAP_WIDTH_TRUE && force >= mass && direction != Vec2(0, 0))
 	{
-		chunkOverlaps = entities->ChunkOverlaps(newPos, dimensions);
-		vector<Entity*> overlaps = entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
+		chunkOverlaps = game->entities->ChunkOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
 		for (Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
 			{
 				if (hitEntity != nullptr)
 					*hitEntity = entity;
-				if (!entity->TryMove(direction, force - mass, entities, ignore) && !entity->Overlaps(pos, dimensions))
+				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, dimensions))
 				{
 					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = entities->FindCorpOverlaps(pos, dimensions);
+					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, dimensions);
 					bool successful = false;
 					for (Entity* entity2 : overlaps2)
 						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
@@ -316,27 +320,22 @@ bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity** hit
 	}
 	else return false;
 
-	SetPos(newPos, entities);
+	SetPos(newPos);
 
 	return true;
 }
 
-bool Entity::TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore) // returns index of hit item.
-{
-	return TryMove(direction, force, entities, nullptr, ignore);
-}
-
-void Entity::SetPos(Vec2 newPos, Entities* entities)
+void Entity::SetPos(Vec2 newPos)
 {
 	std::pair<Vec2, Vec2> minMaxOldPos = Chunk::MinMaxPos(pos, dimensions);
 	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(newPos, dimensions);
 	if (minMaxOldPos != minMaxNewPos)
 	{
-		int position = distance(entities->begin(), find(entities->begin(), entities->end(), this));
-		vector<Chunk*> oldChunkOverlaps = entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
+		int position = distance(game->entities->begin(), find(game->entities->begin(), game->entities->end(), this));
+		vector<Chunk*> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
 		for (Chunk* chunk : oldChunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), position));
-		vector<Chunk*> newChunkOverlaps = entities->MainChunkOverlaps(minMaxNewPos.first, minMaxNewPos.second);
+		vector<Chunk*> newChunkOverlaps = game->entities->MainChunkOverlaps(minMaxNewPos.first, minMaxNewPos.second);
 		for (Chunk* chunk : newChunkOverlaps)
 			chunk->push_back(position);
 	}
@@ -362,15 +361,15 @@ public:
 	}
 
 
-	void Update(Game* game, float dTime) override
+	void Update() override
 	{
 		if (tTime != startTime)
 		{
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
 			for (Entity* entity : hitEntities)
 				if (entity != this && entity != creator)
-					entity->DealDamage(damage, game, this);
-			DestroySelf(game, this);
+					entity->DealDamage(damage, this);
+			DestroySelf(this);
 		}
 	}
 
@@ -403,23 +402,23 @@ public:
 		return newPuddle;
 	}
 
-
-	void Update(Game* game, float dTime) override
+	void Update() override
 	{
 		if (tTime - lastTime > timePer)
 		{
 			lastTime = tTime;
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
 			for (Entity* entity : hitEntities)
-				entity->DealDamage(damage, game, this);
+				entity->DealDamage(damage, this);
 		}
 		if (tTime - startTime > totalFadeTime)
-			DestroySelf(game, nullptr);
+			DestroySelf(nullptr);
 	}
-	void DUpdate(Game* game, float dTime) override
+
+	void DUpdate() override
 	{
 		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
-		Entity::DUpdate(game, dTime);
+		Entity::DUpdate();
 	}
 
 	bool Corporeal() override
@@ -465,11 +464,11 @@ public:
 		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, dimensions);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
+	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
 		Entity* placedEntity = entityToPlace->Clone(pos, up, creator);
 		placedEntity->name += " from " + creatorName;
-		entities->push_back(placedEntity);
+		game->entities->push_back(placedEntity);
 	}
 };
 
@@ -504,10 +503,10 @@ public:
 		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
 	}
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
+	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creator->name, creator));
-		entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
+		game->entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creator->name, creator));
+		game->entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
 	}
 };
 
@@ -516,12 +515,12 @@ class CorruptOnKill : public PlacedOnLanding
 public:
 	using PlacedOnLanding::PlacedOnLanding;
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
+	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
 		if (callType == 2)
-			PlacedOnLanding::OnDeath(entities, pos, creator, creatorName, callReason, callType);
+			PlacedOnLanding::OnDeath(pos, creator, creatorName, callReason, callType);
 		else
-			Item::OnDeath(entities, pos, creator, creatorName, callReason, callType);
+			Item::OnDeath(pos, creator, creatorName, callReason, callType);
 	}
 };
 

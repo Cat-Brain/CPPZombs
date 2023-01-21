@@ -18,8 +18,7 @@ public:
 
 	bool showUI = true, paused = false;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
-
-
+	float dTime = 0.0f;
 
 	Game() : entities(nullptr), player(nullptr) { }
 
@@ -29,7 +28,9 @@ public:
 
 	Color GetBackgroundNoise(Vec2f noisePos);
 
-	void Update(float dTime);
+	void ApplyLighting();
+
+	void Update();
 
 	void MenuedEntityDied(Entity* entity);
 

@@ -29,17 +29,16 @@ public:
 		return new CollectibleTree(this, dir, pos);
 	}
 
-	void DUpdate(Game* game, float dTime) override
+	void DUpdate() override
 	{
-		Color oldColor = color;
 		if (currentLifespan >= deadStage)
 			color = deadColor;
 		else if (currentLifespan >= cyclesToGrow)
 			color = adultColor;
-		FunctionalBlock::DUpdate(game, dTime);
+		FunctionalBlock::DUpdate();
 	}
 
-	bool TUpdate(Game* game, float dTime) override
+	bool TUpdate() override
 	{
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
@@ -52,24 +51,24 @@ public:
 		return true;
 	}
 
-	void UIUpdate(Game* game, float dTime) override
+	void UIUpdate() override
 	{
 		Vec2 topLeft = TopLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
 			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
 				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(game, topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
 			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
 			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
 				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), color);
 		}
 		else
-			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
@@ -125,11 +124,10 @@ public:
 	{
 		Vine* newVine = new Vine(this, dir, pos);
 		newVine->Start();
-		newVine->generation = ((Vine*)creator)->generation + 1;
 		return newVine;
 	}
 
-	bool TUpdate(Game* game, float dTime) override
+	bool TUpdate() override
 	{
 		if (generation < maxGenerations && currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
@@ -138,34 +136,38 @@ public:
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
-				game->entities->push_back(baseClass->Clone(placementPos, up, this));
+			{
+				Vine* newVine = (Vine*)baseClass->Clone(placementPos, up, this);
+				newVine->generation = generation + 1;
+				game->entities->push_back(newVine);
+			}
 		}
 		currentLifespan++;
 		return true;
 	}
 
-	void OnDeath(Entities* entities, Entity* damageDealer) override
+	void OnDeath(Entity* damageDealer) override
 	{
-		CollectibleTree::OnDeath(entities, damageDealer);
+		CollectibleTree::OnDeath(damageDealer);
 		if (rand() % 100 < chanceForSeed)
-			entities->push_back(seed->Clone(pos));
+			game->entities->push_back(seed->Clone(pos));
 		else
-			entities->push_back(collectible->Clone(pos));
+			game->entities->push_back(collectible->Clone(pos));
 	}
 
-	void UIUpdate(Game* game, float dTime) override
+	void UIUpdate() override
 	{
 		Vec2 topLeft = TopLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
 			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(
 				timePer * cyclesToGrow - (tTime - lastTime + timePer * currentLifespan), 1), color);
 			game->DrawString(topLeft + Vec2(1, 15), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(game, topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
 			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(timePer - tTime + lastTime, 1), color);
 			game->DrawString(topLeft + Vec2(1, 15), ToStringWithPrecision(
 				timePer * deadStage - (tTime - lastTime + timePer * currentLifespan), 1), color);
@@ -173,7 +175,7 @@ public:
 		}
 		else
 		{
-			DrawUIBox(game, topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
 			game->DrawString(topLeft + Vec2(1, 8), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), deadColor);
 		}
 	}

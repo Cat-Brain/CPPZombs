@@ -9,27 +9,34 @@ public:
 		Entity(pos, dimensions, color, mass, maxHealth, health, name), color2(color2)
 	{ }
 
-	void DUpdate(Game* game, float dTime) override
+	void DUpdate() override
 	{
 		float t = (float)health / (float)maxHealth;
 		Color tempColor = color;
 		color = Color(int(color2.r + t * (color.r - color2.r)), int(color2.g + t * (color.g - color2.g)), int(color2.b + t * (color.b - color2.b)), int(color2.a + t * (color.a - color2.a)));
-		Entity::DUpdate(game, dTime);
+		Entity::DUpdate();
 		color = tempColor;
 	}
 };
 
-class Placeable : public DToCol
+class LightBlock : public DToCol
 {
 public:
-	Collectible* toPlace;
+	Color lightColor;
+	float lightIntensity;
+	LightSource* lightSource;
 
-	Placeable(Collectible* toPlace, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), toPlace(toPlace)
+	LightBlock(Color lightColor, float lightIntensity = 1.0f, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), lightColor(lightColor), lightIntensity(lightIntensity), lightSource(nullptr)
 	{ }
 
-	Placeable(Placeable* baseClass, Vec2 pos) :
-		Placeable(*baseClass)
+	void Start() override
+	{
+		game->entities->lightSources.push_back(lightSource = new LightSource(pos, lightColor, lightIntensity));
+	}
+
+	LightBlock(LightBlock* baseClass, Vec2 pos) :
+		LightBlock(*baseClass)
 	{
 		this->pos = pos;
 		this->baseClass = baseClass;
@@ -38,24 +45,35 @@ public:
 
 	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return new Placeable(this, pos);
+		return new LightBlock(this, pos);
 	}
 
-	void OnDeath(Entities* entities, Entity* damageDealer) override
+	bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr)
 	{
-		if (toPlace != nullptr && rand() % 2)
-				entities->push_back(toPlace->Clone(pos));
+		if (!DToCol::TryMove(direction, force, ignore, hitEntity))
+			return false;
+		lightSource->pos = pos;
+		return true;
+	}
+
+	void OnDeath(Entity* damageDealer) override
+	{
+		if (lightSource != nullptr)
+		{
+			game->entities->Remove(lightSource);
+			delete lightSource;
+		}
 	}
 };
 
 namespace Shootables
 {
-	Placeable* cheeseBlock = new Placeable(nullptr, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
+	LightBlock* cheeseBlock = new LightBlock(Color(235, 178, 56), 1.0f, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Wall", Color(235, 178, 56), 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", Color(235, 178, 56), 0);
 }
 
 namespace Collectibles
@@ -82,18 +100,19 @@ public:
 
 	FunctionalBlock() = default;
 
-	void Update(Game* game, float dTime) override
+	void Update() override
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			if (TUpdate(game, dTime))
+			if (TUpdate())
 				lastTime = tTime;
 		}
 	}
 
-	virtual bool TUpdate(Game* game, float dTime) { return true; }
+	virtual bool TUpdate() { return true; }
 };
 
+/*
 class Duct : public FunctionalBlock
 {
 public:
@@ -262,4 +281,4 @@ namespace Shootables
 {
 	PlacedOnLanding* smallVacuum = new PlacedOnLanding(Structures::Conveyers::smallVacuum, "Small vacuum", "Structure", Structures::Conveyers::smallVacuum->color, 0);
 	Collectible* cSmallVacuum = new Collectible(*smallVacuum);
-}
+}*/

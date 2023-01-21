@@ -1,6 +1,6 @@
 #include "Defence.h"
 
-namespace Shootables
+/*namespace Shootables
 {
 	namespace Conveyers
 	{
@@ -135,4 +135,4 @@ namespace Shootables
 {
 	PlacedOnLanding* smallPrinter = new PlacedOnLanding(Structures::Printers::smallPrinter, "Printer", "Structure", Structures::Printers::smallPrinter->color, 0);
 	Collectible* cSmallPrinter = new Collectible(*smallPrinter);
-}
+}*/

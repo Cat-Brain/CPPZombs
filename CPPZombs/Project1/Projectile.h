@@ -33,31 +33,31 @@ public:
         return new Projectile(this, pos, direction, creator);
     }
 
-    void Update(Game* game, float dTime) override
+    void Update() override
     {
         if(tTime - begin >= duration / speed)
-            return DestroySelf(game, this);
+            return DestroySelf(this);
 
         Entity* entity;
 
-        if (CheckPos(game, dTime, entity))
+        if (CheckPos(entity))
         {
             callType = 1 + int(entity == nullptr);
-            DestroySelf(game, entity);
+            DestroySelf(entity);
             return;
         }
         Vec2 oldPos = pos;
-        MovePos(dTime, game->entities);
-        if (oldPos != pos && CheckPos(game, dTime, entity))
+        MovePos();
+        if (oldPos != pos && CheckPos(entity))
         {
             if (entity != nullptr)
-                SetPos(oldPos, game->entities);
+                SetPos(oldPos);
             callType = 1 + int(entity == nullptr);
-            DestroySelf(game, entity);
+            DestroySelf(entity);
         }
     }
 
-    bool CheckPos(Game* game, float dTime, Entity*& hitEntity)
+    bool CheckPos(Entity*& hitEntity)
     {
         vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
 
@@ -67,17 +67,17 @@ public:
                 continue;
 
             hitEntity = entity;
-            if (entity->DealDamage(damage, game, this) == 1)
+            if (entity->DealDamage(damage, this) == 1)
                 hitEntity = nullptr;
             return true;
         }
         return false;
     }
 
-    virtual void MovePos(float dTime, Entities* entities)
+    virtual void MovePos()
     {
-        fPos += direction * dTime * speed;
-        SetPos(Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y))), entities);
+        fPos += direction * game->dTime * speed;
+        SetPos(Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y))));
     }
 
     int SortOrder() override
@@ -158,9 +158,9 @@ public:
         return new ShotItem(this, baseItem, pos, direction, creator);
     }
 
-    void OnDeath(Entities* entities, Entity* damageDealer) override
+    void OnDeath(Entity* damageDealer) override
     {
-        item.baseClass->OnDeath(entities, pos, creator, creatorName, damageDealer, callType);
+        item.baseClass->OnDeath(pos, creator, creatorName, damageDealer, callType);
     }
 };
 

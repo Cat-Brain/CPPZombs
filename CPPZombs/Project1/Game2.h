@@ -6,7 +6,7 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = new Entities();
-	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, 1, 10, 5, "Player");
+	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, 0.5f, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -49,8 +49,10 @@ bool Game::OnUserUpdate(float deltaTime)
 	{
 		inputs.Update1(this);
 
+		dTime = deltaTime;
+
 		if (playerAlive)
-			Update(deltaTime);
+			Update();
 		else
 		{
 			Clear(olc::BLACK);
@@ -71,7 +73,40 @@ Color Game::GetBackgroundNoise(Vec2f noisePos)
 		Clamp(backgroundBaseColor.b + (int)roundf(randomNoiseValue * backgroundColorWidth.b) * 5, 0, 255));
 }
 
-void Game::Update(float dTime)
+void Game::ApplyLighting()
+{
+	Color lightData[screenWidth][screenHeight];
+
+	double dayBrightness = (cos(tTime * 3.14159275 / 60.0 + 3.14) + 1) * 0.5;
+	Color ambientColor = Color(static_cast<byte>(dayBrightness * 255), static_cast<byte>(dayBrightness * 255), static_cast<byte>(dayBrightness * 255), 255);
+
+	for (int x = 0; x < screenWidth; x++)
+		for (int y = 0; y < screenHeight; y++)
+		{
+			lightData[x][y] = ambientColor;
+
+			Vec2 truePos = Vec2(x, y) + playerPos - screenDimH;
+
+			for (LightSource* lightSource : entities->lightSources)
+				lightData[x][y] += lightSource->GetEffect(truePos);
+		}
+
+	Color* renderData = GetDrawTarget()->GetData();
+
+	for (int x = 0; x < screenWidth; x++)
+		for (int y = 0; y < screenHeight; y++)
+		{
+			int index = x + (screenHeight - y - 1) * screenWidth;
+			renderData[index].r =
+				static_cast<byte>((int)renderData[index].r * (int)lightData[x][y].r / 255);
+			renderData[index].g =
+				static_cast<byte>((int)renderData[index].g * (int)lightData[x][y].g / 255);
+			renderData[index].b =
+				static_cast<byte>((int)renderData[index].b * (int)lightData[x][y].b / 255);
+		}
+}
+
+void Game::Update()
 {
 	tTime += dTime;
 
@@ -88,27 +123,27 @@ void Game::Update(float dTime)
 		if (waveCount == 0)
 		{
 			waveCount = 10;
-			spawnableEnemies.SpawnEnemyType(this, { ranger });
+			spawnableEnemies.SpawnEnemyType({ ranger });
 			waveCount = 0;
 		}
 		else if(waveCount == 7)
-			spawnableEnemies.SpawnEnemyType(this, { deceiver });
+			spawnableEnemies.SpawnEnemyType({ deceiver });
 		else if (waveCount == 9)
-			spawnableEnemies.SpawnEnemyType(this, { parent });
+			spawnableEnemies.SpawnEnemyType({ parent });
 		else if(waveCount == 10)
-			spawnableEnemies.SpawnEnemyType(this, { hyperSpeedster });
+			spawnableEnemies.SpawnEnemyType({ hyperSpeedster });
 		else if (waveCount == 13)
-			spawnableEnemies.SpawnEnemyType(this, { gigaExploder });
+			spawnableEnemies.SpawnEnemyType({ gigaExploder });
 		else if(waveCount == 15)
-			spawnableEnemies.SpawnEnemyType(this, { megaTanker });
+			spawnableEnemies.SpawnEnemyType({ megaTanker });
 		else
 		{
-			spawnableEnemies.SpawnRandomEnemies(this);
+			spawnableEnemies.SpawnRandomEnemies();
 		}
 	}
 
 
-	entities->Update(this, dTime); // Updates all entities.
+	entities->Update(); // Updates all entities.
 
 	if (playerPos != lastPlayerPos)
 	{
@@ -121,13 +156,14 @@ void Game::Update(float dTime)
 	}
 	SetDrawTarget(&midResScreen);
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
-	entities->DUpdate(this, dTime); // Draws all entities.
+	entities->DUpdate(); // Draws all entities.
 	// Draw mouse.
+	ApplyLighting(); // Apply lighting.
 	Draw(ToRSpace(inputs.mousePosition), Color(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));
 	// Reset screen to high-res screen.
 	SetDrawTarget(nullptr); // nullptr means default here.
 	DrawSprite({ 0, 0 }, &midResScreen, 4); // Apply the mid-res screen onto the big one before use.
-	entities->UIUpdate(this, dTime); // Draws all entities.
+	entities->UIUpdate(); // Draws all entities.
 	
 	if (tTime < 2.0f)
 	{
@@ -143,10 +179,10 @@ void Game::Update(float dTime)
 		showUI = !showUI;
 	if (showUI && playerAlive)
 	{
-		DrawString(Vec2(0, 0), ToStringWithPrecision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::BLACK);
+		DrawString(Vec2(0, 0), ToStringWithPrecision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::CYAN);
 		DrawString(Vec2(0, 9), std::to_string(player->health), olc::DARK_RED);
 		DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
-		player->items.DUpdate(this);
+		player->items.DUpdate();
 	}
 
 	frameCount++;

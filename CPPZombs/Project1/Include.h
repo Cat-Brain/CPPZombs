@@ -29,9 +29,13 @@ typedef olc::Pixel Color;
 typedef olc::HWButton Key;
 #pragma endregion
 
-// Global variables:
-int screenWidth = 80, screenHeight = screenWidth,
-	screenWidthH = screenWidth >> 1, screenHeightH = screenHeight >> 1;
+#pragma region Global variables
+#define screenWidth 80
+#define screenHeight screenWidth
+#define screenWidthH (screenWidth >> 1)
+#define screenHeightH (screenHeight >> 1)
+#define screenWidthHighRes (screenWidth << 2)
+#define screenHeightHighRes (screenHeight << 2)
 Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 int pixelCount = screenWidth * screenHeight;
 
@@ -43,6 +47,11 @@ int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
 float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
+
+// Very important!
+class Game;
+Game* game;
+#pragma endregion
 
 #pragma region Math
 float RandFloat()

@@ -36,18 +36,18 @@ public:
 
 	virtual void Start() { }
 
-	virtual void Draw(Vec2 pos, Color color, Game* game, float dTime, Vec2 dir = vZero)
+	virtual void Draw(Vec2 pos, Color color, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		Color tempColor = this->color;
 		this->color = color;
-		DUpdate(game, dTime);
+		DUpdate();
 		this->pos = tempPos;
 		this->color = tempColor;
 	}
 
-	virtual void DUpdate(Game* game, float dTime) // Normally only draws.
+	virtual void DUpdate() // Normally only draws.
 	{
 		Vec2 disp = ToRSpace(pos);
 		disp = Vec2(labs(disp.x), labs(disp.y));
@@ -55,7 +55,7 @@ public:
 			game->FillRect(ToRSpace(pos) - dimensions + vOne, dimensions * 2 - vOne, color);
 	}
 
-	void DrawUIBox(Game* game, Vec2 topLeft, Vec2 bottomRight, string text, Color textColor,
+	void DrawUIBox(Vec2 topLeft, Vec2 bottomRight, string text, Color textColor,
 		Color borderColor = olc::VERY_DARK_GREY, Color fillColor = olc::DARK_GREY)
 	{
 		game->DrawRect(topLeft, bottomRight - topLeft, borderColor);
@@ -73,9 +73,9 @@ public:
 		return TopLeft() + Vec2((int)name.length() * 8, 8);
 	}
 
-	virtual void UIUpdate(Game* game, float dTime) // Draws when shouldUI is true.
+	virtual void UIUpdate() // Draws when shouldUI is true.
 	{
-		DrawUIBox(game, TopLeft(), BottomRight(), name, color);
+		DrawUIBox(TopLeft(), BottomRight(), name, color);
 	}
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
@@ -86,26 +86,25 @@ public:
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
 
-	virtual void Update(Game* game, float dTime) { } // Normally doesn't draw.
+	virtual void Update() { } // Normally doesn't draw.
 	
-	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity* ignore = nullptr); // returns if item was hit.
-	virtual bool TryMove(Vec2 direction, int force, Entities* entities, Entity** hitEntity, Entity* ignore); // returns if item was hit.
-	virtual void SetPos(Vec2 newPos, Entities* entities);
+	virtual bool TryMove(Vec2 direction, int force = 1, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns if item was hit.
+	virtual void SetPos(Vec2 newPos);
 
-	virtual int DealDamage(int damage, Game* game, Entity* damageDealer)
+	virtual int DealDamage(int damage, Entity* damageDealer)
 	{
 		health -= damage;
 		if (health <= 0)
 		{
-			DestroySelf(game, damageDealer);
+			DestroySelf(damageDealer);
 			return 1;
 		}
 		return 0;
 	}
 
-	void DestroySelf(Game* game, Entity* damageDealer); // Always calls OnDeath;
+	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 
-	virtual void OnDeath(Entities* entities, Entity* damageDealer) { }
+	virtual void OnDeath(Entity* damageDealer) { }
 
 	virtual int SortOrder()
 	{
@@ -118,6 +117,11 @@ public:
 	}
 
 	#pragma region bool functions
+
+	virtual bool IsLight()
+	{
+		return true;
+	}
 
 	virtual bool CanAttack()
 	{
@@ -198,21 +202,39 @@ public:
 	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
 
-
-	void Update(Game* game, float dTime) override
+	void Update() override
 	{
 		if (tTime - startTime > totalFadeTime)
-			DestroySelf(game, nullptr);
+			DestroySelf(nullptr);
 	}
-	void DUpdate(Game* game, float dTime) override
+
+	void DUpdate() override
 	{
 		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
-		Entity::DUpdate(game, dTime);
+		Entity::DUpdate();
 	}
 
 	bool Corporeal() override
 	{
 		return false;
+	}
+};
+
+
+
+class LightSource
+{
+public:
+	Vec2 pos;
+	Color color;
+	float intensity;
+
+	LightSource(Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, float intensity = 1.0f) :
+		pos(pos), color(color), intensity(intensity) { }
+
+	Color GetEffect(Vec2 position) // In world.
+	{
+		return color * min(1.0f, intensity / Diagnistance(position, pos));
 	}
 };
 

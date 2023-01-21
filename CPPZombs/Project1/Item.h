@@ -53,7 +53,7 @@ public:
 		return name != b.name;
 	}
 
-	virtual void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
+	virtual void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
 };
 Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
 
@@ -62,7 +62,7 @@ class GoneOnLandItem : public Item
 public:
 	using Item::Item;
 
-	void OnDeath(Entities* entities, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override { }
+	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override { }
 
 	virtual Item Clone(int count)
 	{
@@ -172,7 +172,7 @@ public:
 		return true;
 	}
 
-	void DUpdate(Game* game)
+	void DUpdate()
 	{
 		for (int i = 0; i < size(); i++)
 		{

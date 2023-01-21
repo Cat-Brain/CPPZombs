@@ -1,6 +1,6 @@
 #include "Enemy.h"
 
-class Player : public Entity
+class Player : public LightBlock
 {
 public:
 	Entity* currentMenuedEntity = nullptr;
@@ -11,14 +11,16 @@ public:
 	float lastMove = -1.0f, moveSpeed = 0.125f, lastBMove = -1.0f, bMoveSpeed = 0.125f,
 		lastVac = -1.0f, vacSpeed = 0.0625f, lastClick = -1.0f, clickSpeed = 0.25f;
 
-	Player(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), int vacDist = 6, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, dimensions, color, mass, maxHealth, health, name), vacDist(vacDist)
+	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, Color color = olc::WHITE, Color color2 = olc::BLACK,
+		float lightIntensity = 1.0f, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(color, lightIntensity, pos, dimensions, color, color2, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}
 
 	void Start() override
 	{
+		LightBlock::Start();
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone());
@@ -28,7 +30,7 @@ public:
 		items.currentIndex = 0; // Copper
 	}
 
-	void Update(Game* game, float dTime) override
+	void Update() override
 	{
 		bool exitedMenu = false;
 		if (currentMenuedEntity != nullptr && (game->inputs.leftMouse.bPressed || game->inputs.rightMouse.bPressed) &&
@@ -89,7 +91,7 @@ public:
 			if (direction != Vec2(0, 0))
 			{
 				lastMove = tTime;
-				TryMove(direction, 3, game->entities, nullptr);
+				TryMove(direction, 3);
 			}
 
 			playerVel = pos - oldPos;
@@ -117,7 +119,7 @@ public:
 		if (tTime - lastBMove >= bMoveSpeed && heldEntity != nullptr && heldEntity->pos != game->inputs.mousePosition && heldEntity->pos != pos)
 		{
 			lastBMove = tTime;
-			heldEntity->TryMove(Squarmalized(game->inputs.mousePosition - heldEntity->pos), 1, game->entities);
+			heldEntity->TryMove(Squarmalized(game->inputs.mousePosition - heldEntity->pos), 1);
 		}
 		
 		
@@ -149,12 +151,13 @@ public:
 		for (Entity* collectible : collectibles)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);
-			collectible->DestroySelf(game, this);
+			collectible->DestroySelf(this);
 		}
 	}
 
-	void OnDeath(Entities* entities, Entity* damageDealer) override
+	void OnDeath(Entity* damageDealer) override
 	{
+		LightBlock::OnDeath(damageDealer);
 		playerAlive = false;
 		if (damageDealer != nullptr)
 			deathCauseName = damageDealer->name;
