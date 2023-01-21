@@ -453,7 +453,7 @@ namespace EnemyClasses
 			{
 				Item shotItem = items[0].Clone(1);
 				items.TryTakeIndex(0);
-				game->entities->push_back(basicShotItem->Clone(shotItem, pos, (playerPos - pos) * shotItem.range, this));
+				game->entities->push_back(basicShotItem->Clone(shotItem, pos, (playerPos - pos) * static_cast<int>(shotItem.range), this));
 			}
 		}
 	};

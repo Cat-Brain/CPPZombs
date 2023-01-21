@@ -25,11 +25,14 @@ using std::string;
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
 typedef olc::vf2d Vec2f;
+typedef byte RGB[3];
 typedef olc::Pixel Color;
 typedef olc::HWButton Key;
 #pragma endregion
 
 #pragma region Global variables
+#define PI_F 3.141592f
+#define PI_D 3.14159275
 #define screenWidth 80
 #define screenHeight screenWidth
 #define screenWidthH (screenWidth >> 1)
@@ -65,6 +68,16 @@ int JMod(int x, int m)
 }
 
 int Clamp(int value, int minimum, int maximum)
+{
+	return max(min(value, maximum), minimum);
+}
+
+float ClampF(float value, float minimum, float maximum)
+{
+	return max(min(value, maximum), minimum);
+}
+
+double ClampD(double value, double minimum, double maximum)
 {
 	return max(min(value, maximum), minimum);
 }

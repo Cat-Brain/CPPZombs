@@ -23,16 +23,16 @@ class LightBlock : public DToCol
 {
 public:
 	Color lightColor;
-	float lightIntensity;
+	int lightFalloff;
 	LightSource* lightSource;
 
-	LightBlock(Color lightColor, float lightIntensity = 1.0f, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), lightColor(lightColor), lightIntensity(lightIntensity), lightSource(nullptr)
+	LightBlock(Color lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), lightColor(lightColor), lightFalloff(lightFalloff), lightSource(nullptr)
 	{ }
 
 	void Start() override
 	{
-		game->entities->lightSources.push_back(lightSource = new LightSource(pos, lightColor, lightIntensity));
+		game->entities->lightSources.push_back(lightSource = new LightSource(pos, lightColor, lightFalloff));
 	}
 
 	LightBlock(LightBlock* baseClass, Vec2 pos) :
@@ -68,7 +68,7 @@ public:
 
 namespace Shootables
 {
-	LightBlock* cheeseBlock = new LightBlock(Color(235, 178, 56), 1.0f, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
+	LightBlock* cheeseBlock = new LightBlock(Color(117, 89, 28), 5, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
 }
 
 namespace Resources
@@ -107,6 +107,40 @@ public:
 			if (TUpdate())
 				lastTime = tTime;
 		}
+	}
+
+	virtual bool TUpdate() { return true; }
+};
+
+class FunctionalBlock2 : public Entity // Can have speed multipliers.
+{
+public:
+	float timePer, timeSince;
+
+	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	{
+		Start();
+	}
+
+	FunctionalBlock2(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	{
+		Start();
+	}
+
+	FunctionalBlock2() = default;
+
+	virtual float TimeIncrease()
+	{
+		return game->dTime;
+	}
+
+	void Update() override
+	{
+		timeSince += TimeIncrease();
+		if (timeSince >= timePer && TUpdate())
+			timeSince -= timePer;
 	}
 
 	virtual bool TUpdate() { return true; }

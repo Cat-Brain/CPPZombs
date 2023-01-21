@@ -38,38 +38,21 @@ public:
 class Entities : public vector<Entity*>
 {
 protected:
-	bool updatingProjectiles;
 	int index;
-	int currentUpdatingType;
 
 public:
-	Entities() :
-		vector(0)
-	{
-		for (int x = 0; x < MAP_WIDTH; x++)
-			for (int y = 0; y < MAP_WIDTH; y++)
-				chunks[x][y].pos = Vec2(x * CHUNK_WIDTH, y * CHUNK_WIDTH);
-	}
-
 	bool addedEntity;
 	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
 	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
 	vector<LightSource*> lightSources;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
 
-	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
+	Entities() :
+		vector(0), addedEntity(false), index(0)
 	{
-		vector<Chunk*> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
-		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
-			for (int y = minPos.y; y <= maxPos.y; y++)
-				result[i++] = &chunks[x][y];
-		return result;
-	}
-
-	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
-	{
-		std::pair<Vec2, Vec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
-		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
+		for (int x = 0; x < MAP_WIDTH; x++)
+			for (int y = 0; y < MAP_WIDTH; y++)
+				chunks[x][y].pos = Vec2(x * CHUNK_WIDTH, y * CHUNK_WIDTH);
 	}
 
 	void push_back(Entity* entity)
@@ -90,7 +73,22 @@ public:
 
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entity->pos, entity->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
-			chunk->push_back(size() - 1);
+			chunk->push_back(static_cast<int>(size() - 1));
+	}
+
+	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
+	{
+		vector<Chunk*> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
+		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
+			for (int y = minPos.y; y <= maxPos.y; y++)
+				result[i++] = &chunks[x][y];
+		return result;
+	}
+
+	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
+	{
+		std::pair<Vec2, Vec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
+		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
 	Entity* FindNearestEnemy(Vec2 pos, Vec2 farthestDimensions)
@@ -138,6 +136,8 @@ public:
 	{
 		return FindIncorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
+
+	// Add more overlap functions.
 
 	void SortEntities()
 	{
@@ -224,7 +224,7 @@ public:
 			collectibles.erase(find(collectibles.begin(), collectibles.end(), entityToRemove));
 		// Remove from every chunk that this object overlaps.
 		vector<Entity*>::iterator mainPos = find(begin(), end(), entityToRemove);
-		int removalIndex = distance(begin(), mainPos);
+		int removalIndex = static_cast<int>(distance(begin(), mainPos));
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), removalIndex));
@@ -331,7 +331,7 @@ void Entity::SetPos(Vec2 newPos)
 	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(newPos, dimensions);
 	if (minMaxOldPos != minMaxNewPos)
 	{
-		int position = distance(game->entities->begin(), find(game->entities->begin(), game->entities->end(), this));
+		int position = static_cast<int>(distance(game->entities->begin(), find(game->entities->begin(), game->entities->end(), this)));
 		vector<Chunk*> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
 		for (Chunk* chunk : oldChunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), position));
@@ -526,7 +526,7 @@ public:
 
 namespace Hazards
 {
-	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 3, Color(80, 43, 92));
+	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 2, Color(80, 43, 92));
 }
 
 namespace Resources

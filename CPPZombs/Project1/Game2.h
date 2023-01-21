@@ -6,7 +6,7 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = new Entities();
-	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, 0.5f, 1, 10, 5, "Player");
+	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, 25, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -75,40 +75,33 @@ Color Game::GetBackgroundNoise(Vec2f noisePos)
 
 void Game::ApplyLighting()
 {
-	Color lightData[screenWidth][screenHeight];
-
-	double dayBrightness = (cos(tTime * 3.14159275 / 60.0 + 3.14) + 1) * 0.5;
-	Color ambientColor = Color(static_cast<byte>(dayBrightness * 255), static_cast<byte>(dayBrightness * 255), static_cast<byte>(dayBrightness * 255), 255);
-
-	for (int x = 0; x < screenWidth; x++)
-		for (int y = 0; y < screenHeight; y++)
-		{
-			lightData[x][y] = ambientColor;
-
-			Vec2 truePos = Vec2(x, y) + playerPos - screenDimH;
-
-			for (LightSource* lightSource : entities->lightSources)
-				lightData[x][y] += lightSource->GetEffect(truePos);
-		}
+	Color ambientColor = Color(static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), 255);
 
 	Color* renderData = GetDrawTarget()->GetData();
+
+	for (LightSource* lightSource : entities->lightSources)
+		lightSource->ApplyLight();
 
 	for (int x = 0; x < screenWidth; x++)
 		for (int y = 0; y < screenHeight; y++)
 		{
 			int index = x + (screenHeight - y - 1) * screenWidth;
 			renderData[index].r =
-				static_cast<byte>((int)renderData[index].r * (int)lightData[x][y].r / 255);
+				static_cast<byte>((int)renderData[index].r * shadowMap[x][y][0] / 255);
+			shadowMap[x][y][0] = ambientColor.r;
 			renderData[index].g =
-				static_cast<byte>((int)renderData[index].g * (int)lightData[x][y].g / 255);
+				static_cast<byte>((int)renderData[index].g * shadowMap[x][y][1] / 255);
+			shadowMap[x][y][1] = ambientColor.g;
 			renderData[index].b =
-				static_cast<byte>((int)renderData[index].b * (int)lightData[x][y].b / 255);
+				static_cast<byte>((int)renderData[index].b * shadowMap[x][y][2] / 255);
+			shadowMap[x][y][2] = ambientColor.b;
 		}
 }
 
 void Game::Update()
 {
 	tTime += dTime;
+	brightness = ClampF(sinf(tTime * PI_F / 120.0f + 0.75f * PI_F) + 0.75f, 0, 1);
 
 	system_clock::time_point timeStartFrame = system_clock::now();
 

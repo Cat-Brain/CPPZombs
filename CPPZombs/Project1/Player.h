@@ -12,8 +12,8 @@ public:
 		lastVac = -1.0f, vacSpeed = 0.0625f, lastClick = -1.0f, clickSpeed = 0.25f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, Color color = olc::WHITE, Color color2 = olc::BLACK,
-		float lightIntensity = 1.0f, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(color, lightIntensity, pos, dimensions, color, color2, mass, maxHealth, health, name), vacDist(vacDist)
+		int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(olc::GREY, lightFalloff, pos, dimensions, color, color2, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}
@@ -124,7 +124,7 @@ public:
 		
 		
 		Vec2f normalizedDir = Normalized(game->inputs.mousePosition - pos);
-		Vec2 shootOffset = (dimensions + currentShootingItem.dimensions - vOne) * Vec2(roundf(normalizedDir.x), roundf(normalizedDir.y));
+		Vec2 shootOffset = (dimensions + currentShootingItem.dimensions - vOne) * Vec2(static_cast<int>(roundf(normalizedDir.x)), static_cast<int>(roundf(normalizedDir.y)));
 		if (heldEntity == nullptr && game->inputs.middleMouse.bPressed && game->inputs.mousePosition != pos &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition, vOne)).size())
 		{

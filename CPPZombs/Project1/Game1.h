@@ -10,6 +10,7 @@ public:
 	Entities* entities;
 	Player* player;
 	olc::Sprite lowResScreen, midResScreen;
+	RGB shadowMap[screenWidth][screenHeight];
 	Inputs inputs;
 
 	Color backgroundBaseColor;
@@ -19,8 +20,18 @@ public:
 	bool showUI = true, paused = false;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
 	float dTime = 0.0f;
+	float brightness = 0.0f;
 
-	Game() : entities(nullptr), player(nullptr) { }
+	Game() : entities(nullptr), player(nullptr)
+	{
+		for (int x = 0; x < screenWidth; x++)
+			for (int y = 0; y < screenHeight; y++)
+			{
+				shadowMap[x][y][0] = 0u;
+				shadowMap[x][y][1] = 0u;
+				shadowMap[x][y][2] = 0u;
+			}
+	}
 
 	bool OnUserCreate() override;
 

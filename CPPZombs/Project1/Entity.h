@@ -227,15 +227,30 @@ class LightSource
 public:
 	Vec2 pos;
 	Color color;
-	float intensity;
+	int falloff;
 
-	LightSource(Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, float intensity = 1.0f) :
-		pos(pos), color(color), intensity(intensity) { }
+	LightSource(Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, int falloff = 50) :
+		pos(pos), color(color), falloff(falloff) { }
 
-	Color GetEffect(Vec2 position) // In world.
+	void ApplyLight()
+	{
+		Vec2 camMin = playerPos - screenDimH, camMax = playerPos + screenDimH;
+		int maxDistance = ceilf(max(color.r, max(color.g, color.b)) / (float)falloff);
+		Vec2 lightMin = pos - vOne * maxDistance, lightMax = pos + vOne * maxDistance;
+		for (int x = max(camMin.x, lightMin.x); x < min(camMax.x, lightMax.x); x++)
+			for (int y = max(camMin.y, lightMin.y); y < min(camMax.y, lightMax.y); y++)
+			{
+				int falloffAmount = falloff * Diagnistance(pos, Vec2(x, y));
+				game->shadowMap[x - camMin.x][y - camMin.y][0] += Clamp(color.r - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][0]);
+				game->shadowMap[x - camMin.x][y - camMin.y][1] += Clamp(color.g - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][1]);
+				game->shadowMap[x - camMin.x][y - camMin.y][2] += Clamp(color.b - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][2]);
+			}
+	}
+
+	/*Color GetEffect(Vec2 position) // In world.
 	{
 		return color * min(1.0f, intensity / Diagnistance(position, pos));
-	}
+	}*/
 };
 
 
