@@ -1,4 +1,4 @@
-#include "Entity.h"
+#include "Particles.h"
 
 class Collectible : public Entity
 {

@@ -91,16 +91,7 @@ public:
 	virtual bool TryMove(Vec2 direction, int force = 1, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns if item was hit.
 	virtual void SetPos(Vec2 newPos);
 
-	virtual int DealDamage(int damage, Entity* damageDealer)
-	{
-		health -= damage;
-		if (health <= 0)
-		{
-			DestroySelf(damageDealer);
-			return 1;
-		}
-		return 0;
-	}
+	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 

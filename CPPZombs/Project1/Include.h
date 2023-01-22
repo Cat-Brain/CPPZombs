@@ -87,6 +87,11 @@ int ModClamp(int value, int minimum, int maximum)
 	return value % (maximum - minimum) + minimum;
 }
 
+Vec2 Vabs(Vec2 a)
+{
+	return Vec2(abs(a.x), abs(a.y));
+}
+
 int Squagnitude(Vec2 a)
 {
 	return static_cast<int>(max(labs(static_cast<long>(a.x)), labs(static_cast<long>(a.y))));
