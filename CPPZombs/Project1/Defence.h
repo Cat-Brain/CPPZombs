@@ -8,11 +8,12 @@ public:
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
 	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA, Color deadColor = olc::BLACK,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA,
+		Color deadColor = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
-		FunctionalBlock2(timePer, pos, dimensions, color, mass, maxHealth, health, name)
+		FunctionalBlock2(timePer, pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{ }
 
 	void Start() override
@@ -110,9 +111,10 @@ public:
 	int maxGenerations, generation;
 
 	Vine(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
-		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA, Color deadColor = olc::BLACK,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA,
+		Color deadColor = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
-		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, mass, maxHealth, health, name),
+		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{ }
 
@@ -219,33 +221,33 @@ namespace Plants
 {
 	namespace Trees
 	{
-		Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17);
-		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 1, 1, 1, "Copper tree");
+		Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17), copperResistence = Color(0, 0, 50);
+		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
-		Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48);
-		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 100, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 1, 1, 1, "Iron tree");
+		Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48), ironResistence = Color(50, 50, 0);
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 100, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
-		Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88);
-		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 1, 1, 1, "Ruby tree");
+		Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88), rubyResistence = Color(0, 50, 50);
+		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");
 
-		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80);
-		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 1, 1, 1, "Emerald tree");
+		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80), emeraldResistence = Color(50, 0, 50);
+		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
 
-		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78);
-		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, 1, 1, 1, "Rock tree");
+		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78), rockResistence = Color(50, 50, 50);
+		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
 	}
 
 
 	namespace Vines
 	{
-		Color babyCheeseVineColor = Color(255, 210, 112), cheeseVineColor = Color(200, 160, 75), deadCheeseVineColor = Color(140, 110, 50);
-		Vine* cheeseVine = new Vine(Collectibles::cheese, nullptr, 5, 10, 5, 10, 2.0f, vZero, vOne, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 1, 1, "Cheese vine");
+		Color babyCheeseVineColor = Color(255, 210, 112), cheeseVineColor = Color(200, 160, 75), deadCheeseVineColor = Color(140, 110, 50), cheeseResistence = Color(0, 0, 50);
+		Vine* cheeseVine = new Vine(Collectibles::cheese, nullptr, 5, 10, 5, 10, 2.0f, vZero, vOne, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
 
-		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61);
-		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
+		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61), leadResistence = Color(0, 50, 0);
+		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
 		
-		Color babyTopazVineColor = Color(255, 218, 84), topazVineColor = Color(181, 142, 0), deadTopazVineColor = Color(107, 84, 0);
-		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
+		Color babyTopazVineColor = Color(255, 218, 84), topazVineColor = Color(181, 142, 0), deadTopazVineColor = Color(107, 84, 0), topazResistence = Color(25, 0, 50);
+		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
 	}
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.

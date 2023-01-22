@@ -11,13 +11,14 @@ public:
 	string name;
 	Vec2 pos, dir;
 	Vec2 dimensions; // Actually half dimensions. So a 3x3 would actually be called a 2x2, and a 1x1 would remain a 1x1.
-	Color color;
+	Color color, subsurfaceResistance;
 	int mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
 
-	Entity(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), dimensions(dimensions), dir(0, 0), color(color), mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
+	Entity(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE), Color subsurfaceResistance = olc::WHITE,
+		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance), mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
 	{
 	}
 
@@ -36,15 +37,12 @@ public:
 
 	virtual void Start() { }
 
-	virtual void Draw(Vec2 pos, Color color, Vec2 dir = vZero)
+	virtual void Draw(Vec2 pos, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
-		Color tempColor = this->color;
-		this->color = color;
 		DUpdate();
 		this->pos = tempPos;
-		this->color = tempColor;
 	}
 
 	virtual void DUpdate() // Normally only draws.
@@ -209,39 +207,6 @@ public:
 	{
 		return false;
 	}
-};
-
-
-
-class LightSource
-{
-public:
-	Vec2 pos;
-	Color color;
-	int falloff;
-
-	LightSource(Vec2 pos = Vec2(0, 0), Color color = olc::WHITE, int falloff = 50) :
-		pos(pos), color(color), falloff(falloff) { }
-
-	void ApplyLight()
-	{
-		Vec2 camMin = playerPos - screenDimH, camMax = playerPos + screenDimH;
-		int maxDistance = ceilf(max(color.r, max(color.g, color.b)) / (float)falloff);
-		Vec2 lightMin = pos - vOne * maxDistance, lightMax = pos + vOne * maxDistance;
-		for (int x = max(camMin.x, lightMin.x); x < min(camMax.x, lightMax.x); x++)
-			for (int y = max(camMin.y, lightMin.y); y < min(camMax.y, lightMax.y); y++)
-			{
-				int falloffAmount = falloff * Diagnistance(pos, Vec2(x, y));
-				game->shadowMap[x - camMin.x][y - camMin.y][0] += Clamp(color.r - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][0]);
-				game->shadowMap[x - camMin.x][y - camMin.y][1] += Clamp(color.g - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][1]);
-				game->shadowMap[x - camMin.x][y - camMin.y][2] += Clamp(color.b - falloffAmount, 0, 255 - game->shadowMap[x - camMin.x][y - camMin.y][2]);
-			}
-	}
-
-	/*Color GetEffect(Vec2 position) // In world.
-	{
-		return color * min(1.0f, intensity / Diagnistance(position, pos));
-	}*/
 };
 
 

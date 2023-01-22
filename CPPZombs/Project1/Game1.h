@@ -3,6 +3,7 @@
 class Entity;
 class Entities;
 class Player;
+class Planet;
 
 class Game : public olc::PixelGameEngine
 {
@@ -10,7 +11,7 @@ public:
 	Entities* entities;
 	Player* player;
 	olc::Sprite lowResScreen, midResScreen;
-	RGB shadowMap[screenWidth][screenHeight];
+	JRGB shadowMap[screenWidth * 3][screenHeight * 3];
 	Inputs inputs;
 
 	Color backgroundBaseColor;
@@ -22,14 +23,16 @@ public:
 	float dTime = 0.0f;
 	float brightness = 0.0f;
 
+	Planet* planet;
+
 	Game() : entities(nullptr), player(nullptr)
 	{
-		for (int x = 0; x < screenWidth; x++)
-			for (int y = 0; y < screenHeight; y++)
+		for (int x = 0; x < screenWidth * 3; x++)
+			for (int y = 0; y < screenHeight * 3; y++)
 			{
-				shadowMap[x][y][0] = 0u;
-				shadowMap[x][y][1] = 0u;
-				shadowMap[x][y][2] = 0u;
+				shadowMap[x][y].r = 0u;
+				shadowMap[x][y].g = 0u;
+				shadowMap[x][y].b = 0u;
 			}
 	}
 
@@ -37,15 +40,13 @@ public:
 
 	bool OnUserUpdate(float deltaTime) override;
 
-	Color GetBackgroundNoise(Vec2f noisePos);
+	bool OnUserDestroy() override;
+
+	bool OnConsoleCommand(const string& text) override;
 
 	void ApplyLighting();
 
 	void Update();
 
 	void MenuedEntityDied(Entity* entity);
-
-	bool OnUserDestroy() override;
-
-	bool OnConsoleCommand(const string& text) override;
 };

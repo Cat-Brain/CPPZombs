@@ -6,10 +6,10 @@ public:
 	Item baseItem;
 
 	Collectible(Item baseItem, Vec2 pos = vZero) :
-		Entity(pos, baseItem.dimensions, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Item baseItem, Vec2 pos, Color color) :
-		Entity(pos, baseItem.dimensions, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
 

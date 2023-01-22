@@ -5,8 +5,9 @@ class DToCol : public Entity
 public:
 	Color color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, dimensions, color, mass, maxHealth, health, name), color2(color2)
+	DToCol(Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK),
+		Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name), color2(color2)
 	{ }
 
 	void DUpdate() override
@@ -22,12 +23,14 @@ public:
 class LightBlock : public DToCol
 {
 public:
-	Color lightColor;
+	JRGB lightColor;
 	int lightFalloff;
 	LightSource* lightSource;
 
-	LightBlock(Color lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE), Color color2 = Color(olc::BLACK), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, dimensions, color, color2, mass, maxHealth, health, name), lightColor(lightColor), lightFalloff(lightFalloff), lightSource(nullptr)
+	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
+		Color color2 = Color(olc::BLACK), Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), lightColor(lightColor),
+		lightFalloff(lightFalloff), lightSource(nullptr)
 	{ }
 
 	void Start() override
@@ -68,7 +71,7 @@ public:
 
 namespace Shootables
 {
-	LightBlock* cheeseBlock = new LightBlock(Color(117, 89, 28), 5, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), 1, 4, 4, "Cheese");
+	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 5, vZero, vOne, Color(235, 178, 56), Color(0, 0, 0, 127), olc::BLACK, 1, 4, 4, "Cheese");
 }
 
 namespace Resources
@@ -86,14 +89,16 @@ class FunctionalBlock : public Entity
 public:
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
+		Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
+		Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -117,14 +122,16 @@ class FunctionalBlock2 : public Entity // Can have speed multipliers.
 public:
 	float timePer, timeSince;
 
-	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
+		Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock2(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, mass, maxHealth, health, name)
+	FunctionalBlock2(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
+		Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}

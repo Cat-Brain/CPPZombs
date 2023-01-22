@@ -161,8 +161,10 @@
     <ClInclude Include="Game1.h" />
     <ClInclude Include="Include.h" />
     <ClInclude Include="Item.h" />
+    <ClInclude Include="LightSource.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Particles.h" />
+    <ClInclude Include="Planet.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Game2.h" />
     <ClInclude Include="Printers.h" />

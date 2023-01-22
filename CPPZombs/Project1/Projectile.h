@@ -1,4 +1,4 @@
-#include "Entities.h"
+#include "LightSource.h"
 
 class Projectile : public Entity
 {
@@ -10,8 +10,9 @@ public:
     float speed, begin;
     int callType = 0;
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), Color color = olc::GREY, int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), dimensions, color, mass, maxHealth, health),
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), Color color = olc::GREY,
+        Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1) :
+        Entity(Vec2(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
@@ -104,7 +105,7 @@ public:
     string creatorName;
 
     ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item.range, item.damage, speed, dimensions, item.color, mass, maxHealth, health), item(item)
+        Projectile(item.range, item.damage, speed, dimensions, item.color, olc::WHITE, mass, maxHealth, health), item(item)
     {
         Start();
     }

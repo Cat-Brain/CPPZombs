@@ -11,9 +11,9 @@ public:
 	float lastMove = -1.0f, moveSpeed = 0.125f, lastBMove = -1.0f, bMoveSpeed = 0.125f,
 		lastVac = -1.0f, vacSpeed = 0.0625f, lastClick = -1.0f, clickSpeed = 0.25f;
 
-	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, Color color = olc::WHITE, Color color2 = olc::BLACK,
-		int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(olc::GREY, lightFalloff, pos, dimensions, color, color2, mass, maxHealth, health, name), vacDist(vacDist)
+	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, Color color = olc::WHITE, Color color2 = olc::BLACK, JRGB lightColor = JRGB(127, 127, 127),
+		Color subsurfaceResistance = olc::WHITE, int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(lightColor, lightFalloff, pos, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}
@@ -24,6 +24,7 @@ public:
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::iron->Clone());
+		items.push_back(Resources::cheese->Clone(10));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
 		for (Item* item : Resources::Seeds::plantSeeds)
 			items.push_back(item->Clone());

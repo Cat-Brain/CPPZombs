@@ -1,8 +1,29 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(238,19): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(101,48): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(101,75): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(101,1): warning C4267: 'argument': conversion from 'size_t' to 'const T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(101,104): warning C4244: 'argument': conversion from 'float' to 'const T', possible loss of data
+          with
+          [
+              T=int32_t
+          ]
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(422,122): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\LightSource.h(28,19): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   Generating code
-  220 of 2976 functions ( 7.4%) were compiled, the rest were copied from previous compilation.
-    21 functions were new in current compilation
-    42 functions had inline decision re-evaluated but remain unchanged
+  232 of 3258 functions ( 7.1%) were compiled, the rest were copied from previous compilation.
+    23 functions were new in current compilation
+    24 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe

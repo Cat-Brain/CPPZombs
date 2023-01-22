@@ -1,4 +1,4 @@
-#include "Player.h"
+#include "Planet.h"
 
 bool Game::OnUserCreate()
 {
@@ -6,7 +6,7 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = new Entities();
-	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, 25, 1, 10, 5, "Player");
+	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -14,20 +14,8 @@ bool Game::OnUserCreate()
 	SetPixelMode(Color::ALPHA);
 
 	srand(static_cast<uint>(time(NULL)));
-	backgroundBaseColor.r = rand() % 128 + 64;
-	backgroundBaseColor.g = rand() % 128 + 64;
-	backgroundBaseColor.b = rand() % 128 + 64;
 
-	int randChoice = rand();
-	backgroundColorWidth.r = rand() % 2 + 2 + 4 * int(randChoice == 0);
-	backgroundColorWidth.g = rand() % 2 + 2 + 4 * int(randChoice == 1);
-	backgroundColorWidth.b = rand() % 2 + 2 + 4 * int(randChoice == 2);
-
-	backgroundNoise.SetFrequency(0.06125f);
-	backgroundNoise.SetFractalLacunarity(2.0f);
-	backgroundNoise.SetFractalGain(0.5f);
-	backgroundNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-	backgroundNoise.SetSeed(static_cast<int>(time(NULL)));
+	planet = new Planet();
 
 	return true;
 }
@@ -65,43 +53,30 @@ bool Game::OnUserUpdate(float deltaTime)
 	return true;
 }
 
-Color Game::GetBackgroundNoise(Vec2f noisePos)
-{
-	float randomNoiseValue = backgroundNoise.GetNoise(noisePos.x, noisePos.y);
-	return Color(Clamp(backgroundBaseColor.r + (int)roundf(randomNoiseValue * backgroundColorWidth.r) * 5, 0, 255),
-		Clamp(backgroundBaseColor.g + (int)roundf(randomNoiseValue * backgroundColorWidth.g) * 5, 0, 255),
-		Clamp(backgroundBaseColor.b + (int)roundf(randomNoiseValue * backgroundColorWidth.b) * 5, 0, 255));
-}
-
 void Game::ApplyLighting()
 {
-	Color ambientColor = Color(static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), 255);
+	JRGB ambientColor = JRGB(static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255));
 
 	Color* renderData = GetDrawTarget()->GetData();
 
 	for (LightSource* lightSource : entities->lightSources)
 		lightSource->ApplyLight();
 
-	for (int x = 0; x < screenWidth; x++)
-		for (int y = 0; y < screenHeight; y++)
+	for (int x = screenWidth; x < screenWidth * 2; x++)
+		for (int y = screenHeight; y < screenHeight * 2; y++)
 		{
-			int index = x + (screenHeight - y - 1) * screenWidth;
-			renderData[index].r =
-				static_cast<byte>((int)renderData[index].r * shadowMap[x][y][0] / 255);
-			shadowMap[x][y][0] = ambientColor.r;
-			renderData[index].g =
-				static_cast<byte>((int)renderData[index].g * shadowMap[x][y][1] / 255);
-			shadowMap[x][y][1] = ambientColor.g;
-			renderData[index].b =
-				static_cast<byte>((int)renderData[index].b * shadowMap[x][y][2] / 255);
-			shadowMap[x][y][2] = ambientColor.b;
+			int index = x - screenWidth + (screenHeight * 2 - y - 1) * screenWidth;
+			renderData[index].r = static_cast<byte>((int)renderData[index].r * shadowMap[x][y].r / 255);
+			renderData[index].g = static_cast<byte>((int)renderData[index].g * shadowMap[x][y].g / 255);
+			renderData[index].b = static_cast<byte>((int)renderData[index].b * shadowMap[x][y].b / 255);
+			shadowMap[x][y] = ambientColor;
 		}
 }
 
 void Game::Update()
 {
 	tTime += dTime;
-	brightness = ClampF(sinf(tTime * PI_F / 120.0f + 0.75f * PI_F) + 0.75f, 0, 1);
+	brightness = planet->GetBrightness();
 
 	system_clock::time_point timeStartFrame = system_clock::now();
 
@@ -145,7 +120,7 @@ void Game::Update()
 		Color* screenColors = lowResScreen.GetData(); // Background draw must be after player gets updated.
 		for (int x = 0; x < lowResScreen.width; x++)
 			for (int y = 0; y < lowResScreen.height; y++)
-				screenColors[y * lowResScreen.width + x] = GetBackgroundNoise(spacePlayerPos + Vec2(x, y));
+				screenColors[y * lowResScreen.width + x] = planet->GetBackgroundNoise(spacePlayerPos + Vec2(x, y));
 	}
 	SetDrawTarget(&midResScreen);
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
@@ -172,7 +147,9 @@ void Game::Update()
 		showUI = !showUI;
 	if (showUI && playerAlive)
 	{
-		DrawString(Vec2(0, 0), ToStringWithPrecision((secondsBetweenWaves - tTime + lastWave), 1) + " - " + std::to_string(waveCount), olc::CYAN);
+		float timeTillNextWave = secondsBetweenWaves - tTime + lastWave;
+		DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
+			std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount), olc::CYAN);
 		DrawString(Vec2(0, 9), std::to_string(player->health), olc::DARK_RED);
 		DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 		player->items.DUpdate();
@@ -191,6 +168,25 @@ bool Game::OnUserDestroy()
 {
 	for (int i = 0; i < entities->size(); i++)
 		delete (*entities)[i];
+	for (int i = 0; i < entities->particles.size(); i++)
+		delete entities->particles[i];
+	for (int i = 0; i < entities->lightSources.size(); i++)
+		delete entities->lightSources[i]->colorMap;
+	for (int x = 0; x < CHUNK_WIDTH; x++)
+		for (int y = 0; y < CHUNK_WIDTH; y++)
+		{
+			entities->chunks[x][y].positions.clear();
+			entities->chunks[x][y].clear();
+		}
+	delete planet;
+	entities->collectibles.clear();
+	entities->sortedNCEntities.clear();
+	entities->particles.clear();
+	entities->lightSources.clear();
+	entities->renderedChunks.clear();
+	entities->clear();
+	//printf("Hm");
+	//delete entities; // This line seems to break everything. =[ I guess I'll just accept a bit of memory leaking for now.
 	return true;
 }
 

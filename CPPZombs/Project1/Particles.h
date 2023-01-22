@@ -21,6 +21,34 @@ public:
 	virtual void HighResUpdate() { }
 };
 
+class VelocityParticle : public Particle
+{
+public:
+	Vec2f velocity;
+
+	VelocityParticle(Vec2f pos, Vec2f velocity, float duration) :
+		Particle(pos, duration), velocity(velocity) { }
+
+	void Update() override
+	{
+		pos += velocity * game->dTime;
+	}
+};
+
+class VelocitySquare : public VelocityParticle
+{
+public:
+	Color color;
+
+	VelocitySquare(Vec2f pos, Vec2f velocity, Color color, float duration) :
+		VelocityParticle(pos, velocity, duration), color(color) { }
+
+	void LowResUpdate() override
+	{
+		game->Draw(ToRSpace(pos), color);
+	}
+};
+
 class SpinParticle : public Particle
 {
 public:
@@ -70,6 +98,6 @@ public:
 
 	void HighResUpdate() override
 	{
-		game->DrawRotatedStringDecal(ToRSpace(pos) * 4.0f, text, rotation, vOne * 4.0f, color, (Vec2f)vOne * scale);
+		game->DrawRotatedStringDecal(ToRSpace(pos) * 4.0f, text, rotation, up * 4.0f + right * text.size() * 4.0f, color, (Vec2f)vOne * scale);
 	}
 };

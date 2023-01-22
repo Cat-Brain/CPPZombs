@@ -11,22 +11,19 @@ struct EntityIndex // For sorting.
 	}
 };
 
-#define CHUNK_WIDTH 16
-#define MAP_WIDTH 25 // Defined in chunks.
+#define CHUNK_WIDTH 8
+#define MAP_WIDTH 50 // Defined in chunks not units.
 #define MAP_WIDTH_TRUE CHUNK_WIDTH * MAP_WIDTH
 class Chunk : public vector<int>
 {
 public:
 	Vec2 pos;
-	//byte positions[CHUNK_WIDTH][CHUNK_WIDTH]; // In this's indexes!! Not entities's indices! This is to avoid crashing.
+	vector<byte> positions;
 
-	Chunk(vector<int> entities = {}, Vec2 pos = vZero) :
-		vector(entities), pos(pos)//, positions()
-	{
-		//for (int x = 0; x < CHUNK_WIDTH; x++)
-			//for (int y = 0; y < CHUNK_WIDTH; y++)
-				//positions[x][y] = 255;
-	}
+	Chunk(Vec2 pos = vZero) :
+		vector({}), pos(pos), positions(0) { }
+
+	~Chunk() { }
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
@@ -36,33 +33,49 @@ public:
 
 	void PrepareForRendering(vector<Entity*> entities)
 	{
-		/*for (int x = 0; x < CHUNK_WIDTH; x++)
-			for (int y = 0; y < CHUNK_WIDTH; y++)
-				positions[x][y] = 255;
-		for (int index : *this)
+		positions.clear();
+		positions.resize(CHUNK_WIDTH * CHUNK_WIDTH, 255);
+		for (int i = 0; i < size(); i++) // There better not be > 255 
 		{
-			Entity* entity = entities[index];
+			Entity* entity = entities[(*this)[i]];
+			if (!entity->Corporeal())
+				continue;
 			Vec2 minPos = entity->pos - entity->dimensions + vOne - pos;
 			Vec2 maxPos = entity->pos + entity->dimensions - vOne - pos;
 
-			for (int x = max(0, minPos.x); x <= min(CHUNK_WIDTH, maxPos.x); x++)
-				for (int y = max(0, minPos.y); y <= min(CHUNK_WIDTH, maxPos.y); y++)
-					positions[x][y] = index;
-		}*/
+			for (int x = max(0, minPos.x); x <= min(CHUNK_WIDTH - 1, maxPos.x); x++)
+				for (int y = max(0, minPos.y); y <= min(CHUNK_WIDTH - 1, maxPos.y); y++)
+					positions[x * CHUNK_WIDTH + y] = i;
+		}
+	}
+
+	int IndexOfPosition(Vec2 pos) // Pos is in global space, also do NOT use if prepare for rendering has not been called.
+	{
+		if (!positions.size())
+			return -1;
+		Vec2 newPos = pos - this->pos;
+		if (newPos.x >= 0 && newPos.y >= 0 && newPos.x < CHUNK_WIDTH && newPos.y < CHUNK_WIDTH && positions[newPos.x * CHUNK_WIDTH + newPos.y] != 255)
+			return (*this)[positions[newPos.x * CHUNK_WIDTH + newPos.y]];
+		return -1;
+	}
+
+	void UnprepareForRendering()
+	{
+		positions.clear();
 	}
 	
 	static Vec2 ToSpace(Vec2 pos)
 	{
-		return Vec2(Clamp(pos.x / CHUNK_WIDTH, 0, MAP_WIDTH), Clamp(pos.y / CHUNK_WIDTH, 0, MAP_WIDTH));
+		return Vec2(Clamp(pos.x / CHUNK_WIDTH, 0, MAP_WIDTH - 1), Clamp(pos.y / CHUNK_WIDTH, 0, MAP_WIDTH - 1));
 	}
 
 	static std::pair<Vec2, Vec2> MinMaxPos(Vec2 pos, Vec2 dimensions)
 	{
-		return { Vec2(max((pos.x - dimensions.x + 1) / CHUNK_WIDTH, 0), max((pos.y - dimensions.y + 1) / CHUNK_WIDTH, 0)),
-			Vec2(min((pos.x + dimensions.x - 1) / CHUNK_WIDTH, MAP_WIDTH), min((pos.y + dimensions.y - 1) / CHUNK_WIDTH, MAP_WIDTH)) };
+		return { ToSpace(pos - dimensions), ToSpace(pos + dimensions) };
 	}
 };
 
+class LightSource;
 class Entities : public vector<Entity*>
 {
 protected:
@@ -75,13 +88,14 @@ public:
 	vector<LightSource*> lightSources;
 	vector<Particle*> particles;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
+	vector<Chunk*> renderedChunks;
 
 	Entities() :
 		vector(0), addedEntity(false), index(0)
 	{
 		for (int x = 0; x < MAP_WIDTH; x++)
 			for (int y = 0; y < MAP_WIDTH; y++)
-				chunks[x][y].pos = Vec2(x * CHUNK_WIDTH, y * CHUNK_WIDTH);
+				chunks[x][y] = Chunk({ x * CHUNK_WIDTH, y * CHUNK_WIDTH });
 	}
 
 	void push_back(Entity* entity)
@@ -103,6 +117,12 @@ public:
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entity->pos, entity->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
 			chunk->push_back(static_cast<int>(size() - 1));
+	}
+
+	Chunk* ChunkAtPos(Vec2 pos)
+	{
+		Vec2 chunkPos = Chunk::ToSpace(pos);
+		return &chunks[chunkPos.x][chunkPos.y];
 	}
 
 	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
@@ -143,7 +163,7 @@ public:
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim) &&
-					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter]);
+					(find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter]);
 		return overlaps;
 	}
 
@@ -164,6 +184,44 @@ public:
 	vector<Entity*> FindIncorpOverlaps(Vec2 pos, Vec2 hDim)
 	{
 		return FindIncorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
+	}
+
+	vector<Entity*> FindAllOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	{
+		vector<Entity*> overlaps{};
+		for (Chunk* chunk : chunkOverlaps)
+			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
+				if ((*this)[*iter]->Overlaps(pos, hDim) &&
+					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter]);
+		return overlaps;
+	}
+
+	vector<Entity*> FindAllOverlaps(Vec2 pos, Vec2 hDim)
+	{
+		return FindAllOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
+	}
+
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim) // Returns {corporeals, incorporeals}
+	{
+		vector<Entity*> corporeals{}, incorporeals{};
+		for (Chunk* chunk : chunkOverlaps)
+			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
+				if ((*this)[*iter]->Overlaps(pos, hDim) &&
+					((*this)[*iter]->dimensions == vOne ||
+						((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter]) == corporeals.end()) ||
+						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter]) == incorporeals.end())))
+				{
+					if ((*this)[*iter]->Corporeal())
+						corporeals.push_back((*this)[*iter]);
+					else
+						incorporeals.push_back((*this)[*iter]);
+				}
+		return { corporeals, incorporeals };
+	}
+
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec2 pos, Vec2 hDim)
+	{
+		return FindPairOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
 	vector<Entity*> RayTraceIntersections(Vec2 startPos, Vec2 endPos)
@@ -265,17 +323,23 @@ public:
 
 	void DUpdate()
 	{
-		// Use ChunkOverlaps in future update for performance.
-		for (index = 0; index < collectibles.size(); index++)
-			if (collectibles[index]->dActive)
-				collectibles[index]->DUpdate();
-
-		for (index = 0; index < sortedNCEntities.size(); index++)
-			if (sortedNCEntities[index]->dActive)
-				sortedNCEntities[index]->DUpdate();
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne);
+		for (Entity* entity : toRenderPair.second)
+			entity->DUpdate();
+		for (Entity* entity : toRenderPair.first)
+			entity->DUpdate();
 
 		for (Particle* particle : particles)
 			particle->LowResUpdate();
+
+		// Double the size that would normally be rendered, this is just for doing lighting, so it needs to go a bit further.
+		vector<Chunk*> newRenderedChunks = MainChunkOverlaps(Chunk::ToSpace(playerPos - screenDim), Chunk::ToSpace(playerPos + screenDim));
+		if (renderedChunks != newRenderedChunks)
+			for (Chunk* chunk : renderedChunks)
+				chunk->UnprepareForRendering();
+		renderedChunks = newRenderedChunks;
+		for (Chunk* chunk : renderedChunks)
+			chunk->PrepareForRendering(*this);
 	}
 
 	void UIUpdate()
@@ -354,8 +418,10 @@ public:
 
 int Entity::DealDamage(int damage, Entity* damageDealer)
 {
-	game->entities->particles.push_back(new SpinText(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne), damage, to_string(damage),
-		damageDealer->color, 1.0f, RandFloat() * 5.0f, RandFloat() * 0.125f));
+	if (damage > 0)
+		game->entities->particles.push_back(new SpinText(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
+			Color(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
+			0.5f, RandFloat() * 5.0f, RandFloat() * 0.125f + 0.125f));
 	
 	health -= damage;
 	if (health <= 0)
@@ -442,6 +508,9 @@ void Entity::SetPos(Vec2 newPos)
 
 // Post entities definition entities:
 
+#define EXPLOSION_PARTICLE_COUNT 25
+#define EXPLOSION_PARTICLE_SPEED 16.0f
+#define EXPLOSION_PARTICLE_DURATION 0.5f
 class ExplodeNextFrame : public Entity
 {
 public:
@@ -449,8 +518,8 @@ public:
 	Vec2 explosionDimensions;
 	float startTime;
 
-	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
-		Entity(pos, vOne, olc::WHITE, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
+	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Color color = olc::WHITE , Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+		Entity(pos, vOne, color, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
 	{
 		this->creator = creator;
 	}
@@ -464,6 +533,12 @@ public:
 			for (Entity* entity : hitEntities)
 				if (entity != this && entity != creator)
 					entity->DealDamage(damage, this);
+			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
+			{
+				float rotation = RandFloat() * PI_F * 2;
+				game->entities->particles.push_back(new VelocitySquare(pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
+					color, EXPLOSION_PARTICLE_DURATION));
+			}
 			DestroySelf(this);
 		}
 	}
@@ -482,7 +557,7 @@ public:
 
 	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec2 pos = Vec2(0, 0),
 		Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
-		Entity(pos, dimensions, color, 1, 1, 1, "Puddle"),
+		Entity(pos, dimensions, color, color, 1, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime) { }
 
 	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2 pos) :
@@ -602,7 +677,7 @@ public:
 
 	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		game->entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, pos, name + string(" shot by ") + creatorName, creator));
+		game->entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
 		game->entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
 	}
 };
