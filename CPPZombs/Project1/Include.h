@@ -56,102 +56,107 @@ Game* game;
 #pragma endregion
 
 #pragma region Math
-float RandFloat()
+inline float RandFloat()
 {
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
-int JMod(int x, int m)
+inline int JMod(int x, int m)
 {
 	return ((x % m) + m) % m;
 }
 
-int Clamp(int value, int minimum, int maximum)
+inline int Clamp(int value, int minimum, int maximum)
 {
 	return max(min(value, maximum), minimum);
 }
 
-float ClampF(float value, float minimum, float maximum)
-{
-	return max(min(value, maximum), minimum);
-}
-
-float ClampF01(float value)
-{
-	return ClampF(value, 0, 1);
-}
-
-double ClampD(double value, double minimum, double maximum)
-{
-	return max(min(value, maximum), minimum);
-}
-
-double ClampD01(double value)
-{
-	return ClampD(value, 0, 1);
-}
-
-int ModClamp(int value, int minimum, int maximum)
+inline int ModClamp(int value, int minimum, int maximum)
 {
 	return value % (maximum - minimum) + minimum;
 }
 
-Vec2 Vabs(Vec2 a)
+inline float ClampF(float value, float minimum, float maximum)
+{
+	return max(min(value, maximum), minimum);
+}
+
+inline float ClampF01(float value)
+{
+	return ClampF(value, 0, 1);
+}
+
+inline double ClampD(double value, double minimum, double maximum)
+{
+	return max(min(value, maximum), minimum);
+}
+
+inline double ClampD01(double value)
+{
+	return ClampD(value, 0, 1);
+}
+
+inline Vec2 ClampV2(Vec2 value, Vec2 minimum, Vec2 maximum)
+{
+	return Vec2(Clamp(value.x, minimum.x, maximum.x), Clamp(value.y, minimum.y, maximum.y));
+}
+
+inline Vec2 Vabs(Vec2 a)
 {
 	return Vec2(abs(a.x), abs(a.y));
 }
 
-int Squagnitude(Vec2 a)
+inline int Squagnitude(Vec2 a)
 {
 	return static_cast<int>(max(labs(static_cast<long>(a.x)), labs(static_cast<long>(a.y))));
 }
 
-int Diagnitude(Vec2 a)
+inline int Diagnitude(Vec2 a)
 {
 	return abs(a.x) + abs(a.y);
 }
 
-float SqrMagnitude(Vec2f a)
+inline float SqrMagnitude(Vec2f a)
 {
 	return a.x * a.x + a.y * a.y;
 }
 
-float Magnitude(Vec2f a)
+inline float Magnitude(Vec2f a)
 {
 	return std::sqrtf(SqrMagnitude(a));
 }
 
-int Squistance(Vec2 a, Vec2 b)
+inline int Squistance(Vec2 a, Vec2 b)
 {
 	return Squagnitude(a - b);
 }
 
-int Diagnistance(Vec2 a, Vec2 b)
+inline int Diagnistance(Vec2 a, Vec2 b)
 {
 	return Diagnitude(a - b);
 }
 
-Vec2 Squarmalized(Vec2 a)
+inline Vec2 Squarmalized(Vec2 a)
 {
 	return a / static_cast<int>(max(1, Squagnitude(a)));
 }
 
-Vec2f Normalized(Vec2f a)
+inline Vec2f Normalized(Vec2f a)
 {
 	return a / max(0.001f, Magnitude(a));
 }
 
-Vec2f V2fMin(Vec2f a, Vec2f b)
+inline Vec2f V2fMin(Vec2f a, Vec2f b)
 {
 	return { SqrMagnitude(a) < SqrMagnitude(b) ? a : b };
 }
 
-float Distance(Vec2f a, Vec2f b)
+inline float Distance(Vec2f a, Vec2f b)
 {
 	return Magnitude(a - b);
 }
 
-float Dot(Vec2f a, Vec2f b)
+inline float Dot(Vec2f a, Vec2f b)
 {
 	return a.x * b.x + a.y * b.y;
 }

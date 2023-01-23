@@ -456,9 +456,9 @@ void Entity::DestroySelf(Entity* damageDealer)
 
 bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
 {
-	Vec2 newPos = pos + direction;
+	Vec2 newPos = ClampV2(pos + direction, vZero, vOne * (MAP_WIDTH_TRUE - 1));
 	vector<Chunk*> chunkOverlaps;
-	if (newPos.x >= 0 && newPos.x < MAP_WIDTH_TRUE && newPos.y >= 0 && newPos.y < MAP_WIDTH_TRUE && force >= mass && direction != Vec2(0, 0))
+	if (force >= mass && direction != Vec2(0, 0))
 	{
 		chunkOverlaps = game->entities->ChunkOverlaps(newPos, dimensions);
 		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
@@ -494,8 +494,9 @@ bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEnti
 
 void Entity::SetPos(Vec2 newPos)
 {
+	Vec2 clampedNewPos = ClampV2(newPos, vZero, vOne * (MAP_WIDTH_TRUE - 1));
 	std::pair<Vec2, Vec2> minMaxOldPos = Chunk::MinMaxPos(pos, dimensions);
-	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(newPos, dimensions);
+	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(clampedNewPos, dimensions);
 	if (minMaxOldPos != minMaxNewPos)
 	{
 		int position = static_cast<int>(distance(game->entities->begin(), find(game->entities->begin(), game->entities->end(), this)));
@@ -506,7 +507,7 @@ void Entity::SetPos(Vec2 newPos)
 		for (Chunk* chunk : newChunkOverlaps)
 			chunk->push_back(position);
 	}
-	pos = newPos;
+	pos = clampedNewPos;
 }
 
 #pragma endregion
