@@ -3,7 +3,8 @@
 class Planet
 {
 public:
-	float dawnTime, dayTime, duskTime, nightTime;
+	float dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
+	Enemies enemies, bosses;
 	JRGB backgroundBaseColor, backgroundColorWidth;
 	FastNoiseLite backgroundNoise;
 
@@ -13,6 +14,11 @@ public:
 		dayTime = RandFloat() * 60.0f;
 		duskTime = RandFloat() * 60.0f;
 		nightTime = RandFloat() * 60.0f;
+
+		ambientDark = RandFloat() * 0.5f;
+		ambientLight = RandFloat() * 0.5f + 0.5f;
+
+
 		backgroundBaseColor.r = rand() % 128 + 64;
 		backgroundBaseColor.g = rand() % 128 + 64;
 		backgroundBaseColor.b = rand() % 128 + 64;
@@ -40,6 +46,7 @@ public:
 	float GetBrightness()
 	{
 		float wrappedTime = fmodf(tTime, dawnTime + dayTime + duskTime + nightTime);
-		return ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));
+		float ambientDiff = ambientLight - ambientDark;
+		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));
 	}
 };

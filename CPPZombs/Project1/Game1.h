@@ -22,6 +22,7 @@ public:
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
 	float dTime = 0.0f;
 	float brightness = 0.0f;
+	float timeStartBossPrep = 0.0f;
 
 	std::unique_ptr<Planet> planet;
 

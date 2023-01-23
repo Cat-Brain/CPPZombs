@@ -605,7 +605,7 @@ EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 6, 13, 0
 LegParticle* spiderLeg = new LegParticle(vZero, nullptr, Color(0, 0, 0, 150), 32.0f);
 EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 1.0f, 1.0f, 0.25f, 2, 3, 1, vOne, Color(79, 0, 26), olc::BLACK, olc::VERY_DARK_GREY, 1, 2, 2, "Spider");
 EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 6, 6, 1, vOne * 3, Color(79, 0, 26), olc::BLACK, Color(0, 50, 0), 5, 10, 10, "Spider Parent");
-EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 100, 20, 1, vOne * 7, Color(77, 14, 35), olc::BLACK, olc::VERY_DARK_GREY, 50, 100, 100, "Spoobderb - The 30 footed beast");
+EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 250, 20, 1, vOne * 7, Color(77, 14, 35), olc::BLACK, olc::VERY_DARK_GREY, 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 
 class Enemies : public vector<Enemy*>
@@ -653,3 +653,5 @@ public:
 
 Enemies spawnableEnemies{ walker, tanker, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
 snake, vacuumer, ranger, spider, spiderParent, spoobderb };
+
+Enemies spawnableBosses{ spoobderb };
