@@ -53,6 +53,11 @@ public:
 		return name != b.name;
 	}
 
+	bool operator <(Item b)
+	{
+		return typeName[0] < b.typeName[0];
+	}
+
 	virtual void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
 };
 Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
@@ -103,6 +108,7 @@ public:
 				return;
 			}
 		vector<Item>::push_back(item.Clone());
+		std::sort(begin(), end());
 	}
 
 	bool TryTake(Item item)// Count should be positive.

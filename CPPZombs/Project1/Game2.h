@@ -5,7 +5,7 @@ bool Game::OnUserCreate()
 	lowResScreen = olc::Sprite(screenWidth / 4, screenHeight / 4);
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
-	entities = new Entities();
+	entities = std::make_unique<Entities>();
 	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
@@ -15,7 +15,7 @@ bool Game::OnUserCreate()
 
 	srand(static_cast<uint>(time(NULL)));
 
-	planet = new Planet();
+	planet = std::make_unique<Planet>();
 
 	return true;
 }
@@ -180,15 +180,12 @@ bool Game::OnUserDestroy()
 			entities->chunks[x][y].positions.clear();
 			entities->chunks[x][y].clear();
 		}
-	delete planet;
 	entities->collectibles.clear();
 	entities->sortedNCEntities.clear();
 	entities->particles.clear();
 	entities->lightSources.clear();
 	entities->renderedChunks.clear();
 	entities->clear();
-	//printf("Hm");
-	//delete entities; // This line seems to break everything. =[ I guess I'll just accept a bit of memory leaking for now.
 	return true;
 }
 

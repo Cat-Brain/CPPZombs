@@ -8,7 +8,7 @@ class Planet;
 class Game : public olc::PixelGameEngine
 {
 public:
-	Entities* entities;
+	std::unique_ptr<Entities> entities;
 	Player* player;
 	olc::Sprite lowResScreen, midResScreen;
 	JRGB shadowMap[screenWidth * 3][screenHeight * 3];
@@ -23,7 +23,7 @@ public:
 	float dTime = 0.0f;
 	float brightness = 0.0f;
 
-	Planet* planet;
+	std::unique_ptr<Planet> planet;
 
 	Game() : entities(nullptr), player(nullptr)
 	{

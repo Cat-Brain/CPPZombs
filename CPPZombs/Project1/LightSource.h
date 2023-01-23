@@ -20,13 +20,6 @@ public:
 		return ceilf(max(color.r, max(color.g, color.b)) / (float)falloff);
 	}
 
-	bool ApplyLightToPos(JRGB currentColor, int index, Vec2 newPos, Vec2 camMin, Vec2 camMax) // newPos is in relative coordinates.
-	{
-		return newPos.x >= camMin.x && camMax.x >= newPos.x &&
-			newPos.y >= camMin.y && camMax.y >= newPos.y &&
-			colorMap[index].MaxEq(currentColor);
-	}
-
 	void ApplyLight()
 	{
 		Vec2 camMin = playerPos - screenDimH * 3, camMax = playerPos + screenDimH * 3, relCamMax = camMax - camMin;
@@ -50,50 +43,45 @@ public:
 			vector<Vec2> shouldCheckNextPoses{};
 
 			int index = (pos.x - lightMin.x) * colorMapWidth + pos.y - lightMin.y;
-			if (ApplyLightToPos(color, index + 1, pos + up, camMin, camMax))
+			if (colorMap[index + 1].MaxEq(color))
 				shouldCheckNextPoses.push_back(pos + up);
 
-			if (ApplyLightToPos(color, index - colorMapWidth, pos + left, camMin, camMax))
+			if (colorMap[index - colorMapWidth].MaxEq(color))
 				shouldCheckNextPoses.push_back(pos + left);
 
-			if (ApplyLightToPos(color, index - 1, pos + down, camMin, camMax))
+			if (colorMap[index - 1].MaxEq(color))
 				shouldCheckNextPoses.push_back(pos + down);
 
-			if (ApplyLightToPos(color, index + colorMapWidth, pos + right, camMin, camMax))
+			if (colorMap[index + colorMapWidth].MaxEq(color))
 				shouldCheckNextPoses.push_back(pos + right);
 
-			vector<Vec2> nextShouldCheckPoses(0);
 			colorMap[(pos.x - lightMin.x) * colorMapWidth + pos.y - lightMin.y].MaxEq(color);
-			for (int i = 0; i < maxDistance - 1 && shouldCheckNextPoses.size(); i++)
+			for (int i = 0; i < shouldCheckNextPoses.size(); i++)
 			{
-				for (Vec2 position : shouldCheckNextPoses)
+				Vec2 position = shouldCheckNextPoses[i];
+				if (position.x <= 0 || position.x + 1 >= MAP_WIDTH_TRUE || position.y <= 0 || position.y + 1 >= MAP_WIDTH_TRUE)
+					continue;
+				JRGB currentColor = colorMap[(position.x - lightMin.x) * colorMapWidth + position.y - lightMin.y] - falloff;
+				index = game->entities->ChunkAtPos(position)->IndexOfPosition(position);
+				if (index != -1)
 				{
-					if (position.x <= 0 || position.x + 1 >= MAP_WIDTH_TRUE || position.y <= 0 || position.y + 1 >= MAP_WIDTH_TRUE)
-						continue;
-					JRGB currentColor = colorMap[(position.x - lightMin.x) * colorMapWidth + position.y - lightMin.y] - falloff;
-					index = game->entities->ChunkAtPos(position)->IndexOfPosition(position);
-					if (index != -1)
-					{
-						JRGB newColor = JRGB((*game->entities)[index]->subsurfaceResistance);
-						currentColor -= newColor / 4;
-						currentColor.MinEq(newColor);
-					}
-
-					index = (position.x - lightMin.x) * colorMapWidth + position.y - lightMin.y;
-					if (ApplyLightToPos(currentColor, index + 1, position + up, camMin, camMax))
-						nextShouldCheckPoses.push_back(position + up);
-
-					if (ApplyLightToPos(currentColor, index - colorMapWidth, position + left, camMin, camMax))
-						nextShouldCheckPoses.push_back(position + left);
-
-					if (ApplyLightToPos(currentColor, index - 1, position + down, camMin, camMax))
-						nextShouldCheckPoses.push_back(position + down);
-
-					if (ApplyLightToPos(currentColor, index + colorMapWidth, position + right, camMin, camMax))
-						nextShouldCheckPoses.push_back(position + right);
+					JRGB newColor = JRGB((*game->entities)[index]->subsurfaceResistance);
+					currentColor -= newColor / 4;
+					currentColor.MinEq(newColor);
 				}
-				copy(nextShouldCheckPoses.begin(), nextShouldCheckPoses.end(), back_inserter(shouldCheckNextPoses));
-				nextShouldCheckPoses.clear();
+
+				index = (position.x - lightMin.x) * colorMapWidth + position.y - lightMin.y;
+				if (colorMap[index + 1].MaxEq(currentColor))
+					shouldCheckNextPoses.push_back(position + up);
+
+				if (colorMap[index - colorMapWidth].MaxEq(currentColor))
+					shouldCheckNextPoses.push_back(position + left);
+
+				if (colorMap[index - 1].MaxEq(currentColor))
+					shouldCheckNextPoses.push_back(position + down);
+
+				if (colorMap[index + colorMapWidth].MaxEq(currentColor))
+					shouldCheckNextPoses.push_back(position + right);
 			}
 			for (int x = 0; x < colorMapWidth; x++)
 				for (int y = 0; y < colorMapWidth; y++)

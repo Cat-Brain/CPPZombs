@@ -19,11 +19,11 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(422,122): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\LightSource.h(28,19): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(428,122): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\LightSource.h(26,19): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
   Generating code
-  232 of 3258 functions ( 7.1%) were compiled, the rest were copied from previous compilation.
-    23 functions were new in current compilation
-    24 functions had inline decision re-evaluated but remain unchanged
+  228 of 3374 functions ( 6.8%) were compiled, the rest were copied from previous compilation.
+    25 functions were new in current compilation
+    61 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
