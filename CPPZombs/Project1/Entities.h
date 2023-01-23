@@ -323,7 +323,13 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne); // Collectibles then NCs.
+		// Early pass
+		for (Entity* entity : toRenderPair.second)
+			entity->EarlyDUpdate();
+		for (Entity* entity : toRenderPair.first)
+			entity->EarlyDUpdate();
+		// Normal pass
 		for (Entity* entity : toRenderPair.second)
 			entity->DUpdate();
 		for (Entity* entity : toRenderPair.first)

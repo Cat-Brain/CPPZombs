@@ -467,6 +467,118 @@ namespace EnemyClasses
 			}
 		}
 	};
+
+	class Spider : public Enemy
+	{
+	public:
+		vector<LegParticle*> legs;
+		vector<float> lastLegUpdates;
+		LegParticle baseLeg;
+		int legCount;
+		float legLength, legTolerance, legCycleSpeed;
+		float legRotation = 0.0f;
+
+		Spider(LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+			float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed) { }
+
+		Entity* Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		{
+			EnemyClasses::Spider* newEnemy = new EnemyClasses::Spider(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			return newEnemy;
+		}
+
+		void Start() override
+		{
+			Enemy::Start();
+			legRotation = RandFloat();
+
+			legs = vector<LegParticle*>(legCount);
+			lastLegUpdates = vector<float>(legCount);
+			float offsettedTTime = tTime + RandFloat() * legCycleSpeed;
+
+			for (int i = 0; i < legCount; i++)
+			{
+				LegParticle* newLeg = new LegParticle(baseLeg);
+				newLeg->parent = this;
+				newLeg->desiredPos = LegPos(i);
+				newLeg->pos = newLeg->desiredPos;
+				lastLegUpdates[i] = offsettedTTime + i * legCycleSpeed / legCount;
+				legs[i] = newLeg;
+			}
+		}
+
+		Vec2f LegPos(int index)
+		{
+			float rotation = (float(index) / legCount + legRotation) * 2 * PI_F;
+			return pos + Vec2f(sinf(rotation), cosf(rotation)) * legLength;
+		}
+
+		void EarlyDUpdate() override
+		{
+			for (int i = 0; i < legCount; i++)
+				legs[i]->LowResUpdate();
+			Enemy::EarlyDUpdate();
+		}
+
+		void Update() override
+		{
+			Enemy::Update();
+			for (int i = 0; i < legCount; i++)
+			{
+				if (tTime - lastLegUpdates[i] > legCycleSpeed)
+				{
+					lastLegUpdates[i] += legCycleSpeed;
+					Vec2f desiredPos = LegPos(i) + Normalized(playerPos - pos) * legTolerance * 0.5f;
+					if (Distance(legs[i]->desiredPos, desiredPos) > legTolerance)
+						legs[i]->desiredPos = desiredPos;
+				}
+				legs[i]->Update();
+			}
+		}
+		
+		void OnDeath(Entity* damageDealer) override
+		{
+			Enemy::OnDeath(damageDealer);
+			for (LegParticle* leg : legs)
+				delete leg;
+		}
+	};
+
+	class Spoobderb : public Spider
+	{
+	public:
+		Entity* baseChild;
+
+		Spoobderb(Entity* baseChild, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+			float timePer = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, Color color = olc::WHITE, Color color2 = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
+				timePer, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name) { }
+
+		Entity* Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		{
+			EnemyClasses::Spoobderb* newEnemy = new EnemyClasses::Spoobderb(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			return newEnemy;
+		}
+
+		int DealDamage(int damage, Entity* damageDealer) override
+		{
+			for (int i = 0; i < damage; i++)
+				game->entities->push_back(baseChild->Clone(pos - dimensions + vOne + Vec2(rand() % ((dimensions.x + 1) * 2), rand() % ((dimensions.y + 1) * 2)), up, this));
+			return Spider::DealDamage(damage, damageDealer);
+		}
+	};
 }
 
 
@@ -474,7 +586,6 @@ namespace EnemyClasses
 
 Enemy* walker = new Enemy(0.75f, 1, 1, 1, vOne, olc::CYAN, olc::BLACK, Color(50, 0, 0), 1, 3, 3, "Walker");
 Enemy* tanker = new Enemy(1.0f, 2, 2, 1, vOne * 2, olc::RED, olc::BLACK, Color(0, 25, 25), 5, 12, 12, "Tanker");
-Enemy* speedster = new Enemy(0.5f, 2, 3, 1, vOne, olc::YELLOW, olc::BLACK, Color(0, 0, 50), 1, 2, 2, "Speedster");
 EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 8, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 20, 15, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, Color(0, 25, 25), 10, 48, 48, "Mega Tanker");
 
@@ -490,6 +601,11 @@ EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 1, 7, 1, vOne, o
 
 EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 3, 5, 0, vOne, olc::GREY, olc::BLACK, Color(50, 50, 50), 1, 3, 3, "Vacuumer");
 EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 6, 13, 0, vOne * 3, olc::GREY, olc::BLACK, Color(50, 50, 50), 1, 12, 12, "Ranger");
+
+LegParticle* spiderLeg = new LegParticle(vZero, nullptr, Color(0, 0, 0, 150), 32.0f);
+EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 1.0f, 1.0f, 0.25f, 2, 3, 1, vOne, Color(79, 0, 26), olc::BLACK, olc::VERY_DARK_GREY, 1, 2, 2, "Spider");
+EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 100, 20, 1, vOne * 7, Color(77, 14, 35), olc::BLACK, olc::VERY_DARK_GREY, 50, 100, 100, "Spoobderb - The 30 footed beast");
+
 
 class Enemies : public vector<Enemy*>
 {
@@ -534,5 +650,5 @@ public:
 	}
 };
 
-Enemies spawnableEnemies{ walker, tanker, speedster, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
-snake, vacuumer, ranger };
+Enemies spawnableEnemies{ walker, tanker, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
+snake, vacuumer, ranger, spider, spoobderb };

@@ -101,3 +101,30 @@ public:
 		game->DrawRotatedStringDecal(ToRSpace(pos) * 4.0f, text, rotation, up * 4.0f + right * text.size() * 4.0f, color, (Vec2f)vOne * scale);
 	}
 };
+
+class LegParticle : public Particle
+{
+public:
+	Entity* parent;
+	Vec2f desiredPos;
+	Color color;
+	float moveSpeed;
+
+	LegParticle(Vec2f pos, Entity* parent, Color color, float moveSpeed) :
+		Particle(pos, 0), parent(parent), desiredPos(pos), color(color), moveSpeed(moveSpeed) { }
+
+	bool ShouldEnd() override
+	{
+		return parent == nullptr;
+	}
+
+	void Update() override
+	{
+		pos += V2fMin(Normalized(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
+	}
+
+	void LowResUpdate() override
+	{
+		game->DrawLine(ToRSpace(pos), ToRSpace(parent->pos), color);
+	}
+};

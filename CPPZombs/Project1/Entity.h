@@ -45,6 +45,8 @@ public:
 		this->pos = tempPos;
 	}
 
+	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobster.
+
 	virtual void DUpdate() // Normally only draws.
 	{
 		Vec2 disp = ToRSpace(pos);

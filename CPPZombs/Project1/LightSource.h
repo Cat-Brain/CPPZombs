@@ -15,6 +15,11 @@ public:
 	LightSource(Vec2 pos = Vec2(0, 0), JRGB color = JRGB(255, 255, 255), byte falloff = 50) :
 		pos(pos), color(color), falloff(falloff) { }
 
+	float Range()
+	{
+		return ceilf(max(color.r, max(color.g, color.b)) / (float)falloff);
+	}
+
 	bool ApplyLightToPos(JRGB currentColor, int index, Vec2 newPos, Vec2 camMin, Vec2 camMax) // newPos is in relative coordinates.
 	{
 		return newPos.x >= camMin.x && camMax.x >= newPos.x &&
@@ -25,7 +30,7 @@ public:
 	void ApplyLight()
 	{
 		Vec2 camMin = playerPos - screenDimH * 3, camMax = playerPos + screenDimH * 3, relCamMax = camMax - camMin;
-		int maxDistance = ceilf(max(color.r, max(color.g, color.b)) / (float)falloff);
+		int maxDistance = Range();
 		Vec2 lightMin = pos - vOne * maxDistance, lightMax = pos + vOne * maxDistance;
 		colorMapWidth = lightMax.x - lightMin.x + 1;
 		if (lastColor != color || lastFalloff != falloff)

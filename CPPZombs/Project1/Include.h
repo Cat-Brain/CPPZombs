@@ -111,9 +111,14 @@ int Diagnitude(Vec2 a)
 	return abs(a.x) + abs(a.y);
 }
 
+float SqrMagnitude(Vec2f a)
+{
+	return a.x * a.x + a.y * a.y;
+}
+
 float Magnitude(Vec2f a)
 {
-	return std::sqrtf(a.x * a.x + a.y * a.y);
+	return std::sqrtf(SqrMagnitude(a));
 }
 
 int Squistance(Vec2 a, Vec2 b)
@@ -133,7 +138,12 @@ Vec2 Squarmalized(Vec2 a)
 
 Vec2f Normalized(Vec2f a)
 {
-	return a / Magnitude(a);
+	return a / max(0.001f, Magnitude(a));
+}
+
+Vec2f V2fMin(Vec2f a, Vec2f b)
+{
+	return { SqrMagnitude(a) < SqrMagnitude(b) ? a : b };
 }
 
 float Distance(Vec2f a, Vec2f b)

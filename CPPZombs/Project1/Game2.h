@@ -91,7 +91,7 @@ void Game::Update()
 		if (waveCount == 0)
 		{
 			waveCount = 10;
-			spawnableEnemies.SpawnEnemyType({ ranger });
+			spawnableEnemies.SpawnEnemyType({ spoobderb });
 			waveCount = 0;
 		}
 		else if(waveCount == 7)
@@ -104,12 +104,15 @@ void Game::Update()
 			spawnableEnemies.SpawnEnemyType({ gigaExploder });
 		else if(waveCount == 15)
 			spawnableEnemies.SpawnEnemyType({ megaTanker });
+		else if (waveCount == 17)
+			spawnableEnemies.SpawnEnemyType({ spoobderb });
 		else
 		{
 			spawnableEnemies.SpawnRandomEnemies();
 		}
 	}
 
+	SetDrawTarget(&midResScreen);
 
 	entities->Update(); // Updates all entities.
 
@@ -122,7 +125,6 @@ void Game::Update()
 			for (int y = 0; y < lowResScreen.height; y++)
 				screenColors[y * lowResScreen.width + x] = planet->GetBackgroundNoise(spacePlayerPos + Vec2(x, y));
 	}
-	SetDrawTarget(&midResScreen);
 	DrawSprite({ 0, 0 }, &lowResScreen, 4);
 	entities->DUpdate(); // Draws all entities.
 	// Draw mouse.
