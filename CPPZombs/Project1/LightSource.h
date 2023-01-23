@@ -83,8 +83,8 @@ public:
 				if (colorMap[index + colorMapWidth].MaxEq(currentColor))
 					shouldCheckNextPoses.push_back(position + right);
 			}
-			for (int x = 0; x < colorMapWidth; x++)
-				for (int y = 0; y < colorMapWidth; y++)
+			for (int x = max(0, camMin.x - lightMin.x); x < min(colorMapWidth, camMax.x - lightMin.x); x++)
+				for (int y = max(0, camMin.y - lightMin.y); y < min(colorMapWidth, camMax.y - lightMin.y); y++)
 				{
 					game->shadowMap[x + lightMin.x - camMin.x][y + lightMin.y - camMin.y] += colorMap[x * colorMapWidth + y];
 				}

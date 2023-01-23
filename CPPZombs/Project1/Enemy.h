@@ -589,7 +589,7 @@ Enemy* tanker = new Enemy(1.0f, 2, 2, 1, vOne * 2, olc::RED, olc::BLACK, Color(0
 EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({olc::RED, olc::YELLOW, olc::BLUE}, 2.0f, 0.25f, 8, 10, 1, vOne, olc::BLACK, 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 20, 15, 1, vOne * 3, Color(174, 0, 255), olc::BLACK, Color(0, 25, 25), 10, 48, 48, "Mega Tanker");
 
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 3, 4, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 153), olc::BLACK, 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 4, 4, 1, vOne, olc::WHITE, olc::BLACK, Color(255, 255, 255, 153), olc::BLACK, 1, 3, 3, "Deceiver");
 
 // Child not included in spawnable enemies.
 Enemy* child = new Enemy(0.125f, 0, 0, 1, vOne, olc::MAGENTA, olc::BLACK, Color(0, 50, 0), 1, 1, 1, "Child");
@@ -604,6 +604,7 @@ EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 6, 13, 0
 
 LegParticle* spiderLeg = new LegParticle(vZero, nullptr, Color(0, 0, 0, 150), 32.0f);
 EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 1.0f, 1.0f, 0.25f, 2, 3, 1, vOne, Color(79, 0, 26), olc::BLACK, olc::VERY_DARK_GREY, 1, 2, 2, "Spider");
+EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 6, 6, 1, vOne * 3, Color(79, 0, 26), olc::BLACK, Color(0, 50, 0), 5, 10, 10, "Spider Parent");
 EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 100, 20, 1, vOne * 7, Color(77, 14, 35), olc::BLACK, olc::VERY_DARK_GREY, 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 
@@ -651,4 +652,4 @@ public:
 };
 
 Enemies spawnableEnemies{ walker, tanker, hyperSpeedster, megaTanker, deceiver, parent, exploder, gigaExploder,
-snake, vacuumer, ranger, spider, spoobderb };
+snake, vacuumer, ranger, spider, spiderParent, spoobderb };
