@@ -2,18 +2,18 @@
 
 bool Game::OnUserCreate()
 {
+	srand(static_cast<uint>(time(NULL)));
+
 	lowResScreen = olc::Sprite(screenWidth / 4, screenHeight / 4);
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
-	entities = std::make_unique<Entities>();
-	player = new Player(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
+	entities = make_unique<Entities>();
+	player = make_shared<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
 	entities->push_back(player);
 	playerAlive = true;
 	totalGamePoints = 0;
 	sAppName = "CPPZombs!";
 	SetPixelMode(Color::ALPHA);
-
-	srand(static_cast<uint>(time(NULL)));
 
 	planet = std::make_unique<Planet>();
 
@@ -59,7 +59,7 @@ void Game::ApplyLighting()
 
 	Color* renderData = GetDrawTarget()->GetData();
 
-	for (LightSource* lightSource : entities->lightSources)
+	for (shared_ptr<LightSource> lightSource : entities->lightSources)
 		lightSource->ApplyLight();
 
 	for (int x = screenWidth; x < screenWidth * 2; x++)
@@ -80,36 +80,25 @@ void Game::Update()
 
 	system_clock::time_point timeStartFrame = system_clock::now();
 
-	// New wave:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || (inputs.enter.bPressed))
+	// Spawn boss:
+	if (inputs.enter.bPressed && !shouldSpawnBoss)
 	{
-		if (!inputs.enter.bPressed)
-			lastWave = tTime;
+		shouldSpawnBoss = true;
+		timeStartBossPrep = tTime;
+	}
 
-		waveCount += int(!inputs.enter.bPressed);
+	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
+	{
+		planet->bosses.SpawnRandomEnemies(max(250, Enemies::GetRoundPoints()));
+		shouldSpawnBoss = false;
+	}
 
-		if (waveCount == 0)
-		{
-			waveCount = 10;
-			spawnableEnemies.SpawnEnemyType({ spoobderb });
-			waveCount = 0;
-		}
-		else if(waveCount == 7)
-			spawnableEnemies.SpawnEnemyType({ deceiver });
-		else if (waveCount == 9)
-			spawnableEnemies.SpawnEnemyType({ parent });
-		else if(waveCount == 10)
-			spawnableEnemies.SpawnEnemyType({ hyperSpeedster });
-		else if (waveCount == 13)
-			spawnableEnemies.SpawnEnemyType({ gigaExploder });
-		else if(waveCount == 15)
-			spawnableEnemies.SpawnEnemyType({ megaTanker });
-		else if (waveCount == 17)
-			spawnableEnemies.SpawnEnemyType({ spoobderb });
-		else
-		{
-			spawnableEnemies.SpawnRandomEnemies();
-		}
+	// New wave:
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0)
+	{
+		lastWave = tTime;
+		waveCount++;
+		planet->enemies.SpawnRandomEnemies();
 	}
 
 	SetDrawTarget(&midResScreen);
@@ -150,8 +139,17 @@ void Game::Update()
 	if (showUI && playerAlive)
 	{
 		float timeTillNextWave = secondsBetweenWaves - tTime + lastWave;
-		DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
-			std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount), olc::CYAN);
+		if (shouldSpawnBoss)
+		{
+			float timeTillNextBoss = 60.0f - tTime + timeStartBossPrep;
+			DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
+				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
+				std::to_string(int(timeTillNextBoss)) + "." +
+				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), olc::CYAN);
+		}
+		else
+			DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
+				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount), olc::CYAN);
 		DrawString(Vec2(0, 9), std::to_string(player->health), olc::DARK_RED);
 		DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 		player->items.DUpdate();
@@ -168,24 +166,6 @@ void Game::MenuedEntityDied(Entity* entity)
 
 bool Game::OnUserDestroy()
 {
-	for (int i = 0; i < entities->size(); i++)
-		delete (*entities)[i];
-	for (int i = 0; i < entities->particles.size(); i++)
-		delete entities->particles[i];
-	for (int i = 0; i < entities->lightSources.size(); i++)
-		delete entities->lightSources[i]->colorMap;
-	for (int x = 0; x < CHUNK_WIDTH; x++)
-		for (int y = 0; y < CHUNK_WIDTH; y++)
-		{
-			entities->chunks[x][y].positions.clear();
-			entities->chunks[x][y].clear();
-		}
-	entities->collectibles.clear();
-	entities->sortedNCEntities.clear();
-	entities->particles.clear();
-	entities->lightSources.clear();
-	entities->renderedChunks.clear();
-	entities->clear();
 	return true;
 }
 

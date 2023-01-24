@@ -29,9 +29,9 @@ public:
         Start();
     }
 
-    Entity* Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    shared_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
     {
-        return new Projectile(this, pos, direction, creator);
+        return make_shared<Projectile>(this, pos, direction, creator);
     }
 
     void Update() override
@@ -60,14 +60,14 @@ public:
 
     bool CheckPos(Entity*& hitEntity)
     {
-        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
+        vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
 
-        for (Entity* entity : hitEntities)
+        for (shared_ptr<Entity> entity : hitEntities)
         {
-            if (entity == creator || entity == this)
+            if (entity.get() == creator || entity.get() == this)
                 continue;
 
-            hitEntity = entity;
+            hitEntity = entity.get();
             if (entity->DealDamage(damage, this) == 1)
                 hitEntity = nullptr;
             return true;
@@ -149,14 +149,14 @@ public:
         Start();
     }
 
-    Entity* Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    shared_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
     {
-        return new ShotItem(this, pos, direction, creator);
+        return make_shared<ShotItem>(this, pos, direction, creator);
     }
 
-    Entity* Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
+    shared_ptr<Entity> Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
     {
-        return new ShotItem(this, baseItem, pos, direction, creator);
+        return make_shared<ShotItem>(this, baseItem, pos, direction, creator);
     }
 
     void OnDeath(Entity* damageDealer) override

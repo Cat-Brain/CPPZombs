@@ -43,14 +43,14 @@ public:
 			lastClick = tTime;
 		}
 
-		vector<Entity*> hitEntities;
+		vector<shared_ptr<Entity>> hitEntities;
 		if (game->inputs.rightMouse.bPressed && game->inputs.mousePosition != pos &&
 			(currentMenuedEntity == nullptr || currentMenuedEntity->pos != game->inputs.mousePosition)
 			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition, dimensions)).size())
 		{
 			if (currentMenuedEntity != nullptr)
 				currentMenuedEntity->shouldUI = false;
-			currentMenuedEntity = hitEntities[0];
+			currentMenuedEntity = hitEntities[0].get();
 			currentMenuedEntity->shouldUI = true;
 		}
 		if (game->inputs.w.bPressed || game->inputs.up.bPressed || game->inputs.a.bPressed || game->inputs.left.bPressed ||
@@ -129,7 +129,7 @@ public:
 		if (heldEntity == nullptr && game->inputs.middleMouse.bPressed && game->inputs.mousePosition != pos &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition, vOne)).size())
 		{
-			heldEntity = hitEntities[0];
+			heldEntity = hitEntities[0].get();
 			heldEntity->holder = this;
 		}
 		else if (!game->inputs.space.bHeld && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr && game->inputs.mousePosition != pos &&
@@ -148,10 +148,10 @@ public:
 			game->entities->Vacuum(pos, vacDist);
 		}
 
-		vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
-		for (Entity* collectible : collectibles)
+		vector<shared_ptr<Entity>> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
+		for (shared_ptr<Entity> collectible : collectibles)
 		{
-			items.push_back(((Collectible*)collectible)->baseItem);
+			items.push_back(((Collectible*)collectible.get())->baseItem);
 			collectible->DestroySelf(this);
 		}
 	}

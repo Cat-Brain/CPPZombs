@@ -30,9 +30,9 @@ public:
 		Start();
 	}
 
-	virtual Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
+	virtual shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
 	{
-		return new Entity(this, pos);
+		return make_shared<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
@@ -181,6 +181,32 @@ vector<Entity*> CorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
 			foundEntities.push_back(*i);
 	return foundEntities;
 }
+
+vector< shared_ptr<Entity>> EntitiesAtPos(Vec2 pos, vector<shared_ptr<Entity>> entities)
+{
+	vector<shared_ptr<Entity>> foundCollectibles(0);
+	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+		if ((*i)->pos == pos)
+			foundCollectibles.push_back(*i);
+	return foundCollectibles;
+}
+
+shared_ptr<Entity> FindAEntity(Vec2 pos, vector<shared_ptr<Entity>> entities)
+{
+	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+		if ((*i)->pos == pos)
+			return *i;
+	return nullptr;
+}
+
+vector<shared_ptr<Entity>> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<shared_ptr<Entity>> entities)
+{
+	vector<shared_ptr<Entity>> foundCollectibles(0);
+	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+		if ((*i)->Overlaps(pos, dimensions))
+			foundCollectibles.push_back(*i);
+	return foundCollectibles;
+}
 #pragma endregion
 
 
@@ -212,5 +238,5 @@ public:
 };
 
 
-typedef pair<Cost, Item*> RecipeA;
-typedef pair<Cost, Entity*> RecipeB;
+typedef std::pair<Cost, Item*> RecipeA;
+typedef std::pair<Cost, Entity*> RecipeB;

@@ -9,18 +9,18 @@
 #include <thread>
 using namespace std::this_thread;
 using namespace std::chrono;
+using std::vector;
+using std::string;
+using std::unique_ptr;
+using std::shared_ptr;
 using std::max;
 using std::min;
-using std::vector;
-using std::map;
-using std::cin;
-using std::cout;
 using std::remove;
 using std::find;
 using std::distance;
 using std::to_string;
-using std::pair;
-using std::string;
+using std::make_unique;
+using std::make_shared;
 
 typedef unsigned int uint;
 typedef olc::vi2d Vec2;
@@ -52,7 +52,7 @@ string deathCauseName = "NULL DEATH CAUSE";
 
 // Very important!
 class Game;
-Game* game;
+unique_ptr<Game> game;
 #pragma endregion
 
 #pragma region Math

@@ -30,9 +30,9 @@ public:
 		Start();
 	}
 
-	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return new CollectibleTree(this, dir, pos);
+		return make_shared<CollectibleTree>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -126,11 +126,9 @@ public:
 		Start();
 	}
 
-	Entity* Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		Vine* newVine = new Vine(this, dir, pos);
-		newVine->Start();
-		return newVine;
+		return make_shared<Vine>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -145,10 +143,10 @@ public:
 			Vec2 placementPos = pos;
 			while (placementPos == pos)
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
+			vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
 			{
-				Vine* newVine = (Vine*)baseClass->Clone(placementPos, up, this);
+				shared_ptr<Vine> newVine = std::dynamic_pointer_cast<Vine>(baseClass->Clone(placementPos, up, this));
 				newVine->generation = generation + 1;
 				game->entities->push_back(newVine);
 			}
@@ -233,7 +231,7 @@ namespace Plants
 		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80), emeraldResistence = Color(50, 0, 50);
 		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
 
-		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78), rockResistence = Color(50, 50, 50);
+		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78), rockResistence = Color(50, 0, 50);
 		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
 	}
 

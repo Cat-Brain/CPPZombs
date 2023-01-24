@@ -19,11 +19,44 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Particles.h(
           [
               T=int32_t
           ]
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(428,122): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\LightSource.h(26,19): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\xutility(217,72): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\xutility(216,16): message : see reference to function template instantiation '_Ty *std::construct_at<_Ty,olc::v2d_generic<int32_t>,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float,0x0>(_Ty *const ,olc::v2d_generic<int32_t> &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&) noexcept(<expr>)' being compiled
+          with
+          [
+              _Ty=SpinText
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(2023,1): message : see reference to function template instantiation 'void std::_Construct_in_place<_Ty,olc::v2d_generic<int32_t>,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float>(_Ty &,olc::v2d_generic<int32_t> &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&) noexcept(false)' being compiled
+          with
+          [
+              _Ty=SpinText
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(2703,36): message : see reference to function template instantiation 'std::_Ref_count_obj2<SpinText>::_Ref_count_obj2<_Ty,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float>(_Ty &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&)' being compiled
+          with
+          [
+              _Ty=Vec2
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(2704,20): message : see reference to function template instantiation 'std::_Ref_count_obj2<SpinText>::_Ref_count_obj2<_Ty,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float>(_Ty &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&)' being compiled
+          with
+          [
+              _Ty=Vec2
+          ]
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(446,59): message : see reference to function template instantiation 'std::shared_ptr<SpinText> std::make_shared<SpinText,olc::v2d_generic<int32_t>,int&,std::string,Color,float,float,float>(olc::v2d_generic<int32_t> &&,int &,std::string &&,Color &&,float &&,float &&,float &&)' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\xutility(231,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\xutility(218,85): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\xutility(224,49): message : see reference to function template instantiation '_Ty *std::construct_at<_Ty,olc::v2d_generic<int32_t>,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float,0x0>(_Ty *const ,olc::v2d_generic<int32_t> &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&) noexcept(false)' being compiled
+          with
+          [
+              _Ty=SpinText
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(2023,1): message : see reference to function template instantiation 'void std::_Construct_in_place<_Ty,olc::v2d_generic<int32_t>,int&,std::basic_string<char,std::char_traits<char>,std::allocator<char>>,olc::Pixel,float,float,float>(_Ty &,olc::v2d_generic<int32_t> &&,int &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &&,olc::Pixel &&,float &&,float &&,float &&) noexcept(false)' being compiled
+          with
+          [
+              _Ty=SpinText
+          ]
   Generating code
-  1 of 3384 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  10 of 4154 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    4 functions had inline decision re-evaluated but remain unchanged
+    6 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe

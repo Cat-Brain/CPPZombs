@@ -31,13 +31,13 @@ public:
 			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
 	}
 
-	void PrepareForRendering(vector<Entity*> entities)
+	void PrepareForRendering(vector<shared_ptr<Entity>> entities)
 	{
 		positions.clear();
 		positions.resize(CHUNK_WIDTH * CHUNK_WIDTH, 255);
 		for (int i = 0; i < size(); i++) // There better not be > 255 
 		{
-			Entity* entity = entities[(*this)[i]];
+			shared_ptr<Entity> entity = entities[(*this)[i]];
 			if (!entity->Corporeal())
 				continue;
 			Vec2 minPos = entity->pos - entity->dimensions + vOne - pos;
@@ -76,17 +76,17 @@ public:
 };
 
 class LightSource;
-class Entities : public vector<Entity*>
+class Entities : public vector<shared_ptr<Entity>>
 {
 protected:
 	int index;
 
 public:
 	bool addedEntity;
-	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
-	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
-	vector<LightSource*> lightSources;
-	vector<Particle*> particles;
+	vector<shared_ptr<Entity>> sortedNCEntities; // The NC stands for Non-Collectible.
+	vector<shared_ptr<Entity>> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
+	vector<shared_ptr<LightSource>> lightSources;
+	vector<shared_ptr<Particle>> particles;
 	Chunk chunks[MAP_WIDTH][MAP_WIDTH];
 	vector<Chunk*> renderedChunks;
 
@@ -98,13 +98,13 @@ public:
 				chunks[x][y] = Chunk({ x * CHUNK_WIDTH, y * CHUNK_WIDTH });
 	}
 
-	void push_back(Entity* entity)
+	void push_back(shared_ptr<Entity> entity)
 	{
 		entity->pos.x = Clamp(entity->pos.x, entity->dimensions.x - 1, MAP_WIDTH_TRUE - entity->dimensions.x + 1);
 		entity->pos.y = Clamp(entity->pos.y, entity->dimensions.y - 1, MAP_WIDTH_TRUE - entity->dimensions.y + 1);
 
 		addedEntity = true;
-		vector<Entity*>::push_back(entity);
+		vector<shared_ptr<Entity>>::push_back(entity);
 
 		if (entity->IsCollectible())
 			collectibles.push_back(entity);
@@ -119,6 +119,17 @@ public:
 			chunk->push_back(static_cast<int>(size() - 1));
 	}
 
+	void push_back(shared_ptr<LightSource> lightSource)
+	{
+		lightSources.push_back(lightSource);
+	}
+
+	void push_back(shared_ptr<Particle> particle)
+	{
+		particles.push_back(particle);
+	}
+
+#pragma region Overlaps and collisionstuff
 	Chunk* ChunkAtPos(Vec2 pos)
 	{
 		Vec2 chunkPos = Chunk::ToSpace(pos);
@@ -140,12 +151,12 @@ public:
 		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
-	Entity* FindNearestEnemy(Vec2 pos, Vec2 farthestDimensions)
+	shared_ptr<Entity> FindNearestEnemy(Vec2 pos, Vec2 farthestDimensions)
 	{
-		vector<Entity*> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
+		vector<shared_ptr<Entity>> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
 		float currentBestDist = 9999.0f;
-		Entity* currentBest = nullptr;
-		for (Entity* entity : nearbyEntities)
+		shared_ptr<Entity> currentBest = nullptr;
+		for (shared_ptr<Entity> entity : nearbyEntities)
 		{
 			float dist;
 			if (entity->IsEnemy() && (dist = Distance(pos, entity->pos)) < currentBestDist)
@@ -157,9 +168,9 @@ public:
 		return currentBest;
 	}
 
-	vector<Entity*> FindCorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindCorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
-		vector<Entity*> overlaps{};
+		vector<shared_ptr<Entity>> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim) &&
@@ -167,28 +178,28 @@ public:
 		return overlaps;
 	}
 
-	vector<Entity*> FindCorpOverlaps(Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindCorpOverlaps(Vec2 pos, Vec2 hDim)
 	{
 		return FindCorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
-	vector<Entity*> FindIncorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindIncorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
-		vector<Entity*> overlaps{};
+		vector<shared_ptr<Entity>> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim)) overlaps.push_back((*this)[*iter]);
 		return overlaps;
 	}
 
-	vector<Entity*> FindIncorpOverlaps(Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindIncorpOverlaps(Vec2 pos, Vec2 hDim)
 	{
 		return FindIncorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
-	vector<Entity*> FindAllOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindAllOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
 	{
-		vector<Entity*> overlaps{};
+		vector<shared_ptr<Entity>> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Overlaps(pos, hDim) &&
@@ -196,14 +207,14 @@ public:
 		return overlaps;
 	}
 
-	vector<Entity*> FindAllOverlaps(Vec2 pos, Vec2 hDim)
+	vector<shared_ptr<Entity>> FindAllOverlaps(Vec2 pos, Vec2 hDim)
 	{
 		return FindAllOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim) // Returns {corporeals, incorporeals}
+	std::pair<vector<shared_ptr<Entity>>, vector<shared_ptr<Entity>>> FindPairOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim) // Returns {corporeals, incorporeals}
 	{
-		vector<Entity*> corporeals{}, incorporeals{};
+		vector<shared_ptr<Entity>> corporeals{}, incorporeals{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Overlaps(pos, hDim) &&
@@ -219,14 +230,14 @@ public:
 		return { corporeals, incorporeals };
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec2 pos, Vec2 hDim)
+	std::pair<vector<shared_ptr<Entity>>, vector<shared_ptr<Entity>>> FindPairOverlaps(Vec2 pos, Vec2 hDim)
 	{
 		return FindPairOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
 	}
 
-	vector<Entity*> RayTraceIntersections(Vec2 startPos, Vec2 endPos)
+	vector<shared_ptr<Entity>> RayTraceIntersections(Vec2 startPos, Vec2 endPos)
 	{
-		vector<Entity*> overlaps(0);
+		vector<shared_ptr<Entity>> overlaps(0);
 
 		Vec2 start = Chunk::ToSpace(startPos), end = Chunk::ToSpace(endPos);
 		Vec2 absDelta = Vabs(end - start);
@@ -258,11 +269,12 @@ public:
 	}
 
 	// Add more overlap functions.
+#pragma endregion
 
 	void SortEntities()
 	{
 		int length = static_cast<int>(size());
-		for (Entity* entity : *this)
+		for (shared_ptr<Entity> entity : *this)
 			length -= int(entity->IsCollectible());
 		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(length);
 		for (int i = 0, j = 0; i < size(); i++)
@@ -273,7 +285,7 @@ public:
 			}
 		std::sort(unsortedToSorted.begin(), unsortedToSorted.end());
 
-		sortedNCEntities = vector<Entity*>(length);
+		sortedNCEntities = vector<shared_ptr<Entity>>(length);
 		for (int i = 0, j = 0; i < size(); i++)
 			if (!(*this)[i]->IsCollectible())
 			{
@@ -281,9 +293,9 @@ public:
 				j++;
 			}
 
-		collectibles = vector<Entity*>(size() - length);
+		collectibles = vector<shared_ptr<Entity>>(size() - length);
 		length = 0;
-		for (Entity* entity : *this)
+		for (shared_ptr<Entity> entity : *this)
 			if (entity->IsCollectible())
 				collectibles[length++] = entity;
 		addedEntity = false;
@@ -313,9 +325,8 @@ public:
 			particles[i]->Update();
 			if (particles[i]->ShouldEnd())
 			{
-				Particle* toDestroyParticle = particles[i];
+				shared_ptr<Particle> toDestroyParticle = particles[i];
 				particles.erase(particles.begin() + i);
-				delete toDestroyParticle;
 				i--;
 			}
 		}
@@ -323,19 +334,19 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne); // Collectibles then NCs.
-		// Early pass
-		for (Entity* entity : toRenderPair.second)
+		std::pair<vector<shared_ptr<Entity>>, vector<shared_ptr<Entity>>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne); // Collectibles then NCs.
+		// Collectibles
+		for (shared_ptr<Entity> entity : toRenderPair.second)
 			entity->EarlyDUpdate();
-		for (Entity* entity : toRenderPair.first)
-			entity->EarlyDUpdate();
-		// Normal pass
-		for (Entity* entity : toRenderPair.second)
+		for (shared_ptr<Entity> entity : toRenderPair.second)
 			entity->DUpdate();
-		for (Entity* entity : toRenderPair.first)
+		// Normal entities
+		for (shared_ptr<Entity> entity : toRenderPair.first)
+			entity->EarlyDUpdate();
+		for (shared_ptr<Entity> entity : toRenderPair.first)
 			entity->DUpdate();
 
-		for (Particle* particle : particles)
+		for (shared_ptr<Particle> particle : particles)
 			particle->LowResUpdate();
 
 		// Double the size that would normally be rendered, this is just for doing lighting, so it needs to go a bit further.
@@ -350,7 +361,7 @@ public:
 
 	void UIUpdate()
 	{
-		for (Particle* particle : particles)
+		for (shared_ptr<Particle> particle : particles)
 			particle->HighResUpdate();
 
 		for (index = 0; index < collectibles.size(); index++)
@@ -367,14 +378,14 @@ public:
 		// Remove from sortedNCEntities or from collectibles.
 		if (!entityToRemove->IsCollectible())
 		{
-			vector<Entity*>::iterator pos = find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove);
+			vector<shared_ptr<Entity>>::iterator pos = std::find_if(sortedNCEntities.begin(), sortedNCEntities.end(), [entityToRemove](std::shared_ptr<Entity> const& i) { return i.get() == entityToRemove; });
 			index -= int(index >= distance(sortedNCEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
 			sortedNCEntities.erase(pos);
 		}
 		else
-			collectibles.erase(find(collectibles.begin(), collectibles.end(), entityToRemove));
+			collectibles.erase(std::find_if(collectibles.begin(), collectibles.end(), [entityToRemove](std::shared_ptr<Entity> const& i) { return i.get() == entityToRemove; }));
 		// Remove from every chunk that this object overlaps.
-		vector<Entity*>::iterator mainPos = find(begin(), end(), entityToRemove);
+		vector<shared_ptr<Entity>>::iterator mainPos = std::find_if(begin(), end(), [entityToRemove](std::shared_ptr<Entity> const& i) { return i.get() == entityToRemove; });;
 		int removalIndex = static_cast<int>(distance(begin(), mainPos));
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, entityToRemove->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
@@ -392,12 +403,17 @@ public:
 
 	void Remove(LightSource* lightSourceToRemove)
 	{
-		lightSources.erase(find(lightSources.begin(), lightSources.end(), lightSourceToRemove));
+		lightSources.erase(std::find_if(lightSources.begin(), lightSources.end(), [lightSourceToRemove](std::shared_ptr<LightSource> const& i) { return i.get() == lightSourceToRemove; }));
+	}
+
+	void Remove(Particle* particleToRemove)
+	{
+		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::shared_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
 	void Vacuum(Vec2 pos, int vacDist)
 	{
-		for (Entity* collectible : collectibles)
+		for (shared_ptr<Entity> collectible : collectibles)
 		{
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
@@ -409,7 +425,7 @@ public:
 
 	void VacuumCone(Vec2 pos, Vec2 dir, int vacDist, float fov)
 	{
-		for (Entity* collectible : collectibles)
+		for (shared_ptr<Entity> collectible : collectibles)
 		{
 			int distance = Diagnistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - pos + dir)) >= 1 - fov)
@@ -425,7 +441,7 @@ public:
 int Entity::DealDamage(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
-		game->entities->particles.push_back(new SpinText(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
+		game->entities->push_back(make_shared<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
 			Color(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
 			0.5f, RandFloat() * 5.0f, RandFloat() * 0.125f + 0.125f));
 	
@@ -440,18 +456,17 @@ int Entity::DealDamage(int damage, Entity* damageDealer)
 
 void Item::OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 {
-	game->entities->push_back(new Collectible(*this, pos));
+	game->entities->push_back(make_shared<Collectible>(*this, pos));
 }
 
 void Entity::DestroySelf(Entity* damageDealer)
 {
 	if (shouldUI)
 		game->MenuedEntityDied(this);
-	game->entities->Remove(this);
 	OnDeath(damageDealer);
 	if (holder != nullptr)
 		holder->heldEntity = nullptr;
-	delete this;
+	game->entities->Remove(this);
 }
 
 bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
@@ -461,19 +476,19 @@ bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEnti
 	if (force >= mass && direction != Vec2(0, 0))
 	{
 		chunkOverlaps = game->entities->ChunkOverlaps(newPos, dimensions);
-		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
-		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
+		vector<shared_ptr<Entity>> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
+		for (shared_ptr<Entity> entity : overlaps)
+			if (entity.get() != ignore && (entity.get() != this) && (creator != entity->creator || creator == nullptr))
 			{
 				if (hitEntity != nullptr)
-					*hitEntity = entity;
+					*hitEntity = entity.get();
 				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, dimensions))
 				{
 					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, dimensions);
+					vector<shared_ptr<Entity>> overlaps2 = game->entities->FindCorpOverlaps(pos, dimensions);
 					bool successful = false;
-					for (Entity* entity2 : overlaps2)
-						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
+					for (shared_ptr<Entity> entity2 : overlaps2)
+						if (entity2.get() != ignore && entity2.get() != this && (creator != entity2->creator || creator == nullptr) &&
 							force - mass > entity2->mass)
 						{
 							successful = true;
@@ -499,7 +514,7 @@ void Entity::SetPos(Vec2 newPos)
 	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(clampedNewPos, dimensions);
 	if (minMaxOldPos != minMaxNewPos)
 	{
-		int position = static_cast<int>(distance(game->entities->begin(), find(game->entities->begin(), game->entities->end(), this)));
+		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::shared_ptr<Entity> const& i) { return i.get() == this; })));
 		vector<Chunk*> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
 		for (Chunk* chunk : oldChunkOverlaps)
 			chunk->erase(find(chunk->begin(), chunk->end(), position));
@@ -536,14 +551,14 @@ public:
 	{
 		if (tTime != startTime)
 		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
-			for (Entity* entity : hitEntities)
-				if (entity != this && entity != creator)
+			vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
+			for (shared_ptr<Entity> entity : hitEntities)
+				if (entity.get() != this && entity.get() != creator)
 					entity->DealDamage(damage, this);
 			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
 			{
 				float rotation = RandFloat() * PI_F * 2;
-				game->entities->particles.push_back(new VelocitySquare(pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
+				game->entities->particles.push_back(make_shared<VelocitySquare>(pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
 					color, EXPLOSION_PARTICLE_DURATION));
 			}
 			DestroySelf(this);
@@ -573,10 +588,9 @@ public:
 		startTime = tTime;
 	}
 
-	Entity* Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
-		FadeOutPuddle* newPuddle = new FadeOutPuddle(this, pos);
-		return newPuddle;
+		return make_shared<FadeOutPuddle>(this, pos);
 	}
 
 	void Update() override
@@ -584,8 +598,8 @@ public:
 		if (tTime - lastTime > timePer)
 		{
 			lastTime = tTime;
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
-			for (Entity* entity : hitEntities)
+			vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
+			for (shared_ptr<Entity> entity : hitEntities)
 				entity->DealDamage(damage, this);
 		}
 		if (tTime - startTime > totalFadeTime)
@@ -644,7 +658,7 @@ public:
 
 	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		Entity* placedEntity = entityToPlace->Clone(pos, up, creator);
+		shared_ptr<Entity> placedEntity = entityToPlace->Clone(pos, up, creator);
 		if (sayCreator)
 			placedEntity->name += " from " + creatorName;
 		game->entities->push_back(placedEntity);
@@ -684,8 +698,8 @@ public:
 
 	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		game->entities->push_back(new ExplodeNextFrame(damage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
-		game->entities->push_back(new FadeOut(0.5f, pos, explosionDimensions, color));
+		game->entities->push_back(make_shared<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
+		game->entities->push_back(make_shared<FadeOut>(0.5f, pos, explosionDimensions, color));
 	}
 };
 

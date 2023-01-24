@@ -38,7 +38,7 @@ int main()
 	while (fullscreen != "y" && fullscreen != "n")
 		std::cin >> fullscreen;
 
-	game = new Game();
+	game = make_unique<Game>();
 	if (game->Construct(screenWidthHighRes, screenHeightHighRes, 2, 2, fullscreen == "y", true)) game->Start();
 
 	printf("\nFairwell universe!\n");

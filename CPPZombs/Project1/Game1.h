@@ -8,8 +8,8 @@ class Planet;
 class Game : public olc::PixelGameEngine
 {
 public:
-	std::unique_ptr<Entities> entities;
-	Player* player;
+	unique_ptr<Entities> entities;
+	shared_ptr<Player> player;
 	olc::Sprite lowResScreen, midResScreen;
 	JRGB shadowMap[screenWidth * 3][screenHeight * 3];
 	Inputs inputs;
@@ -22,6 +22,7 @@ public:
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
 	float dTime = 0.0f;
 	float brightness = 0.0f;
+	bool shouldSpawnBoss;
 	float timeStartBossPrep = 0.0f;
 
 	std::unique_ptr<Planet> planet;

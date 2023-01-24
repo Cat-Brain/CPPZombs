@@ -4,7 +4,7 @@ class Planet
 {
 public:
 	float dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
-	Enemies enemies, bosses;
+	EnemiesInstance enemies, bosses;
 	JRGB backgroundBaseColor, backgroundColorWidth;
 	FastNoiseLite backgroundNoise;
 
@@ -33,6 +33,9 @@ public:
 		backgroundNoise.SetFractalGain(0.5f);
 		backgroundNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
 		backgroundNoise.SetSeed(static_cast<int>(time(NULL)));
+
+		enemies = spawnableEnemies.RandomClone();
+		bosses = spawnableBosses.RandomClone();
 	}
 
 	Color GetBackgroundNoise(Vec2f noisePos)
