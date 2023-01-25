@@ -297,8 +297,8 @@ namespace EnemyClasses
 			}
 
 			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
-				game->entities->push_back(enemies[i]);
-			return enemies[0]; // Do 0 here.
+				game->entities->push_back(std::move(enemies[i]));
+			return std::move(enemies[0]); // Do 0 here.
 		}
 
 		void DUpdate() override
@@ -321,8 +321,8 @@ namespace EnemyClasses
 			}
 			else
 			{
-				vector<shared_ptr<Entity>> nearbyEnemies = game->entities->FindCorpOverlaps(pos, vOne * 2);
-				for (shared_ptr<Entity> entity : nearbyEnemies)
+				vector<Entity*> nearbyEnemies = game->entities->FindCorpOverlaps(pos, vOne * 2);
+				for (Entity* entity : nearbyEnemies)
 					if (!entity->IsEnemy())
 						entity->DealDamage(damage, this);
 			}
@@ -423,10 +423,10 @@ namespace EnemyClasses
 				}
 			}
 			game->entities->Vacuum(pos, vacDist);
-			vector<shared_ptr<Entity>> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
-			for (shared_ptr<Entity> collectible : collectibles)
+			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
+			for (Entity* collectible : collectibles)
 			{
-				items.push_back(((Collectible*)collectible.get())->baseItem);
+				items.push_back(((Collectible*)collectible)->baseItem);
 				collectible->DestroySelf(this);
 			}
 		}
@@ -436,7 +436,7 @@ namespace EnemyClasses
 			Enemy::OnDeath(damageDealer);
 			for (Item item : items)
 			{
-				game->entities->push_back(make_shared<Collectible>(item, pos));
+				game->entities->push_back(make_unique<Collectible>(item, pos));
 			}
 		}
 	};

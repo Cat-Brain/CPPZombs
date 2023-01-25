@@ -182,27 +182,27 @@ vector<Entity*> CorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
 	return foundEntities;
 }
 
-vector<Entity*> EntitiesAtPos(Vec2 pos, vector<shared_ptr<Entity>> entities)
+vector<Entity*> EntitiesAtPos(Vec2 pos, vector<Entity*> entities)
 {
 	vector<Entity*> foundCollectibles(0);
-	for (vector<unique_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
-			foundCollectibles.push_back((*i).get());
+			foundCollectibles.push_back(*i);
 	return foundCollectibles;
 }
 
-Entity* FindAEntity(Vec2 pos, vector<shared_ptr<Entity>> entities)
+Entity* FindAEntity(Vec2 pos, vector<Entity*> entities)
 {
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
 			return *i;
 	return nullptr;
 }
 
-vector<shared_ptr<Entity>> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<shared_ptr<Entity>> entities)
+vector<Entity*> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<Entity*> entities)
 {
-	vector<shared_ptr<Entity>> foundCollectibles(0);
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	vector<Entity*> foundCollectibles(0);
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->Overlaps(pos, dimensions))
 			foundCollectibles.push_back(*i);
 	return foundCollectibles;

@@ -9,7 +9,7 @@ class Game : public olc::PixelGameEngine
 {
 public:
 	unique_ptr<Entities> entities;
-	shared_ptr<Player> player;
+	Player* player;
 	olc::Sprite lowResScreen, midResScreen;
 	JRGB shadowMap[screenWidth * 3][screenHeight * 3];
 	Inputs inputs;

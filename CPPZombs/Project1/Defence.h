@@ -143,12 +143,12 @@ public:
 			Vec2 placementPos = pos;
 			while (placementPos == pos)
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<unique_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
 			{
-				unique_ptr<Vine> newVine = std::dynamic_pointer_cast<Vine>(baseClass->Clone(placementPos, up, this));
-				newVine->generation = generation + 1;
-				game->entities->push_back(newVine);
+				unique_ptr<Entity> newVine =baseClass->Clone(placementPos, up, this);
+				((Vine*)newVine.get())->generation = generation + 1;
+				game->entities->push_back(std::move(newVine));
 			}
 		}
 		currentLifespan++;

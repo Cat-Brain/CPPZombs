@@ -151,7 +151,7 @@ public:
 		vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
 		for (Entity* collectible : collectibles)
 		{
-			items.push_back(((Collectible*)collectible.get())->baseItem);
+			items.push_back(((Collectible*)collectible)->baseItem);
 			collectible->DestroySelf(this);
 		}
 	}
