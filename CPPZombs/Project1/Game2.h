@@ -8,8 +8,9 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = make_unique<Entities>();
-	entities->push_back(make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player"));
-	player = static_cast<Player*>((*entities)[entities->size() - 1].get());
+	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
+	player = static_cast<Player*>(playerUnique.get());
+	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
 	totalGamePoints = 0;
 	sAppName = "CPPZombs!";

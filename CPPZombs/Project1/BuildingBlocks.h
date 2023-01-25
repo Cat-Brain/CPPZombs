@@ -37,7 +37,7 @@ public:
 	{
 		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, lightFalloff);
 		lightSource = sharedPtr.get();
-		game->entities->push_back(std::move(sharedPtr));
+		game->entities->lightSources.push_back(std::move(sharedPtr));
 	}
 
 	LightBlock(LightBlock* baseClass, Vec2 pos) :

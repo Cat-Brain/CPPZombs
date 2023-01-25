@@ -31,15 +31,16 @@ public:
 			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
 	}
 
-	void PrepareForRendering(vector<unique_ptr<Entity>> entities)
+	void PrepareForRendering(vector<unique_ptr<Entity>>* entities)
 	{
 		positions.clear();
 		positions.resize(CHUNK_WIDTH * CHUNK_WIDTH, 255);
 		for (int i = 0; i < size(); i++) // There better not be > 255 
 		{
-			Entity* entity = entities[(*this)[i]].get();
+			Entity* entity = (*entities)[(*this)[i]].get();
 			if (!entity->Corporeal())
 				continue;
+
 			Vec2 minPos = entity->pos - entity->dimensions + vOne - pos;
 			Vec2 maxPos = entity->pos + entity->dimensions - vOne - pos;
 
@@ -104,8 +105,6 @@ public:
 		entity->pos.y = Clamp(entity->pos.y, entity->dimensions.y - 1, MAP_WIDTH_TRUE - entity->dimensions.y + 1);
 
 		addedEntity = true;
-		vector<unique_ptr<Entity>>::push_back(entity);
-
 		if (entity->IsCollectible())
 			collectibles.push_back(entity.get());
 		else
@@ -116,17 +115,9 @@ public:
 
 		vector<Chunk*> chunkOverlaps = ChunkOverlaps(entity->pos, entity->dimensions);
 		for (Chunk* chunk : chunkOverlaps)
-			chunk->push_back(static_cast<int>(size() - 1));
-	}
+			chunk->push_back(static_cast<int>(size()));
 
-	void push_back(unique_ptr<LightSource> lightSource)
-	{
-		lightSources.push_back(lightSource);
-	}
-
-	void push_back(unique_ptr<Particle> particle)
-	{
-		particles.push_back(particle);
+		vector<unique_ptr<Entity>>::push_back(std::move(entity));
 	}
 
 #pragma region Overlaps and collisionstuff
@@ -174,7 +165,7 @@ public:
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim) &&
-					(find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
+					(find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
@@ -203,7 +194,7 @@ public:
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Overlaps(pos, hDim) &&
-					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter]) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
+					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
@@ -219,8 +210,8 @@ public:
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Overlaps(pos, hDim) &&
 					((*this)[*iter]->dimensions == vOne ||
-						((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter]) == corporeals.end()) ||
-						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter]) == incorporeals.end())))
+						((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
+						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
 					if ((*this)[*iter]->Corporeal())
 						corporeals.push_back((*this)[*iter].get());
@@ -356,7 +347,7 @@ public:
 				chunk->UnprepareForRendering();
 		renderedChunks = newRenderedChunks;
 		for (Chunk* chunk : renderedChunks)
-			chunk->PrepareForRendering(*this);
+			chunk->PrepareForRendering(this);
 	}
 
 	void UIUpdate()
@@ -441,7 +432,7 @@ public:
 int Entity::DealDamage(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
-		game->entities->push_back(make_unique<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
+		game->entities->particles.push_back(make_unique<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
 			Color(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
 			0.5f, RandFloat() * 5.0f, RandFloat() * 0.125f + 0.125f));
 	
