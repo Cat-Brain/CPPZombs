@@ -27,9 +27,9 @@ public:
 		lastTime = tTime + RandFloat() * timePer;
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<Enemy>(this, pos);
+		return make_unique<Enemy>(this, pos);
 	}
 
 	bool IsEnemy() override
@@ -140,9 +140,9 @@ namespace EnemyClasses
 			Start();
 		}
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Deceiver> newEnemy = make_shared<EnemyClasses::Deceiver>(*this);
+			unique_ptr<EnemyClasses::Deceiver> newEnemy = make_unique<EnemyClasses::Deceiver>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -192,9 +192,9 @@ namespace EnemyClasses
 			Start();
 		}
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Parent> newEnemy = make_shared<EnemyClasses::Parent>(*this);
+			unique_ptr<EnemyClasses::Parent> newEnemy = make_unique<EnemyClasses::Parent>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -232,9 +232,9 @@ namespace EnemyClasses
 			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{ }
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Exploder> newEnemy = make_shared<EnemyClasses::Exploder>(*this);
+			unique_ptr<EnemyClasses::Exploder> newEnemy = make_unique<EnemyClasses::Exploder>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -244,8 +244,8 @@ namespace EnemyClasses
 		void OnDeath(Entity* damageDealer) override
 		{
 			Enemy::OnDeath(damageDealer);
-			game->entities->push_back(make_shared<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name));
-			game->entities->push_back(make_shared<FadeOut>(1.5f, pos, explosionDimensions, color));
+			game->entities->push_back(make_unique<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name));
+			game->entities->push_back(make_unique<FadeOut>(1.5f, pos, explosionDimensions, color));
 		}
 	};
 
@@ -272,12 +272,12 @@ namespace EnemyClasses
 			lastPos = pos;
 		}
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<Snake>* enemies = new shared_ptr<Snake>[length];
+			unique_ptr<Snake>* enemies = new unique_ptr<Snake>[length];
 			for (int i = 0; i < length; i++)
 			{
-				enemies[i] = make_shared<Snake>(*this);
+				enemies[i] = make_unique<Snake>(*this);
 				enemies[i]->baseClass = baseClass;
 				enemies[i]->pos = pos;
 				enemies[i]->Start();
@@ -368,9 +368,9 @@ namespace EnemyClasses
 			colorOffset = RandFloat() * colorCycleSpeed;
 		}
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::ColorCycler> newEnemy = make_shared<EnemyClasses::ColorCycler>(*this);
+			unique_ptr<EnemyClasses::ColorCycler> newEnemy = make_unique<EnemyClasses::ColorCycler>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -401,9 +401,9 @@ namespace EnemyClasses
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{ }
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Vacuumer> newEnemy = make_shared<EnemyClasses::Vacuumer>(*this);
+			unique_ptr<EnemyClasses::Vacuumer> newEnemy = make_unique<EnemyClasses::Vacuumer>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -446,9 +446,9 @@ namespace EnemyClasses
 	public:
 		using Vacuumer::Vacuumer;
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Ranger> newEnemy = make_shared<EnemyClasses::Ranger>(*this);
+			unique_ptr<EnemyClasses::Ranger> newEnemy = make_unique<EnemyClasses::Ranger>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -485,9 +485,9 @@ namespace EnemyClasses
 			Enemy(timePer, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed) { }
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Spider> newEnemy = make_shared<EnemyClasses::Spider>(*this);
+			unique_ptr<EnemyClasses::Spider> newEnemy = make_unique<EnemyClasses::Spider>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
@@ -562,9 +562,9 @@ namespace EnemyClasses
 			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
 				timePer, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name) { }
 
-		shared_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
-			shared_ptr<EnemyClasses::Spoobderb> newEnemy = make_shared<EnemyClasses::Spoobderb>(*this);
+			unique_ptr<EnemyClasses::Spoobderb> newEnemy = make_unique<EnemyClasses::Spoobderb>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();

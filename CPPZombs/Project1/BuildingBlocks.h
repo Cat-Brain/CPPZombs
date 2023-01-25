@@ -48,9 +48,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<LightBlock>(this, pos);
+		return make_unique<LightBlock>(this, pos);
 	}
 
 	bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr)

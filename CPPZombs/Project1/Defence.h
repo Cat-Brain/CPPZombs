@@ -30,9 +30,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<CollectibleTree>(this, dir, pos);
+		return make_unique<CollectibleTree>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -126,9 +126,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<Vine>(this, dir, pos);
+		return make_unique<Vine>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -143,10 +143,10 @@ public:
 			Vec2 placementPos = pos;
 			while (placementPos == pos)
 				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
+			vector<unique_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
 			{
-				shared_ptr<Vine> newVine = std::dynamic_pointer_cast<Vine>(baseClass->Clone(placementPos, up, this));
+				unique_ptr<Vine> newVine = std::dynamic_pointer_cast<Vine>(baseClass->Clone(placementPos, up, this));
 				newVine->generation = generation + 1;
 				game->entities->push_back(newVine);
 			}
@@ -223,7 +223,7 @@ namespace Plants
 		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
 		Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48), ironResistence = Color(50, 50, 0);
-		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 100, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 90, 120, 20, 1.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
 		Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88), rubyResistence = Color(0, 50, 50);
 		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");

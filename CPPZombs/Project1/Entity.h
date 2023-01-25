@@ -30,9 +30,9 @@ public:
 		Start();
 	}
 
-	virtual shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
+	virtual unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
 	{
-		return make_shared<Entity>(this, pos);
+		return make_unique<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
@@ -182,16 +182,16 @@ vector<Entity*> CorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
 	return foundEntities;
 }
 
-vector< shared_ptr<Entity>> EntitiesAtPos(Vec2 pos, vector<shared_ptr<Entity>> entities)
+vector<Entity*> EntitiesAtPos(Vec2 pos, vector<shared_ptr<Entity>> entities)
 {
-	vector<shared_ptr<Entity>> foundCollectibles(0);
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	vector<Entity*> foundCollectibles(0);
+	for (vector<unique_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
-			foundCollectibles.push_back(*i);
+			foundCollectibles.push_back((*i).get());
 	return foundCollectibles;
 }
 
-shared_ptr<Entity> FindAEntity(Vec2 pos, vector<shared_ptr<Entity>> entities)
+Entity* FindAEntity(Vec2 pos, vector<shared_ptr<Entity>> entities)
 {
 	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
 		if ((*i)->pos == pos)
