@@ -8,8 +8,9 @@ bool Game::OnUserCreate()
 	midResScreen = olc::Sprite(screenWidth, screenHeight);
 	SetDrawTarget(&midResScreen);
 	entities = make_unique<Entities>();
-	player = make_shared<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
-	entities->push_back(player);
+	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, olc::BLUE, olc::BLACK, JRGB(127, 127, 127), olc::BLACK, 25, 1, 10, 5, "Player");
+	player = static_cast<Player*>(playerUnique.get());
+	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
 	totalGamePoints = 0;
 	sAppName = "CPPZombs!";
@@ -59,7 +60,7 @@ void Game::ApplyLighting()
 
 	Color* renderData = GetDrawTarget()->GetData();
 
-	for (shared_ptr<LightSource> lightSource : entities->lightSources)
+	for (unique_ptr<LightSource>& lightSource : entities->lightSources)
 		lightSource->ApplyLight();
 
 	for (int x = screenWidth; x < screenWidth * 2; x++)

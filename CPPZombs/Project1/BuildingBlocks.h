@@ -25,7 +25,7 @@ class LightBlock : public DToCol
 public:
 	JRGB lightColor;
 	int lightFalloff;
-	shared_ptr<LightSource> lightSource;
+	LightSource* lightSource;
 
 	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, Color color = Color(olc::WHITE),
 		Color color2 = Color(olc::BLACK), Color subsurfaceResistance = olc::WHITE, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -35,9 +35,9 @@ public:
 
 	void Start() override
 	{
-		shared_ptr<LightSource> sharedPtr = make_shared<LightSource>(pos, lightColor, lightFalloff);
-		lightSource = sharedPtr;
-		game->entities->push_back(sharedPtr);
+		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, lightFalloff);
+		lightSource = sharedPtr.get();
+		game->entities->lightSources.push_back(std::move(sharedPtr));
 	}
 
 	LightBlock(LightBlock* baseClass, Vec2 pos) :
@@ -48,9 +48,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<LightBlock>(this, pos);
+		return make_unique<LightBlock>(this, pos);
 	}
 
 	bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr)
@@ -63,7 +63,7 @@ public:
 
 	void OnDeath(Entity* damageDealer) override
 	{
-		game->entities->Remove(lightSource.get());
+		game->entities->Remove(lightSource);
 	}
 };
 
