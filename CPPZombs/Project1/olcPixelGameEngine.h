@@ -4051,7 +4051,7 @@ namespace olc
 #if defined(OLC_PLATFORM_GLUT)
 			glutSwapBuffers();
 #endif
-		}
+			}
 
 		void PrepareDrawing() override
 		{

@@ -1,12 +1,15 @@
 #pragma region Basic include stuff
-#define OLC_PGE_APPLICATION
-#include "olcPixelGameEngine.h"
+//#define OLC_PGE_APPLICATION
+//#include "olcPixelGameEngine.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include "FastNoiseLite.h"
 #include<string>
 #include<set>
 #include<map>
 #include <chrono>
 #include <thread>
+#include <iostream>
 using namespace std::this_thread;
 using namespace std::chrono;
 using std::vector;
@@ -23,10 +26,7 @@ using std::make_unique;
 using std::make_shared;
 
 typedef unsigned int uint;
-typedef olc::vi2d Vec2;
-typedef olc::vf2d Vec2f;
-typedef olc::Pixel Color;
-typedef olc::HWButton Key;
+typedef uint8_t byte;
 #pragma endregion
 
 #pragma region Global variables
@@ -38,12 +38,8 @@ typedef olc::HWButton Key;
 #define screenHeightH (screenHeight >> 1)
 #define screenWidthHighRes (screenWidth << 2)
 #define screenHeightHighRes (screenHeight << 2)
-Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 int pixelCount = screenWidth * screenHeight;
-
 bool playerAlive = false;
-Vec2 playerPos(0, 0), lastPlayerPos(0, 0);
-Vec2 playerVel(0, 0);
 int totalGamePoints;
 int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
@@ -95,71 +91,6 @@ inline double ClampD01(double value)
 {
 	return ClampD(value, 0, 1);
 }
-
-inline Vec2 ClampV2(Vec2 value, Vec2 minimum, Vec2 maximum)
-{
-	return Vec2(Clamp(value.x, minimum.x, maximum.x), Clamp(value.y, minimum.y, maximum.y));
-}
-
-inline Vec2 Vabs(Vec2 a)
-{
-	return Vec2(abs(a.x), abs(a.y));
-}
-
-inline int Squagnitude(Vec2 a)
-{
-	return static_cast<int>(max(labs(static_cast<long>(a.x)), labs(static_cast<long>(a.y))));
-}
-
-inline int Diagnitude(Vec2 a)
-{
-	return abs(a.x) + abs(a.y);
-}
-
-inline float SqrMagnitude(Vec2f a)
-{
-	return a.x * a.x + a.y * a.y;
-}
-
-inline float Magnitude(Vec2f a)
-{
-	return std::sqrtf(SqrMagnitude(a));
-}
-
-inline int Squistance(Vec2 a, Vec2 b)
-{
-	return Squagnitude(a - b);
-}
-
-inline int Diagnistance(Vec2 a, Vec2 b)
-{
-	return Diagnitude(a - b);
-}
-
-inline Vec2 Squarmalized(Vec2 a)
-{
-	return a / static_cast<int>(max(1, Squagnitude(a)));
-}
-
-inline Vec2f Normalized(Vec2f a)
-{
-	return a / max(0.001f, Magnitude(a));
-}
-
-inline Vec2f V2fMin(Vec2f a, Vec2f b)
-{
-	return { SqrMagnitude(a) < SqrMagnitude(b) ? a : b };
-}
-
-inline float Distance(Vec2f a, Vec2f b)
-{
-	return Magnitude(a - b);
-}
-
-inline float Dot(Vec2f a, Vec2f b)
-{
-	return a.x * b.x + a.y * b.y;
-}
 #pragma endregion
 
 template <typename T>
@@ -176,174 +107,9 @@ int PsuedoRandom()
 	return psuedoRandomizer++;
 }
 
-#pragma region Vec2 functions
-Vec2 ToSpace(Vec2 positionInSpace)
+struct Key
 {
-	return Vec2(positionInSpace.x, screenHeight - positionInSpace.y - 1);
-}
-
-Vec2 ToRSpace(Vec2 positionInLocalSpace)
-{
-	return ToSpace(positionInLocalSpace - playerPos + screenDimH);
-}
-
-Vec2 ToSpaceFromR(Vec2 positionInRenderSpace) // May not work.
-{
-	return ToSpace(positionInRenderSpace) + playerPos - screenDim;
-}
-
-// Rotation:
-void RotateLeft(Vec2& dir)
-{
-	dir = Vec2(-dir.y, dir.x);
-}
-
-void RotateLeft(Vec2& dir, int amount)
-{
-	for (int i = 0; i < amount; i++)
-		dir = Vec2(-dir.y, dir.x);
-}
-
-void RotateRight(Vec2& dir)
-{
-	dir = Vec2(dir.y, -dir.x);
-}
-
-void RotateRight(Vec2& dir, int amount)
-{
-	for (int i = 0; i < amount; i++)
-		dir = Vec2(dir.y, -dir.x);
-}
-
-void RotateRight45(Vec2& dir)
-{
-	dir = Vec2(int((dir.x + dir.y) / 1.41f), int((dir.y - dir.x) / 1.41f));
-}
-#pragma endregion
-
-class JRGB
-{
-public:
-	byte r, g, b;
-
-	JRGB(byte r = 0, byte g = 0, byte b = 0):
-		r(r), g(g), b(b) { }
-
-	JRGB(Color color) :
-		r(color.r), g(color.g), b(color.b) { }
-
-#pragma region Operators
-	JRGB operator +(JRGB other)
-	{
-		return JRGB(Clamp(r + int(other.r), 0, 255), Clamp(g + int(other.g), 0, 255), Clamp(b + int(other.b), 0, 255));
-	}
-
-	JRGB operator +(int scaler)
-	{
-		return JRGB(Clamp(r + scaler, 0, 255), Clamp(g + scaler, 0, 255), Clamp(b + scaler, 0, 255));
-	}
-
-	JRGB operator -(JRGB other)
-	{
-		return JRGB(Clamp(r - int(other.r), 0, 255), Clamp(g - int(other.g), 0, 255), Clamp(b - int(other.b), 0, 255));
-	}
-
-	JRGB operator -(int scaler)
-	{
-		return *this + -scaler;
-	}
-
-	void operator +=(JRGB other)
-	{
-		*this = *this + other;
-	}
-
-	void operator +=(int scaler)
-	{
-		*this = *this + scaler;
-	}
-
-	void operator -=(JRGB other)
-	{
-		*this = *this - other;
-	}
-
-	void operator -=(int scaler)
-	{
-		*this = *this - scaler;
-	}
-
-	JRGB operator *(JRGB other)
-	{
-		return JRGB(min(r * other.r, 255), min(g * other.g, 255), min(b * other.b, 255));
-	}
-
-	JRGB operator *(int scaler)
-	{
-		return JRGB(min(r * scaler, 255), min(g * scaler, 255), min(b * scaler, 255));
-	}
-
-	JRGB operator /(JRGB other)
-	{
-		return JRGB(r / other.r, g / other.g, b / other.b);
-	}
-
-	JRGB operator /(int scaler)
-	{
-		return JRGB(r / scaler, g / scaler, b / scaler);
-	}
-
-	void operator *=(JRGB other)
-	{
-		*this = *this * other;
-	}
-
-	void operator *=(int scaler)
-	{
-		*this = *this * scaler;
-	}
-
-	void operator /=(JRGB other)
-	{
-		*this = *this / other;
-	}
-
-	void operator /=(int scaler)
-	{
-		*this = *this / scaler;
-	}
-
-	bool operator ==(JRGB other)
-	{
-		return r == other.r && g == other.g && b == other.b;
-	}
-
-	bool operator !=(JRGB other)
-	{
-		return !(*this == other);
-	}
-#pragma endregion
-
-	bool MaxEq(JRGB newRGB)
-	{
-		if (r >= newRGB.r && g >= newRGB.g && b >= newRGB.b)
-			return false;
-		r = max(r, newRGB.r);
-		g = max(g, newRGB.g);
-		b = max(b, newRGB.b);
-		return true;
-	}
-
-	bool MinEq(JRGB newRGB)
-	{
-		if (r <= newRGB.r && g <= newRGB.g && b <= newRGB.b)
-			return false;
-		r = min(r, newRGB.r);
-		g = min(g, newRGB.g);
-		b = min(b, newRGB.b);
-		return true;
-	}
-
+	bool pressed, held, released;
 };
 
 struct Inputs
@@ -352,26 +118,26 @@ struct Inputs
 		enter, c, q, e, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
-	Vec2 mousePosition;
+	//Vec2 mousePosition;
 	int mouseScroll = 0;
 
 	Inputs() = default;
 
 	static void ResetKey(Key& key)
 	{
-		key.bHeld = false;
-		key.bPressed = false;
-		key.bReleased = false;
+		key.pressed = false;
+		key.held = false;
+		key.released = false;
 	}
 
 	static void ReadIntoKey(Key& key, Key newPressings)
 	{
-		key.bHeld |= newPressings.bHeld;
-		key.bPressed |= newPressings.bPressed;
-		key.bReleased |= newPressings.bReleased;
+		key.held |= newPressings.held;
+		key.pressed |= newPressings.pressed;
+		key.released |= newPressings.released;
 	}
 
-	static void UpdateKey(olc::PixelGameEngine* game, Key& key, olc::Key keycode)
+	/*static void UpdateKey(olc::PixelGameEngine* game, Key& key, olc::Key keycode)
 	{
 		Key newPressings = game->GetKey(keycode);
 		ReadIntoKey(key, newPressings);
@@ -402,34 +168,34 @@ struct Inputs
 		ReadIntoKey(rightMouse, game->GetMouse(1));
 		ReadIntoKey(middleMouse, game->GetMouse(2));
 	}
-
+*/
 	void Update2()
 	{
 		mouseScroll = 0;
 
 		// No resetting of bHeld for wasd or arrow keys as that's covered by the player.
-		w.bPressed = false;
-		w.bReleased = false;
+		w.pressed = false;
+		w.released = false;
 
-		up.bPressed = false;
-		up.bReleased = false;
-		a.bPressed = false;
-		a.bReleased = false;
+		up.pressed = false;
+		up.released = false;
+		a.pressed = false;
+		a.released = false;
 
-		left.bPressed = false;
-		left.bReleased = false;
+		left.pressed = false;
+		left.released = false;
 
-		d.bPressed = false;
-		d.bReleased = false;
+		d.pressed = false;
+		d.released = false;
 
-		right.bPressed = false;
-		right.bReleased = false;
+		right.pressed = false;
+		right.released = false;
 
-		s.bPressed = false;
-		s.bReleased = false;
+		s.pressed = false;
+		s.released = false;
 
-		down.bPressed = false;
-		down.bReleased = false;
+		down.pressed = false;
+		down.released = false;
 
 		Inputs::ResetKey(enter);
 		Inputs::ResetKey(c);
@@ -441,5 +207,3 @@ struct Inputs
 		Inputs::ResetKey(middleMouse);
 	}
 };
-
-Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);

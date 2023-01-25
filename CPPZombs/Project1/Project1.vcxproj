@@ -79,10 +79,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)Includes</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)Libraries</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Includes</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)Includes</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(ProjectDir)Libraries</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,6 +128,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glfw3.lib$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,10 +149,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glfw3.lib$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BuildingBlocks.h" />
@@ -161,6 +167,7 @@
     <ClInclude Include="Game1.h" />
     <ClInclude Include="Include.h" />
     <ClInclude Include="Item.h" />
+    <ClInclude Include="JRGB.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Particles.h" />
@@ -169,7 +176,9 @@
     <ClInclude Include="Game2.h" />
     <ClInclude Include="Printers.h" />
     <ClInclude Include="Projectile.h" />
+    <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Vec2.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc" />

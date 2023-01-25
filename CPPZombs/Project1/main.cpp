@@ -1,11 +1,12 @@
-#include "Game2.h"
+//#include "Game2.h"
+#include "Renderer.h"
 
 int main()
 {
 	printf("Greetings universe!\nDo you want to use fullscreen? 'y' or 'n'");
 
-	for (int i = 0; i < Plants::plants.size(); i++)
-		Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
+	//for (int i = 0; i < Plants::plants.size(); i++)
+		//Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
 
 #pragma region Icons
 
@@ -38,8 +39,8 @@ int main()
 	while (fullscreen != "y" && fullscreen != "n")
 		std::cin >> fullscreen;
 
-	game = make_unique<Game>();
-	if (game->Construct(screenWidthHighRes, screenHeightHighRes, 2, 2, fullscreen == "y", true)) game->Start();
+	//game = make_unique<Game>();
+	//if (game->Construct(screenWidthHighRes, screenHeightHighRes, 2, 2, fullscreen == "y", true)) game->Start();
 
 	printf("\nFairwell universe!\n");
 	return 0;
