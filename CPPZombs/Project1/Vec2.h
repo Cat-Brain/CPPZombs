@@ -16,15 +16,9 @@ public:
 		return Vec2(x, screenHeight - y - 1);
 	}
 
-	inline Vec2 ToRSpace()
-	{
-		return (*this - playerPos + screenDimH).ToSpace();
-	}
+	inline Vec2 ToRSpace();
 
-	inline Vec2 ToSpaceFromR() // May not work.
-	{
-		return ToSpace() + playerPos - screenDim;
-	}
+	inline Vec2 ToSpaceFromR();
 
 
 	inline Vec2 RotateLeft()
@@ -96,36 +90,20 @@ public:
 	{
 		return Vec2(x + other.x, y + other.y);
 	}
-	Vec2f operator+(Vec2f other)
-	{
-		return Vec2f(x + other.x, y + other.y);
-	}
 
 	Vec2 operator-(Vec2 other)
 	{
 		return Vec2(x - other.x, y - other.y);
-	}
-	Vec2f operator-(Vec2f other)
-	{
-		return Vec2f(x - other.x, y - other.y);
 	}
 
 	Vec2 operator*(Vec2 other)
 	{
 		return Vec2(x * other.x, y * other.y);
 	}
-	Vec2f operator*(Vec2f other)
-	{
-		return Vec2f(x * other.x, y * other.y);
-	}
 
 	Vec2 operator/(Vec2 other)
 	{
 		return Vec2(x / other.x, y / other.y);
-	}
-	Vec2f operator/(Vec2f other)
-	{
-		return Vec2f(x / other.x, y / other.y);
 	}
 };
 
@@ -137,20 +115,14 @@ public:
 	Vec2f(float x, float y) :
 		x(x), y(y) { }
 
-	Vec2f ToSpace()
+	inline Vec2f ToSpace()
 	{
 		return Vec2f(x, screenHeight - y - 1);
 	}
 
-	Vec2f ToRSpace()
-	{
-		return (*this - playerPos + screenDimH).ToSpace();
-	}
+	inline Vec2f ToRSpace();
 
-	Vec2f ToSpaceFromR() // May not work.
-	{
-		return ToSpace() + playerPos - screenDim;
-	}
+	inline Vec2f ToSpaceFromR();
 
 
 	Vec2f RotateLeft()
@@ -255,3 +227,23 @@ Vec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeight
 
 Vec2 playerPos(0, 0), lastPlayerPos(0, 0);
 Vec2 playerVel(0, 0);
+
+inline Vec2 Vec2::ToRSpace()
+{
+	return (*this - playerPos + screenDimH).ToSpace();
+}
+
+inline Vec2 Vec2::ToSpaceFromR() // May not work.
+{
+	return ToSpace() + playerPos - screenDim;
+}
+
+inline Vec2f Vec2f::ToRSpace()
+{
+	return (*this - playerPos + screenDimH).ToSpace();
+}
+
+inline Vec2f Vec2f::ToSpaceFromR() // May not work.
+{
+	return ToSpace() + playerPos - screenDim;
+}

@@ -47,8 +47,8 @@ float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
 
 // Very important!
-class Game;
-unique_ptr<Game> game;
+//class Game;
+//unique_ptr<Game> game;
 #pragma endregion
 
 #pragma region Math

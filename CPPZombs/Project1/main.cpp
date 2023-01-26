@@ -39,6 +39,8 @@ int main()
 	while (fullscreen != "y" && fullscreen != "n")
 		std::cin >> fullscreen;
 
+	Renderer renderer;
+	renderer.Construct();
 	//game = make_unique<Game>();
 	//if (game->Construct(screenWidthHighRes, screenHeightHighRes, 2, 2, fullscreen == "y", true)) game->Start();
 
