@@ -1,0 +1,72 @@
+#include "Vec2.h"
+
+struct Key
+{
+	bool pressed, held, released;
+};
+
+struct Inputs
+{
+	Key w, a, s, d,
+		enter, c, q, e, space,
+		up, left, down, right,
+		leftMouse, rightMouse, middleMouse;
+	int mouseScroll;
+	Vec2 mousePosition = Vec2(0, 0);
+
+	Inputs() = default;
+
+	static void ResetKey(Key& key)
+	{
+		key.pressed = false;
+		key.held = false;
+		key.released = false;
+	}
+
+	static void UpdateKey(GLFWwindow* window, Key& key, int keycode)
+	{
+		bool held = glfwGetKey(window, keycode) == GLFW_PRESS;
+		key.pressed = !key.held && held;
+		key.pressed = key.held && !held;
+		key.held = held;
+	}
+
+	static void UpdateKey2(GLFWwindow* window, Key& key, int keycode)
+	{
+		bool held = glfwGetKey(window, keycode) == GLFW_PRESS;
+		key.pressed = !key.held && held;
+		key.pressed = key.held && !held;
+		key.held |= held;
+	}
+
+	static void UpdateMouse(GLFWwindow* window, Key& key, int keycode)
+	{
+		bool held = glfwGetMouseButton(window, keycode) == GLFW_PRESS;
+		key.pressed = !key.held && held;
+		key.pressed = key.held && !held;
+		key.held = held;
+	}
+
+	void Update1(GLFWwindow* window)
+	{
+		UpdateKey2(window, w, GLFW_KEY_W);
+		UpdateKey2(window, a, GLFW_KEY_A);
+		UpdateKey2(window, s, GLFW_KEY_S);
+		UpdateKey2(window, d, GLFW_KEY_D);
+
+		UpdateKey2(window, up, GLFW_KEY_UP);
+		UpdateKey2(window, left, GLFW_KEY_LEFT);
+		UpdateKey2(window, down, GLFW_KEY_DOWN);
+		UpdateKey2(window, right, GLFW_KEY_RIGHT);
+
+		UpdateKey(window, enter, GLFW_KEY_ENTER);
+		UpdateKey(window, c, GLFW_KEY_C);
+		UpdateKey(window, q, GLFW_KEY_Q);
+		UpdateKey(window, e, GLFW_KEY_E);
+		UpdateKey(window, space, GLFW_KEY_SPACE);
+
+		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
+		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);
+		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
+	}
+};

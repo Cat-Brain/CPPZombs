@@ -5,11 +5,19 @@ class Mesh
 public:
 	uint vbo, ebo, vao;
 	vector<Vec2> vertices;
+	vector<uint> indices;
 
-	Mesh(vector<Vec2> vertices) : vertices(vertices)
+	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{} { }
+
+	Mesh(vector<Vec2> vertices, vector<uint> indices) : vertices(vertices), indices(indices)
 	{
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glGenBuffers(1, &ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
 
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -23,6 +31,9 @@ public:
 	void Draw()
 	{
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	}
 };
+
+Mesh quad;

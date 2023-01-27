@@ -1,11 +1,11 @@
-#include "Include.h"
+#include "Renderer.h"
 
 class Entity;
 class Entities;
 class Player;
 class Planet;
 
-class Game : public olc::PixelGameEngine
+class Game : public Renderer
 {
 public:
 	unique_ptr<Entities> entities;

@@ -1,4 +1,4 @@
-#include "Vec2.h"
+#include "Inputs.h"
 
 class JRGB
 {
