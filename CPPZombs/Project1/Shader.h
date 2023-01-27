@@ -43,8 +43,8 @@ uint CreateShader(const char* vertexShaderSource, const char* fragmentShaderSour
 const char* defaultVert = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "\n"
-"	uniform vec2 scale, position;\n"
-"	out vec2 uv;"
+"uniform vec2 scale, position;\n"
+"out vec2 uv;"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x * scale.x + position.x + 0.5, aPos.y * scale.y + position.y + 0.5, aPos.z, 1.0);\n"
@@ -52,12 +52,36 @@ const char* defaultVert = "#version 330 core\n"
 "}\0";
 
 const char* defaultFrag = "#version 330 core\n"
-"	out vec4 FragColor;\n"
-"	in vec2 uv;\n"
+"out vec4 FragColor;\n"
+"in vec2 uv;\n"
 "\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(uv.x, uv.y, 1.0f, 1.0f);\n"
+"	FragColor = vec4(uv.xy, 1.0f, 1.0f);\n"
 "}\0";
 
 uint defaultShader;
+
+const char* framebufferVert = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"\n"
+"out vec2 uv;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos, 1.0);\n"
+"	uv = aPos.xy * 0.5 + 0.5;\n"
+"}\0";
+
+const char* framebufferFrag = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec2 uv;\n"
+"\n"
+"uniform sampler2D screenTexture;"
+"\n"
+"void main()"
+"{\n"
+"	//FragColor = vec4(texture(screenTexture, uv).rgb, 1.0);\n"
+"	FragColor = vec4(0, 1, 0, 1);\n"
+"}\0";
+
+uint framebufferShader;

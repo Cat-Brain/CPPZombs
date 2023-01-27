@@ -28,6 +28,13 @@ public:
 		glEnableVertexAttribArray(0);
 	}
 
+	~Mesh()
+	{
+		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &ebo);
+		glDeleteVertexArrays(1, &vao);
+	}
+
 	void Draw()
 	{
 		glBindVertexArray(vao);
@@ -36,4 +43,4 @@ public:
 	}
 };
 
-Mesh quad;
+Mesh quad, screenSpaceQuad;

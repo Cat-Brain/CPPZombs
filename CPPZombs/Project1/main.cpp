@@ -3,7 +3,7 @@
 
 int main()
 {
-	printf("Greetings universe!\nDo you want to use fullscreen? 'y' or 'n'");
+	printf("Greetings universe!\n");
 
 	//for (int i = 0; i < Plants::plants.size(); i++)
 		//Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
@@ -33,11 +33,6 @@ int main()
 	}*/
 
 #pragma endregion
-
-	string fullscreen;
-	std::cin >> fullscreen;
-	while (fullscreen != "y" && fullscreen != "n")
-		std::cin >> fullscreen;
 
 	Renderer renderer;
 	renderer.Construct();
