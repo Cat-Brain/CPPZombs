@@ -30,20 +30,15 @@ typedef uint8_t byte;
 #pragma region Global variables
 #define PI_F 3.141592f
 #define PI_D 3.14159275
-#define screenWidth 80
-#define screenHeight screenWidth
-#define screenWidthH (screenWidth >> 1)
-#define screenHeightH (screenHeight >> 1)
-#define screenWidthHighRes (screenWidth << 2)
-#define screenHeightHighRes (screenHeight << 2)
-int pixelCount = screenWidth * screenHeight;
+uint trueScreenWidth, trueScreenHeight;
+float screenRatio;
 bool playerAlive = false;
 int totalGamePoints;
 int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
 float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
-
+uint totalTexturesCreated = 0;
 // Very important!
 //class Game;
 //unique_ptr<Game> game;

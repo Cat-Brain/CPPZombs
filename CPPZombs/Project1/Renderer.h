@@ -2,7 +2,12 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
+	trueScreenWidth = width;
+	trueScreenHeight = height;
+	printf("?");
+	screenRatio = (float)trueScreenWidth / (float)trueScreenHeight;
+	for (Framebuffer* framebuffer : framebuffers)
+		framebuffer->ResetWidth(int(ceilf(framebuffer->height * screenRatio)));
 }
 
 class Renderer
@@ -17,7 +22,10 @@ private:
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		window = glfwCreateWindow(screenWidth * 10, screenHeight * 10, "Martionatany", NULL, NULL);
+		trueScreenWidth = 800;
+		trueScreenHeight = 600;
+		screenRatio = (float)trueScreenWidth / (float)trueScreenHeight;
+		window = glfwCreateWindow(trueScreenWidth, trueScreenHeight, "Martionatany", NULL, NULL);
 		if (window == NULL)
 		{
 			std::cout << "Failed to create GLFW window" << std::endl;
@@ -32,7 +40,7 @@ private:
 			return -1;
 		}
 
-		glViewport(0, 0, screenWidth * 10, screenHeight * 10);
+		glViewport(0, 0, trueScreenWidth, trueScreenHeight);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 #pragma endregion
 		
@@ -42,10 +50,12 @@ private:
 		framebufferShader = CreateShader(framebufferVert, framebufferFrag);
 #pragma endregion
 
-		quad = Mesh({ {-0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f}, {0.5f, -0.5f} }, {0, 1, 2, 0, 2, 3});
-		screenSpaceQuad = Mesh({ {-1.0f, -1.0f}, {-1.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, -1.0f} }, { 0, 1, 2, 0, 2, 3 });
+		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
+		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3 });
 
-		lowRes = Framebuffer(100, 100);
+		lowRes = Framebuffer(5);
+		midRes = Framebuffer(lowRes.height * 2);
+		highRes = Framebuffer(midRes.height * 2);
 
 		Start();
 		return true;
@@ -56,22 +66,20 @@ private:
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 		inputs.Update1(window);
-		glBindFramebuffer(GL_FRAMEBUFFER, lowRes.framebuffer);
+		UseFramebuffer(framebuffers[int(glfwGetTime()) % framebuffers.size()]);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(defaultShader);
-		glUniform2f(glGetUniformLocation(defaultShader, "scale"), 1, 1);
-		glUniform2f(glGetUniformLocation(defaultShader, "position"), -1, -1);
+		glUniform2f(glGetUniformLocation(defaultShader, "scale"), 2, 2);
+		glUniform2f(glGetUniformLocation(defaultShader, "position"), -1.0f, -1.0f);
 		quad.Draw();
 		Update();
 		// now bind back to default framebuffer and draw a quad plane with the attached framebuffer color texture
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// clear all relevant buffers
-		glClearColor(1.0f, 1.0f, 0.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
-		glClear(GL_COLOR_BUFFER_BIT);
+		UseFramebuffer(nullptr);
 
 		glUseProgram(framebufferShader);
-		glBindTexture(GL_TEXTURE_2D, lowRes.textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+		glBindTexture(GL_TEXTURE_2D, framebuffers[int(glfwGetTime()) % framebuffers.size()]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+		glUniform1i(glGetUniformLocation(framebufferShader, "screenTexture"), int(glfwGetTime()) % framebuffers.size());
 
 		screenSpaceQuad.Draw();
 
@@ -82,13 +90,15 @@ private:
 	void TEnd()
 	{
 		End();
-		glDeleteProgram(defaultShader);
+		for (std::pair<std::pair<const char*, const char*>, uint*>& pairPair : shaders)
+			glDeleteProgram(*pairPair.second);
+		for (Mesh* mesh : meshes)
+			mesh->Destroy();
 		glfwTerminate();
 	}
 
 public:
 	GLFWwindow* window = nullptr;
-	Framebuffer lowRes, midRes, highRes;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
 

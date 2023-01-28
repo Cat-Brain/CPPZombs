@@ -11,15 +11,6 @@ public:
 	iVec2(int both):
 		x(both), y(both) { }
 
-	inline iVec2 ToSpace()
-	{
-		return iVec2(x, screenHeight - y - 1);
-	}
-
-	inline iVec2 ToRSpace();
-
-	inline iVec2 ToSpaceFromR();
-
 
 	inline iVec2 RotateLeft()
 	{
@@ -114,15 +105,6 @@ public:
 
 	Vec2(float x, float y) :
 		x(x), y(y) { }
-
-	inline Vec2 ToSpace()
-	{
-		return Vec2(x, screenHeight - y - 1);
-	}
-
-	inline Vec2 ToRSpace();
-
-	inline Vec2 ToSpaceFromR();
 
 
 	Vec2 RotateLeft()
@@ -223,27 +205,6 @@ public:
 };
 
 iVec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);
-iVec2 screenDim(screenWidth, screenHeight), screenDimH(screenWidthH, screenHeightH);
 
 iVec2 playerPos(0, 0), lastPlayerPos(0, 0);
 iVec2 playerVel(0, 0);
-
-inline iVec2 iVec2::ToRSpace()
-{
-	return (*this - playerPos + screenDimH).ToSpace();
-}
-
-inline iVec2 iVec2::ToSpaceFromR() // May not work.
-{
-	return ToSpace() + playerPos - screenDim;
-}
-
-inline Vec2 Vec2::ToRSpace()
-{
-	return (*this - playerPos + screenDimH).ToSpace();
-}
-
-inline Vec2 Vec2::ToSpaceFromR() // May not work.
-{
-	return ToSpace() + playerPos - screenDim;
-}
