@@ -234,12 +234,14 @@ namespace EnemyClasses
 		RGBA color3, color4;
 		Snake* back = nullptr, *front = nullptr;
 		int length;
+		float segmentDistance;
 
-		Snake(int length, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
+		Snake(int length, float segmentDistance, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA subsurfaceResistance = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
+			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			length(length), segmentDistance(segmentDistance), color3(color3), color4(color4)
 		{
 			Start();
 		}
@@ -257,7 +259,7 @@ namespace EnemyClasses
 			{
 				enemies[i] = make_unique<Snake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos;
+				enemies[i]->pos = pos + Vec2(RandFloat(), RandFloat());
 				enemies[i]->Start();
 				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
@@ -282,41 +284,29 @@ namespace EnemyClasses
 		void DUpdate() override
 		{
 			if (front == nullptr)
-				color = color3;
-			Enemy::DUpdate();
+				game->Draw(iPos, color3, dimensions);
+		}
+
+		void EarlyDUpdate() override
+		{
+			if (front == nullptr)
+				return;
+
+			float t = (float)health / (float)maxHealth;
+			RGBA tempColor = RGBA(int(color2.r + t * (color.r - color2.r)), int(color2.g + t * (color.g - color2.g)), int(color2.b + t * (color.b - color2.b)), int(color2.a + t * (color.a - color2.a)));
+			game->DrawLine(iPos, front->iPos, color);
 		}
 
 		void Update() override
 		{
-			Enemy::Update();
-
 			if (front != nullptr)
-				vel = vZero;
-		}
-
-		void TUpdate() override
-		{
-			Enemy::TUpdate();
-			if (back != nullptr && back->iPos != lastPos)
-				back->SetPos(lastPos);
-		}
-
-		/*void VUpdate() override
-		{
-
-		}
-
-		virtual void AddForce(Vec2 force)
-		{
-			vel += force / mass;
-		}*/
-
-		void SetPos(Vec2 newPos) override
-		{
-			Vec2 oldIPos = iPos;
-			Enemy::SetPos(newPos);
-			if (oldIPos != iPos)
-				lastPos = oldIPos;
+			{
+				float distance = pos.Distance(front->pos);
+				float temp = (distance / segmentDistance);
+				vel += ((pos - front->pos) / distance) * (1.0f / (temp * temp * temp) - 1.0f / temp) * game->dTime;
+			}
+			else
+				Enemy::Update();
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -588,7 +578,7 @@ EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(3.0f, 12, 12, 0.12
 // Mid-lates:
 EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Parent");
 EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
-EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.25f, 4.0f, 1, 6, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(5, 3.0f, 0.25f, 4.0f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
 
 // Lates:
 EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 4.0f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
@@ -667,7 +657,7 @@ EnemiesInstance Enemies::RandomClone()
 	return result;
 }
 
-Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent, snake},
+Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent, /*snake*/},
 	{hyperSpeedster, megaTanker, gigaExploder, ranger} };
 
 Enemies spawnableBosses{ {spoobderb} };
