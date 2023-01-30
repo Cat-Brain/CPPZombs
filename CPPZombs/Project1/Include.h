@@ -8,6 +8,8 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <ft2build.h>
+#include FT_FREETYPE_H  
 using namespace std::this_thread;
 using namespace std::chrono;
 using std::vector;
@@ -32,7 +34,7 @@ typedef uint8_t byte;
 #define PI_D 3.14159275
 uint trueScreenWidth, trueScreenHeight;
 float screenRatio;
-bool playerAlive = false;
+bool playerAlive = true;
 int totalGamePoints;
 int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
@@ -40,8 +42,8 @@ float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
 uint totalTexturesCreated = 0;
 // Very important!
-//class Game;
-//unique_ptr<Game> game;
+class Game;
+unique_ptr<Game> game;
 #pragma endregion
 
 #pragma region Math
@@ -99,3 +101,6 @@ int PsuedoRandom()
 {
 	return psuedoRandomizer++;
 }
+
+int ScrWidth();
+int ScrHeight();

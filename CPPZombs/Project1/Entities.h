@@ -17,10 +17,10 @@ struct EntityIndex // For sorting.
 class Chunk : public vector<int>
 {
 public:
-	Vec2 pos;
+	iVec2 pos;
 	vector<byte> positions;
 
-	Chunk(Vec2 pos = vZero) :
+	Chunk(iVec2 pos = vZero) :
 		vector({}), pos(pos), positions(0) { }
 
 	~Chunk() { }
@@ -32,7 +32,7 @@ public:
 	}
 
 	void PrepareForRendering(vector<unique_ptr<Entity>>* entities)
-	{
+	{/*
 		positions.clear();
 		positions.resize(CHUNK_WIDTH * CHUNK_WIDTH, 255);
 		for (int i = 0; i < size(); i++) // There better not be > 255 
@@ -41,13 +41,13 @@ public:
 			if (!entity->Corporeal())
 				continue;
 
-			Vec2 minPos = entity->pos - entity->dimensions + vOne - pos;
-			Vec2 maxPos = entity->pos + entity->dimensions - vOne - pos;
+			iVec2 minPos = entity->pos - entity->dimensions + vOne - pos;
+			iVec2 maxPos = entity->pos + entity->dimensions - vOne - pos;
 
 			for (int x = max(0, minPos.x); x <= min(CHUNK_WIDTH - 1, maxPos.x); x++)
 				for (int y = max(0, minPos.y); y <= min(CHUNK_WIDTH - 1, maxPos.y); y++)
 					positions[x * CHUNK_WIDTH + y] = i;
-		}
+		}*/
 	}
 
 	int IndexOfPosition(Vec2 pos) // Pos is in global space, also do NOT use if prepare for rendering has not been called.
@@ -65,14 +65,14 @@ public:
 		positions.clear();
 	}
 	
-	static Vec2 ToSpace(Vec2 pos)
+	static iVec2 ToSpace(Vec2 pos)
 	{
-		return Vec2(Clamp(pos.x / CHUNK_WIDTH, 0, MAP_WIDTH - 1), Clamp(pos.y / CHUNK_WIDTH, 0, MAP_WIDTH - 1));
+		return iVec2(Clamp(pos.x / CHUNK_WIDTH, 0, MAP_WIDTH - 1), Clamp(pos.y / CHUNK_WIDTH, 0, MAP_WIDTH - 1));
 	}
 
-	static std::pair<Vec2, Vec2> MinMaxPos(Vec2 pos, Vec2 dimensions)
+	static std::pair<iVec2, iVec2> MinMaxPos(Vec2 pos, Vec2 dimensions)
 	{
-		return { ToSpace(pos - dimensions), ToSpace(pos + dimensions) };
+		return { ToSpace(pos - dimensions / 2), ToSpace((pos + dimensions / 2)) };
 	}
 };
 
@@ -123,11 +123,11 @@ public:
 #pragma region Overlaps and collisionstuff
 	Chunk* ChunkAtPos(Vec2 pos)
 	{
-		Vec2 chunkPos = Chunk::ToSpace(pos);
+		iVec2 chunkPos = Chunk::ToSpace(pos);
 		return &chunks[chunkPos.x][chunkPos.y];
 	}
 
-	vector<Chunk*> MainChunkOverlaps(Vec2 minPos, Vec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
+	vector<Chunk*> MainChunkOverlaps(iVec2 minPos, iVec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
 	{
 		vector<Chunk*> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
 		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
@@ -138,19 +138,19 @@ public:
 
 	vector<Chunk*> ChunkOverlaps(Vec2 pos, Vec2 dimensions)
 	{
-		std::pair<Vec2, Vec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
+		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
 		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
 	Entity* FindNearestEnemy(Vec2 pos, Vec2 farthestDimensions)
 	{
-		vector<Entity*> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
-		float currentBestDist = 9999.0f;
+		vector<Entity*> nearbyEntities = FindCorpIOverlaps(pos, farthestDimensions);
+		float currentBestDist = 9999.0f; // Sqr magnitude not real magnitude.
 		Entity* currentBest = nullptr;
 		for (Entity* entity : nearbyEntities)
 		{
 			float dist;
-			if (entity->IsEnemy() && (dist = Distance(pos, entity->pos)) < currentBestDist)
+			if (entity->IsEnemy() && (dist = (pos - entity->pos).SqrMagnitude()) < currentBestDist)
 			{
 				currentBestDist = dist;
 				currentBest = entity;
@@ -159,58 +159,57 @@ public:
 		return currentBest;
 	}
 
-	vector<Entity*> FindCorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	vector<Entity*> FindCorpIOverlaps(vector<Chunk*> chunkOverlaps, Vec2 iPos, Vec2 dim)
 	{
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim) &&
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->IOverlaps(iPos, dim) &&
 					(find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
-	vector<Entity*> FindCorpOverlaps(Vec2 pos, Vec2 hDim)
+	vector<Entity*> FindCorpIOverlaps(Vec2 pos, Vec2 dim)
 	{
-		return FindCorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
+		return FindCorpIOverlaps(ChunkOverlaps(pos, dim), pos, dim);
 	}
 
-	vector<Entity*> FindIncorpOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
-	{
-		vector<Entity*> overlaps{};
-		for (Chunk* chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, hDim)) overlaps.push_back((*this)[*iter].get());
-		return overlaps;
-	}
-
-	vector<Entity*> FindIncorpOverlaps(Vec2 pos, Vec2 hDim)
-	{
-		return FindIncorpOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
-	}
-
-	vector<Entity*> FindAllOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim)
+	vector<Entity*> FindIncorpIOverlaps(vector<Chunk*> chunkOverlaps, Vec2 iPos, Vec2 dim)
 	{
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, hDim) &&
-					((*this)[*iter]->dimensions == vOne || find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->IOverlaps(iPos, dim)) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
-	vector<Entity*> FindAllOverlaps(Vec2 pos, Vec2 hDim)
+	vector<Entity*> FindIncorpIOverlaps(Vec2 pos, Vec2 dim)
 	{
-		return FindAllOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
+		return FindIncorpIOverlaps(ChunkOverlaps(pos, dim), pos, dim);
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<Chunk*> chunkOverlaps, Vec2 pos, Vec2 hDim) // Returns {corporeals, incorporeals}
+	vector<Entity*> FindAllIOverlaps(vector<Chunk*> chunkOverlaps, Vec2 iPos, Vec2 dim)
+	{
+		vector<Entity*> overlaps{};
+		for (Chunk* chunk : chunkOverlaps)
+			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
+				if ((*this)[*iter]->IOverlaps(iPos, dim) &&
+					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
+		return overlaps;
+	}
+
+	vector<Entity*> FindAllIOverlaps(Vec2 pos, Vec2 dim)
+	{
+		return FindAllIOverlaps(ChunkOverlaps(pos, dim), pos, dim);
+	}
+
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairIOverlaps(vector<Chunk*> chunkOverlaps, Vec2 iPos, Vec2 dim) // Returns {corporeals, incorporeals}
 	{
 		vector<Entity*> corporeals{}, incorporeals{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, hDim) &&
-					((*this)[*iter]->dimensions == vOne ||
-						((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
+				if ((*this)[*iter]->IOverlaps(iPos, dim) &&
+					(((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
 						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
 					if ((*this)[*iter]->Corporeal())
@@ -221,9 +220,9 @@ public:
 		return { corporeals, incorporeals };
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec2 pos, Vec2 hDim)
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairIOverlaps(Vec2 pos, Vec2 dim)
 	{
-		return FindPairOverlaps(ChunkOverlaps(pos, hDim), pos, hDim);
+		return FindPairIOverlaps(ChunkOverlaps(pos, dim), pos, dim);
 	}
 
 	vector<Entity*> RayTraceIntersections(Vec2 startPos, Vec2 endPos)
@@ -231,7 +230,7 @@ public:
 		vector<Entity*> overlaps(0);
 
 		Vec2 start = Chunk::ToSpace(startPos), end = Chunk::ToSpace(endPos);
-		Vec2 absDelta = Vabs(end - start);
+		Vec2 absDelta = (end - start).Abs();
 		Vec2 currentPos = startPos;
 		int n = 1 + absDelta.x + absDelta.y;
 		Vec2 inc = Vec2(int(end.x > start.x) * 2 - 1, int(end.y > start.y) * 2 - 1);
@@ -298,8 +297,11 @@ public:
 			SortEntities();
 
 		for (int i = 0; i < collectibles.size(); i++)
+		{
 			if (collectibles[i]->active)
 				collectibles[i]->Update();
+			collectibles[i]->VUpdate();
+		}
 
 		if (addedEntity)
 			SortEntities();
@@ -310,6 +312,9 @@ public:
 
 		if (addedEntity)
 			SortEntities();
+
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			sortedNCEntities[index]->VUpdate();
 
 		for (int i = 0; i < particles.size(); i++)
 		{
@@ -325,7 +330,7 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(playerPos, screenDimH + vOne); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairIOverlaps(game->PlayerPos(), ScrDim() + vOne); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 			entity->EarlyDUpdate();
@@ -341,7 +346,7 @@ public:
 			particle->LowResUpdate();
 
 		// Double the size that would normally be rendered, this is just for doing lighting, so it needs to go a bit further.
-		vector<Chunk*> newRenderedChunks = MainChunkOverlaps(Chunk::ToSpace(playerPos - screenDim), Chunk::ToSpace(playerPos + screenDim));
+		vector<Chunk*> newRenderedChunks = MainChunkOverlaps(Chunk::ToSpace(game->PlayerPos() - ScrDim()), Chunk::ToSpace(game->PlayerPos() + ScrDim()));
 		if (renderedChunks != newRenderedChunks)
 			for (Chunk* chunk : renderedChunks)
 				chunk->UnprepareForRendering();
@@ -402,14 +407,14 @@ public:
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
-	void Vacuum(Vec2 pos, int vacDist)
+	void Vacuum(iVec2 iPos, float vacSpeed, int vacDist)
 	{
 		for (Entity* collectible : collectibles)
 		{
-			int distance = Diagnistance(pos, collectible->pos);
+			int distance = iPos.Squistance(collectible->iPos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
 			{
-				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos));
+				collectible->vel += Vec2(iPos - collectible->iPos).Normalized() * vacSpeed * game->dTime;
 			}
 		}
 	}
@@ -418,10 +423,10 @@ public:
 	{
 		for (Entity* collectible : collectibles)
 		{
-			int distance = Diagnistance(pos, collectible->pos);
-			if (collectible->active && distance > 0 && distance <= vacDist && Dot(dir, Normalized(collectible->pos - pos + dir)) >= 1 - fov)
+			int distance = pos.Distance(collectible->pos);
+			if (collectible->active && distance > 0 && distance <= vacDist && dir.Dot((collectible->pos - pos + dir).Normalized()) >= 1 - fov)
 			{
-				collectible->SetPos(collectible->pos + Squarmalized(pos - collectible->pos));
+				collectible->SetPos(collectible->pos + (pos - collectible->pos).Normalized());
 			}
 		}
 	}
@@ -432,8 +437,8 @@ public:
 int Entity::DealDamage(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
-		game->entities->particles.push_back(make_unique<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (2 * dimensions - vOne) - up, damage, to_string(damage),
-			Color(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
+		game->entities->particles.push_back(make_unique<SpinText>(pos + Vec2(RandFloat(), RandFloat()) * (dimensions * 2 - vOne) - up, damage, to_string(damage),
+			RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
 			0.5f, RandFloat() * 5.0f, RandFloat() * 0.125f + 0.125f));
 	
 	health -= damage;
@@ -460,50 +465,32 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
-bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
+void Entity::VUpdate()
 {
-	Vec2 newPos = ClampV2(pos + direction, vZero, vOne * (MAP_WIDTH_TRUE - 1));
-	vector<Chunk*> chunkOverlaps;
-	if (force >= mass && direction != Vec2(0, 0))
+	ReduceVel();
+	if (Corporeal())
 	{
-		chunkOverlaps = game->entities->ChunkOverlaps(newPos, dimensions);
-		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
-		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
-			{
-				if (hitEntity != nullptr)
-					*hitEntity = entity;
-				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, dimensions))
-				{
-					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, dimensions);
-					bool successful = false;
-					for (Entity* entity2 : overlaps2)
-						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
-							force - mass > entity2->mass)
-						{
-							successful = true;
-							break;
-						}
-					if (successful)
-						break;
-					return false; // The entity is not stuck inside another entity and are blocked.
-				}
-			}
+		vector<Entity*> entities = game->entities->FindCorpIOverlaps(iVec2(pos + vel * game->dTime), dimensions);
+		for (Entity* entity : entities)
+		{
+			if (entity == this)
+				continue;
+			Vec2 force = entity->vel * mass;
+			entity->vel = 0;
+			entity->AddForce(vel * mass);
+			vel = 0;
+			AddForce(force);
+		}
 	}
-	else return false;
-
-	SetPos(newPos);
-
-	return true;
+	SetPos(pos + vel * game->dTime);
 }
 
 void Entity::SetPos(Vec2 newPos)
 {
-	Vec2 clampedNewPos = ClampV2(newPos, vZero, vOne * (MAP_WIDTH_TRUE - 1));
+	Vec2 clampedNewPos = newPos.ClampV(dimensions, vOne * (MAP_WIDTH_TRUE - 1) - dimensions);
 	std::pair<Vec2, Vec2> minMaxOldPos = Chunk::MinMaxPos(pos, dimensions);
 	std::pair<Vec2, Vec2> minMaxNewPos = Chunk::MinMaxPos(clampedNewPos, dimensions);
-	if (minMaxOldPos != minMaxNewPos)
+	if (minMaxOldPos.first != minMaxNewPos.first || minMaxOldPos.second != minMaxNewPos.second)
 	{
 		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
 		vector<Chunk*> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
@@ -514,6 +501,7 @@ void Entity::SetPos(Vec2 newPos)
 			chunk->push_back(position);
 	}
 	pos = clampedNewPos;
+	iPos = iVec2(pos);
 }
 
 #pragma endregion
@@ -531,7 +519,7 @@ public:
 	Vec2 explosionDimensions;
 	float startTime;
 
-	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, Color color = olc::WHITE , Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, RGBA color = RGBA(), Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
 		Entity(pos, vOne, color, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
 	{
 		this->creator = creator;
@@ -542,14 +530,14 @@ public:
 	{
 		if (tTime != startTime)
 		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
+			vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(pos, explosionDimensions);
 			for (Entity* entity : hitEntities)
 				if (entity != this && entity != creator)
 					entity->DealDamage(damage, this);
 			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
 			{
 				float rotation = RandFloat() * PI_F * 2;
-				game->entities->particles.push_back(make_unique<VelocitySquare>(pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
+				game->entities->particles.push_back(make_unique<VelocitySquare>(pos, Vec2(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
 					color, EXPLOSION_PARTICLE_DURATION));
 			}
 			DestroySelf(this);
@@ -569,7 +557,7 @@ public:
 	float startTime, totalFadeTime, timePer, lastTime;
 
 	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec2 pos = Vec2(0, 0),
-		Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
+		Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA()) :
 		Entity(pos, dimensions, color, color, 1, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime) { }
 
@@ -589,7 +577,7 @@ public:
 		if (tTime - lastTime > timePer)
 		{
 			lastTime = tTime;
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
+			vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(pos, dimensions);
 			for (Entity* entity : hitEntities)
 				entity->DealDamage(damage, this);
 		}
@@ -621,10 +609,10 @@ public:
 	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2 dimensions = vOne) :
 		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator){ }
 
-	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2 dimensions = vOne) :
+	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2 dimensions = vOne) :
 		Item(name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
 
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2 dimensions = vOne) :
+	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2 dimensions = vOne) :
 		Item(baseClass, name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
 
 	Item Clone(int count) override
@@ -661,10 +649,10 @@ class ExplodeOnLanding : public Item
 public:
 	Vec2 explosionDimensions;
 
-	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	ExplodeOnLanding(Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
 		Item(name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
 
-	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	ExplodeOnLanding(Item* baseClass, Vec2 explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
 		Item(baseClass, name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
 
 	virtual Item Clone(int count)
@@ -710,15 +698,15 @@ public:
 
 namespace Hazards
 {
-	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 2, Color(80, 43, 92));
+	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 3, RGBA(80, 43, 92));
 }
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 3, "Ruby", "Ammo", Color(168, 50, 100), 4);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 8, "Emerald", "Ammo", Color(65, 224, 150), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 4, "Topaz", "Ammo", Color(255, 200, 0), 3, 1, 15.0f, vOne * 2);
-	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", Color(80, 43, 92), 0, 1, 15.0f, true);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, "Ruby", "Ammo", RGBA(168, 50, 100), 4);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, "Topaz", "Ammo", RGBA(255, 200, 0), 3, 1, 15.0f, vOne * 3);
+	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", RGBA(80, 43, 92), 0, 1, 15.0f, true);
 }
 
 namespace Collectibles

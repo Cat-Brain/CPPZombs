@@ -22,7 +22,7 @@ public:
 
 	void ApplyLight()
 	{
-		Vec2 camMin = playerPos - screenDimH * 3, camMax = playerPos + screenDimH * 3, relCamMax = camMax - camMin;
+		/*Vec2 camMin = playerPos - ScrDim() * 1.5f, camMax = playerPos + screenDimH * 3, relCamMax = camMax - camMin;
 		int maxDistance = Range();
 		Vec2 lightMin = pos - vOne * maxDistance, lightMax = pos + vOne * maxDistance;
 		colorMapWidth = lightMax.x - lightMin.x + 1;
@@ -88,6 +88,6 @@ public:
 				{
 					game->shadowMap[x + lightMin.x - camMin.x][y + lightMin.y - camMin.y] += colorMap[x * colorMapWidth + y];
 				}
-		}
+		}*/
 	}
 };

@@ -6,16 +6,16 @@ public:
 	Item* baseClass;
 	string name;
 	string typeName;
-	Color color;
+	RGBA color;
 	int damage;
 	int count;
 	float range;
 	Vec2 dimensions;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
 		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", Color color = olc::MAGENTA, int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
 		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
 	virtual Item Clone(int count)
@@ -60,7 +60,7 @@ public:
 
 	virtual void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
 };
-Item* dItem = new Item("NULL", "NULL TYPE", olc::MAGENTA, 0, 0);
+Item* dItem = new Item("NULL", "NULL TYPE", RGBA(), 0, 0);
 
 class GoneOnLandItem : public Item
 {
@@ -123,7 +123,7 @@ public:
 				{
 					erase(begin() + i);
 					if (i >= currentIndex)
-						currentIndex--;
+						currentIndex = max(0, currentIndex - 1);
 				}
 				else
 					(*this)[i].count -= item.count;
@@ -135,13 +135,13 @@ public:
 
 	bool TryTakeIndex(int index)
 	{
-		if (index >= size())
+		if (index >= size() || index < 0)
 			return false;
 		if ((*this)[index].count == 1)
 		{
 			erase(begin() + index);
 			if (index >= currentIndex)
-				currentIndex--;
+				currentIndex = max(0, currentIndex - 1);
 		}
 		else
 			(*this)[index].count -= 1;
@@ -150,7 +150,7 @@ public:
 
 	bool TryTakeIndex(int index, Item& result)
 	{
-		if (index >= size())
+		if (index >= size() || index < 0)
 			return false;
 
 		result = (*this)[index];
@@ -180,14 +180,21 @@ public:
 
 	void DUpdate()
 	{
+		if (size() == 0)
+			return;
+		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
+		Vec2 offset = game->IPlayerPos() - Vec2(ScrDim()) * 0.5f;
 		for (int i = 0; i < size(); i++)
 		{
-			game->FillRect(Vec2(0, game->ScreenHeight() - 7 * (i + 1)), Vec2(7, 7), (*this)[i].color);
-			game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)),
-				"-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName), (*this)[i].color);
+			if (i == currentIndex)
+				continue;
+			game->DrawFBL(offset + Vec2(0, scale * i), (*this)[i].color, Vec2(scale, scale));
+			//game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)),
+				//"-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName), (*this)[i].color);
 		}
-		if (size() > 0)
-			game->DrawRect(Vec2(0, game->ScreenHeight() - 7 * (currentIndex + 1)), Vec2(6, 6), olc::BLACK);
+		game->DrawFBL(offset + Vec2(0, scale * currentIndex), RGBA(), Vec2(scale, scale));
+		int scale2 = scale / 5;
+		game->DrawFBL(offset + Vec2(scale2, scale2 + scale * currentIndex), (*this)[currentIndex].color, Vec2(scale, scale) - 2 * scale2);
 	}
 
 	Item GetCurrentItem()
@@ -200,9 +207,9 @@ public:
 
 namespace Resources
 {
-	Item* copper = new Item("Copper", "Ammo", Color(232, 107, 5), 1);
-	Item* iron = new Item("Iron", "Ammo", Color(111, 123, 128), 3);
-	Item* rock = new Item("Rock", "Ammo", Color(145, 141, 118), 6, 1, 5.0f);
+	Item* copper = new Item("Copper", "Ammo", RGBA(232, 107, 5), 1);
+	Item* iron = new Item("Iron", "Ammo", RGBA(111, 123, 128), 3);
+	Item* rock = new Item("Rock", "Ammo", RGBA(145, 141, 118), 6, 1, 5.0f);
 }
 
 #pragma endregion

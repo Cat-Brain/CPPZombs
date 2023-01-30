@@ -38,10 +38,10 @@ public:
 		bosses = spawnableBosses.RandomClone();
 	}
 
-	Color GetBackgroundNoise(Vec2f noisePos)
+	RGBA GetBackgroundNoise(Vec2 noisePos)
 	{
 		float randomNoiseValue = backgroundNoise.GetNoise(noisePos.x, noisePos.y);
-		return Color(Clamp(backgroundBaseColor.r + (int)roundf(randomNoiseValue * backgroundColorWidth.r) * 5, 0, 255),
+		return RGBA(Clamp(backgroundBaseColor.r + (int)roundf(randomNoiseValue * backgroundColorWidth.r) * 5, 0, 255),
 			Clamp(backgroundBaseColor.g + (int)roundf(randomNoiseValue * backgroundColorWidth.g) * 5, 0, 255),
 			Clamp(backgroundBaseColor.b + (int)roundf(randomNoiseValue * backgroundColorWidth.b) * 5, 0, 255));
 	}

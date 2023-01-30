@@ -9,16 +9,18 @@ public:
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
-	Vec2 pos, dir;
-	Vec2 dimensions; // Actually half dimensions. So a 3x3 would actually be called a 2x2, and a 1x1 would remain a 1x1.
-	Color color, subsurfaceResistance;
-	int mass;
+	Vec2 pos, dir, vel;
+	Vec2 iPos;
+	Vec2 dimensions;
+	RGBA color, subsurfaceResistance;
+	float mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
 
-	Entity(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE), Color subsurfaceResistance = olc::WHITE,
-		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance), mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
+	Entity(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(), RGBA subsurfaceResistance = RGBA(),
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		pos(pos), iPos(pos), dimensions(dimensions), vel(0, 0), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance),
+		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
 	{
 	}
 
@@ -30,9 +32,9 @@ public:
 		Start();
 	}
 
-	virtual shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
+	virtual unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
 	{
-		return make_shared<Entity>(this, pos);
+		return make_unique<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
@@ -47,25 +49,46 @@ public:
 
 	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobster.
 
-	virtual void DUpdate() // Normally only draws.
+	virtual void VUpdate();
+
+	virtual void ReduceVel()
 	{
-		Vec2 disp = ToRSpace(pos);
-		disp = Vec2(labs(disp.x), labs(disp.y));
-		if(disp.x >= 0 && disp.x <= game->ScreenWidth() && disp.y >= 0 && disp.y <= game->ScreenWidth())
-			game->FillRect(ToRSpace(pos) - dimensions + vOne, dimensions * 2 - vOne, color);
+		vel *= powf(0.25f, game->dTime);
 	}
 
-	void DrawUIBox(Vec2 topLeft, Vec2 bottomRight, string text, Color textColor,
-		Color borderColor = olc::VERY_DARK_GREY, Color fillColor = olc::DARK_GREY)
+	virtual void AddForce(Vec2 force)
 	{
-		game->DrawRect(topLeft, bottomRight - topLeft, borderColor);
-		game->FillRect(topLeft + Vec2(1, 1), bottomRight - topLeft - Vec2(1, 1), fillColor);
-		game->DrawString(topLeft + Vec2(1, 1), text, textColor);
+		vel += force / mass;
+	}
+
+	void ResolveCollision(Entity* other) // SUPER INCOMPLETE, DO NOT USE!
+	{
+		Vec2 p = pos - other->pos;
+		Vec2 b = dimensions + other->dimensions;
+		Vec2 w = p.Abs() - b;
+		Vec2 s = Vec2(p.x < 0.0 ? -1 : 1, p.y < 0.0 ? -1 : 1);
+		float g = max(w.x, w.y);
+		Vec2  q = w.V2fMin(0.0);
+		float l = q.Magnitude();
+		Vec2 movement = s * ((g > 0.0) ? q / l : ((w.x > w.y) ? Vec2(1, 0) : Vec2(0, 1)));
+	}
+
+	virtual void DUpdate() // Normally only draws.
+	{
+		game->Draw(iPos, color, dimensions);
+	}
+
+	void DrawUIBox(Vec2 topLeft, Vec2 bottomRight, string text, RGBA textColor,
+		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
+	{
+		game->DrawFBL(topLeft, borderColor, bottomRight - topLeft);
+		game->DrawFBL(topLeft + Vec2(1, 1), fillColor, bottomRight - topLeft - Vec2(1, 1));
+		//game->DrawString(topLeft + Vec2(1, 1), text, textColor);
 	}
 
 	virtual Vec2 TopLeft()
 	{
-		return ToRSpace(pos + dimensions - vOne) * 4 + Vec2(4, 0);
+		return pos + dimensions - vOne * 4 + Vec2(4, 0);
 	}
 
 	virtual Vec2 BottomRight()
@@ -88,7 +111,6 @@ public:
 
 	virtual void Update() { } // Normally doesn't draw.
 	
-	virtual bool TryMove(Vec2 direction, int force = 1, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns if item was hit.
 	virtual void SetPos(Vec2 newPos);
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
@@ -102,9 +124,9 @@ public:
 		return 0;
 	}
 
-	virtual bool Overlaps(Vec2 pos, Vec2 hDim)
+	virtual bool IOverlaps(Vec2 iPos, Vec2 dim)
 	{
-		return labs(this->pos.x - pos.x) < (dimensions.x + hDim.x) - 1 && labs(this->pos.y - pos.y) < (dimensions.y + hDim.y) - 1;
+		return labs(this->iPos.x - iPos.x) < (dimensions.x + dim.x) / 2 && labs(this->iPos.y - iPos.y) < (dimensions.y + dim.y) / 2;
 	}
 
 	#pragma region bool functions
@@ -156,56 +178,14 @@ public:
 
 
 #pragma region Other Entity funcitons
-bool EmptyFromEntities(Vec2 pos, vector<Entity*> entities)
-{
-	for (int i = 0; i < entities.size(); i++)
-		if (entities[i]->pos == pos)
-			return false;
-	return true;
-}
 
-vector<Entity*> IncorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
+vector<Entity*> EntitiesOverlaps(Vec2 iPos, Vec2 dimensions, vector<Entity*> entities)
 {
-	vector<Entity*> foundEntities = vector<Entity*>();
-	for (vector<Entity*>::iterator i = entities->begin(); i != entities->end(); i++)
-		if (!(*i)->Corporeal() && (*i)->pos == pos)
+	vector<Entity*> foundEntities(0);
+	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
+		if ((*i)->IOverlaps(iPos, dimensions))
 			foundEntities.push_back(*i);
 	return foundEntities;
-}
-
-vector<Entity*> CorporealsAtPos(Vec2 pos, vector<Entity*>* entities)
-{
-	vector<Entity*> foundEntities = vector<Entity*>();
-	for (vector<Entity*>::iterator i = entities->begin(); i != entities->end(); i++)
-		if ((*i)->Corporeal() && (*i)->pos == pos)
-			foundEntities.push_back(*i);
-	return foundEntities;
-}
-
-vector< shared_ptr<Entity>> EntitiesAtPos(Vec2 pos, vector<shared_ptr<Entity>> entities)
-{
-	vector<shared_ptr<Entity>> foundCollectibles(0);
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
-		if ((*i)->pos == pos)
-			foundCollectibles.push_back(*i);
-	return foundCollectibles;
-}
-
-shared_ptr<Entity> FindAEntity(Vec2 pos, vector<shared_ptr<Entity>> entities)
-{
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
-		if ((*i)->pos == pos)
-			return *i;
-	return nullptr;
-}
-
-vector<shared_ptr<Entity>> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<shared_ptr<Entity>> entities)
-{
-	vector<shared_ptr<Entity>> foundCollectibles(0);
-	for (vector<shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
-		if ((*i)->Overlaps(pos, dimensions))
-			foundCollectibles.push_back(*i);
-	return foundCollectibles;
 }
 #pragma endregion
 
@@ -216,7 +196,7 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), Color color = Color(olc::WHITE)) :
+	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA()) :
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
 
 	void Update() override
@@ -240,3 +220,13 @@ public:
 
 typedef std::pair<Cost, Item*> RecipeA;
 typedef std::pair<Cost, Entity*> RecipeB;
+
+Vec2 Game::PlayerPos()
+{
+	return ((Entity*)player)->pos;
+}
+
+iVec2 Game::IPlayerPos()
+{
+	return ((Entity*)player)->iPos;
+}

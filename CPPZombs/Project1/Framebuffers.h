@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "Text.h"
 
 class Framebuffer
 {
@@ -7,7 +7,7 @@ public:
 
 	Framebuffer() : fbo(0), rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0) { }
 
-	Framebuffer(uint height) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(ceilf(height * screenRatio)), height(height)
+	Framebuffer(uint height) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(static_cast<uint>(floorf(height * screenRatio))), height(height)
 	{
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -20,6 +20,8 @@ public:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
         // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
         glGenRenderbuffers(1, &rbo);
@@ -32,8 +34,9 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-    void ResetWidth(int newWidth)
+    void ResetWidth()
     {
+        int newWidth = int(floorf(height * screenRatio));
         if (width == newWidth)
             return;
         width = newWidth;
@@ -44,17 +47,40 @@ public:
     }
 };
 
-void UseFramebuffer(Framebuffer* framebuffer)
+uint currentFramebuffer = 0;
+Framebuffer midRes, highRes;
+vector<Framebuffer*> framebuffers{ &midRes, &highRes };
+
+void UseFramebuffer()
 {
-    if (framebuffer == nullptr)
+    if (currentFramebuffer == 0)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, trueScreenWidth, trueScreenHeight);
         return;
     }
+    Framebuffer* framebuffer = framebuffers[currentFramebuffer - 1];
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->framebuffer);
     glViewport(0, 0, framebuffer->width, framebuffer->height);
 }
 
-Framebuffer lowRes, midRes, highRes;
-vector<Framebuffer*> framebuffers{ &lowRes, &midRes, &highRes };
+int ScrWidth()
+{
+    if (currentFramebuffer == 0)
+        return trueScreenWidth;
+    return framebuffers[currentFramebuffer - 1]->width;
+}
+
+int ScrHeight()
+{
+    if (currentFramebuffer == 0)
+        return trueScreenHeight;
+    return framebuffers[currentFramebuffer - 1]->height;
+}
+
+iVec2 ScrDim()
+{
+    if (currentFramebuffer == 0)
+        return { int(trueScreenWidth), int(trueScreenHeight) };
+    return { int(framebuffers[currentFramebuffer - 1]->width), int(framebuffers[currentFramebuffer - 1]->height) };
+}

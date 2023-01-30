@@ -6,10 +6,12 @@ public:
 	uint vbo, ebo, vao;
 	vector<float> vertices;
 	vector<uint> indices;
+	GLenum mode;
 
 	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{} { }
 
-	Mesh(vector<float> vertices, vector<uint> indices) : vertices(vertices), indices(indices)
+	Mesh(vector<float> vertices, vector<uint> indices, GLenum mode = GL_TRIANGLES) :
+		vertices(vertices), indices(indices), mode(mode)
 	{
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
@@ -30,7 +32,7 @@ public:
 	void Draw()
 	{
 		glBindVertexArray(vao);
-		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(mode, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 	}
 
 	void Destroy()
@@ -41,6 +43,6 @@ public:
 	}
 };
 
-Mesh quad, screenSpaceQuad;
+Mesh quad, screenSpaceQuad, line;
 
-vector<Mesh*> meshes{ &quad, &screenSpaceQuad }; // Destroys them at the end.
+vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line }; // Destroys them at the end.

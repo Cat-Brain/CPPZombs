@@ -8,14 +8,20 @@ public:
 	Collectible(Item baseItem, Vec2 pos = vZero) :
 		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
-	Collectible(Item baseItem, Vec2 pos, Color color) :
+	Collectible(Item baseItem, Vec2 pos, RGBA color) :
 		Entity(pos, baseItem.dimensions, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
-		return make_shared<Collectible>(this, pos);
+		return make_unique<Collectible>(this, pos);
+	}
+
+	void VUpdate() override
+	{
+		vel *= powf(0.25f, game->dTime);
+		Entity::VUpdate();
 	}
 
 

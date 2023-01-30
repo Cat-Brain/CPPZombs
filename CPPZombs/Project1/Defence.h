@@ -4,12 +4,12 @@ class CollectibleTree : public FunctionalBlock2
 {
 public:
 	Collectible* collectible, *seed;
-	Color adultColor, deadColor;
+	RGBA adultColor, deadColor;
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
 	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA,
-		Color deadColor = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
@@ -30,9 +30,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<CollectibleTree>(this, dir, pos);
+		return make_unique<CollectibleTree>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -54,9 +54,9 @@ public:
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			if (rand() % 100 < chanceForSeed)
-				game->entities->push_back(seed->Clone(pos + (dimensions + collectible->dimensions - vOne) * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(seed->Clone(pos + (dimensions + seed->dimensions) * 0.5f * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
-				game->entities->push_back(collectible->Clone(pos + (dimensions + seed->dimensions - vOne) * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(collectible->Clone(pos + (dimensions + collectible->dimensions) * 0.5f * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}
 		currentLifespan++;
 		return true;
@@ -68,15 +68,15 @@ public:
 		if (currentLifespan < cyclesToGrow)
 		{
 			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
-			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
-				timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
+				//timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
 			DrawUIBox(topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
-			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - timeSince, 1), color);
-			game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
-				timePer * (deadStage - currentLifespan) - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
+				//timePer * (deadStage - currentLifespan) - timeSince, 1), color);
 		}
 		else
 			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
@@ -111,8 +111,8 @@ public:
 	int maxGenerations, generation;
 
 	Vine(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
-		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, Color color = olc::WHITE, Color adultColor = olc::MAGENTA,
-		Color deadColor = olc::BLACK, Color subsurfaceResistance = olc::WHITE,
+		float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
 		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
@@ -126,9 +126,9 @@ public:
 		Start();
 	}
 
-	shared_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_shared<Vine>(this, dir, pos);
+		return make_unique<Vine>(this, dir, pos);
 	}
 
 	float TimeIncrease() override
@@ -142,13 +142,13 @@ public:
 		{
 			Vec2 placementPos = pos;
 			while (placementPos == pos)
-				placementPos = pos + (dimensions * 2 - vOne) * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<shared_ptr<Entity>> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
+				placementPos = pos + dimensions * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
+			vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
 			{
-				shared_ptr<Vine> newVine = std::dynamic_pointer_cast<Vine>(baseClass->Clone(placementPos, up, this));
-				newVine->generation = generation + 1;
-				game->entities->push_back(newVine);
+				unique_ptr<Entity> newVine = baseClass->Clone(placementPos, up, this);
+				((Vine*)newVine.get())->generation = generation + 1;
+				game->entities->push_back(std::move(newVine));
 			}
 		}
 		currentLifespan++;
@@ -170,22 +170,22 @@ public:
 		if (currentLifespan < cyclesToGrow)
 		{
 			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
-			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(
-				timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
-			game->DrawString(topLeft + Vec2(1, 15), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
+			//game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(
+			//	timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 15), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
 			DrawUIBox(topLeft, topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
-			game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(timePer - timeSince, 1), color);
-			game->DrawString(topLeft + Vec2(1, 15), ToStringWithPrecision(
-				timePer * (deadStage - currentLifespan) - timeSince, 1), color);
-			game->DrawString(topLeft + Vec2(1, 22), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
+			//game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(timePer - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 15), ToStringWithPrecision(
+			//	timePer * (deadStage - currentLifespan) - timeSince, 1), color);
+			//game->DrawString(topLeft + Vec2(1, 22), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
 		}
 		else
 		{
 			DrawUIBox(topLeft, topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
-			game->DrawString(topLeft + Vec2(1, 8), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), deadColor);
+			//game->DrawString(topLeft + Vec2(1, 8), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), deadColor);
 		}
 	}
 
@@ -219,33 +219,33 @@ namespace Plants
 {
 	namespace Trees
 	{
-		Color babyCopperTreeColor = Color(207, 137, 81), copperTreeColor = Color(163, 78, 8), deadCopperTreeColor = Color(94, 52, 17), copperResistence = Color(0, 0, 50);
+		RGBA babyCopperTreeColor = RGBA(207, 137, 81), copperTreeColor = RGBA(163, 78, 8), deadCopperTreeColor = RGBA(94, 52, 17), copperResistence = RGBA(0, 0, 50);
 		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
-		Color babyIronTreeColor = Color(96, 192, 225), ironTreeColor = Color(67, 90, 99), deadIronTreeColor = Color(45, 47, 48), ironResistence = Color(50, 50, 0);
+		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48), ironResistence = RGBA(50, 50, 0);
 		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 10, 100, 10, 8.0f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
-		Color babyRubyTreeColor = Color(207, 120, 156), rubyTreeColor = Color(135, 16, 66), deadRubyTreeColor = Color(120, 65, 88), rubyResistence = Color(0, 50, 50);
+		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88), rubyResistence = RGBA(0, 50, 50);
 		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");
 
-		Color babyEmeraldTreeColor = Color(145, 255, 204), emeraldTreeColor = Color(65, 166, 119), deadEmeraldTreeColor = Color(61, 97, 80), emeraldResistence = Color(50, 0, 50);
+		RGBA babyEmeraldTreeColor = RGBA(145, 255, 204), emeraldTreeColor = RGBA(65, 166, 119), deadEmeraldTreeColor = RGBA(61, 97, 80), emeraldResistence = RGBA(50, 0, 50);
 		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
 
-		Color babyRockTreeColor = Color(212, 212, 212), rockTreeColor = Color(201, 196, 165), deadRockTreeColor = Color(150, 140, 78), rockResistence = Color(50, 0, 50);
+		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(150, 140, 78), rockResistence = RGBA(50, 0, 50);
 		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
 	}
 
 
 	namespace Vines
 	{
-		Color babyCheeseVineColor = Color(255, 210, 112), cheeseVineColor = Color(200, 160, 75), deadCheeseVineColor = Color(140, 110, 50), cheeseResistence = Color(0, 0, 50);
+		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50), cheeseResistence = RGBA(0, 0, 50);
 		Vine* cheeseVine = new Vine(Collectibles::cheese, nullptr, 5, 10, 5, 10, 2.0f, vZero, vOne, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
 
-		Color babyLeadVineColor = Color(198, 111, 227), leadVineColor = Color(153, 29, 194), deadLeadVineColor = Color(15, 50, 61), leadResistence = Color(0, 50, 0);
+		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61), leadResistence = RGBA(0, 50, 0);
 		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
 		
-		Color babyTopazVineColor = Color(255, 218, 84), topazVineColor = Color(181, 142, 0), deadTopazVineColor = Color(107, 84, 0), topazResistence = Color(25, 0, 50);
-		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 2, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
+		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0), topazResistence = RGBA(25, 0, 50);
+		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 3, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
 	}
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.
@@ -264,7 +264,7 @@ namespace Resources::Seeds
 	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, 1);
 	// Vines
 	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", Plants::Vines::cheeseVineColor, 0);
-	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, false, vOne * 2);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, false, vOne * 3);
 	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
 
 	// Keep a list of all of the seeds.

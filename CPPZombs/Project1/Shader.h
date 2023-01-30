@@ -44,20 +44,19 @@ const char* defaultVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "\n"
 "uniform vec2 scale, position;\n"
-"out vec2 uv;"
+"\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);\n"
-"	uv = aPos;\n"
 "}\0";
 
 const char* defaultFrag = "#version 330 core\n"
 "out vec4 FragColor;\n"
-"in vec2 uv;\n"
+"uniform vec4 color;\n"
 "\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(uv.xy, 1.0f, 1.0f);\n"
+"	FragColor = color;\n"
 "}\0";
 
 uint defaultShader;
@@ -66,10 +65,11 @@ const char* framebufferVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "\n"
 "out vec2 uv;\n"
+"uniform float currentScrRat, newScrRat;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos, 1.0, 1.0);\n"
-"	uv = aPos * 0.5 + 0.5;\n"
+"	uv = vec2((aPos.x + 1) * currentScrRat / newScrRat - 1, aPos.y) * 0.5 + 0.5;\n"
 "}\0";
 
 const char* framebufferFrag = "#version 330 core\n"
@@ -80,9 +80,56 @@ const char* framebufferFrag = "#version 330 core\n"
 "\n"
 "void main()"
 "{\n"
-"	FragColor = vec4(texture(screenTexture, uv).rgb, 1.0);\n"
+"	FragColor = texture(screenTexture, uv);\n"
 "}\0";
 
 uint framebufferShader;
 
-vector<std::pair<std::pair<const char*, const char*>, uint*>> shaders{ {{defaultVert, defaultFrag}, &defaultShader}, {{framebufferVert, framebufferFrag}, &framebufferShader} };
+const char* backgroundVert = "#version 330 core\n"
+"layout (location = 0) in vec2 aPos;\n"
+"out vec2 fragPos;\n"
+"\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, 1.0, 1.0);\n"
+"	fragPos = aPos;\n"
+"}\0";
+
+const char* backgroundFrag = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec2 fragPos;\n"
+"uniform vec2 offset, screenDim;\n"
+"\n"
+"void main()"
+"{\n"
+"	float colorValue = (sin((offset.x + fragPos.x * screenDim.x) * 0.1) + sin((offset.y + fragPos.y * screenDim.y) * 0.1)) * 0.25 + 0.5;\n"
+"	FragColor = vec4(colorValue, colorValue, colorValue, 1.0);\n"
+"}\0";
+
+uint backgroundShader;
+
+const char* lineVert = "#version 330 core\n"
+"layout (location = 0) in vec2 aPos;\n"
+"\n"
+"uniform vec2 a, b;\n"
+"\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(a * aPos.x + b * aPos.y, 0.0, 1.0);\n"
+"}\0";
+
+const char* lineFrag = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"uniform vec4 color;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	FragColor = color;\n"
+"}\0";
+
+uint lineShader;
+
+vector<std::pair<std::pair<const char*, const char*>, uint*>> shaders{ {{defaultVert, defaultFrag}, &defaultShader},
+	{{framebufferVert, framebufferFrag}, &framebufferShader},
+	{{backgroundVert, backgroundFrag}, &backgroundShader},
+	{{lineVert, lineFrag}, &lineShader } };
