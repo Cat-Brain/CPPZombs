@@ -698,13 +698,13 @@ public:
 
 namespace Hazards
 {
-	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, vOne * 3, RGBA(80, 43, 92));
+	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 2, 0.2f, vZero, vOne * 5, RGBA(80, 43, 92));
 }
 
 namespace Resources
 {
 	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, "Ruby", "Ammo", RGBA(168, 50, 100), 4);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 17, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
 	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, "Topaz", "Ammo", RGBA(255, 200, 0), 3, 1, 15.0f, vOne * 3);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", RGBA(80, 43, 92), 0, 1, 15.0f, true);
 }

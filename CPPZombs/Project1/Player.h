@@ -8,7 +8,7 @@ public:
 	int vacDist;
 	bool placedBlock;
 	Vec2 placingDir = up;
-	float moveSpeed = 16, maxSpeed = 4.0f, lastVac = -1.0f, vacSpeed = 32.0f, lastClick = -1.0f, clickSpeed = 0.25f;
+	float moveSpeed = 16, maxSpeed = 4.0f, lastVac = -1.0f, vacSpeed = 32.0f, lastClick = -1.0f, clickSpeed = 0.02f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		RGBA subsurfaceResistance = RGBA(), int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -21,8 +21,10 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
-		items.push_back(Resources::copper->Clone(10));
-		items.push_back(Resources::cheese->Clone(10));
+		//items.push_back(Resources::copper->Clone(10));
+		items.push_back(Resources::emerald->Clone(600));
+		items.push_back(Resources::lead->Clone(20));
+		//items.push_back(Resources::cheese->Clone(10));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
 		for (Item* item : Resources::Seeds::plantSeeds)
 			items.push_back(item->Clone());
@@ -94,7 +96,7 @@ public:
 			if (iVec2(heldEntity->pos) == game->inputs.mousePosition + iPos)
 				heldEntity->vel = 0;
 			else
-				heldEntity->vel += (iPos + game->inputs.mousePosition - heldEntity->iPos).Normalized() / heldEntity->mass;
+				heldEntity->vel += (iPos + game->inputs.mousePosition - heldEntity->iPos).Normalized() / heldEntity->mass * 10;
 		}
 		
 		

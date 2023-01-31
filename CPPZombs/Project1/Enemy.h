@@ -303,7 +303,7 @@ namespace EnemyClasses
 			{
 				float distance = pos.Distance(front->pos);
 				float temp = (distance / segmentDistance);
-				vel += ((pos - front->pos) / distance) * (1.0f / (temp * temp * temp) - 1.0f / temp) * game->dTime;
+				vel += ((pos - front->pos) / distance) * (1.0f / (temp * temp * temp) - 1.0f / temp) * game->dTime * 10;
 			}
 			else
 				Enemy::Update();
@@ -566,22 +566,22 @@ LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.
 Enemy* child = new Enemy(1.0f, 8.0f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
 
 // Earlies.
-Enemy* walker = new Enemy(0.75f, 1.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
+Enemy* walker = new Enemy(0.75f, 1.5f, 1, 1, 0, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
 Enemy* tanker = new Enemy(1.0f, 1.0f, 2, 1, 1, vOne * 5, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
-EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 1.0f, 1.0f, 0.25f, 4.0f, 2, 1, 1, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
+EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.0f, 4.0f, 2, 1, 0, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
 
 // Mids:
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 2.0f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 6.0f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
 EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 5, 0.0f, 4.0f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
 EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(3.0f, 12, 12, 0.125f, 8.0f, 3, 4, 0, vOne, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 
 // Mid-lates:
-EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Parent");
+EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
-EnemyClasses::Snake* snake = new EnemyClasses::Snake(5, 3.0f, 0.25f, 4.0f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(5, 3.0f, 0.25f, 16.0f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
 
 // Lates:
-EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 4.0f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 24.0f, 0, 1, 4, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 15, 0.0f, 4.0f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(3.0f, 12, 12, 0.125f, 8.0f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 12, 12, "Ranger");
@@ -657,7 +657,7 @@ EnemiesInstance Enemies::RandomClone()
 	return result;
 }
 
-Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent, /*snake*/},
-	{hyperSpeedster, megaTanker, gigaExploder, ranger} };
+Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent/*, snake*/},
+	{/*hyperSpeedster, */megaTanker, gigaExploder, ranger }, {hyperSpeedster} };
 
 Enemies spawnableBosses{ {spoobderb} };
