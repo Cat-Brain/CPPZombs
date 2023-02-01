@@ -459,6 +459,44 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
+bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
+{
+	Vec2 newPos = (pos + direction).ClampV(vZero, vOne * (MAP_WIDTH_TRUE - 1));
+	vector<Chunk*> chunkOverlaps;
+	if (force >= mass && direction != Vec2(0, 0))
+	{
+		chunkOverlaps = game->entities->ChunkOverlaps(newPos, dimensions);
+		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, dimensions);
+		for (Entity* entity : overlaps)
+			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
+			{
+				if (hitEntity != nullptr)
+					*hitEntity = entity;
+				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, dimensions))
+				{
+					// something in front of them, however if they're stuck, we want to let them move anyways.
+					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, dimensions);
+					bool successful = false;
+					for (Entity* entity2 : overlaps2)
+						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
+							force - mass > entity2->mass)
+						{
+							successful = true;
+							break;
+						}
+					if (successful)
+						break;
+					return false; // The entity is not stuck inside another entity and are blocked.
+				}
+			}
+	}
+	else return false;
+
+	SetPos(newPos);
+
+	return true;
+}
+
 void Entity::SetPos(Vec2 newPos)
 {
 	Vec2 clampedNewPos = newPos.ClampV(dimensions, vOne * (MAP_WIDTH_TRUE - 1) - dimensions);

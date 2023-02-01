@@ -100,6 +100,8 @@ public:
 	
 	virtual void SetPos(Vec2 newPos);
 
+	bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
+
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;

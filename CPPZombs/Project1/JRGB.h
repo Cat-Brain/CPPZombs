@@ -179,9 +179,9 @@ public:
 		return RGBA(min(r * other.r, 255), min(g * other.g, 255), min(b * other.b, 255));
 	}
 
-	RGBA operator *(int scaler)
+	RGBA operator *(float scaler)
 	{
-		return RGBA(min(r * scaler, 255), min(g * scaler, 255), min(b * scaler, 255));
+		return RGBA(min(int(roundf(r * scaler)), 255), min(int(roundf(g * scaler)), 255), min(int(roundf(b * scaler)), 255));
 	}
 
 	RGBA operator /(RGBA other)
@@ -189,9 +189,9 @@ public:
 		return RGBA(r / other.r, g / other.g, b / other.b);
 	}
 
-	RGBA operator /(int scaler)
+	RGBA operator /(float scaler)
 	{
-		return RGBA(r / scaler, g / scaler, b / scaler);
+		return RGBA(min(int(roundf(r / scaler)), 255), min(int(roundf(g / scaler)), 255), min(int(roundf(b / scaler)), 255));
 	}
 
 	void operator *=(RGBA other)

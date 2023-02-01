@@ -3,26 +3,27 @@
 class Projectile : public Entity
 {
 public:
-    Vec2 direction;
+    Vec2f direction;
+    Vec2f fPos;
     float duration;
     int damage;
-    float lastTime, timePer, begin;
-    int callType = 0; 
+    float speed, begin;
+    int callType = 0;
 
-    Projectile(float duration = 10, int damage = 1, float timePer = 8.0f, Vec2f dimensions = Vec2f(1, 1), RGBA color = RGBA(),
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
         RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2f(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
-        duration(duration), damage(damage), timePer(timePer), begin(tTime)
+        Entity(Vec2(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
+        duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator):
+    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
         Projectile(*baseClass)
     {
         this->creator = creator;
         this->direction = Vec2f(direction).Normalized();
-        lastTime = 0.0f;
+        fPos = pos + Vec2f(0.01f, 0.01f);
         this->pos = pos;
         begin = tTime;
         Start();
@@ -33,11 +34,9 @@ public:
         return make_unique<Projectile>(this, pos, direction, creator);
     }
 
-    void ReduceVel() override { }
-
     void Update() override
     {
-        if(tTime - begin >= duration / speed)
+        if (tTime - begin >= duration / speed)
             return DestroySelf(this);
 
         Entity* entity;
@@ -48,11 +47,20 @@ public:
             DestroySelf(entity);
             return;
         }
+        Vec2 oldPos = pos;
+        MovePos();
+        if (oldPos != pos && CheckPos(entity))
+        {
+            if (entity != nullptr)
+                SetPos(oldPos);
+            callType = 1 + int(entity == nullptr);
+            DestroySelf(entity);
+        }
     }
 
     bool CheckPos(Entity*& hitEntity)
     {
-        vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(iPos, dimensions);
+        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
 
         for (Entity* entity : hitEntities)
         {
@@ -65,6 +73,12 @@ public:
             return true;
         }
         return false;
+    }
+
+    virtual void MovePos()
+    {
+        fPos += direction * game->dTime * speed;
+        SetPos(Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y))));
     }
 
     int SortOrder() override
@@ -99,14 +113,15 @@ public:
     ShotItem(ShotItem* baseClass, Vec2f pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
-        damage = item.damage;
-        begin = tTime;
         this->creator = creator;
-        this->pos = pos;
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
-        vel = this->direction * speed;
+        this->direction = Vec2f(direction).Normalized();
         duration = fminf(item.range, magnitude);
+        fPos = pos + Vec2f(0.01f, 0.01f);
+        this->pos = pos;
+        begin = tTime;
+        damage = item.damage;
         creatorName = creator->name;
         Start();
     }
@@ -114,30 +129,24 @@ public:
     ShotItem(ShotItem* baseClass, Item item, Vec2f pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
-        this->item = item;
-        damage = item.damage;
-        color = item.color;
-        begin = tTime;
         this->creator = creator;
-        this->pos = pos;
-        this->iPos = Vec2(pos);
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
-        vel = this->direction * speed;
+        this->direction = Vec2f(direction).Normalized();
         duration = fminf(item.range, magnitude);
-        this->dimensions = item.dimensions;
+        fPos = pos + Vec2f(0.01f, 0.01f);
+        this->pos = pos;
+        begin = tTime;
+        damage = item.damage;
+        this->item = item;
         if (creator == nullptr)
             name = item.name;
         else
-        {
-            vel += creator->vel;
-            name = item.name + " shot by " + creator->name;
             creatorName = creator->name;
-        }
         Start();
     }
 
-    unique_ptr<Entity> Clone(Vec2f pos, Vec2f direction, Entity* creator) override
+    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
     {
         return make_unique<ShotItem>(this, pos, direction, creator);
     }
@@ -149,8 +158,7 @@ public:
 
     void OnDeath(Entity* damageDealer) override
     {
-        item.baseClass->OnDeath(iPos, creator, creatorName, damageDealer, callType);
-        std::cout << iPos.x << ", " << iPos.y << " = " << pos.x << ", " << pos.y << "\n";
+        item.baseClass->OnDeath(pos, creator, creatorName, damageDealer, callType);
     }
 };
 

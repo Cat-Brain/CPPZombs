@@ -1,18 +1,18 @@
-#include "Printers.h"
+#include "Defence.h"
 
 class Enemy : public DToCol
 {
 public:
-	float timePer, lastTime, moveSpeed;
+	float timePer, lastTime, timePerMove, lastMove;
 
 	int points, firstWave;
 	int damage;
 
-	Enemy(float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1, Vec2f dimensions = vOne,
+	Enemy(float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(vZero, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
-		timePer(timePer), lastTime(0.0f), moveSpeed(moveSpeed), points(points), firstWave(firstWave), damage(damage)
+		timePer(timePer), lastTime(0.0f), timePerMove(timePerMove), lastMove(0.0f), points(points), firstWave(firstWave), damage(damage)
 	{
 	}
 
@@ -29,7 +29,7 @@ public:
 		lastTime = tTime + RandFloat() * timePer;
 	}
 
-	unique_ptr<Entity> Clone(Vec2f pos = vZero, Vec2f dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Enemy>(this, pos);
 	}
@@ -41,25 +41,39 @@ public:
 
 	void Update() override
 	{
-		vel += (game->PlayerPos() - pos).Normalized() * moveSpeed * game->dTime;
+		if (tTime - lastMove >= timePerMove)
+			if (MUpdate())
+				lastMove = tTime;
+
 		if (tTime - lastTime >= timePer)
+			if (TUpdate())
+				lastTime = tTime;
+	}
+
+	virtual bool MUpdate()
+	{
+		TryMove((game->PlayerPos() - pos).Rormalized(), mass);
+		return true;
+	}
+
+	virtual bool TUpdate()
+	{
+		vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
+		int randomization;
+		for (int i = 0; i < hitEntities.size(); i++)
 		{
-			TUpdate();
-			lastTime = tTime;
+			Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
+			if (entity != this && !entity->IsEnemy())
+			{
+				entity->DealDamage(damage, this);
+				break;
+			}
 		}
 	}
 
-	virtual void TUpdate()
+	Vec2 BottomRight() override
 	{
-		vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(iPos, dimensions + vOne);
-		for (Entity* entity : hitEntities)
-			if (entity != this && !entity->IsEnemy())
-				entity->DealDamage(damage, this);
-	}
-
-	Vec2f BottomRight() override
-	{
-		return DToCol::BottomRight() + Vec2f(8 + (int)to_string(health).length() * 8, 0);
+		return DToCol::BottomRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
 	}
 
 	void UIUpdate() override
@@ -67,10 +81,10 @@ public:
 		DrawUIBox(TopLeft(), BottomRight(), name + " " + to_string(health), color);
 	}
 
-	bool PosInUIBounds(Vec2f screenSpacePos) override
+	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2f topLeft = TopLeft();
-		Vec2f bottomRight = BottomRight();
+		Vec2 topLeft = TopLeft();
+		Vec2 bottomRight = BottomRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
@@ -102,15 +116,15 @@ namespace EnemyClasses
 		RGBA color3;
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
-		Deceiver(float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1, Vec2f dimensions = vOne,
+		Deceiver(float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne,
 			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
 		}
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Deceiver> newEnemy = make_unique<EnemyClasses::Deceiver>(*this);
 			newEnemy->baseClass = baseClass;
@@ -138,16 +152,16 @@ namespace EnemyClasses
 			color.g = g * color3.g;
 			color.b = b * color3.b;
 
-			Vec2f tempPos = iPos;
+			Vec2f tempPos = pos;
 
-			iPos = Vec2f(game->PlayerPos().x * 2 - iPos.x, iPos.y);
+			pos = Vec2f(game->PlayerPos().x * 2 - pos.x, pos.y);
 			Enemy::DUpdate();
-			iPos = Vec2f(iPos.x, game->PlayerPos().y * 2 - iPos.y);
+			pos = Vec2f(pos.x, game->PlayerPos().y * 2 - pos.y);
 			Enemy::DUpdate();
-			iPos = Vec2f(game->PlayerPos().x * 2 - iPos.x, iPos.y);
+			pos = Vec2f(game->PlayerPos().x * 2 - pos.x, pos.y);
 			Enemy::DUpdate();
 
-			iPos = tempPos;
+			pos = tempPos;
 		}
 
 	};
@@ -157,15 +171,15 @@ namespace EnemyClasses
 	public:
 		Enemy* child;
 
-		Parent(Enemy* child, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+		Parent(Enemy* child, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), child(child)
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), child(child)
 		{
 			Start();
 		}
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Parent> newEnemy = make_unique<EnemyClasses::Parent>(*this);
 			newEnemy->baseClass = baseClass;
@@ -197,15 +211,15 @@ namespace EnemyClasses
 	class Exploder : public Enemy
 	{
 	public:
-		Vec2f explosionDimensions;
+		Vec2 explosionDimensions;
 
-		Exploder(Vec2f explosionDimensions, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+		Exploder(Vec2 explosionDimensions, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{ }
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity * creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Exploder> newEnemy = make_unique<EnemyClasses::Exploder>(*this);
 			newEnemy->baseClass = baseClass;
@@ -214,9 +228,19 @@ namespace EnemyClasses
 			return newEnemy;
 		}
 
-		void TUpdate() override
+		bool TUpdate() override
 		{
-			DestroySelf(this);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
+			int randomization;
+			for (int i = 0; i < hitEntities.size(); i++)
+			{
+				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
+				if (entity != this && !entity->IsEnemy())
+				{
+					entity->DealDamage(damage, this);
+					break;
+				}
+			}
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -230,27 +254,16 @@ namespace EnemyClasses
 	class Snake : public Enemy
 	{
 	public:
-		Vec2f lastPos;
 		RGBA color3, color4;
-		Snake* back = nullptr, *front = nullptr;
+		Snake* back = nullptr, * front = nullptr;
 		int length;
-		float segmentDistance;
 
-		Snake(int length, float segmentDistance, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
+		Snake(int length, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA subsurfaceResistance = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
-			length(length), segmentDistance(segmentDistance), color3(color3), color4(color4)
-		{
-			Start();
-		}
-
-		void Start() override
-		{
-			Enemy::Start();
-			lastPos = pos;
-		}
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
+		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -259,12 +272,12 @@ namespace EnemyClasses
 			{
 				enemies[i] = make_unique<Snake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos + Vec2f(RandFloat(), RandFloat());
+				enemies[i]->pos = pos;
 				enemies[i]->Start();
 				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
-			
+
 			if (length > 1)
 			{
 				enemies[0]->front = enemies[1].get();
@@ -284,29 +297,25 @@ namespace EnemyClasses
 		void DUpdate() override
 		{
 			if (front == nullptr)
-				game->Draw(iPos, color3, dimensions);
+				color = color3;
+			Enemy::DUpdate();
 		}
 
-		void EarlyDUpdate() override
+		void SetPos(Vec2 newPos)
+		{
+			Vec2 lastPos = pos;
+			Enemy::SetPos(newPos);
+			if (lastPos != pos)
+				if (back != nullptr)
+					back->SetPos(lastPos);
+		}
+
+		bool MUpdate() override
 		{
 			if (front == nullptr)
-				return;
+				Enemy::MUpdate();
 
-			float t = (float)health / (float)maxHealth;
-			RGBA tempColor = RGBA(int(color2.r + t * (color.r - color2.r)), int(color2.g + t * (color.g - color2.g)), int(color2.b + t * (color.b - color2.b)), int(color2.a + t * (color.a - color2.a)));
-			game->DrawLine(iPos, front->iPos, color);
-		}
-
-		void Update() override
-		{
-			if (front != nullptr)
-			{
-				float distance = pos.Distance(front->pos);
-				float temp = (distance / segmentDistance);
-				vel += ((pos - front->pos) / distance) * (1.0f / (temp * temp * temp) - 1.0f / temp) * game->dTime * 10;
-			}
-			else
-				Enemy::Update();
+			return true;
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -317,7 +326,7 @@ namespace EnemyClasses
 			if (front != nullptr)
 				front->back = nullptr;
 		}
-		
+
 		int Cost() override
 		{
 			return points * length / 3;
@@ -330,10 +339,10 @@ namespace EnemyClasses
 		vector<RGBA> colorsToCycle;
 		float colorOffset, colorCycleSpeed;
 
-		ColorCycler(vector<RGBA> colorsToCycle, float colorCycleSpeed = 1.0f, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1,
-			int firstWave = 1, int damage = 1, Vec2f dimensions = vOne, RGBA color2 = RGBA(),
+		ColorCycler(vector<RGBA> colorsToCycle, float colorCycleSpeed = 1.0f, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1,
+			int firstWave = 1, int damage = 1, Vec2 dimensions = vOne, RGBA color2 = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, colorsToCycle[0], color2, RGBA(), mass, maxHealth, health, name),
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, colorsToCycle[0], color2, RGBA(), mass, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
 		{ }
 
@@ -343,7 +352,7 @@ namespace EnemyClasses
 			colorOffset = RandFloat() * colorCycleSpeed;
 		}
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::ColorCycler> newEnemy = make_unique<EnemyClasses::ColorCycler>(*this);
 			newEnemy->baseClass = baseClass;
@@ -370,14 +379,14 @@ namespace EnemyClasses
 		int vacDist, desiredDistance;
 		Items items;
 
-		Vacuumer(float vacSpeed, int vacDist, int desiredDistance, float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
+		Vacuumer(float vacSpeed, int vacDist, int desiredDistance, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
 			vacSpeed(vacSpeed), vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{ }
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity * creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Vacuumer> newEnemy = make_unique<EnemyClasses::Vacuumer>(*this);
 			newEnemy->baseClass = baseClass;
@@ -386,18 +395,11 @@ namespace EnemyClasses
 			return newEnemy;
 		}
 
-		void Update() override
+		void MUpdate()
 		{
-			float currentDistance = 0;
-			if (fabsf((currentDistance = game->PlayerPos().Distance(pos)) - desiredDistance) > 1.0f)
-			{
-				vel += (game->PlayerPos() - pos).Normalized() * moveSpeed * game->dTime * (int(currentDistance > desiredDistance) * 2 - 1);
-			}
-			if (tTime - lastTime >= timePer)
-			{
-				TUpdate();
-				lastTime = tTime;
-			}
+			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) < 2.0f)
+				TryMove((game->PlayerPos() - pos).Rormalized(), mass);
+			return true;
 		}
 
 		void TUpdate() override

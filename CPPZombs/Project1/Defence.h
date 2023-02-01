@@ -8,7 +8,7 @@ public:
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
 	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
@@ -22,7 +22,7 @@ public:
 		timeSince = timePer * RandFloat();
 	}
 
-	CollectibleTree(CollectibleTree* baseClass, Vec2f dir, Vec2f pos) :
+	CollectibleTree(CollectibleTree* baseClass, Vec2 dir, Vec2 pos) :
 		CollectibleTree(*baseClass)
 	{
 		this->pos = pos;
@@ -30,7 +30,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2f pos = vZero, Vec2f dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<CollectibleTree>(this, dir, pos);
 	}
@@ -82,9 +82,9 @@ public:
 			DrawUIBox(topLeft, topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
 	}
 
-	bool PosInUIBounds(Vec2f screenSpacePos) override
+	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2f topLeft = TopLeft(), bottomRight;
+		Vec2 topLeft = TopLeft(), bottomRight;
 		if (currentLifespan < cyclesToGrow)
 		{
 			bottomRight = topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15);
@@ -111,14 +111,14 @@ public:
 	int maxGenerations, generation;
 
 	Vine(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
-		float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
 		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{ }
 
-	Vine(Vine* baseClass, Vec2f dir, Vec2f pos) :
+	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
 		Vine(*baseClass)
 	{
 		this->pos = pos;
@@ -126,7 +126,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2f pos = vZero, Vec2f dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Vine>(this, dir, pos);
 	}
@@ -140,10 +140,10 @@ public:
 	{
 		if (generation < maxGenerations && currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
-			Vec2f placementPos = pos;
+			Vec2 placementPos = pos;
 			while (placementPos == pos)
-				placementPos = pos + dimensions * Vec2f((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<Entity*> hitEntities = game->entities->FindCorpIOverlaps(placementPos, dimensions);
+				placementPos = pos + dimensions * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
 			if (!hitEntities.size())
 			{
 				unique_ptr<Entity> newVine = baseClass->Clone(placementPos, up, this);
@@ -189,20 +189,20 @@ public:
 		}
 	}
 
-	bool PosInUIBounds(Vec2f screenSpacePos) override
+	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2f topLeft = TopLeft(), bottomRight;
+		Vec2 topLeft = TopLeft(), bottomRight;
 		if (currentLifespan < cyclesToGrow)
 		{
-			bottomRight = topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 22);
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			bottomRight = topLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 29);
+			bottomRight = topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29);
 		}
 		else
 		{
-			bottomRight = topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15);
+			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
 		}
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
