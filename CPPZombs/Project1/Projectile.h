@@ -116,7 +116,6 @@ public:
         this->creator = creator;
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
-        this->direction = Vec2f(direction).Normalized();
         duration = fminf(item.range, magnitude);
         fPos = pos + Vec2f(0.01f, 0.01f);
         this->pos = pos;
@@ -132,13 +131,14 @@ public:
         this->creator = creator;
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
-        this->direction = Vec2f(direction).Normalized();
         duration = fminf(item.range, magnitude);
         fPos = pos + Vec2f(0.01f, 0.01f);
         this->pos = pos;
         begin = tTime;
         damage = item.damage;
         this->item = item;
+        color = item.color;
+        dimensions = item.dimensions;
         if (creator == nullptr)
             name = item.name;
         else

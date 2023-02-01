@@ -408,7 +408,7 @@ public:
 			int distance = pos.Squistance(collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
 			{
-				collectible->pos += Vec2f(pos - collectible->pos).Rormalized() * game->dTime;
+				collectible->SetPos(collectible->pos + Vec2f(pos - collectible->pos).Rormalized());
 			}
 		}
 	}

@@ -183,7 +183,7 @@ public:
 		if (size() == 0)
 			return;
 		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
-		Vec2f offset = game->IPlayerPos() - Vec2f(ScrDim()) * 0.5f;
+		Vec2f offset = game->PlayerPos() - Vec2f(ScrDim()) * 0.5f;
 		for (int i = 0; i < size(); i++)
 		{
 			if (i == currentIndex)

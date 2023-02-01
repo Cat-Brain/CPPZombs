@@ -8,7 +8,9 @@ public:
 	int vacDist;
 	bool placedBlock;
 	Vec2f placingDir = up;
-	float moveSpeed = 16, maxSpeed = 4.0f, lastVac = -1.0f, vacSpeed = 32.0f, lastClick = -1.0f, clickSpeed = 0.02f;
+	float timePerMove = 0.125f, lastMove = 0.0f, maxSpeed = 4.0f, lastVac = -1.0f,
+		timePerVac = 0.125f, lastClick = -1.0f, clickSpeed = 0.25f,
+		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		RGBA subsurfaceResistance = RGBA(), int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -21,26 +23,19 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
-		//items.push_back(Resources::copper->Clone(10));
-		items.push_back(Resources::emerald->Clone(600));
-		items.push_back(Resources::lead->Clone(20));
-		//items.push_back(Resources::cheese->Clone(10));
+		items.push_back(Resources::copper->Clone(10));
+		items.push_back(Resources::cheese->Clone(10));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
 		for (Item* item : Resources::Seeds::plantSeeds)
 			items.push_back(item->Clone());
 		items.currentIndex = 0; // Copper
 	}
 
-	void ReduceVel() override
-	{
-		vel *= powf(0.1f, game->dTime);
-	}
-
 	void Update() override
 	{
 		bool exitedMenu = false;
 		if (currentMenuedEntity != nullptr && (game->inputs.leftMouse.pressed || game->inputs.rightMouse.pressed) &&
-			!currentMenuedEntity->PosInUIBounds(game->inputs.mousePosition + iPos))
+			!currentMenuedEntity->PosInUIBounds(game->inputs.mousePosition + pos))
 		{
 			currentMenuedEntity->shouldUI = false;
 			currentMenuedEntity = nullptr;
@@ -50,8 +45,8 @@ public:
 
 		vector<Entity*> hitEntities;
 		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != vZero &&
-			(currentMenuedEntity == nullptr || !currentMenuedEntity->IOverlaps(game->inputs.mousePosition + iPos, vOne))
-			&& (hitEntities = game->entities->FindCorpIOverlaps(game->inputs.mousePosition + iPos, dimensions)).size())
+			(currentMenuedEntity == nullptr || !currentMenuedEntity->Overlaps(game->inputs.mousePosition + pos, vOne))
+			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + pos, dimensions)).size())
 		{
 			if (currentMenuedEntity != nullptr)
 				currentMenuedEntity->shouldUI = false;
@@ -61,20 +56,50 @@ public:
 
 		#pragma region Movement
 
-		Vec2 force = vZero;
+		if (game->inputs.w.pressed || game->inputs.up.pressed || game->inputs.a.pressed || game->inputs.left.pressed ||
+			game->inputs.s.pressed || game->inputs.down.pressed || game->inputs.d.pressed || game->inputs.right.pressed)
+			lastMove = tTime;
 
-		if (game->inputs.a.held || game->inputs.left.held)
-			vel.x--;
-		if (game->inputs.d.held || game->inputs.right.held)
-			vel.x++;
-		if (game->inputs.s.held || game->inputs.down.held)
-			vel.y--;
-		if (game->inputs.w.held || game->inputs.up.held)
-			vel.y++;
+		if (tTime - lastMove >= timePerMove)
+		{
+			Vec2 direction(0, 0);
 
-		Vec2 newVel = vel + force * moveSpeed * game->dTime;
-		if (vel.SqrMagnitude() < maxSpeed * maxSpeed || newVel.SqrMagnitude() < vel.SqrMagnitude())
-			vel = newVel;
+			#pragma region Inputs
+			if (game->inputs.a.held || game->inputs.left.held)
+			{
+				game->inputs.a.held = false;
+				game->inputs.left.held = false;
+				direction.x--;
+			}
+			if (game->inputs.d.held || game->inputs.right.held)
+			{
+				game->inputs.d.held = false;
+				game->inputs.right.held = false;
+				direction.x++;
+			}
+			if (game->inputs.s.held || game->inputs.down.held)
+			{
+				game->inputs.s.held = false;
+				game->inputs.down.held = false;
+				direction.y--;
+			}
+			if (game->inputs.w.held || game->inputs.up.held)
+			{
+				game->inputs.w.held = false;
+				game->inputs.up.held = false;
+				direction.y++;
+			}
+			#pragma endregion
+
+			Vec2 oldPos = pos;
+			if (direction != vZero)
+			{
+				lastMove = tTime;
+				TryMove(direction, 3);
+			}
+
+			game->inputs.mousePosition += pos - oldPos;
+		}
 
 		#pragma endregion
 
@@ -86,23 +111,23 @@ public:
 		if (game->inputs.middleMouse.released && heldEntity != nullptr)
 		{
 			heldEntity->holder = nullptr;
-			heldEntity->vel = 0;
 			heldEntity = nullptr;
 		}
 
 		if (heldEntity != nullptr)
 		{
 			heldEntity->dir.RotateLeft(game->inputs.mouseScroll);
-			if (Vec2(heldEntity->pos) == game->inputs.mousePosition + iPos)
-				heldEntity->vel = 0;
-			else
-				heldEntity->vel += (iPos + game->inputs.mousePosition - heldEntity->iPos).Normalized() / heldEntity->mass * 10;
+			if (tTime - lastHoldMove > timePerHoldMove)
+			{
+				lastHoldMove = tTime;
+				heldEntity->TryMove(Vec2f(pos + game->inputs.mousePosition - heldEntity->pos).Rormalized(), mass);
+			}
 		}
 		
 		
-		Vec2 normalizedDir = Vec2(game->inputs.mousePosition).Normalized();
+		Vec2 normalizedDir = Vec2f(game->inputs.mousePosition).Normalized();
 		if (heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
-			(hitEntities = game->entities->FindCorpIOverlaps(game->inputs.mousePosition + iPos, vOne)).size())
+			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + pos, vOne)).size())
 		{
 			heldEntity = hitEntities[0];
 			heldEntity->holder = this;
@@ -112,15 +137,16 @@ public:
 		{
 			lastClick = tTime;
 			game->entities->push_back(basicShotItem->Clone(currentShootingItem,
-				iPos + dimensions / 2.0f + right * int(game->inputs.mousePosition.x <= 0) + up * int(game->inputs.mousePosition.y <= 0), game->inputs.mousePosition, this));
+				pos, game->inputs.mousePosition, this));
 		}
 
-		if (heldEntity == nullptr && game->inputs.space.held)
+		if (heldEntity == nullptr && game->inputs.space.held && tTime - lastVac > timePerVac)
 		{
-			game->entities->Vacuum(iPos, vacSpeed, vacDist);
+			game->entities->Vacuum(pos, vacDist);
+			lastVac = tTime;
 		}
 
-		vector<Entity*> collectibles = EntitiesOverlaps(iPos, dimensions, game->entities->collectibles);
+		vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
 		for (Entity* collectible : collectibles)
 		{
 			items.push_back(((Collectible*)collectible)->baseItem);

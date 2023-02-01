@@ -132,11 +132,11 @@ public:
 		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
 		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
 		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
-			dimensions.x * 2 / ScrWidth(), dimensions.y * 2 / ScrHeight());
+			float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
 
 		glUniform2f(glGetUniformLocation(defaultShader, "position"),
-			(pos.x - IPlayerPos().x) * 2 / ScrWidth(),
-			(pos.y - IPlayerPos().y) * 2 / ScrHeight());
+			float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
+			float((pos.y - PlayerPos().y) * 2) / ScrHeight());
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(defaultShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
@@ -154,11 +154,11 @@ public:
 		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
 		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
 		glUniform2f(glGetUniformLocation(lineShader, "a"),
-			(a.x - IPlayerPos().x) * 2 / ScrWidth(),
-			(a.y - IPlayerPos().y) * 2 / ScrHeight());
+			(a.x - PlayerPos().x) * 2 / ScrWidth(),
+			(a.y - PlayerPos().y) * 2 / ScrHeight());
 		glUniform2f(glGetUniformLocation(lineShader, "b"),
-			(b.x - IPlayerPos().x) * 2 / ScrWidth(),
-			(b.y - IPlayerPos().y) * 2 / ScrHeight());
+			(b.x - PlayerPos().x) * 2 / ScrWidth(),
+			(b.y - PlayerPos().y) * 2 / ScrHeight());
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(lineShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
@@ -183,12 +183,7 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec2f PlayerPos()
-	{
-		return vZero;
-	}
-
-	inline virtual Vec2 IPlayerPos()
+	inline virtual Vec2 PlayerPos()
 	{
 		return vZero;
 	}

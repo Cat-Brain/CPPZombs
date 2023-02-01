@@ -95,7 +95,7 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
-	Draw(inputs.mousePosition + player->iPos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));// Draw mouse.
+	Draw(inputs.mousePosition + player->pos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));// Draw mouse.
 	// Draw mid-res screen onto true screen.
 	DrawFramebufferOnto(0);
 

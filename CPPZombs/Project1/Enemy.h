@@ -52,7 +52,7 @@ public:
 
 	virtual bool MUpdate()
 	{
-		TryMove((game->PlayerPos() - pos).Rormalized(), mass);
+		TryMove(Vec2f(game->PlayerPos() - pos).Rormalized(), mass);
 		return true;
 	}
 
@@ -69,6 +69,8 @@ public:
 				break;
 			}
 		}
+
+		return true;
 	}
 
 	Vec2 BottomRight() override
@@ -375,15 +377,14 @@ namespace EnemyClasses
 	class Vacuumer : public Enemy
 	{
 	public:
-		float vacSpeed;
 		int vacDist, desiredDistance;
 		Items items;
 
-		Vacuumer(float vacSpeed, int vacDist, int desiredDistance, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Vacuumer(int vacDist, int desiredDistance, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
-			vacSpeed(vacSpeed), vacDist(vacDist), desiredDistance(desiredDistance), items(0)
+			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
@@ -395,23 +396,23 @@ namespace EnemyClasses
 			return newEnemy;
 		}
 
-		void MUpdate()
+		bool MUpdate() override
 		{
 			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) < 2.0f)
-				TryMove((game->PlayerPos() - pos).Rormalized(), mass);
+				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(Vec2f(game->PlayerPos() - pos).SqrMagnitude() > desiredDistance * desiredDistance)), mass);
 			return true;
 		}
 
-		void TUpdate() override
+		bool TUpdate() override
 		{
-			game->entities->Vacuum(pos, vacSpeed, vacDist);
+			game->entities->Vacuum(pos, vacDist);
 			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
 			for (Entity* collectible : collectibles)
 			{
 				items.push_back(((Collectible*)collectible)->baseItem);
 				collectible->DestroySelf(this);
 			}
-			Enemy::TUpdate();
+			return Enemy::TUpdate();
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -419,7 +420,7 @@ namespace EnemyClasses
 			Enemy::OnDeath(damageDealer);
 			for (Item item : items)
 			{
-				game->entities->push_back(make_unique<Collectible>(item, iPos));
+				game->entities->push_back(make_unique<Collectible>(item, pos));
 			}
 		}
 	};
@@ -429,7 +430,7 @@ namespace EnemyClasses
 	public:
 		using Vacuumer::Vacuumer;
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Ranger> newEnemy = make_unique<EnemyClasses::Ranger>(*this);
 			newEnemy->baseClass = baseClass;
@@ -438,7 +439,7 @@ namespace EnemyClasses
 			return std::move(newEnemy);
 		}
 
-		void TUpdate() override
+		bool TUpdate() override
 		{
 			Vacuumer::TUpdate();
 
@@ -446,8 +447,10 @@ namespace EnemyClasses
 			{
 				Item shotItem = items[0].Clone(1);
 				items.TryTakeIndex(0);
-				game->entities->push_back(basicShotItem->Clone(shotItem, iPos, Vec2f((game->IPlayerPos() - iPos) * static_cast<int>(shotItem.range)), this));
+				game->entities->push_back(basicShotItem->Clone(shotItem, pos, Vec2f((game->PlayerPos() - pos) * static_cast<int>(shotItem.range)), this));
 			}
+
+			return true;
 		}
 	};
 
@@ -517,7 +520,7 @@ namespace EnemyClasses
 				if (tTime - lastLegUpdates[i] > legCycleSpeed)
 				{
 					lastLegUpdates[i] += legCycleSpeed;
-					Vec2f desiredPos = LegPos(i) + (game->PlayerPos() - pos).Normalized() * legTolerance * 0.5f;
+					Vec2f desiredPos = LegPos(i) + Vec2f(game->PlayerPos() - pos).Normalized() * legTolerance * 0.5f;
 					if (legs[i]->desiredPos.Distance(desiredPos) > legTolerance)
 						legs[i]->desiredPos = desiredPos;
 				}
@@ -545,7 +548,7 @@ namespace EnemyClasses
 			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
 				timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name) { }
 
-		unique_ptr<Entity> Clone(Vec2f pos, Vec2f dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<EnemyClasses::Spoobderb> newEnemy = make_unique<EnemyClasses::Spoobderb>(*this);
 			newEnemy->baseClass = baseClass;
@@ -565,31 +568,31 @@ namespace EnemyClasses
 
 //Predefinitions
 LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f);
-Enemy* child = new Enemy(1.0f, 8.0f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
+Enemy* child = new Enemy(1.0f, 0.125f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
 
 // Earlies.
-Enemy* walker = new Enemy(0.75f, 1.5f, 1, 1, 0, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
-Enemy* tanker = new Enemy(1.0f, 1.0f, 2, 1, 1, vOne * 5, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
-EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.0f, 4.0f, 2, 1, 0, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
+Enemy* walker = new Enemy(0.75f, 0.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
+Enemy* tanker = new Enemy(1.0f, 0.75f, 2, 1, 1, vOne * 5, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
+EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 2, 1, 1, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
 
 // Mids:
-EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 6.0f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
-EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 5, 0.0f, 4.0f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
-EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(3.0f, 12, 12, 0.125f, 8.0f, 3, 4, 0, vOne, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
+EnemyClasses::Deceiver* deceiver = new EnemyClasses::Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
+EnemyClasses::Exploder* exploder = new EnemyClasses::Exploder(vOne * 5, 0.0f, 0.25f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
+EnemyClasses::Vacuumer* vacuumer = new EnemyClasses::Vacuumer(12, 12, 0.125f, 0.125f, 3, 4, 0, vOne, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 
 // Mid-lates:
 EnemyClasses::Parent* parent = new EnemyClasses::Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
-EnemyClasses::Snake* snake = new EnemyClasses::Snake(5, 3.0f, 0.25f, 16.0f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
+EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.5f, 0.25f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
 
 // Lates:
-EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 24.0f, 0, 1, 4, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 0.25f, 0, 1, 4, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
-EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 15, 0.0f, 4.0f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
-EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(3.0f, 12, 12, 0.125f, 8.0f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 12, 12, "Ranger");
+EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 15, 0.0f, 0.25f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
+EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 0.125f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 12, 12, "Ranger");
 
 // Bosses:
-EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 2.0f, 250, 0, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
+EnemyClasses::Spoobderb* spoobderb = new EnemyClasses::Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 0.5f, 250, 0, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 class EnemiesInstance;
 class Enemies : public vector<vector<Enemy*>>

@@ -37,8 +37,7 @@ public:
 
 	void End() override;
 
-	inline Vec2f PlayerPos() override;
-	inline Vec2 IPlayerPos() override;
+	inline Vec2 PlayerPos() override;
 
 	void ApplyLighting();
 
