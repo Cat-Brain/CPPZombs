@@ -9,22 +9,21 @@ public:
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
-	Vec2 pos, dir, vel;
-	Vec2 iPos;
+	Vec2 pos, dir;
 	Vec2 dimensions;
 	RGBA color, subsurfaceResistance;
 	float mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
 
-	Entity(Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(), RGBA subsurfaceResistance = RGBA(),
+	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), iPos(pos), dimensions(dimensions), vel(0, 0), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance),
+		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
 	{
 	}
 
-	Entity(Entity* baseClass, Vec2 pos):
+	Entity(Entity* baseClass, Vec2f pos):
 		Entity(*baseClass)
 	{
 		this->pos = pos;
@@ -49,40 +48,28 @@ public:
 
 	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobster.
 
-	virtual void VUpdate();
-
-	virtual void ReduceVel()
-	{
-		vel *= powf(0.25f, game->dTime);
-	}
-
-	virtual void AddForce(Vec2 force)
-	{
-		vel += force / mass;
-	}
-
 	void ResolveCollision(Entity* other) // SUPER INCOMPLETE, DO NOT USE!
 	{
-		Vec2 p = pos - other->pos;
-		Vec2 b = dimensions + other->dimensions;
-		Vec2 w = p.Abs() - b;
-		Vec2 s = Vec2(p.x < 0.0 ? -1 : 1, p.y < 0.0 ? -1 : 1);
+		Vec2f p = pos - other->pos;
+		Vec2f b = dimensions + other->dimensions;
+		Vec2f w = p.Abs() - b;
+		Vec2f s = Vec2f(p.x < 0.0 ? -1 : 1, p.y < 0.0 ? -1 : 1);
 		float g = max(w.x, w.y);
-		Vec2  q = w.V2fMin(0.0);
+		Vec2f  q = w.V2fMin(0.0);
 		float l = q.Magnitude();
-		Vec2 movement = s * ((g > 0.0) ? q / l : ((w.x > w.y) ? Vec2(1, 0) : Vec2(0, 1)));
+		Vec2f movement = s * ((g > 0.0) ? q / l : ((w.x > w.y) ? Vec2f(1, 0) : Vec2f(0, 1)));
 	}
 
 	virtual void DUpdate() // Normally only draws.
 	{
-		game->Draw(iPos, color, dimensions);
+		game->Draw(pos, color, dimensions);
 	}
 
 	void DrawUIBox(Vec2 topLeft, Vec2 bottomRight, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
 		game->DrawFBL(topLeft, borderColor, bottomRight - topLeft);
-		game->DrawFBL(topLeft + Vec2(1, 1), fillColor, bottomRight - topLeft - Vec2(1, 1));
+		game->DrawFBL(topLeft + 1, fillColor, bottomRight - topLeft - 1);
 		//game->DrawString(topLeft + Vec2(1, 1), text, textColor);
 	}
 
@@ -124,9 +111,9 @@ public:
 		return 0;
 	}
 
-	virtual bool IOverlaps(Vec2 iPos, Vec2 dim)
+	virtual bool Overlaps(Vec2 pos, Vec2 dim)
 	{
-		return labs(this->iPos.x - iPos.x) < (dimensions.x + dim.x) / 2 && labs(this->iPos.y - iPos.y) < (dimensions.y + dim.y) / 2;
+		return labs(this->pos.x - pos.x) < (dimensions.x + dim.x) / 2 && labs(this->pos.y - pos.y) < (dimensions.y + dim.y) / 2;
 	}
 
 	#pragma region bool functions
@@ -179,14 +166,15 @@ public:
 
 #pragma region Other Entity funcitons
 
-vector<Entity*> EntitiesOverlaps(Vec2 iPos, Vec2 dimensions, vector<Entity*> entities)
+vector<Entity*> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<Entity*> entities)
 {
 	vector<Entity*> foundEntities(0);
 	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
-		if ((*i)->IOverlaps(iPos, dimensions))
+		if ((*i)->Overlaps(pos, dimensions))
 			foundEntities.push_back(*i);
 	return foundEntities;
 }
+
 #pragma endregion
 
 
@@ -196,7 +184,7 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = Vec2(0, 0), Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA()) :
+	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
 
 	void Update() override
@@ -221,12 +209,7 @@ public:
 typedef std::pair<Cost, Item*> RecipeA;
 typedef std::pair<Cost, Entity*> RecipeB;
 
-Vec2 Game::PlayerPos()
+Vec2f Game::PlayerPos()
 {
 	return ((Entity*)player)->pos;
-}
-
-iVec2 Game::IPlayerPos()
-{
-	return ((Entity*)player)->iPos;
 }

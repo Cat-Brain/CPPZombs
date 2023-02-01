@@ -5,7 +5,7 @@ class DToCol : public Entity
 public:
 	RGBA color2;
 
-	DToCol(Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
+	DToCol(Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name), color2(color2)
 	{ }
@@ -27,7 +27,7 @@ public:
 	int lightFalloff;
 	LightSource* lightSource;
 
-	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
+	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2f pos = vZero, Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), lightColor(lightColor),
 		lightFalloff(lightFalloff), lightSource(nullptr)
@@ -40,7 +40,7 @@ public:
 		game->entities->lightSources.push_back(std::move(sharedPtr));
 	}
 
-	LightBlock(LightBlock* baseClass, Vec2 pos) :
+	LightBlock(LightBlock* baseClass, Vec2f pos) :
 		LightBlock(*baseClass)
 	{
 		this->pos = pos;
@@ -48,12 +48,12 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2f pos = vZero, Vec2f dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<LightBlock>(this, pos);
 	}
 
-	void SetPos(Vec2 newPos) override
+	void SetPos(Vec2f newPos) override
 	{
 		DToCol::SetPos(newPos);
 		lightSource->pos = pos;
@@ -85,14 +85,14 @@ class FunctionalBlock : public Entity
 public:
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
@@ -118,14 +118,14 @@ class FunctionalBlock2 : public Entity // Can have speed multipliers.
 public:
 	float timePer, timeSince;
 
-	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
-	FunctionalBlock2(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{

@@ -18,12 +18,6 @@ public:
 		return make_unique<Collectible>(this, pos);
 	}
 
-	void VUpdate() override
-	{
-		vel *= powf(0.25f, game->dTime);
-		Entity::VUpdate();
-	}
-
 
 	virtual Collectible* Clone(int count)
 	{

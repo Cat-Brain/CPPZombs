@@ -148,7 +148,7 @@ public:
 		DrawFBL(pos - dimensions / 2, color, dimensions);
 	}
 
-	void DrawLine(Vec2 a, Vec2 b, RGBA color)
+	void DrawLine(Vec2f a, Vec2f b, RGBA color)
 	{
 		glUseProgram(lineShader);
 		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
@@ -183,12 +183,12 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec2 PlayerPos()
+	inline virtual Vec2f PlayerPos()
 	{
 		return vZero;
 	}
 
-	inline virtual iVec2 IPlayerPos()
+	inline virtual Vec2 IPlayerPos()
 	{
 		return vZero;
 	}

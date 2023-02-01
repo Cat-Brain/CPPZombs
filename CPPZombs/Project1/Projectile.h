@@ -6,13 +6,13 @@ public:
     Vec2 direction;
     float duration;
     int damage;
-    float speed, begin;
+    float lastTime, timePer, begin;
     int callType = 0; 
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
+    Projectile(float duration = 10, int damage = 1, float timePer = 8.0f, Vec2f dimensions = Vec2f(1, 1), RGBA color = RGBA(),
         RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
-        duration(duration), damage(damage), speed(speed), begin(tTime)
+        Entity(Vec2f(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
+        duration(duration), damage(damage), timePer(timePer), begin(tTime)
     {
         Start();
     }
@@ -21,8 +21,8 @@ public:
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->direction = direction.Normalized();
-        vel = this->direction * speed;
+        this->direction = Vec2f(direction).Normalized();
+        lastTime = 0.0f;
         this->pos = pos;
         begin = tTime;
         Start();
@@ -90,13 +90,13 @@ public:
     Item item;
     string creatorName;
 
-    ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
+    ShotItem(Item item, float speed = 8.0f, Vec2f dimensions = Vec2f(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, dimensions, item.color, RGBA(), mass, maxHealth, health), item(item)
     {
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Vec2f pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         damage = item.damage;
@@ -111,7 +111,7 @@ public:
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Item item, Vec2f pos, Vec2f direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->item = item;
@@ -120,7 +120,7 @@ public:
         begin = tTime;
         this->creator = creator;
         this->pos = pos;
-        this->iPos = iVec2(pos);
+        this->iPos = Vec2(pos);
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
         vel = this->direction * speed;
@@ -137,12 +137,12 @@ public:
         Start();
     }
 
-    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(Vec2f pos, Vec2f direction, Entity* creator) override
     {
         return make_unique<ShotItem>(this, pos, direction, creator);
     }
 
-    unique_ptr<Entity> Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
+    unique_ptr<Entity> Clone(Item baseItem, Vec2f pos, Vec2f direction, Entity* creator)
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }

@@ -10,12 +10,12 @@ public:
 	int damage;
 	int count;
 	float range;
-	Vec2 dimensions;
+	Vec2f dimensions;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
 		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2 dimensions = vOne) :
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
 		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
 
 	virtual Item Clone(int count)
@@ -58,7 +58,7 @@ public:
 		return typeName[0] < b.typeName[0];
 	}
 
-	virtual void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType);
+	virtual void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType);
 };
 Item* dItem = new Item("NULL", "NULL TYPE", RGBA(), 0, 0);
 
@@ -67,7 +67,7 @@ class GoneOnLandItem : public Item
 public:
 	using Item::Item;
 
-	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) override { }
+	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override { }
 
 	virtual Item Clone(int count)
 	{
@@ -183,18 +183,18 @@ public:
 		if (size() == 0)
 			return;
 		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
-		Vec2 offset = game->IPlayerPos() - Vec2(ScrDim()) * 0.5f;
+		Vec2f offset = game->IPlayerPos() - Vec2f(ScrDim()) * 0.5f;
 		for (int i = 0; i < size(); i++)
 		{
 			if (i == currentIndex)
 				continue;
-			game->DrawFBL(offset + Vec2(0, scale * i), (*this)[i].color, Vec2(scale, scale));
+			game->DrawFBL(offset + Vec2f(0, scale * i), (*this)[i].color, Vec2f(scale, scale));
 			//game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)),
 				//"-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName), (*this)[i].color);
 		}
-		game->DrawFBL(offset + Vec2(0, scale * currentIndex), RGBA(), Vec2(scale, scale));
+		game->DrawFBL(offset + Vec2f(0, scale * currentIndex), RGBA(), Vec2f(scale, scale));
 		int scale2 = scale / 5;
-		game->DrawFBL(offset + Vec2(scale2, scale2 + scale * currentIndex), (*this)[currentIndex].color, Vec2(scale, scale) - 2 * scale2);
+		game->DrawFBL(offset + Vec2f(scale2, scale2 + scale * currentIndex), (*this)[currentIndex].color, Vec2f(scale, scale) - 2 * scale2);
 	}
 
 	Item GetCurrentItem()

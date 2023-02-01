@@ -1,83 +1,84 @@
 ﻿  main.cpp
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Inputs.h(73,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Inputs.h(74,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(125,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(252,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Renderer.h(199,56): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,70): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,40): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,70): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,46): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,112): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,105): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,123): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(69,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(69,21): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(96,46): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(129,28): warning C4244: 'argument': conversion from 'float' to 'long', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(129,88): warning C4244: 'argument': conversion from 'float' to 'long', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(58,126): warning C4244: 'argument': conversion from 'float' to 'const unsigned __int64', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(59,52): warning C4244: 'argument': conversion from 'float' to 'const unsigned __int64', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(70,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(70,74): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,104): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,104): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(235,9): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(236,74): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(236,44): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(237,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(251,1): warning C4244: '-=': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(256,1): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(426,17): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Projectile.h(14,69): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(10,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(90,91): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(97,100): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(123,88): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(130,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(57,134): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(57,112): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(59,148): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(59,126): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(70,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(76,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(82,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(90,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(94,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(98,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(145,75): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(145,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(172,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(179,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(187,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(197,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(201,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(205,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(62,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(130,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(131,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(132,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(137,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(138,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(139,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(394,123): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,88): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,75): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\memory(3416,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(442): message : see reference to function template instantiation 'std::unique_ptr<SpinText,std::default_delete<SpinText>> std::make_unique<SpinText,Vec2,int&,std::string,RGBA,float,float,float,0>(Vec2 &&,int &,std::string &&,RGBA &&,float &&,float &&,float &&)' being compiled
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Inputs.h(73,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Inputs.h(74,26): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(125,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(252,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Renderer.h(199,49): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,70): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,40): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(195,70): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,46): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,31): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,112): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,105): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(197,123): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(69,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(69,21): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(96,46): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(129,28): warning C4244: 'argument': conversion from 'float' to 'long', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(129,88): warning C4244: 'argument': conversion from 'float' to 'long', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(58,126): warning C4244: 'argument': conversion from 'float' to 'const unsigned __int64', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(59,52): warning C4244: 'argument': conversion from 'float' to 'const unsigned __int64', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(70,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(70,74): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,104): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(104,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,104): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,61): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(105,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(235,9): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(236,74): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(236,44): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(237,13): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(251,22): warning C4244: '-=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(256,22): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(426,17): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Projectile.h(14,69): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(10,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(90,91): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(97,100): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(123,88): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\BuildingBlocks.h(130,97): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(57,134): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(57,112): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(59,148): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(59,126): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(70,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(76,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(82,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(90,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(94,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(98,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(145,75): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(145,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(172,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(179,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(187,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(197,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(201,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(205,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(62,41): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(130,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(131,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(132,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(137,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(138,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(139,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(394,123): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,88): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,75): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(3433,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(442,1): message : see reference to function template instantiation 'std::unique_ptr<SpinText,std::default_delete<SpinText>> std::make_unique<SpinText,Vec2,int&,std::string,RGBA,float,float,float,0>(Vec2 &&,int &,std::string &&,RGBA &&,float &&,float &&,float &&)' being compiled
+  glad.c
   Generating code
-  144 of 2771 functions ( 5.2%) were compiled, the rest were copied from previous compilation.
+  150 of 2775 functions ( 5.4%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Project1.vcxproj -> C:\Users\180022550\source\repos\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
+  Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe

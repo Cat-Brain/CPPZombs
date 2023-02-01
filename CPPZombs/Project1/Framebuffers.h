@@ -78,7 +78,7 @@ int ScrHeight()
     return framebuffers[currentFramebuffer - 1]->height;
 }
 
-iVec2 ScrDim()
+Vec2 ScrDim()
 {
     if (currentFramebuffer == 0)
         return { int(trueScreenWidth), int(trueScreenHeight) };

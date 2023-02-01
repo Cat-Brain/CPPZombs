@@ -12,7 +12,7 @@ struct Inputs
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
 	int mouseScroll;
-	iVec2 mousePosition = vZero;
+	Vec2 mousePosition = vZero;
 
 	Inputs() = default;
 

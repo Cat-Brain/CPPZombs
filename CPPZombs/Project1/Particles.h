@@ -3,10 +3,10 @@
 class Particle
 {
 public:
-	Vec2 pos;
+	Vec2f pos;
 	float startTime, duration;
 
-	Particle(Vec2 pos, float duration) :
+	Particle(Vec2f pos, float duration) :
 		pos(pos), duration(duration), startTime(tTime) { }
 
 	virtual bool ShouldEnd()
@@ -24,9 +24,9 @@ public:
 class VelocityParticle : public Particle
 {
 public:
-	Vec2 velocity;
+	Vec2f velocity;
 
-	VelocityParticle(Vec2 pos, Vec2 velocity, float duration) :
+	VelocityParticle(Vec2f pos, Vec2f velocity, float duration) :
 		Particle(pos, duration), velocity(velocity) { }
 
 	void Update() override
@@ -40,7 +40,7 @@ class VelocitySquare : public VelocityParticle
 public:
 	RGBA color;
 
-	VelocitySquare(Vec2 pos, Vec2 velocity, RGBA color, float duration) :
+	VelocitySquare(Vec2f pos, Vec2f velocity, RGBA color, float duration) :
 		VelocityParticle(pos, velocity, duration), color(color) { }
 
 	void LowResUpdate() override
@@ -54,10 +54,10 @@ class SpinParticle : public Particle
 public:
 	float rotation, rotationalVelocity;
 
-	SpinParticle(Vec2 pos, float duration, float rotation, float rotationalVelocity) :
+	SpinParticle(Vec2f pos, float duration, float rotation, float rotationalVelocity) :
 		Particle(pos, duration), rotation(rotation), rotationalVelocity(rotationalVelocity) { }
 
-	SpinParticle(Vec2 pos, float duration) :
+	SpinParticle(Vec2f pos, float duration) :
 		Particle(pos, duration), rotation(RandFloat() * PI_F), rotationalVelocity((RandFloat() - 0.5f) * PI_F * 4.0f) { }
 
 	void Update() override
@@ -71,10 +71,10 @@ class WobbleScaler : public SpinParticle
 public:
 	float scale, baseScale, wobbleSpeed, wobbleStrength;
 
-	WobbleScaler(Vec2 pos, float duration, float scale, float wobbleSpeed, float wobbleStrength, float rotation, float rotationalVelocity) :
+	WobbleScaler(Vec2f pos, float duration, float scale, float wobbleSpeed, float wobbleStrength, float rotation, float rotationalVelocity) :
 		SpinParticle(pos, duration, rotation, rotationalVelocity), scale(scale), baseScale(scale), wobbleSpeed(wobbleSpeed), wobbleStrength(wobbleStrength) { }
 
-	WobbleScaler(Vec2 pos, float duration, float scale, float wobbleSpeed, float wobbleStrength) :
+	WobbleScaler(Vec2f pos, float duration, float scale, float wobbleSpeed, float wobbleStrength) :
 		SpinParticle(pos, duration), scale(scale), baseScale(scale), wobbleSpeed(wobbleSpeed), wobbleStrength(wobbleStrength) { }
 
 	void Update() override
@@ -90,10 +90,10 @@ public:
 	RGBA color;
 	string text;
 
-	SpinText(Vec2 pos, float duration, string text, RGBA color, float scale, float wobbleSpeed, float wobbleStrength, float rotation, float rotationalVelocity) :
+	SpinText(Vec2f pos, float duration, string text, RGBA color, float scale, float wobbleSpeed, float wobbleStrength, float rotation, float rotationalVelocity) :
 		WobbleScaler(pos, duration, scale, wobbleSpeed, rotation, rotationalVelocity, wobbleStrength), text(text), color(color) { }
 
-	SpinText(Vec2 pos, float duration, string text, RGBA color, float scale, float wobbleSpeed, float wobbleStrength) :
+	SpinText(Vec2f pos, float duration, string text, RGBA color, float scale, float wobbleSpeed, float wobbleStrength) :
 		WobbleScaler(pos, duration, scale, wobbleSpeed, wobbleStrength), text(text), color(color) { }
 
 	void HighResUpdate() override
@@ -106,11 +106,11 @@ class LegParticle : public Particle
 {
 public:
 	Entity* parent;
-	Vec2 desiredPos;
+	Vec2f desiredPos;
 	RGBA color;
 	float moveSpeed;
 
-	LegParticle(Vec2 pos, Entity* parent, RGBA color, float moveSpeed) :
+	LegParticle(Vec2f pos, Entity* parent, RGBA color, float moveSpeed) :
 		Particle(pos, 0), parent(parent), desiredPos(pos), color(color), moveSpeed(moveSpeed) { }
 
 	bool ShouldEnd() override

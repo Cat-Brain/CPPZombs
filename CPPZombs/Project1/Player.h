@@ -7,7 +7,7 @@ public:
 	Items items;
 	int vacDist;
 	bool placedBlock;
-	Vec2 placingDir = up;
+	Vec2f placingDir = up;
 	float moveSpeed = 16, maxSpeed = 4.0f, lastVac = -1.0f, vacSpeed = 32.0f, lastClick = -1.0f, clickSpeed = 0.02f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
@@ -93,7 +93,7 @@ public:
 		if (heldEntity != nullptr)
 		{
 			heldEntity->dir.RotateLeft(game->inputs.mouseScroll);
-			if (iVec2(heldEntity->pos) == game->inputs.mousePosition + iPos)
+			if (Vec2(heldEntity->pos) == game->inputs.mousePosition + iPos)
 				heldEntity->vel = 0;
 			else
 				heldEntity->vel += (iPos + game->inputs.mousePosition - heldEntity->iPos).Normalized() / heldEntity->mass * 10;

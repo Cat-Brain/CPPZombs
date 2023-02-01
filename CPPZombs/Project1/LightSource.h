@@ -6,13 +6,13 @@ protected:
 	JRGB lastColor;
 	byte lastFalloff = 0;
 public:
-	Vec2 pos;
+	Vec2f pos;
 	JRGB color;
 	byte falloff;
 	JRGB* colorMap = nullptr;
 	int colorMapWidth = 0;
 
-	LightSource(Vec2 pos = Vec2(0, 0), JRGB color = JRGB(255, 255, 255), byte falloff = 50) :
+	LightSource(Vec2f pos = Vec2f(0, 0), JRGB color = JRGB(255, 255, 255), byte falloff = 50) :
 		pos(pos), color(color), falloff(falloff) { }
 
 	float Range()
