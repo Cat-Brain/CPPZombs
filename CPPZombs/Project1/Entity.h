@@ -115,7 +115,7 @@ public:
 
 	virtual bool Overlaps(Vec2 pos, Vec2 dim)
 	{
-		return labs(this->pos.x - pos.x) < (dimensions.x + dim.x) / 2 && labs(this->pos.y - pos.y) < (dimensions.y + dim.y) / 2;
+		return labs(this->pos.x - pos.x) < float(dimensions.x + dim.x) / 2 && labs(this->pos.y - pos.y) < float(dimensions.y + dim.y) / 2;
 	}
 
 	#pragma region bool functions

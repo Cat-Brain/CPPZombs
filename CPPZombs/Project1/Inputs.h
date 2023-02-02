@@ -31,6 +31,14 @@ struct Inputs
 		key.held = held;
 	}
 
+	static void UpdateKey2(GLFWwindow* window, Key& key, int keycode)
+	{
+		bool held = glfwGetKey(window, keycode) == GLFW_PRESS;
+		key.pressed = !key.held && held;
+		key.released = key.held && !held;
+		key.held |= held;
+	}
+
 	static void UpdateMouse(GLFWwindow* window, Key& key, int keycode)
 	{
 		bool held = glfwGetMouseButton(window, keycode) == GLFW_PRESS;
@@ -41,15 +49,15 @@ struct Inputs
 
 	void Update(GLFWwindow* window)
 	{
-		UpdateKey(window, w, GLFW_KEY_W);
-		UpdateKey(window, a, GLFW_KEY_A);
-		UpdateKey(window, s, GLFW_KEY_S);
-		UpdateKey(window, d, GLFW_KEY_D);
+		UpdateKey2(window, w, GLFW_KEY_W);
+		UpdateKey2(window, a, GLFW_KEY_A);
+		UpdateKey2(window, s, GLFW_KEY_S);
+		UpdateKey2(window, d, GLFW_KEY_D);
 
-		UpdateKey(window, up, GLFW_KEY_UP);
-		UpdateKey(window, left, GLFW_KEY_LEFT);
-		UpdateKey(window, down, GLFW_KEY_DOWN);
-		UpdateKey(window, right, GLFW_KEY_RIGHT);
+		UpdateKey2(window, up, GLFW_KEY_UP);
+		UpdateKey2(window, left, GLFW_KEY_LEFT);
+		UpdateKey2(window, down, GLFW_KEY_DOWN);
+		UpdateKey2(window, right, GLFW_KEY_RIGHT);
 
 		UpdateKey(window, enter, GLFW_KEY_ENTER);
 		UpdateKey(window, c, GLFW_KEY_C);
@@ -66,8 +74,9 @@ struct Inputs
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
-		xPos /= trueScreenWidth;
-		xPos *= ScrWidth(); // So broken with weird screen ratios.
+		xPos /= trueScreenHeight;
+		xPos /= screenRatio;
+		xPos *= ScrWidth();
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= ScrHeight();
 		mousePosition.x = round(xPos - ScrWidth() / 2.0);

@@ -165,7 +165,7 @@ public:
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
 				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, dim) &&
-					(find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end())) overlaps.push_back((*this)[*iter].get());
+					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 

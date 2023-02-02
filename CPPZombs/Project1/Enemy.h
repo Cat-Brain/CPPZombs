@@ -59,7 +59,7 @@ public:
 	virtual bool TUpdate()
 	{
 		vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
-		int randomization;
+		int randomization = rand();
 		for (int i = 0; i < hitEntities.size(); i++)
 		{
 			Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
@@ -586,7 +586,7 @@ EnemyClasses::Parent* spiderParent = new EnemyClasses::Parent(spider, 1.0f, 1.0f
 EnemyClasses::Snake* snake = new EnemyClasses::Snake(30, 0.5f, 0.25f, 1, 1, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
 
 // Lates:
-EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 0.25f, 0, 1, 4, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
+EnemyClasses::ColorCycler* hyperSpeedster = new EnemyClasses::ColorCycler({RGBA(255), RGBA(255, 255), RGBA(0, 0, 255)}, 2.0f, 0.5f, 0.25f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 EnemyClasses::Exploder* gigaExploder = new EnemyClasses::Exploder(vOne * 15, 0.0f, 0.25f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 EnemyClasses::Ranger* ranger = new EnemyClasses::Ranger(12, 12, 0.125f, 0.125f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 1, 12, 12, "Ranger");
@@ -662,7 +662,7 @@ EnemiesInstance Enemies::RandomClone()
 	return result;
 }
 
-Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent/*, snake*/},
-	{/*hyperSpeedster, */megaTanker, gigaExploder, ranger }, {hyperSpeedster} };
+Enemies spawnableEnemies{ {walker, tanker, spider}, {deceiver, exploder, vacuumer}, {parent, spiderParent, snake},
+	{hyperSpeedster, megaTanker, gigaExploder, ranger } };
 
 Enemies spawnableBosses{ {spoobderb} };
