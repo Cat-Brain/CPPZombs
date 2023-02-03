@@ -113,8 +113,8 @@ public:
             float xpos = (pos.x + xOffset + ch.bearing.x * scale) / ScrWidth();
             float ypos = (pos.y - (ch.size.y - ch.bearing.y) * scale) / ScrHeight();
 
-            float w = ch.size.x * scale;
-            float h = ch.size.y * scale;
+            float w = ch.size.x * scale / ScrWidth();
+            float h = ch.size.y * scale / ScrHeight();
             // update VBO for each character
             float vertices[6][4] = {
                 { xpos,     ypos + h,   0.0f, 0.0f },

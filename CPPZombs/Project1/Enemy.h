@@ -573,7 +573,7 @@ Enemy* child = new Enemy(1.0f, 0.125f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(),
 
 // Earlies.
 Enemy* walker = new Enemy(0.75f, 0.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
-Enemy* tanker = new Enemy(1.0f, 0.75f, 2, 1, 1, vOne * 5, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
+Enemy* tanker = new Enemy(1.0f, 0.75f, 2, 1, 1, vOne * 3, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
 EnemyClasses::Spider* spider = new EnemyClasses::Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 2, 1, 1, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
 
 // Mids:

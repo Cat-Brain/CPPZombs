@@ -123,9 +123,7 @@ void Game::TUpdate()
 		//DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
 		player->items.DUpdate();
 	}
-	glDisable(GL_BLEND);
-	font.Render(string("This is sample text"), Vec2(0, 0), 1.0f, RGBA(255, 255, 255, 255));
-	glEnable(GL_BLEND);
+	font.Render(string("This is sample text"), Vec2(-ScrWidth(), 0), 1.0f, RGBA(255, 255, 255, 255));
 
 	frameCount++;
 }
