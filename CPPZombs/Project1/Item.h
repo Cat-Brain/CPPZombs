@@ -189,8 +189,8 @@ public:
 			if (i == currentIndex)
 				continue;
 			game->DrawFBL(offset + Vec2f(0, scale * i), (*this)[i].color, Vec2f(scale, scale));
-			//game->DrawString(Vec2(3, game->ScreenHeight() - 7 * (i + 1)),
-				//"-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName), (*this)[i].color);
+			font.Render("-" + to_string((*this)[i].count) + "-" + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName),
+				Vec2(3, ScrHeight() - 7 * (i + 1)), 7.0f, (*this)[i].color);
 		}
 		game->DrawFBL(offset + Vec2f(0, scale * currentIndex), RGBA(), Vec2f(scale, scale));
 		int scale2 = scale / 5;

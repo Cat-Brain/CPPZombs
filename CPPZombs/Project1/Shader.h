@@ -40,6 +40,7 @@ uint CreateShader(const char* vertexShaderSource, const char* fragmentShaderSour
 
 }
 
+#pragma region Default shader
 const char* defaultVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "\n"
@@ -60,7 +61,9 @@ const char* defaultFrag = "#version 330 core\n"
 "}\0";
 
 uint defaultShader;
+#pragma endregion
 
+#pragma region Framebuffer shader
 const char* framebufferVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "\n"
@@ -84,7 +87,9 @@ const char* framebufferFrag = "#version 330 core\n"
 "}\0";
 
 uint framebufferShader;
+#pragma endregion
 
+#pragma region Background shader
 const char* backgroundVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "out vec2 fragPos;\n"
@@ -107,7 +112,9 @@ const char* backgroundFrag = "#version 330 core\n"
 "}\0";
 
 uint backgroundShader;
+#pragma endregion
 
+#pragma region Default shader
 const char* lineVert = "#version 330 core\n"
 "layout (location = 0) in vec2 aPos;\n"
 "\n"
@@ -128,8 +135,36 @@ const char* lineFrag = "#version 330 core\n"
 "}\0";
 
 uint lineShader;
+#pragma endregion
+
+const char* textVert = "#version 330 core\n"
+"layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>\n"
+"out vec2 TexCoords;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	gl_Position = vec4(vertex.xy, 0.0, 1.0); \n"
+"	TexCoords = vertex.zw; \n"
+"}\0";
+
+const char* textFrag = "#version 330 core\n"
+"in vec2 TexCoords; \n"
+"out vec4 color;\n"
+"\n"
+"uniform sampler2D text;\n"
+"uniform vec4 textColor;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r);\n"
+"	color = textColor * sampled;\n"
+"};\0";
+
+uint textShader;
+#pragma endregion
 
 vector<std::pair<std::pair<const char*, const char*>, uint*>> shaders{ {{defaultVert, defaultFrag}, &defaultShader},
 	{{framebufferVert, framebufferFrag}, &framebufferShader},
 	{{backgroundVert, backgroundFrag}, &backgroundShader},
-	{{lineVert, lineFrag}, &lineShader } };
+	{{lineVert, lineFrag}, &lineShader},
+	{{textVert, textFrag}, &textShader}};

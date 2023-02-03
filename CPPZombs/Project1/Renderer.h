@@ -59,6 +59,7 @@ private:
 		midRes = Framebuffer(45);
 		highRes = Framebuffer(midRes.height * 3);
 		currentFramebuffer = 1;
+		font = Font(string("Fonts/PixeloidSans-JR6qo.ttf"));
 		UseFramebuffer();
 
 		Start();
@@ -82,7 +83,6 @@ private:
 			glfwSetWindowShouldClose(window, true);
 		inputs.Update(window);
 		Update();
-
 		// Prepare current framebuffer to be used in rendering of the frame.
 		//if (currentFramebuffer != 0) DrawFramebufferOnto(0);
 		currentFramebuffer = 1;

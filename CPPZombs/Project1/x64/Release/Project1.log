@@ -6,6 +6,8 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Inputs.h(83,
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(125,36): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(204,19): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\JRGB.h(214,19): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(75,37): warning C4838: conversion from 'FT_Pos' to 'unsigned int' requires a narrowing conversion
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(134,40): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Renderer.h(194,49): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,42): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(191,79): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
@@ -72,9 +74,10 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,8
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(92,75): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(3433,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(436,1): message : see reference to function template instantiation 'std::unique_ptr<SpinText,std::default_delete<SpinText>> std::make_unique<SpinText,Vec2,int&,std::string,RGBA,float,float,float,0>(Vec2 &&,int &,std::string &&,RGBA &&,float &&,float &&,float &&)' being compiled
-  Generating code
-  5 of 2785 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    7 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe
+main.obj : error LNK2001: unresolved external symbol FT_New_Face
+main.obj : error LNK2001: unresolved external symbol FT_Done_FreeType
+main.obj : error LNK2001: unresolved external symbol FT_Done_Face
+main.obj : error LNK2001: unresolved external symbol FT_Init_FreeType
+main.obj : error LNK2001: unresolved external symbol FT_Load_Char
+main.obj : error LNK2001: unresolved external symbol FT_Set_Pixel_Sizes
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe : fatal error LNK1120: 6 unresolved externals

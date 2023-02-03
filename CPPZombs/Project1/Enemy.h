@@ -233,7 +233,7 @@ namespace EnemyClasses
 		bool TUpdate() override
 		{
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
-			int randomization;
+			int randomization = rand();
 			for (int i = 0; i < hitEntities.size(); i++)
 			{
 				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
@@ -243,6 +243,7 @@ namespace EnemyClasses
 					break;
 				}
 			}
+			return true;
 		}
 
 		void OnDeath(Entity* damageDealer) override
