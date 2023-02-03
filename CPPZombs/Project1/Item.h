@@ -188,8 +188,8 @@ public:
 		{
 			if (i != currentIndex)
 				game->DrawFBL(offset + Vec2f(0, scale * i), (*this)[i].color, Vec2f(scale, scale));
-			font.Render((i == currentIndex ? (*this)[i].name : (*this)[i].typeName) + "-" + to_string((*this)[i].count),
-				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2.5f / 48.0f, (*this)[i].color);
+			font.Render((i == currentIndex ? (*this)[i].name : (*this)[i].typeName) + "  " + to_string((*this)[i].count),
+				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2.f / 48.0f, (*this)[i].color);
 		}
 		game->DrawFBL(offset + Vec2f(0, scale * currentIndex), RGBA(), Vec2f(scale, scale));
 		int scale2 = scale / 5;
