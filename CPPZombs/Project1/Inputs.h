@@ -76,9 +76,11 @@ struct Inputs
 		glfwGetCursorPos(window, &xPos, &yPos);
 		xPos /= trueScreenHeight;
 		xPos /= screenRatio;
-		xPos *= ScrWidth();
+		xPos *= ScrHeight() * screenRatio;
+		xPos -= 0.5 * int(ScrWidth() % 2 == 0);
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= ScrHeight();
+		yPos -= 0.5 * int(ScrHeight() % 2 == 0);
 		mousePosition.x = round(xPos - ScrWidth() / 2.0);
 		mousePosition.y = round(yPos - ScrHeight() / 2.0);
 	}

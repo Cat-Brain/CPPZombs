@@ -56,10 +56,11 @@ private:
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
 
-		midRes = Framebuffer(45);
+		midRes = Framebuffer(25);
 		highRes = Framebuffer(midRes.height * 3);
+		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		currentFramebuffer = 1;
-		font = Font(string("Fonts/PixeloidSans-JR6qo.ttf"));
+		font = Font(string("Fonts/PixeloidSans-JR6qo.ttf"), 128);
 		UseFramebuffer();
 
 		Start();
@@ -129,23 +130,40 @@ public:
 	void DrawFBL(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
 	{
 		glUseProgram(defaultShader);
-		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
-		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
-		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
-			float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
+		{
+			glUniform2f(glGetUniformLocation(defaultShader, "scale"),
+				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
 
-		glUniform2f(glGetUniformLocation(defaultShader, "position"),
-			float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
-			float((pos.y - PlayerPos().y) * 2) / ScrHeight());
+			glUniform2f(glGetUniformLocation(defaultShader, "position"),
+				float(pos.x) / ScrWidth(),
+				float(pos.y) / ScrHeight());
+		}
+		else
+		{
+			// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
+			// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
+			glUniform2f(glGetUniformLocation(defaultShader, "scale"),
+				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+
+			glUniform2f(glGetUniformLocation(defaultShader, "position"),
+				float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
+				float((pos.y - PlayerPos().y) * 2) / ScrHeight());
+		}
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(defaultShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		quad.Draw();
 	}
 
-	void Draw(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	inline void Draw(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
 	{
 		DrawFBL(pos - dimensions / 2, color, dimensions);
+	}
+
+	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
+	{
+		font.Render(text, pixelOffset + Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim(), scale, color);
 	}
 
 	void DrawLine(Vec2f a, Vec2f b, RGBA color)
@@ -183,7 +201,7 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec2 PlayerPos()
+	inline virtual Vec2 PlayerPos() // The position of the player in normal coordinates.
 	{
 		return vZero;
 	}

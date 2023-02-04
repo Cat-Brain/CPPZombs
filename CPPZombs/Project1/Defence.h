@@ -64,41 +64,41 @@ public:
 
 	void UIUpdate() override
 	{
-		Vec2f topLeft = TopLeft();
+		Vec2f bottomLeft = BottomLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(topLeft, topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15), "Baby " + name, color, deadColor, collectible->color);
 			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(
 				//timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(topLeft, topLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 22), "Adult " + name, color, deadColor, collectible->color);
 			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 7), ToStringWithPrecision(timePer - timeSince, 1), color);
 			//game->DrawString(topLeft + Vec2(1, 1) + Vec2(0, 14), ToStringWithPrecision(
 				//timePer * (deadStage - currentLifespan) - timeSince, 1), color);
 		}
 		else
-			DrawUIBox(topLeft, topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8), "Dead " + name, deadColor, color, collectible->color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2 topLeft = TopLeft(), bottomRight;
+		Vec2 bottomLeft = BottomLeft(), topRight;
 		if (currentLifespan < cyclesToGrow)
 		{
-			bottomRight = topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15);
+			topRight = bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			bottomRight = topLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 22);
+			topRight = bottomLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 22);
 		}
 		else
 		{
-			bottomRight = topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8);
+			topRight = bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8);
 		}
-		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
-			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
+		return screenSpacePos.x >= bottomLeft.x && screenSpacePos.x <= topRight.x &&
+			screenSpacePos.y >= bottomLeft.y && screenSpacePos.y <= topRight.y;
 	}
 };
 
@@ -166,17 +166,17 @@ public:
 
 	void UIUpdate() override
 	{
-		Vec2f topLeft = TopLeft();
+		Vec2f bottomLeft = BottomLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(topLeft, topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 22), "Baby " + name, color, deadColor, collectible->color);
 			//game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(
 			//	timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), color);
 			//game->DrawString(topLeft + Vec2(1, 15), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(topLeft, topLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 29), "Adult " + name, color, deadColor, collectible->color);
 			//game->DrawString(topLeft + Vec2(1, 8), ToStringWithPrecision(timePer - timeSince, 1), color);
 			//game->DrawString(topLeft + Vec2(1, 15), ToStringWithPrecision(
 			//	timePer * (deadStage - currentLifespan) - timeSince, 1), color);
@@ -184,28 +184,28 @@ public:
 		}
 		else
 		{
-			DrawUIBox(topLeft, topLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15), "Dead " + name, deadColor, color, collectible->color);
 			//game->DrawString(topLeft + Vec2(1, 8), "Gen " + std::to_string(generation) + "/" + std::to_string(maxGenerations), deadColor);
 		}
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2 topLeft = TopLeft(), bottomRight;
+		Vec2 bottomLeft = BottomLeft(), topRight;
 		if (currentLifespan < cyclesToGrow)
 		{
-			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22);
+			topRight = bottomLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			bottomRight = topLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29);
+			topRight = bottomLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29);
 		}
 		else
 		{
-			bottomRight = topLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
+			topRight = bottomLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
 		}
-		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
-			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
+		return screenSpacePos.x >= bottomLeft.x && screenSpacePos.x <= topRight.x &&
+			screenSpacePos.y >= bottomLeft.y && screenSpacePos.y <= topRight.y;
 	}
 };
 

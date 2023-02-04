@@ -1,5 +1,7 @@
 #include "Item.h"
 
+#define COMMON_TEXT_SCALE ScrHeight() / 20
+
 class Entities;
 class Entity
 {
@@ -65,33 +67,33 @@ public:
 		game->Draw(pos, color, dimensions);
 	}
 
-	void DrawUIBox(Vec2 topLeft, Vec2 bottomRight, string text, RGBA textColor,
+	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
-		game->DrawFBL(topLeft, borderColor, bottomRight - topLeft);
-		game->DrawFBL(topLeft + 1, fillColor, bottomRight - topLeft - 1);
-		//game->DrawString(topLeft + Vec2(1, 1), text, textColor);
+		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft);
+		game->DrawFBL(bottomLeft + 1, fillColor, topRight - bottomLeft - 2); // Draw the middle box, +1 and -2 to avoid overlap.
+		game->DrawString(text, pos + right, COMMON_TEXT_SCALE, textColor, Vec2(2, 2));
 	}
 
-	virtual Vec2 TopLeft()
+	virtual Vec2 BottomLeft()
 	{
-		return pos + dimensions - vOne * 4 + Vec2(4, 0);
+		return (pos - game->PlayerPos() + dimensions / 2 + right) * 2 * ScrDim() / midRes.ScrDim();
 	}
 
-	virtual Vec2 BottomRight()
+	virtual Vec2 TopRight()
 	{
-		return TopLeft() + Vec2((int)name.length() * 8, 8);
+		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, COMMON_TEXT_SCALE / 2);
 	}
 
 	virtual void UIUpdate() // Draws when shouldUI is true.
 	{
-		DrawUIBox(TopLeft(), BottomRight(), name, color);
+		DrawUIBox(BottomLeft(), TopRight(), name, color);
 	}
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
 	{
-		Vec2 topLeft = TopLeft();
-		Vec2 bottomRight = BottomRight();
+		Vec2 topLeft = BottomLeft();
+		Vec2 bottomRight = TopRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}

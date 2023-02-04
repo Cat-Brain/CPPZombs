@@ -7,8 +7,8 @@ public:
 
 	Framebuffer() : fbo(0), rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0) { }
 
-	Framebuffer(uint height) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(static_cast<uint>(floorf(height * screenRatio))), height(height)
-	{
+    Framebuffer(uint width, uint height) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height)
+    {
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         // create a color attachment texture
@@ -32,11 +32,13 @@ public:
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+    }
+
+	Framebuffer(uint height) : Framebuffer(ceilf(height * screenRatio), height) { }
 
     void ResetWidth()
     {
-        int newWidth = int(floorf(height * screenRatio));
+        int newWidth = int(ceilf(height * screenRatio));
         if (width == newWidth)
             return;
         width = newWidth;
@@ -45,10 +47,30 @@ public:
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     }
+
+    inline float ScreenRatio()
+    {
+        return float(width) / height;
+    }
+
+    inline int TWidth()
+    {
+        return width - int(ScreenRatio() != screenRatio);
+    }
+
+    inline Vec2 ScrDim()
+    {
+        return { (int)width, (int)height };
+    }
+
+    inline Vec2 TScrDim()
+    {
+        return { (int)TWidth(), (int)height};
+    }
 };
 
 uint currentFramebuffer = 0;
-Framebuffer midRes, highRes;
+Framebuffer midRes, highRes, shadowMap; // Shadowmap must be initialized seperately due to how it works.
 vector<Framebuffer*> framebuffers{ &midRes, &highRes };
 
 void UseFramebuffer()

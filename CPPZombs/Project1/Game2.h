@@ -90,6 +90,8 @@ void Game::TUpdate()
 	glUseProgram(backgroundShader);
 	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x * 2, PlayerPos().y * 2);
 	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), ScrWidth(), ScrHeight());
+	glUniform3f(glGetUniformLocation(backgroundShader, "col1"), planet->color1.r / 255.0f, planet->color1.g / 255.0f, planet->color1.b / 255.0f);
+	glUniform3f(glGetUniformLocation(backgroundShader, "col2"), planet->color2.r / 255.0f, planet->color2.g / 255.0f, planet->color2.b / 255.0f);
 	screenSpaceQuad.Draw();
 
 	entities->Update(); // Updates all entities.
@@ -111,19 +113,18 @@ void Game::TUpdate()
 		if (shouldSpawnBoss)
 		{
 			float timeTillNextBoss = 60.0f - tTime + timeStartBossPrep;
-			//DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
-			//	std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
-			//	std::to_string(int(timeTillNextBoss)) + "." +
-			//	std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), olc::CYAN);
+			font.Render(std::to_string(int(timeTillNextWave)) + "." +
+				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
+				std::to_string(int(timeTillNextBoss)) + "." +
+				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), Vec2(-ScrWidth(), ScrHeight() * 0.95f), ScrHeight() / 20.0f, RGBA(0, 255, 255));
 		}
-		//else
-			//DrawString(Vec2(0, 0), std::to_string(int(timeTillNextWave)) + "." +
-			//	std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount), olc::CYAN);
-		//DrawString(Vec2(0, 9), std::to_string(player->health), olc::DARK_RED);
-		//DrawString(Vec2(0, 18), to_string(totalGamePoints), olc::DARK_YELLOW);
+		else
+			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
+				Vec2(-ScrWidth(), ScrHeight() * 0.95f), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+		font.Render(std::to_string(player->health), Vec2(-ScrWidth(), ScrHeight() * 0.9f), ScrHeight() / 20.0f, RGBA(63));
+		font.Render(to_string(totalGamePoints), Vec2(-ScrWidth(), ScrHeight() * 0.85f), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();
 	}
-	font.Render(string("This is sample text"), Vec2(-ScrWidth(), 0), 1.0f, RGBA(255, 255, 255, 255));
 
 	frameCount++;
 }

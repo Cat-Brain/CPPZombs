@@ -11,9 +11,6 @@ struct EntityIndex // For sorting.
 	}
 };
 
-#define CHUNK_WIDTH 8
-#define MAP_WIDTH 50 // Defined in chunks not units.
-#define MAP_WIDTH_TRUE CHUNK_WIDTH * MAP_WIDTH
 class Chunk : public vector<int>
 {
 public:

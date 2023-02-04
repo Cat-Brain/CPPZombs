@@ -73,20 +73,20 @@ public:
 		return true;
 	}
 
-	Vec2 BottomRight() override
+	Vec2 TopRight() override
 	{
-		return DToCol::BottomRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
+		return DToCol::TopRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
 	}
 
 	void UIUpdate() override
 	{
-		DrawUIBox(TopLeft(), BottomRight(), name + " " + to_string(health), color);
+		DrawUIBox(BottomLeft(), TopRight(), name + " " + to_string(health), color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
 	{
-		Vec2 topLeft = TopLeft();
-		Vec2 bottomRight = BottomRight();
+		Vec2 topLeft = BottomLeft();
+		Vec2 bottomRight = TopRight();
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}

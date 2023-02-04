@@ -32,6 +32,11 @@ typedef uint8_t byte;
 #pragma region Global variables
 #define PI_F 3.141592f
 #define PI_D 3.14159275
+
+#define CHUNK_WIDTH 8
+#define MAP_WIDTH 50 // Defined in chunks not units.
+#define MAP_WIDTH_TRUE CHUNK_WIDTH * MAP_WIDTH
+
 uint trueScreenWidth, trueScreenHeight;
 float screenRatio;
 bool playerAlive = true;

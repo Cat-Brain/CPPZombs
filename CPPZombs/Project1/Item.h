@@ -183,17 +183,17 @@ public:
 		if (size() == 0)
 			return;
 		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
-		Vec2f offset = game->PlayerPos() - Vec2f(ScrDim()) * 0.5f;
+		Vec2f offset = vZero - ScrDim();
 		for (int i = 0; i < size(); i++)
 		{
 			if (i != currentIndex)
-				game->DrawFBL(offset + Vec2f(0, scale * i), (*this)[i].color, Vec2f(scale, scale));
-			font.Render((i == currentIndex ? (*this)[i].name : (*this)[i].typeName) + "  " + to_string((*this)[i].count),
-				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2.f / 48.0f, (*this)[i].color);
+				game->DrawFBL(offset + Vec2f(0, scale * i * 2), (*this)[i].color, Vec2f(scale, scale));
+			font.Render(" " + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName) + "  " + to_string((*this)[i].count),
+				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2, (*this)[i].color);
 		}
-		game->DrawFBL(offset + Vec2f(0, scale * currentIndex), RGBA(), Vec2f(scale, scale));
+		game->DrawFBL(offset + Vec2f(0, scale * currentIndex * 2), RGBA(), Vec2f(scale, scale));
 		int scale2 = scale / 5;
-		game->DrawFBL(offset + Vec2f(scale2, scale2 + scale * currentIndex), (*this)[currentIndex].color, Vec2f(scale, scale) - 2 * scale2);
+		game->DrawFBL(offset + Vec2f(scale2 * 2, scale2 * 2 + scale * currentIndex * 2), (*this)[currentIndex].color, Vec2(scale, scale) - 2 * scale2);
 	}
 
 	Item GetCurrentItem()

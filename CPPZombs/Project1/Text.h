@@ -11,11 +11,11 @@ class Font
 {
 public:
     std::map<char, Character> characters{};
-    uint vao = 0, vbo = 0;
+    uint minimumSize = 0, vao = 0, vbo = 0;
 
     Font() { }
 
-	Font(string location)
+	Font(string location, uint minimumSize) : minimumSize(minimumSize)
 	{
         FT_Library ft;
 		if (FT_Init_FreeType(&ft))
@@ -31,7 +31,7 @@ public:
 			return;
 		}
 
-		FT_Set_Pixel_Sizes(face, 0, 48);
+		FT_Set_Pixel_Sizes(face, 0, minimumSize);
 
 		if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
 		{
@@ -95,8 +95,19 @@ public:
         glBindVertexArray(0);
 	}
 
-    void Render(std::string text, Vec2 pos, float scale, RGBA color)
+    int TextWidth(string text)
     {
+        int result = 0;
+
+        for (std::string::const_iterator c = text.begin(); c != text.end(); c++)
+            result += characters[*c].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
+
+        return result;
+    }
+
+    void Render(string text, Vec2 pos, float scale, RGBA color)
+    {
+        scale /= minimumSize;
         int xOffset = 0;
         // activate corresponding render state	
         glUseProgram(textShader);
@@ -105,8 +116,7 @@ public:
         glBindVertexArray(vao);
 
         // iterate through all characters
-        std::string::const_iterator c;
-        for (c = text.begin(); c != text.end(); c++)
+        for (string::const_iterator c = text.begin(); c != text.end(); c++)
         {
             Character ch = characters[*c];
 

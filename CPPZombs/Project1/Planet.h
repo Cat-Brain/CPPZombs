@@ -5,7 +5,7 @@ class Planet
 public:
 	float dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	EnemiesInstance enemies, bosses;
-	JRGB backgroundBaseColor, backgroundColorWidth;
+	JRGB color1, color2;
 	FastNoiseLite backgroundNoise;
 
 	Planet()
@@ -19,14 +19,13 @@ public:
 		ambientLight = RandFloat() * 0.5f + 0.5f;
 
 
-		backgroundBaseColor.r = rand() % 128 + 64;
-		backgroundBaseColor.g = rand() % 128 + 64;
-		backgroundBaseColor.b = rand() % 128 + 64;
+		color1.r = rand() % 128 + 64;
+		color1.g = rand() % 128 + 64;
+		color1.b = rand() % 128 + 64;
 
-		int randChoice = rand();
-		backgroundColorWidth.r = rand() % 2 + 2 + 4 * int(randChoice == 0);
-		backgroundColorWidth.g = rand() % 2 + 2 + 4 * int(randChoice == 1);
-		backgroundColorWidth.b = rand() % 2 + 2 + 4 * int(randChoice == 2);
+		color2.r = rand() % 64 + 128;
+		color2.g = rand() % 64 + 128;
+		color2.b = rand() % 64 + 128;
 
 		backgroundNoise.SetFrequency(0.06125f);
 		backgroundNoise.SetFractalLacunarity(2.0f);
@@ -36,14 +35,6 @@ public:
 
 		enemies = spawnableEnemies.RandomClone();
 		bosses = spawnableBosses.RandomClone();
-	}
-
-	RGBA GetBackgroundNoise(Vec2f noisePos)
-	{
-		float randomNoiseValue = backgroundNoise.GetNoise(noisePos.x, noisePos.y);
-		return RGBA(Clamp(backgroundBaseColor.r + (int)roundf(randomNoiseValue * backgroundColorWidth.r) * 5, 0, 255),
-			Clamp(backgroundBaseColor.g + (int)roundf(randomNoiseValue * backgroundColorWidth.g) * 5, 0, 255),
-			Clamp(backgroundBaseColor.b + (int)roundf(randomNoiseValue * backgroundColorWidth.b) * 5, 0, 255));
 	}
 
 	float GetBrightness()
