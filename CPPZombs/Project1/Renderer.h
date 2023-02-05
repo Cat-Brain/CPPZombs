@@ -55,9 +55,10 @@ private:
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
+		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 
-		midRes = Framebuffer(25);
-		highRes = Framebuffer(midRes.height * 3);
+		midRes = Framebuffer(80);
+		subScat = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		currentFramebuffer = 1;
 		font = Font(string("Fonts/PixeloidSans-JR6qo.ttf"), 128);
@@ -85,7 +86,6 @@ private:
 		inputs.Update(window);
 		Update();
 		// Prepare current framebuffer to be used in rendering of the frame.
-		//if (currentFramebuffer != 0) DrawFramebufferOnto(0);
 		currentFramebuffer = 1;
 		UseFramebuffer();
 
@@ -163,7 +163,7 @@ public:
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim(), scale, color);
+		font.Render(text, pixelOffset + Vec2f((pos - PlayerPos()) * 2) / midRes.TScrDim() * ScrDim(), scale, color);
 	}
 
 	void DrawLine(Vec2f a, Vec2f b, RGBA color)

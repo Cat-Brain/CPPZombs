@@ -8,7 +8,7 @@ struct Key
 struct Inputs
 {
 	Key w, a, s, d,
-		enter, c, q, e, space,
+		enter, c, q, e, p, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
 	int mouseScroll;
@@ -63,6 +63,7 @@ struct Inputs
 		UpdateKey(window, c, GLFW_KEY_C);
 		UpdateKey(window, q, GLFW_KEY_Q);
 		UpdateKey(window, e, GLFW_KEY_E);
+		UpdateKey(window, p, GLFW_KEY_P);
 		UpdateKey(window, space, GLFW_KEY_SPACE);
 
 		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);

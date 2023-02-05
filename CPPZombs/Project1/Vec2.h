@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "Resources.h"
 
 class Vec2
 {
@@ -110,6 +110,15 @@ public:
 		return Vec2(x / scaler, y / scaler);
 	}
 
+	Vec2 operator%(Vec2 other)
+	{
+		return Vec2(x % other.x, y % other.y);
+	}
+	Vec2 operator%(int scaler)
+	{
+		return Vec2(x % scaler, y % scaler);
+	}
+
 
 	Vec2 operator+=(Vec2 other)
 	{
@@ -152,6 +161,17 @@ public:
 	Vec2 operator/=(int scaler)
 	{
 		*this = *this / scaler;
+		return *this;
+	}
+
+	Vec2 operator%=(Vec2 other)
+	{
+		*this = *this % other;
+		return *this;
+	}
+	Vec2 operator%=(int scaler)
+	{
+		*this = *this % scaler;
 		return *this;
 	}
 
@@ -204,6 +224,14 @@ public:
 	Vec2f RotateRight45()
 	{
 		return Vec2f((x + y) / 1.41f, (y - x) / 1.41f);
+	}
+
+	Vec2f Rotate(float theta)
+	{
+		float cs = cos(theta);
+		float sn = sin(theta);
+
+		return { x * cs - y * sn, x * sn + y * cs };
 	}
 
 	inline Vec2f ClampV(Vec2f minimum, Vec2f maximum)

@@ -72,12 +72,12 @@ public:
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft);
 		game->DrawFBL(bottomLeft + 1, fillColor, topRight - bottomLeft - 2); // Draw the middle box, +1 and -2 to avoid overlap.
-		game->DrawString(text, pos + right, COMMON_TEXT_SCALE, textColor, Vec2(2, 2));
+		game->DrawString(text, pos + right + dimensions / 2, COMMON_TEXT_SCALE, textColor, Vec2(2, 2));
 	}
 
 	virtual Vec2 BottomLeft()
 	{
-		return (pos - game->PlayerPos() + dimensions / 2 + right) * 2 * ScrDim() / midRes.ScrDim();
+		return (pos + right - game->PlayerPos() + dimensions / 2) * 2 * ScrDim() / midRes.TScrDim();
 	}
 
 	virtual Vec2 TopRight()

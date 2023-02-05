@@ -182,6 +182,7 @@
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Resources.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Vec2.h" />
@@ -194,6 +195,12 @@
     <Image Include="Sprites\Icons\Corruption Seed.bmp" />
     <Image Include="Sprites\Icons\Light.bmp" />
     <Image Include="Sprites\Icons\Seed.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Fonts\PixeloidSans-JR6qo.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TextFiles\Enemies\Walker.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

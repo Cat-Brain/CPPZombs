@@ -16,7 +16,7 @@ void Game::Start()
 	
 void Game::Update()
 {
-	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+	if (inputs.p.pressed)
 		paused = !paused;
 	/*if (GetKey(olc::F1).bPressed)
 	{
@@ -30,10 +30,14 @@ void Game::Update()
 			TUpdate();
 		else
 		{
+			currentFramebuffer = 0;
+			UseFramebuffer();
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			//DrawString(Vec2(0, 0), to_string(totalGamePoints) + "\n\nKilled by:\n" + deathCauseName + "\n\nPress esc\nto close.");
-			DrawFramebufferOnto(0);
+			font.Render(to_string(totalGamePoints) + " points", {-ScrWidth(), int(ScrHeight() * 0.9f)}, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.7f)  }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.6f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render("Press esc to close.", { -ScrWidth(), int(ScrHeight() * 0.4f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
 		}
 	}
 }
@@ -75,16 +79,16 @@ void Game::TUpdate()
 
 	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
 	{
-		planet->bosses.SpawnRandomEnemies(max(250, Enemies::GetRoundPoints()));
+		planet->bosses.SpawnRandomEnemies();
 		shouldSpawnBoss = false;
 	}
-
+	waveCount += int(inputs.e.pressed) - int(inputs.q.pressed);
 	// New wave:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.enter.pressed)
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.c.pressed)
 	{
+		planet->enemies.SpawnRandomEnemies();
 		lastWave = tTime;
 		waveCount++;
-		planet->enemies.SpawnRandomEnemies();
 	}
 
 	glUseProgram(backgroundShader);

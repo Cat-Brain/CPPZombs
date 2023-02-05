@@ -53,9 +53,9 @@ public:
         return float(width) / height;
     }
 
-    inline int TWidth()
+    inline float TWidth()
     {
-        return width - int(ScreenRatio() != screenRatio);
+        return height * screenRatio;
     }
 
     inline Vec2 ScrDim()
@@ -63,15 +63,15 @@ public:
         return { (int)width, (int)height };
     }
 
-    inline Vec2 TScrDim()
+    inline Vec2f TScrDim()
     {
-        return { (int)TWidth(), (int)height};
+        return { TWidth(), (float)height};
     }
 };
 
 uint currentFramebuffer = 0;
-Framebuffer midRes, highRes, shadowMap; // Shadowmap must be initialized seperately due to how it works.
-vector<Framebuffer*> framebuffers{ &midRes, &highRes };
+Framebuffer midRes, subScat, shadowMap; // Shadowmap must be initialized seperately due to how it works.
+vector<Framebuffer*> framebuffers{ &midRes, &subScat, &shadowMap };
 
 void UseFramebuffer()
 {

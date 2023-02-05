@@ -54,7 +54,7 @@ public:
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			if (rand() % 100 < chanceForSeed)
-				game->entities->push_back(seed->Clone(pos + (dimensions + seed->dimensions) * 0.5f * Vec2f((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(seed->Clone(pos + Vec2f(dimensions + seed->dimensions) * 0.5f * Vec2f((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
 				game->entities->push_back(collectible->Clone(pos + (dimensions + collectible->dimensions) * 0.5f * Vec2f((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}

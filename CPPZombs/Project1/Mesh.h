@@ -43,6 +43,6 @@ public:
 	}
 };
 
-Mesh quad, screenSpaceQuad, line;
+Mesh quad, screenSpaceQuad, line, dot;
 
-vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line }; // Destroys them at the end.
+vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line, &dot }; // Destroys them at the end.
