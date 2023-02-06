@@ -14,5 +14,8 @@
 #endif
 #endif
 
-#define TEXT_FILE 255
-#define WALKER_FILE 254
+#define TEXT_FILE 0
+#define WALKER_FILE 1
+
+#define FONT_FILE 100
+#define PIXELOID_SANS 101

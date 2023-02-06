@@ -178,7 +178,6 @@
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Game2.h" />
-    <ClInclude Include="Printers.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />

@@ -56,9 +56,6 @@
     <ClInclude Include="Item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Printers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Game1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
