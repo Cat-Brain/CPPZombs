@@ -196,10 +196,6 @@
   <ItemGroup>
     <Text Include="TextFiles\Enemies\Walker.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="bin00001.bin" />
-    <None Include="text_fil.bin" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

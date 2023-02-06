@@ -101,6 +101,9 @@
     <ClInclude Include="Text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc">
@@ -108,17 +111,9 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Sprites\Icons\Ammo.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Sprites\Icons\Corruption Seed.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Sprites\Icons\Light.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Sprites\Icons\Seed.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
+    <Font Include="Fonts\PixeloidSans-JR6qo.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TextFiles\Enemies\Walker.txt" />
   </ItemGroup>
 </Project>
