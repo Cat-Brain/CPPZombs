@@ -15,7 +15,7 @@ public:
 
     Font() { }
 
-	Font(string location, uint minimumSize) : minimumSize(minimumSize)
+	Font(FT_Byte* data, FT_Long size, uint minimumSize) : minimumSize(minimumSize)
 	{
         FT_Library ft;
 		if (FT_Init_FreeType(&ft))
@@ -25,7 +25,7 @@ public:
 		}
 
 		FT_Face face;
-		if (FT_New_Face(ft, "Fonts/PixeloidSans-JR6qo.ttf", 0, &face))
+		if (FT_New_Memory_Face(ft, data, size, 0, &face))
 		{
 			std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 			return;

@@ -1,4 +1,5 @@
 #pragma region Basic include stuff
+#include "resource.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "FastNoiseLite.h"
@@ -9,6 +10,7 @@
 #include <thread>
 #include <iostream>
 #include <ft2build.h>
+#include <Windows.h>
 #include FT_FREETYPE_H  
 using namespace std::this_thread;
 using namespace std::chrono;

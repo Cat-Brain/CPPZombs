@@ -61,7 +61,9 @@ private:
 		subScat = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		currentFramebuffer = 1;
-		font = Font(string("Fonts/PixeloidSans-JR6qo.ttf"), 128);
+		Resource defaultFont = Resource(IDR_TEXT1, TEXT_FILE);
+		std::cout << defaultFont.p.ptr << " " << defaultFont.p.size_bytes;
+		font = Font(static_cast<FT_Byte*>(defaultFont.p.ptr), defaultFont.p.size_bytes, 128);
 		UseFramebuffer();
 
 		Start();
