@@ -761,7 +761,7 @@ namespace Enemies
 	Spoobderb* spoobderb = new Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 0.5f, 50, 12, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 	// Bosses:
-	Cataclysm* cataclysm = new Cataclysm(cat, boomCat, vOne * 13, 5.0f, 12.0f, 2.0f, 5.0f, 100, 12, 1, vOne * 7, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Cataclysm* cataclysm = new Cataclysm(cat, boomCat, vOne * 13, 5.0f, 12.0f, 2.0f, 5.0f, 250, 12, 1, vOne * 7, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
 
 	class Instance;
 	class Types : public vector<vector<Enemy*>>

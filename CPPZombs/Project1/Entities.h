@@ -614,33 +614,33 @@ public:
 	Entity* entityToPlace;
 	string creatorName;
 
-	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2f dimensions = vOne) :
-		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator){ }
+	PlacedOnLanding(Entity* entityToPlace, string typeName, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		Item(entityToPlace->name, typeName, entityToPlace->color, damage, count, range, shootSpeed, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator){ }
 
-	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2f dimensions = vOne) :
-		Item(name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
+	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		Item(name, typeName, color, damage, count, range, shootSpeed, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
 
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, Vec2f dimensions = vOne) :
-		Item(baseClass, name, typeName, color, damage, count, range, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
+	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
 
 	Item Clone(int count) override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, dimensions);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, shootSpeed, dimensions);
 	}
 
 	Item Clone() override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, dimensions);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, shootSpeed, dimensions);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, dimensions);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, shootSpeed, dimensions);
 	}
 
 	Item* Clone2() override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, dimensions);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, color, damage, count, range, sayCreator, shootSpeed, dimensions);
 	}
 
 	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
@@ -655,37 +655,38 @@ public:
 class ExplodeOnLanding : public Item
 {
 public:
+	int explosionDamage;
 	Vec2f explosionDimensions;
 
-	ExplodeOnLanding(Vec2f explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
-		Item(name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Vec2f explosionDimensions = vOne, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		Item(name, typeName, color, damage, count, range, shootSpeed, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
 
-	ExplodeOnLanding(Item* baseClass, Vec2f explosionDimensions = vOne, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
-		Item(baseClass, name, typeName, color, damage, count, range, dimensions), explosionDimensions(explosionDimensions) { }
+	ExplodeOnLanding(Item* baseClass, Vec2f explosionDimensions = vOne, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		Item(baseClass, name, typeName, color, damage, count, shootSpeed, range, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
 
 	virtual Item Clone(int count)
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
+		return ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
+		return ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, name, typeName, color, damage, count, range, dimensions);
+		return new ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		game->entities->push_back(make_unique<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
+		game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
 		game->entities->push_back(make_unique<FadeOut>(0.5f, pos, explosionDimensions, color));
 	}
 };
@@ -711,16 +712,18 @@ namespace Hazards
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, "Ruby", "Ammo", RGBA(168, 50, 100), 4);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, "Topaz", "Ammo", RGBA(255, 200, 0), 3, 1, 15.0f, vOne * 3);
-	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Ammo", RGBA(80, 43, 92), 0, 1, 15.0f, true);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Ammo", RGBA(168, 50, 100), 4);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Ammo", RGBA(255, 200, 0), 3, 1, 15.0f, 0.25f, vOne * 3);
+	ExplodeOnLanding* saphire = new ExplodeOnLanding(vOne * 3, 1, "Saphire", "Ammo", RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
+	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", RGBA(80, 43, 92), 0, 1, 15.0f, true);
 }
 
 namespace Collectibles
 {
-	Collectible* ruby = new Collectible(*Resources::ruby, vZero);
-	Collectible* emerald = new Collectible(*Resources::emerald, vZero);
-	Collectible* topaz = new Collectible(*Resources::topaz, vZero);
-	Collectible* lead = new Collectible(*Resources::lead, vZero);
+	Collectible* ruby = new Collectible(*Resources::ruby);
+	Collectible* emerald = new Collectible(*Resources::emerald);
+	Collectible* topaz = new Collectible(*Resources::topaz);
+	Collectible* saphire = new Collectible(*Resources::saphire);
+	Collectible* lead = new Collectible(*Resources::lead);
 }

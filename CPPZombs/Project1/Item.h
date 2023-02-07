@@ -9,33 +9,33 @@ public:
 	RGBA color;
 	int damage;
 	int count;
-	float range;
+	float range, shootSpeed;
 	Vec2f dimensions;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
-		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
+	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, Vec2f dimensions = vOne) :
-		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), dimensions(dimensions) { }
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return new Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return new Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	Item operator * (int multiplier)
@@ -71,22 +71,22 @@ public:
 
 	virtual Item Clone(int count)
 	{
-		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
 	}
 };
 
@@ -183,7 +183,8 @@ public:
 		if (size() == 0)
 			return;
 		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
-		Vec2 offset = vZero - ScrDim();
+		Vec2
+			offset = vZero - ScrDim();
 		for (int i = 0; i < size(); i++)
 		{
 			if (i != currentIndex)
