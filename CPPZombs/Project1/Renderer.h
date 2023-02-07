@@ -60,9 +60,10 @@ private:
 		midRes = Framebuffer(80);
 		subScat = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
-		currentFramebuffer = 1;
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
 		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), static_cast<FT_Long>(defaultFont.size), 128);
+
+		currentFramebuffer = 1;
 		UseFramebuffer();
 
 		Start();

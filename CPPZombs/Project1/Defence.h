@@ -54,9 +54,9 @@ public:
 		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
 		{
 			if (rand() % 100 < chanceForSeed)
-				game->entities->push_back(seed->Clone(pos + Vec2f(dimensions + seed->dimensions) * 0.5f * Vec2f((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(seed->Clone(pos + (dimensions + seed->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
-				game->entities->push_back(collectible->Clone(pos + (dimensions + collectible->dimensions) * 0.5f * Vec2f((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(collectible->Clone(pos + (dimensions + collectible->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}
 		currentLifespan++;
 		return true;
@@ -67,23 +67,23 @@ public:
 		Vec2f bottomLeft = BottomLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE),
-				"Baby " + name, color, deadColor, collectible->color);
-			game->DrawString(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE));
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+				COMMON_BOARDER_WIDTH, "Baby " + name, color, deadColor, collectible->color);
+			font.Render(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE * 3 / 2),
-				"Adult " + name, color, deadColor, collectible->color);
-			game->DrawString(ToStringWithPrecision(timePer - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE));
-			game->DrawString(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE * 2));
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+				COMMON_BOARDER_WIDTH, "Adult " + name, color, deadColor, collectible->color);
+			font.Render(ToStringWithPrecision(timePer - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
+			font.Render(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
 		}
 		else
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE / 2),
-				"Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 4),
+				COMMON_BOARDER_WIDTH, "Dead " + name, deadColor, color, collectible->color);
 	}
 
 	bool PosInUIBounds(Vec2 screenSpacePos) override
@@ -173,30 +173,32 @@ public:
 		Vec2f bottomLeft = BottomLeft();
 		if (currentLifespan < cyclesToGrow)
 		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE * 3 / 2),
-				"Baby " + name, color, deadColor, collectible->color);
-			game->DrawString(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE));
-			game->DrawString("Gen " + to_string(generation) ,
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE * 2));
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+				COMMON_BOARDER_WIDTH, "Baby " + name, color, deadColor, collectible->color);
+			font.Render(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
+			font.Render("Gen " + to_string(generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
 		}
 		else if (currentLifespan < deadStage)
 		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE * 2),
-				"Adult " + name, color, deadColor, collectible->color);
-			game->DrawString(ToStringWithPrecision(timePer - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE));
-			game->DrawString(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE * 2));
-			game->DrawString("Gen " + to_string(generation),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE * 3));
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp),
+				COMMON_BOARDER_WIDTH, "Adult " + name, color, deadColor, collectible->color);
+			font.Render(ToStringWithPrecision(timePer - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
+			font.Render(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
+			font.Render("Gen " + to_string(generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
 		}
 		else
 		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, COMMON_TEXT_SCALE),
-				"Dead " + name, deadColor, color, collectible->color);
+			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+				COMMON_BOARDER_WIDTH, "Dead " + name, deadColor, color, collectible->color);
+			font.Render("Gen " + to_string(generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
 			game->DrawString("Gen " + to_string(generation),
-				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(0, COMMON_TEXT_SCALE));
+				pos + right + dimensions / 2, COMMON_TEXT_SCALE, color, Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset));
 		}
 	}
 
@@ -242,7 +244,7 @@ namespace Plants
 		RGBA babyEmeraldTreeColor = RGBA(145, 255, 204), emeraldTreeColor = RGBA(65, 166, 119), deadEmeraldTreeColor = RGBA(61, 97, 80), emeraldResistence = RGBA(50, 0, 50);
 		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
 
-		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(150, 140, 78), rockResistence = RGBA(50, 0, 50);
+		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(130, 130, 130), rockResistence = RGBA(50, 0, 50);
 		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
 	}
 

@@ -1,10 +1,10 @@
 #include "Shader.h"
 
 struct Character {
-    uint textureID;       // ID handle of the glyph texture
-    Vec2         size;    // Size of glyph
-    Vec2         bearing; // Offset from baseline to left/top of glyph
-    uint advance;         // Offset to advance to next glyph
+    uint textureID;  // ID handle of the glyph texture
+    Vec2         size;       // Size of glyph
+    Vec2         bearing;    // Offset from baseline to left/top of glyph
+    uint advance;    // Offset to advance to next glyph
 };
 
 class Font
@@ -12,32 +12,33 @@ class Font
 public:
     std::map<char, Character> characters{};
     uint minimumSize = 0, vao = 0, vbo = 0;
+    int mininumVertOffset = 0.0f, maxVertOffset = 0.0f, vertDisp = 0.0f;
 
     Font() { }
 
-	Font(FT_Byte* data, FT_Long size, uint minimumSize) : minimumSize(minimumSize)
-	{
+    Font(FT_Byte* data, FT_Long size, uint minimumSize) : minimumSize(minimumSize)
+    {
         FT_Library ft;
-		if (FT_Init_FreeType(&ft))
-		{
-			std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
-			return;
-		}
+        if (FT_Init_FreeType(&ft))
+        {
+            std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+            return;
+        }
 
-		FT_Face face;
-		if (FT_New_Memory_Face(ft, data, size, 0, &face))
-		{
-			std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
-			return;
-		}
+        FT_Face face;
+        if (FT_New_Memory_Face(ft, data, size, 0, &face))
+        {
+            std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+            return;
+        }
 
-		FT_Set_Pixel_Sizes(face, 0, minimumSize);
+        FT_Set_Pixel_Sizes(face, 0, minimumSize);
 
-		if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
-		{
-			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
-			return;
-		}
+        if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+            return;
+        }
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // disable byte-alignment restriction
 
@@ -77,7 +78,11 @@ public:
                 static_cast<uint>(face->glyph->advance.x)
             };
             characters.insert(std::pair<char, Character>(c, character));
+
+            mininumVertOffset = min(mininumVertOffset, character.bearing.y - character.size.y); // Always negative
+            maxVertOffset = max(mininumVertOffset, character.bearing.y); // Always positive
         }
+        vertDisp = maxVertOffset - mininumVertOffset; // Very useful.
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -93,19 +98,20 @@ public:
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
-	}
+    }
 
     int TextWidth(string text)
     {
         int result = 0;
 
-        for (std::string::const_iterator c = text.begin(); c != text.end(); c++)
-            result += characters[*c].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
+        for (int i = 0; i < text.size() - 1; i++)
+            result += characters[i].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
+        result += characters[text.size() - 1].size.x/* >> 6*/;
 
         return result;
     }
 
-    void Render(string text, Vec2 pos, int scale, RGBA color)
+    void Render(string text, Vec2 pos, float scale, RGBA color)
     {
         scale /= minimumSize;
         int xOffset = 0;
@@ -120,11 +126,11 @@ public:
         {
             Character ch = characters[*c];
 
-            float xpos = (pos.x + static_cast<float>(xOffset) + ch.bearing.x * scale) / ScrWidth();
-            float ypos = (pos.y - (static_cast<float>(ch.size.y) - ch.bearing.y) * scale) / ScrHeight();
+            float xpos = (pos.x + xOffset + ch.bearing.x * scale) / ScrWidth();
+            float ypos = (pos.y - (ch.size.y - ch.bearing.y) * scale) / ScrHeight();
 
-            float w = ch.size.x * static_cast<float>(scale) / ScrWidth();
-            float h = ch.size.y * static_cast<float>(scale) / ScrHeight();
+            float w = ch.size.x * scale / ScrWidth();
+            float h = ch.size.y * scale / ScrHeight();
             // update VBO for each character
             float vertices[6][4] = {
                 { xpos,     ypos + h,   0.0f, 0.0f },

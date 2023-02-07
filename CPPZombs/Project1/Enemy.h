@@ -78,12 +78,12 @@ namespace Enemies
 
 		Vec2 TopRight() override
 		{
-			return DToCol::TopRight() + Vec2(font.TextWidth(name + " " + to_string(health)) * COMMON_TEXT_SCALE / font.minimumSize, COMMON_TEXT_SCALE / 2);
+			return BottomLeft() + Vec2(font.TextWidth(name + " " + to_string(health)) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 		}
 
 		void UIUpdate() override
 		{
-			DrawUIBox(BottomLeft(), TopRight(), name + " " + to_string(health), color);
+			DrawUIBox(BottomLeft(), TopRight(), COMMON_BOARDER_WIDTH, name + " " + to_string(health), color);
 		}
 
 		bool PosInUIBounds(Vec2 screenSpacePos) override
@@ -403,7 +403,7 @@ namespace Enemies
 
 		bool MUpdate() override
 		{
-			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) < 2.0f)
+			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) > 9.0f)
 				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(Vec2f(game->PlayerPos() - pos).SqrMagnitude() > desiredDistance * desiredDistance)), mass);
 			return true;
 		}
@@ -785,7 +785,7 @@ namespace Enemies
 		void SpawnRandomEnemies()
 		{
 			int totalCost = 1, costToAchieve = Types::GetRoundPoints();
-			int currentlySpawnableEnemyCount = 0;
+			int currentlySpawnableEnemyCount = 1;
 			for (int i = 1; i < (*this).size(); i++)
 				currentlySpawnableEnemyCount += int((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() <= costToAchieve);
 			vector<Enemy*> currentlySpawnableEnemies(currentlySpawnableEnemyCount);

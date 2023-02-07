@@ -1,6 +1,7 @@
 #include "Item.h"
 
 #define COMMON_TEXT_SCALE ScrHeight() / 20
+#define COMMON_BOARDER_WIDTH ScrHeight() / 80
 
 class Entities;
 class Entity
@@ -55,27 +56,27 @@ public:
 		game->Draw(pos, color, dimensions);
 	}
 
-	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, string text, RGBA textColor,
+	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
-		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft);
-		game->DrawFBL(bottomLeft + 1, fillColor, topRight - bottomLeft - 2); // Draw the middle box, +1 and -2 to avoid overlap.
-		game->DrawString(text, pos + right + dimensions / 2, COMMON_TEXT_SCALE, textColor, Vec2(2, 2));
+		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth); // + 2 * boarder is to avoid clipping to avoid overlapping the text.
+		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
+		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2), COMMON_TEXT_SCALE, textColor);
 	}
 
 	virtual Vec2 BottomLeft()
 	{
-		return (pos + right - game->PlayerPos() + dimensions / 2) * 2 * ScrDim() / midRes.TScrDim();
+		return (pos + right - game->PlayerPos() + dimensions / 2) * 2 * trueScreenHeight / midRes.height;
 	}
 
-	virtual Vec2 TopRight()
+	virtual Vec2 TopRight() 
 	{
-		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, COMMON_TEXT_SCALE / 2);
+		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 	}
 
 	virtual void UIUpdate() // Draws when shouldUI is true.
 	{
-		DrawUIBox(BottomLeft(), TopRight(), name, color);
+		DrawUIBox(BottomLeft(), TopRight(), COMMON_BOARDER_WIDTH, name, color);
 	}
 
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)

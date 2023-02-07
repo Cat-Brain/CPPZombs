@@ -9,7 +9,7 @@ public:
 	bool placedBlock;
 	Vec2f placingDir = up;
 	float timePerMove = 0.125f, lastMove = 0.0f, maxSpeed = 4.0f, lastVac = -1.0f,
-		timePerVac = 0.125f, lastClick = -1.0f, clickSpeed = 0.25f,
+		timePerVac = 0.125f, lastClick = -1.0f,
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
@@ -132,10 +132,10 @@ public:
 			heldEntity = hitEntities[0];
 			heldEntity->holder = this;
 		}
-		else if (!game->inputs.space.held && tTime - lastClick > clickSpeed && currentMenuedEntity == nullptr &&
+		else if (!game->inputs.space.held && tTime - lastClick > 0.0f && currentMenuedEntity == nullptr &&
 			game->inputs.mousePosition != vZero && currentShootingItem != *dItem && game->inputs.leftMouse.held && items.TryTake(currentShootingItem))
 		{
-			lastClick = tTime;
+			lastClick = tTime + currentShootingItem.shootSpeed;
 			game->entities->push_back(basicShotItem->Clone(currentShootingItem,
 				pos, game->inputs.mousePosition, this));
 		}

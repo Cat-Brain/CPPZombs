@@ -110,7 +110,4 @@
   <ItemGroup>
     <Font Include="Fonts\PixeloidSans-JR6qo.ttf" />
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="TextFiles\Enemies\Walker.txt" />
-  </ItemGroup>
 </Project>

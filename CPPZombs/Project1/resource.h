@@ -14,8 +14,9 @@
 #endif
 #endif
 
-#define TEXT_FILE 0
-#define WALKER_FILE 1
+// Cannot define things as less than or equal to 5 for some reason.
+// My file stuff:
+#define FONT_FILE 6
+#define PIXELOID_SANS 7
 
-#define FONT_FILE 100
-#define PIXELOID_SANS 101
+#define BITMAP_FILE 100
