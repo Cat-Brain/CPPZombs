@@ -62,7 +62,7 @@ private:
 		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
 		currentFramebuffer = 1;
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
-		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), defaultFont.size, 128);
+		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), static_cast<FT_Long>(defaultFont.size), 128);
 		UseFramebuffer();
 
 		Start();
@@ -164,7 +164,7 @@ public:
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + Vec2f((pos - PlayerPos()) * 2) / midRes.TScrDim() * ScrDim(), scale, color);
+		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), static_cast<int>(scale), color);
 	}
 
 	void DrawLine(Vec2f a, Vec2f b, RGBA color)
@@ -210,5 +210,5 @@ public:
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	((Renderer*)game.get())->inputs.mouseScroll += yoffset;
+	((Renderer*)game.get())->inputs.mouseScroll += static_cast<int>(yoffset);
 }

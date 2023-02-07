@@ -122,7 +122,8 @@ public:
 
 	JRGB Lerp(JRGB other, float lerpValue)
 	{
-		return *this + (other - *this) * lerpValue;
+		return *this + JRGB(static_cast<byte>(static_cast<float>(other.r - r) * lerpValue),
+			static_cast<byte>((other.g - g) * lerpValue), static_cast<byte>(static_cast<float>(other.b - b) * lerpValue));
 	}
 };
 
@@ -176,12 +177,12 @@ public:
 
 	RGBA operator *(RGBA other)
 	{
-		return RGBA(min(r * other.r, 255), min(g * other.g, 255), min(b * other.b, 255));
+		return RGBA(r * other.r, g * other.g, b * other.b);
 	}
 
-	RGBA operator *(float scaler)
+	RGBA operator *(int scaler)
 	{
-		return RGBA(min(int(roundf(r * scaler)), 255), min(int(roundf(g * scaler)), 255), min(int(roundf(b * scaler)), 255));
+		return RGBA(r * scaler, g * scaler, b * scaler);
 	}
 
 	RGBA operator /(RGBA other)
@@ -189,9 +190,9 @@ public:
 		return RGBA(r / other.r, g / other.g, b / other.b);
 	}
 
-	RGBA operator /(float scaler)
+	RGBA operator /(int scaler)
 	{
-		return RGBA(min(int(roundf(r / scaler)), 255), min(int(roundf(g / scaler)), 255), min(int(roundf(b / scaler)), 255));
+		return RGBA(r / scaler, g / scaler, b / scaler);
 	}
 
 	void operator *=(RGBA other)
@@ -249,6 +250,7 @@ public:
 
 	RGBA Lerp(RGBA other, float lerpValue)
 	{
-		return *this + (other - *this) * lerpValue;
+		return *this + RGBA(static_cast<byte>(static_cast<float>(other.r - r) * lerpValue), static_cast<byte>((other.g - g) * lerpValue),
+			static_cast<byte>(static_cast<float>(other.b - b) * lerpValue), static_cast<byte>(static_cast<float>(other.a - a) * lerpValue));
 	}
 };

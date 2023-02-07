@@ -23,9 +23,9 @@ public:
 		color1.g = rand() % 128 + 64;
 		color1.b = rand() % 128 + 64;
 
-		color2.r = rand() % 64 + 128;
-		color2.g = rand() % 64 + 128;
-		color2.b = rand() % 64 + 128;
+		color2.r = color1.r + rand() % 32 + 32;
+		color2.g = color1.g + rand() % 32 + 32;
+		color2.b = color1.b + rand() % 32 + 32;
 
 		backgroundNoise.SetFrequency(0.06125f);
 		backgroundNoise.SetFractalLacunarity(2.0f);
@@ -39,7 +39,6 @@ public:
 
 	float GetBrightness()
 	{
-		return 0.5;
 		float wrappedTime = fmodf(tTime, dawnTime + dayTime + duskTime + nightTime);
 		float ambientDiff = ambientLight - ambientDark;
 		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));

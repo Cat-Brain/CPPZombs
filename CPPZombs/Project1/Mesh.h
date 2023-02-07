@@ -8,7 +8,7 @@ public:
 	vector<uint> indices;
 	GLenum mode;
 
-	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{} { }
+	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{}, mode(GL_TRIANGLES) { }
 
 	Mesh(vector<float> vertices, vector<uint> indices, GLenum mode = GL_TRIANGLES) :
 		vertices(vertices), indices(indices), mode(mode)

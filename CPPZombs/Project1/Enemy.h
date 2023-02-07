@@ -78,7 +78,7 @@ namespace Enemies
 
 		Vec2 TopRight() override
 		{
-			return DToCol::TopRight() + Vec2(8 + (int)to_string(health).length() * 8, 0);
+			return DToCol::TopRight() + Vec2(font.TextWidth(name + " " + to_string(health)) * COMMON_TEXT_SCALE / font.minimumSize, COMMON_TEXT_SCALE / 2);
 		}
 
 		void UIUpdate() override
@@ -741,13 +741,13 @@ namespace Enemies
 	Deceiver* deceiver = new Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
 	Exploder* exploder = new Exploder(vOne * 5, 0.0f, 0.25f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
 	Vacuumer* vacuumer = new Vacuumer(12, 12, 0.125f, 0.125f, 3, 4, 0, vOne, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
+	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, vOne, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 
 	// Mid-lates:
 	Parent* parent = new Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 	Parent* spiderParent = new Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
 	Snake* snake = new Snake(30, 0.5f, 0.25f, 30, 6, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
-	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 6, 1, vOne, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
-
+	
 	// Lates:
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 0.25f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
@@ -784,12 +784,13 @@ namespace Enemies
 
 		void SpawnRandomEnemies()
 		{
-			int totalCost = 0, costToAchieve = Types::GetRoundPoints();
+			int totalCost = 1, costToAchieve = Types::GetRoundPoints();
 			int currentlySpawnableEnemyCount = 0;
-			for (int i = 0; i < (*this).size(); i++)
+			for (int i = 1; i < (*this).size(); i++)
 				currentlySpawnableEnemyCount += int((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() <= costToAchieve);
 			vector<Enemy*> currentlySpawnableEnemies(currentlySpawnableEnemyCount);
-			for (int i = 0, j = 0; j < currentlySpawnableEnemyCount; i++)
+			currentlySpawnableEnemies[0] = (*this)[0];
+			for (int i = 1, j = 1; j < currentlySpawnableEnemyCount; i++)
 				if ((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() <= costToAchieve)
 					currentlySpawnableEnemies[j++] = (*this)[i];
 
@@ -832,8 +833,8 @@ namespace Enemies
 		return result;
 	}
 
-	Types naturalSpawns{ {walker, tanker, spider}, {/*deceiver, exploder, vacuumer, */frog}, {parent, spiderParent, snake},
-		{/*hyperSpeedster, megaTanker, gigaExploder, ranger, */bigSnake}, {cat, boomCat, spoobderb} };
+	Types naturalSpawns{ {walker, tanker, spider}, {deceiver, exploder, vacuumer, frog}, {parent, spiderParent, snake},
+		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake}, {cat, boomCat, spoobderb} };
 
 	Types spawnableBosses{ {cataclysm} };
 }

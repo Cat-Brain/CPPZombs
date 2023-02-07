@@ -50,18 +50,6 @@ public:
 
 	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobster.
 
-	void ResolveCollision(Entity* other) // SUPER INCOMPLETE, DO NOT USE!
-	{
-		Vec2f p = pos - other->pos;
-		Vec2f b = dimensions + other->dimensions;
-		Vec2f w = p.Abs() - b;
-		Vec2f s = Vec2f(p.x < 0.0 ? -1 : 1, p.y < 0.0 ? -1 : 1);
-		float g = max(w.x, w.y);
-		Vec2f  q = w.V2fMin(0.0);
-		float l = q.Magnitude();
-		Vec2f movement = s * ((g > 0.0) ? q / l : ((w.x > w.y) ? Vec2f(1, 0) : Vec2f(0, 1)));
-	}
-
 	virtual void DUpdate() // Normally only draws.
 	{
 		game->Draw(pos, color, dimensions);

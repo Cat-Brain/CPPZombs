@@ -20,8 +20,15 @@ public:
 	{
 		HMODULE hModule = GCM();
 		HRSRC hResource = FindResource(hModule, MAKEINTRESOURCE(resourceID), MAKEINTRESOURCE(resourceType));
-		HGLOBAL hData = LoadResource(hModule, hResource);
-		size = SizeofResource(hModule, hResource);
-		ptr = LockResource(hData);
+		if (hResource != 0)
+		{
+			HGLOBAL hData = LoadResource(hModule, hResource);
+			if (hData != 0)
+			{
+				size = SizeofResource(hModule, hResource);
+				if (size != 0)
+					ptr = LockResource(hData);
+			}
+		}
 	}
 };

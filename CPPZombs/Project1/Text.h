@@ -1,10 +1,10 @@
 #include "Shader.h"
 
 struct Character {
-    unsigned int textureID;  // ID handle of the glyph texture
-    Vec2         size;       // Size of glyph
-    Vec2         bearing;    // Offset from baseline to left/top of glyph
-    unsigned int advance;    // Offset to advance to next glyph
+    uint textureID;       // ID handle of the glyph texture
+    Vec2         size;    // Size of glyph
+    Vec2         bearing; // Offset from baseline to left/top of glyph
+    uint advance;         // Offset to advance to next glyph
 };
 
 class Font
@@ -74,7 +74,7 @@ public:
                 texture,
                 Vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
                 Vec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-                face->glyph->advance.x
+                static_cast<uint>(face->glyph->advance.x)
             };
             characters.insert(std::pair<char, Character>(c, character));
         }
@@ -105,7 +105,7 @@ public:
         return result;
     }
 
-    void Render(string text, Vec2 pos, float scale, RGBA color)
+    void Render(string text, Vec2 pos, int scale, RGBA color)
     {
         scale /= minimumSize;
         int xOffset = 0;
@@ -120,11 +120,11 @@ public:
         {
             Character ch = characters[*c];
 
-            float xpos = (pos.x + xOffset + ch.bearing.x * scale) / ScrWidth();
-            float ypos = (pos.y - (ch.size.y - ch.bearing.y) * scale) / ScrHeight();
+            float xpos = (pos.x + static_cast<float>(xOffset) + ch.bearing.x * scale) / ScrWidth();
+            float ypos = (pos.y - (static_cast<float>(ch.size.y) - ch.bearing.y) * scale) / ScrHeight();
 
-            float w = ch.size.x * scale / ScrWidth();
-            float h = ch.size.y * scale / ScrHeight();
+            float w = ch.size.x * static_cast<float>(scale) / ScrWidth();
+            float h = ch.size.y * static_cast<float>(scale) / ScrHeight();
             // update VBO for each character
             float vertices[6][4] = {
                 { xpos,     ypos + h,   0.0f, 0.0f },

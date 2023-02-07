@@ -17,7 +17,7 @@ public:
 	bool showUI = true, paused = false;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
 	float brightness = 0.0f;
-	bool shouldSpawnBoss;
+	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
 
 	Game() : entities(nullptr), player(nullptr)

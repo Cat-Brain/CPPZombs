@@ -11,7 +11,7 @@ struct Inputs
 		enter, c, q, e, p, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse;
-	int mouseScroll;
+	int mouseScroll = 0;
 	Vec2 mousePosition = vZero;
 
 	Inputs() = default;
@@ -82,7 +82,7 @@ struct Inputs
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= ScrHeight();
 		yPos -= 0.5 * int(ScrHeight() % 2 == 0);
-		mousePosition.x = round(xPos - ScrWidth() / 2.0);
-		mousePosition.y = round(yPos - ScrHeight() / 2.0);
+		mousePosition.x = static_cast<int>(round(xPos - ScrWidth() / 2.0));
+		mousePosition.y = static_cast<int>(round(yPos - ScrHeight() / 2.0));
 	}
 };

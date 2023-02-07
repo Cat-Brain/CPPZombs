@@ -34,7 +34,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-	Framebuffer(uint height) : Framebuffer(ceilf(height * screenRatio), height) { }
+	Framebuffer(uint height) : Framebuffer(static_cast<uint>(ceilf(height * screenRatio)), height) { }
 
     void ResetWidth()
     {

@@ -34,8 +34,8 @@ public:
 	void Update() override
 	{
 		bool exitedMenu = false;
-		if (currentMenuedEntity != nullptr && (game->inputs.leftMouse.pressed || game->inputs.rightMouse.pressed) &&
-			!currentMenuedEntity->PosInUIBounds(game->inputs.mousePosition + pos))
+		if (currentMenuedEntity != nullptr && (game->inputs.leftMouse.pressed || game->inputs.rightMouse.pressed)/* &&
+			!currentMenuedEntity->PosInUIBounds(game->inputs.mousePosition + pos)*/)
 		{
 			currentMenuedEntity->shouldUI = false;
 			currentMenuedEntity = nullptr;

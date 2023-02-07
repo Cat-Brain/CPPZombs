@@ -262,7 +262,7 @@ public:
 	inline Vec2 Rormalized()
 	{
 		Vec2f normalized = Normalized();
-		return Vec2(roundf(normalized.x), roundf(normalized.y));
+		return Vec2(static_cast<int>(roundf(normalized.x)), static_cast<int>(roundf(normalized.y)));
 	}
 
 	inline Vec2f V2fMin(Vec2f other)
