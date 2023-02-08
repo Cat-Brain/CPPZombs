@@ -715,7 +715,7 @@ namespace Resources
 	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Ammo", RGBA(168, 50, 100), 4);
 	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Ammo", RGBA(65, 224, 150), 2);
 	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Ammo", RGBA(255, 200, 0), 3, 1, 15.0f, 0.25f, vOne * 3);
-	ExplodeOnLanding* saphire = new ExplodeOnLanding(vOne * 3, 1, "Saphire", "Ammo", RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
+	ExplodeOnLanding* sapphire = new ExplodeOnLanding(vOne * 3, 1, "Sapphire", "Ammo", RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", RGBA(80, 43, 92), 0, 1, 15.0f, true);
 }
 
@@ -724,6 +724,6 @@ namespace Collectibles
 	Collectible* ruby = new Collectible(*Resources::ruby);
 	Collectible* emerald = new Collectible(*Resources::emerald);
 	Collectible* topaz = new Collectible(*Resources::topaz);
-	Collectible* saphire = new Collectible(*Resources::saphire);
+	Collectible* sapphire = new Collectible(*Resources::sapphire);
 	Collectible* lead = new Collectible(*Resources::lead);
 }

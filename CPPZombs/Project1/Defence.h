@@ -258,14 +258,14 @@ namespace Plants
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0), topazResistence = RGBA(25, 0, 50);
 		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 3, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
 		
-		RGBA babySaphireVineColor = RGBA(125, 91, 212), saphireVineColor = RGBA(132, 89, 255), deadSaphireVineColor = RGBA(75, 69, 92), saphireResistence = RGBA(50, 50, 0);
-		Vine* saphireVine = new Vine(Collectibles::saphire->Clone(5), nullptr, 2, 4, 30, 5, 0.25f, vZero, vOne, babySaphireVineColor, saphireVineColor, deadSaphireVineColor, saphireResistence, 1, 6, 6, "Saphire vine");
+		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92), sapphireResistence = RGBA(50, 50, 0);
+		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), nullptr, 2, 4, 30, 5, 0.25f, vZero, vOne, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
 	}
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.
 	vector<CollectibleTree*> plants{ Trees::copperTree, Trees::ironTree,
 		Trees::rubyTree, Trees::emeraldTree, Trees::rockTree,
-		Vines::cheeseVine, Vines::topazVine, Vines::saphireVine, Vines::leadVine };
+		Vines::cheeseVine, Vines::topazVine, Vines::sapphireVine, Vines::leadVine };
 }
 
 namespace Resources::Seeds
@@ -279,11 +279,11 @@ namespace Resources::Seeds
 	// Vines
 	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", Plants::Vines::cheeseVineColor, 0);
 	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, false, 0.25f, vOne * 3);
-	CorruptOnKill* saphireTreeSeed = new CorruptOnKill(Plants::Vines::saphireVine, "Saphire vine seed", "Corruption Seed", Plants::Vines::saphireVineColor, 1);
+	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", Plants::Vines::sapphireVineColor, 1);
 	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
 
 	// Keep a list of all of the seeds.
-	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rockTreeSeed, rubyTreeSeed, emeraldTreeSeed, cheeseVineSeed, topazTreeSeed, saphireTreeSeed, leadVineSeed };
+	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rockTreeSeed, rubyTreeSeed, emeraldTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };
 }
 
 namespace Collectibles::Seeds
@@ -297,11 +297,11 @@ namespace Collectibles::Seeds
 	// Vines
 	Collectible* cheeseVineSeed = new Collectible(*Resources::Seeds::cheeseVineSeed);
 	Collectible* topazTreeSeed = new Collectible(*Resources::Seeds::topazTreeSeed);
-	Collectible* saphireTreeSeed = new Collectible(*Resources::Seeds::saphireTreeSeed);
+	Collectible* sapphireTreeSeed = new Collectible(*Resources::Seeds::sapphireTreeSeed);
 	Collectible* leadVindSeed = new Collectible(*Resources::Seeds::leadVineSeed);
 
 	// Keep a list of all of the seeds.
-	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, cheeseVineSeed, topazTreeSeed, saphireTreeSeed, leadVindSeed };
+	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVindSeed };
 }
 
 #pragma endregion

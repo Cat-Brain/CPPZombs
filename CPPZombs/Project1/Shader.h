@@ -194,8 +194,68 @@ const char* textFrag = "#version 330 core\n"
 uint textShader;
 #pragma endregion
 
+#pragma region Shadow shader
+const char* shadowVert =
+"layout (location = 0) in vec2 aPos;\n"
+"\n"
+"uniform vec2 center, scrDim;\n"
+"uniform int range;\n"
+"out vec2 pos;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	pos = aPos * 2 * range + center - range;\n"
+"   gl_Position = vec4(pos / scrDim, 0.0, 1.0);\n"
+"}\0";
+
+const char* shadowFrag = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec2 pos;\n"
+"uniform vec2 center, scrDim;\n"
+"\n"
+"uniform sampler2D subScat;\n"
+"\n"
+"void main()"
+"{\n"
+"	\n"
+"	FragColor = texture(subScat, pos / scrDim);\n"
+"}\0";
+
+uint shadowShader;
+#pragma endregion
+
+#pragma region Shading shader
+const char* shadingVert = "#version 330 core\n"
+"layout (location = 0) in vec2 aPos;\n"
+"\n"
+"out vec2 shadUV, uv;\n"
+"uniform vec2 screenDim, pos;\n"
+"uniform float currentScrRat, newScrRat;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos, 1.0, 1.0);\n"
+"	shadUV = (aPos * screenDim + pos) / screenDim;\n"
+"	uv = aPos;\n"
+"}\0";
+
+const char* shadingFrag = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"in vec2 shadUV, uv;\n"
+"\n"
+"uniform sampler2D shadowTexture, screenTexture;"
+"\n"
+"void main()"
+"{\n"
+"	FragColor = texture(shadowTexture, shadUV) * texture(screenTexture, uv);\n"
+"}\0";
+
+uint shadingShader;
+#pragma endregion
+
 vector<std::pair<std::pair<const char*, const char*>, uint*>> shaders{ {{defaultVert, defaultFrag}, &defaultShader},
 	{{framebufferVert, framebufferFrag}, &framebufferShader},
 	{{backgroundVert, backgroundFrag}, &backgroundShader},
 	{{lineVert, lineFrag}, &lineShader},
-	{{textVert, textFrag}, &textShader}};
+	{{textVert, textFrag}, &textShader},
+	{{shadowVert, shadowFrag}, &shadowShader},
+	{{shadingVert, shadingFrag}, &shadingShader} };
