@@ -163,6 +163,29 @@ public:
 		DrawFBL(pos - dimensions / 2, color, dimensions);
 	}
 
+	void SubScat(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	{
+		Vec2 tPos = pos - dimensions / 2; // The bottom left of the thing being drawn.
+		glUseProgram(defaultShader);
+		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
+			float(dimensions.x * 2) / MAP_WIDTH_TRUE, float(dimensions.y * 2) / MAP_WIDTH_TRUE);
+
+		glUniform2f(glGetUniformLocation(defaultShader, "position"),
+			float(pos.x) / MAP_WIDTH_TRUE,
+			float(pos.y) / MAP_WIDTH_TRUE);
+		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
+		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
+		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
+			float(dimensions.x * 2) / MAP_WIDTH_TRUE, float(dimensions.y * 2) / MAP_WIDTH_TRUE);
+
+		glUniform2f(glGetUniformLocation(defaultShader, "position"),
+			float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
+			float((pos.y - PlayerPos().y) * 2) / ScrHeight());
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(defaultShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		quad.Draw();
+	}
+
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
 	{
 		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), static_cast<int>(scale), color);

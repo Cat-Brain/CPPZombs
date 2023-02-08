@@ -360,6 +360,17 @@ public:
 				sortedNCEntities[index]->UIUpdate();
 	}
 
+	void SubScatUpdate()
+	{
+		for (index = 0; index < collectibles.size(); index++)
+			if (collectibles[index]->dActive && collectibles[index]->dActive)
+				collectibles[index]->SubScatUpdate();
+
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->dActive)
+				sortedNCEntities[index]->SubScatUpdate();
+	}
+
 	void Remove(Entity* entityToRemove)
 	{
 		// Remove from sortedNCEntities or from collectibles.

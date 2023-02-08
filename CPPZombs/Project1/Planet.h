@@ -43,4 +43,9 @@ public:
 		float ambientDiff = ambientLight - ambientDark;
 		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));
 	}
+
+	JRGB GetAmbient(float brightness)
+	{
+		return JRGB(1, 1, 1) * static_cast<int>(brightness * 255);
+	}
 };

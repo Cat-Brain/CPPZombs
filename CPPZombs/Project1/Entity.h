@@ -49,11 +49,16 @@ public:
 		this->pos = tempPos;
 	}
 
-	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobster.
+	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 
 	virtual void DUpdate() // Normally only draws.
 	{
 		game->Draw(pos, color, dimensions);
+	}
+
+	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
+	{
+		game->SubScat(pos, subsurfaceResistance, dimensions);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,

@@ -44,7 +44,39 @@ void Game::Update()
 
 void Game::ApplyLighting()
 {
-	JRGB ambientColor = JRGB(static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255), static_cast<byte>(brightness * 255));
+	JRGB ambientColor = planet->GetAmbient(brightness);
+
+	currentFramebuffer = 2;
+	UseFramebuffer();
+	glClearColor(ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	entities->SubScatUpdate();
+
+	glUseProgram(shadowShader);
+	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"), ScrWidth(), ScrHeight());
+	for (int i = 0; i < entities->lightSources.size(); i++)
+	{
+		LightSource* light = entities->lightSources[i].get();
+
+		glUniform2i(glGetUniformLocation(shadowShader, "center"), light->pos.x, light->pos.y);
+		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
+
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);
+		quad.Draw();
+	}
+
+	glUseProgram(shadingShader);
+	glBindTexture(GL_TEXTURE_2D, framebuffers[currentFramebuffer - 1]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+	glUniform1i(glGetUniformLocation(framebufferShader, "screenTexture"), currentFramebuffer - 1);
+	glUniform1f(glGetUniformLocation(framebufferShader, "currentScrRat"), (float)ScrWidth() / (float)ScrHeight());
+
+	currentFramebuffer = 1;
+	UseFramebuffer();
+	glUniform1f(glGetUniformLocation(framebufferShader, "newScrRat"), (float)ScrWidth() / (float)ScrHeight());
+
+	screenSpaceQuad.Draw();
+	glUseProgram(defaultShader);
 
 	/*Color* renderData = GetDrawTarget()->GetData();
 

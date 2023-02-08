@@ -15,8 +15,7 @@ public:
 	//JRGB shadowMap[screenWidth * 3][screenHeight * 3];
 
 	bool showUI = true, paused = false;
-	float lastWave = 0.0f, secondsBetweenWaves = 60.0f;
-	float brightness = 0.0f;
+	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
 
