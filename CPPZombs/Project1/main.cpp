@@ -2,6 +2,7 @@
 
 int main()
 {
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	printf("Greetings universe!\n");
 
 	for (int i = 0; i < Plants::plants.size(); i++)

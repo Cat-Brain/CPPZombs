@@ -49,8 +49,20 @@ private:
 #pragma endregion
 		
 
-		for (std::pair<std::pair<const char*, const char*>, uint*>& pairPair : shaders)
-			*pairPair.second = CreateShader(pairPair.first.first, pairPair.first.second);
+		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
+		{
+			Resource vert(std::get<0>(pairPair).first, TEXT_FILE);
+			char* vert2 = new char[vert.size + 2];
+			for (int i = 0; i < vert.size; i++)
+				vert2[i] = ((char*)vert.ptr)[i];
+			vert2[vert.size] = '\0';
+			Resource frag(std::get<0>(pairPair).second, TEXT_FILE);
+			char* frag2 = new char[frag.size + 2];
+			for (int i = 0; i < frag.size; i++)
+				frag2[i] = ((char*)frag.ptr)[i];
+			frag2[frag.size] = '\0';
+			*(std::get<1>(pairPair)) = CreateShader(vert2, frag2, std::get<2>(pairPair));
+		}
 
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
@@ -98,8 +110,8 @@ private:
 	void TEnd()
 	{
 		End();
-		for (std::pair<std::pair<const char*, const char*>, uint*>& pairPair : shaders)
-			glDeleteProgram(*pairPair.second);
+		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
+			glDeleteProgram(*(std::get<1>(pairPair)));
 		for (Mesh* mesh : meshes)
 			mesh->Destroy();
 		glfwTerminate();

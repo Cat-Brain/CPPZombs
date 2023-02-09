@@ -1,0 +1,10 @@
+#version 330 core
+out vec4 FragColor;
+in vec2 shadUV, uv;
+
+uniform sampler2D shadowTexture, screenTexture;
+
+void main()
+{
+	FragColor = /*texture(shadowTexture, shadUV) * */texture(screenTexture, uv);
+} 

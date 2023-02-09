@@ -1,0 +1,16 @@
+#version 330 core
+out vec4 FragColor;
+in vec2 center, pos;
+uniform ivec2 scrDim;
+uniform vec3 color;
+
+uniform sampler2D subScat;
+
+void main()
+{
+	vec3 totalLight = color;
+	vec2 disp = center - pos;
+	float distance = length(disp);
+	vec2 dir = vec2(disp) / distance;
+	FragColor = vec4(color, 1);
+} 

@@ -235,6 +235,9 @@ namespace Enemies
 
 		bool TUpdate() override
 		{
+			Vec2 disp = (pos - game->PlayerPos()).Abs();
+			if (disp.x <= explosionDimensions.x && disp.y <= explosionDimensions.y)
+				DestroySelf(this);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
 			int randomization = rand();
 			for (int i = 0; i < hitEntities.size(); i++)
@@ -739,7 +742,7 @@ namespace Enemies
 
 	// Mids:
 	Deceiver* deceiver = new Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
-	Exploder* exploder = new Exploder(vOne * 5, 0.0f, 0.25f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
+	Exploder* exploder = new Exploder(vOne * 5, 0.0f, 0.375f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
 	Vacuumer* vacuumer = new Vacuumer(12, 12, 0.125f, 0.125f, 3, 4, 0, vOne, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, vOne, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 

@@ -68,30 +68,16 @@ void Game::ApplyLighting()
 
 	glUseProgram(shadingShader);
 	glBindTexture(GL_TEXTURE_2D, framebuffers[currentFramebuffer - 1]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
-	glUniform1i(glGetUniformLocation(framebufferShader, "screenTexture"), currentFramebuffer - 1);
-	glUniform1f(glGetUniformLocation(framebufferShader, "currentScrRat"), (float)ScrWidth() / (float)ScrHeight());
+	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), currentFramebuffer - 1);
+	glUniform2i(glGetUniformLocation(shadingShader, "scrDim"), ScrWidth(), ScrHeight());
 
 	currentFramebuffer = 1;
 	UseFramebuffer();
-	glUniform1f(glGetUniformLocation(framebufferShader, "newScrRat"), (float)ScrWidth() / (float)ScrHeight());
+
+	glUniform1i(glGetUniformLocation(shadingShader, "screenTexture"), currentFramebuffer - 1);
 
 	screenSpaceQuad.Draw();
 	glUseProgram(defaultShader);
-
-	/*Color* renderData = GetDrawTarget()->GetData();
-
-	for (unique_ptr<LightSource>& lightSource : entities->lightSources)
-		lightSource->ApplyLight();
-
-	for (int x = screenWidth; x < screenWidth * 2; x++)
-		for (int y = screenHeight; y < screenHeight * 2; y++)
-		{
-			int index = x - screenWidth + (screenHeight * 2 - y - 1) * screenWidth;
-			renderData[index].r = static_cast<byte>((int)renderData[index].r * shadowMap[x][y].r / 255);
-			renderData[index].g = static_cast<byte>((int)renderData[index].g * shadowMap[x][y].g / 255);
-			renderData[index].b = static_cast<byte>((int)renderData[index].b * shadowMap[x][y].b / 255);
-			shadowMap[x][y] = ambientColor;
-		}*/
 }
 
 void Game::TUpdate()
