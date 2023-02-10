@@ -6,7 +6,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	trueScreenHeight = height;
 	screenRatio = (float)trueScreenWidth / (float)trueScreenHeight;
 	for (Framebuffer* framebuffer : framebuffers)
-		framebuffer->ResetWidth();
+		if (framebuffer->shouldScreenRes)
+			framebuffer->ResetWidth();
+	subScat.width = 3 * midRes.width;
+	subScat.ResetDim();
+	shadowMap.width = subScat.width;
+	shadowMap.ResetDim();
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -70,8 +75,8 @@ private:
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 
 		midRes = Framebuffer(80);
-		subScat = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
-		shadowMap = Framebuffer(MAP_WIDTH_TRUE, MAP_WIDTH_TRUE);
+		subScat = Framebuffer(midRes.width * 3, midRes.height * 3, false);
+		shadowMap = Framebuffer(midRes.width * 3, midRes.height * 3, false);
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
 		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), static_cast<FT_Long>(defaultFont.size), 128);
 
@@ -180,15 +185,15 @@ public:
 		Vec2 tPos = pos - dimensions / 2; // The bottom left of the thing being drawn.
 		glUseProgram(defaultShader);
 		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
-			float(dimensions.x * 2) / MAP_WIDTH_TRUE, float(dimensions.y * 2) / MAP_WIDTH_TRUE);
+			float(dimensions.x * 2) / subScat.width, float(dimensions.y * 2) / subScat.height);
 
 		glUniform2f(glGetUniformLocation(defaultShader, "position"),
-			float(pos.x) / MAP_WIDTH_TRUE,
-			float(pos.y) / MAP_WIDTH_TRUE);
+			float(pos.x) / subScat.width,
+			float(pos.y) / subScat.height);
 		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
 		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
 		glUniform2f(glGetUniformLocation(defaultShader, "scale"),
-			float(dimensions.x * 2) / MAP_WIDTH_TRUE, float(dimensions.y * 2) / MAP_WIDTH_TRUE);
+			float(dimensions.x * 2) / subScat.width, float(dimensions.y * 2) / subScat.height);
 
 		glUniform2f(glGetUniformLocation(defaultShader, "position"),
 			float((pos.x - PlayerPos().x) * 2) / ScrWidth(),

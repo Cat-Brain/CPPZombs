@@ -12,9 +12,9 @@ namespace Enemies
 		int damage;
 
 		Enemy(float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne,
-			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			DToCol(vZero, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			DToCol(vZero, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			timePer(timePer), lastTime(0.0f), timePerMove(timePerMove), lastMove(0.0f), points(points), firstWave(firstWave), damage(damage)
 		{
 		}
@@ -122,9 +122,9 @@ namespace Enemies
 		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
 		Deceiver(float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1, Vec2 dimensions = vOne,
-			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
 		}
@@ -177,9 +177,9 @@ namespace Enemies
 		Enemy* child;
 
 		Parent(Enemy* child, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), child(child)
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), child(child)
 		{
 			Start();
 		}
@@ -219,9 +219,9 @@ namespace Enemies
 		Vec2 explosionDimensions;
 
 		Exploder(Vec2 explosionDimensions, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -269,9 +269,9 @@ namespace Enemies
 
 		Snake(int length, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			RGBA subsurfaceResistance = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
+			RGBA subScat = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -389,9 +389,9 @@ namespace Enemies
 		Items items;
 
 		Vacuumer(int vacDist, int desiredDistance, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{ }
 
@@ -407,7 +407,7 @@ namespace Enemies
 		bool MUpdate() override
 		{
 			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) > 9.0f)
-				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(Vec2f(game->PlayerPos() - pos).SqrMagnitude() > desiredDistance * desiredDistance)), mass);
+				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(Vec2f(game->PlayerPos() - pos).SqrMagnitude() > desiredDistance * desiredDistance)), mass + mass);
 			return true;
 		}
 
@@ -474,9 +474,9 @@ namespace Enemies
 
 		Spider(LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed) { }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -551,10 +551,10 @@ namespace Enemies
 
 		Spoobderb(Entity* baseChild, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
-				timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name) { }
+				timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name) { }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -580,9 +580,9 @@ namespace Enemies
 		Vec2f offset, direction;
 
 		Pouncer(float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name),
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			pounceTime(pounceTime), speed(speed)
 		{ }
 
@@ -624,9 +624,9 @@ namespace Enemies
 		RGBA color3;
 
 		Cat(float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Pouncer(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), color3(color3)
+			Pouncer(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), color3(color3)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -679,9 +679,9 @@ namespace Enemies
 		Vec2 explosionDimensions;
 
 		BoomCat(Vec2 explosionDimensions, float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Cat(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subsurfaceResistance, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
+			Cat(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subScat, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -707,9 +707,9 @@ namespace Enemies
 		Cat* normalChild, * boomChild;
 
 		Cataclysm(Cat* normalChild, Cat* boomChild, Vec2 explosionDimensions, float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subsurfaceResistance = RGBA(),
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			BoomCat(explosionDimensions, pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subsurfaceResistance, mass, maxHealth, health, name), normalChild(normalChild), boomChild(boomChild)
+			BoomCat(explosionDimensions, pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subScat, mass, maxHealth, health, name), normalChild(normalChild), boomChild(boomChild)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override

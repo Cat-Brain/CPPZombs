@@ -4,10 +4,11 @@ class Framebuffer
 {
 public:
 	uint fbo, rbo, textureColorbuffer, framebuffer, texturePos, width, height;
+    bool shouldScreenRes;
 
-	Framebuffer() : fbo(0), rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0) { }
+	Framebuffer() : fbo(0), rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), shouldScreenRes(true) { }
 
-    Framebuffer(uint width, uint height) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height)
+    Framebuffer(uint width, uint height, bool shouldScreenRes = false) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), shouldScreenRes(shouldScreenRes)
     {
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -36,7 +37,15 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-	Framebuffer(uint height) : Framebuffer(static_cast<uint>(ceilf(height * screenRatio)), height) { }
+	Framebuffer(uint height, bool shouldScreenRes = true) : Framebuffer(static_cast<uint>(ceilf(height * screenRatio)), height, shouldScreenRes) { }
+
+    void ResetDim()
+    {
+        glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    }
 
     void ResetWidth()
     {
@@ -44,10 +53,7 @@ public:
         if (width == newWidth)
             return;
         width = newWidth;
-        glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        ResetDim();
     }
 
     inline float ScreenRatio()

@@ -14,14 +14,14 @@ public:
 	string name;
 	Vec2 pos, dir;
 	Vec2 dimensions;
-	RGBA color, subsurfaceResistance;
+	RGBA color, subScat;
 	float mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
 
-	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subsurfaceResistance = RGBA(),
+	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subsurfaceResistance(subsurfaceResistance),
+		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
 	{
 	}
@@ -58,7 +58,7 @@ public:
 
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
 	{
-		game->SubScat(pos, subsurfaceResistance, dimensions);
+		game->SubScat(pos, subScat, dimensions);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,

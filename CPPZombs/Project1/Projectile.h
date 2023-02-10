@@ -11,8 +11,8 @@ public:
     int callType = 0;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
-        RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), dimensions, color, subsurfaceResistance, mass, maxHealth, health),
+        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1) :
+        Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
@@ -138,6 +138,7 @@ public:
         damage = item.damage;
         this->item = item;
         color = item.color;
+        subScat = item.subScat;
         dimensions = item.dimensions;
         if (creator == nullptr)
             name = item.name;

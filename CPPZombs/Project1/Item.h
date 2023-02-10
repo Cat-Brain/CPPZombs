@@ -6,36 +6,36 @@ public:
 	Item* baseClass;
 	string name;
 	string typeName;
-	RGBA color;
+	RGBA color, subScat;
 	int damage;
 	int count;
 	float range, shootSpeed;
 	Vec2f dimensions;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		baseClass(this), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
+	Item(string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		baseClass(this), name(name), typeName(typeName), color(color), subScat(subScat), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		baseClass(baseClass), name(name), typeName(typeName), color(color), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
+		baseClass(baseClass), name(name), typeName(typeName), color(color), subScat(subScat), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return Item(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return Item(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return new Item(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return new Item(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	Item operator * (int multiplier)
@@ -71,22 +71,22 @@ public:
 
 	virtual Item Clone(int count)
 	{
-		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item Clone()
 	{
-		return GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, color, damage, count, range, shootSpeed, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, color, subScat, damage, count, range, shootSpeed, dimensions);
 	}
 };
 
@@ -207,9 +207,9 @@ public:
 
 namespace Resources
 {
-	Item* copper = new Item("Copper", "Ammo", RGBA(232, 107, 5), 1);
-	Item* iron = new Item("Iron", "Ammo", RGBA(111, 123, 128), 3);
-	Item* rock = new Item("Rock", "Ammo", RGBA(145, 141, 118), 6, 1, 5.0f);
+	Item* copper = new Item("Copper", "Ammo", RGBA(232, 107, 5), RGBA(0, 25, 50), 1);
+	Item* iron = new Item("Iron", "Ammo", RGBA(111, 123, 128), RGBA(50, 50, 25), 3);
+	Item* rock = new Item("Rock", "Ammo", RGBA(145, 141, 118), RGBA(25, 25, 50), 6, 1, 5.0f);
 }
 
 #pragma endregion

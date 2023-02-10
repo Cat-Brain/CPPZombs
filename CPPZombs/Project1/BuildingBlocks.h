@@ -6,8 +6,8 @@ public:
 	RGBA color2;
 
 	DToCol(Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
-		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name), color2(color2)
+		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), color2(color2)
 	{ }
 
 	void DUpdate() override
@@ -28,8 +28,8 @@ public:
 	LightSource* lightSource;
 
 	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA color2 = RGBA(), RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), lightColor(lightColor),
+		RGBA color2 = RGBA(), RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
 		lightFalloff(lightFalloff), lightSource(nullptr)
 	{ }
 
@@ -67,12 +67,12 @@ public:
 
 namespace Shootables
 {
-	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 5, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 4, 4, "Cheese");
+	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 5, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(25, 25, 50), 1, 4, 4, "Cheese");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", RGBA(235, 178, 56), 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", Shootables::cheeseBlock->color, Shootables::cheeseBlock->subScat, 0);
 }
 
 namespace Collectibles
@@ -86,15 +86,15 @@ public:
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
+		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
 	FunctionalBlock(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
-		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
+		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
 		Start();
 	}
@@ -119,15 +119,15 @@ public:
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
-		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
+		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
 		Start();
 	}
 
 	FunctionalBlock2(float timePer, float offset, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA subsurfaceResistance = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
+		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
 		Start();
 	}

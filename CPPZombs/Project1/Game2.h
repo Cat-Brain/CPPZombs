@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL)));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(), 25, 1, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(0, 0, 127), 25, 1, 10, 5, "Player");
 	player = static_cast<Player*>(playerUnique.get());
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -48,11 +48,18 @@ void Game::ApplyLighting()
 
 	currentFramebuffer = 2;
 	UseFramebuffer();
-	glClearColor(ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	glBlendFunc(GL_ONE, GL_ONE);
 	entities->SubScatUpdate();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	currentFramebuffer = 3;
+	UseFramebuffer();
 
 	glUseProgram(shadowShader);
+	glClearColor(ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"), ScrWidth(), ScrHeight());
 	for (int i = 0; i < entities->lightSources.size(); i++)
 	{
@@ -121,7 +128,7 @@ void Game::TUpdate()
 	ApplyLighting(); // Apply lighting.
 	Draw(inputs.mousePosition + player->pos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));// Draw mouse.
 	// Draw mid-res screen onto true screen.
-	DrawFramebufferOnto(0);
+	//DrawFramebufferOnto(0);
 
 	entities->UIUpdate(); // Draws UI of uiactive entities.
 	

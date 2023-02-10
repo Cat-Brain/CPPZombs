@@ -13,8 +13,8 @@ public:
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
-		RGBA subsurfaceResistance = RGBA(), int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(lightColor, lightFalloff, pos, dimensions, color, color2, subsurfaceResistance, mass, maxHealth, health, name), vacDist(vacDist)
+		RGBA subScat = RGBA(), int lightFalloff = 50, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(lightColor, lightFalloff, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}

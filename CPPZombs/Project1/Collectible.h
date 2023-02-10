@@ -6,7 +6,7 @@ public:
 	Item baseItem;
 
 	Collectible(Item baseItem, Vec2 pos = vZero) :
-		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.subScat, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
 
 	Collectible(Item baseItem, Vec2 pos, RGBA color) :
 		Entity(pos, baseItem.dimensions, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }

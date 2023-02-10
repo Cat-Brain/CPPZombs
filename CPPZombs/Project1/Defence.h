@@ -271,16 +271,16 @@ namespace Plants
 namespace Resources::Seeds
 {
 	// Trees
-	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", Plants::Trees::copperTreeColor, 0);
-	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", Plants::Trees::ironTreeColor, 0);
-	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", Plants::Trees::rockTreeColor, 0);
-	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", Plants::Trees::rubyTreeColor, 1);
-	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, 1);
+	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", Plants::Trees::copperTreeColor, Plants::Trees::copperResistence, 0);
+	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", Plants::Trees::ironTreeColor, Plants::Trees::ironResistence, 0);
+	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", Plants::Trees::rockTreeColor, Plants::Trees::rockResistence, 0);
+	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", Plants::Trees::rubyTreeColor, Plants::Trees::rubyResistence, 1);
+	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", Plants::Trees::emeraldTreeColor, Plants::Trees::emeraldResistence, 1);
 	// Vines
-	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", Plants::Vines::cheeseVineColor, 0);
-	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, 0, 1, 15.0f, false, 0.25f, vOne * 3);
-	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", Plants::Vines::sapphireVineColor, 1);
-	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, 0);
+	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", Plants::Vines::cheeseVineColor, Plants::Vines::cheeseResistence, 0);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", Plants::Vines::topazVineColor, Plants::Vines::topazResistence, 0, 1, 15.0f, false, 0.25f, vOne * 3);
+	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", Plants::Vines::sapphireVineColor, Plants::Vines::sapphireResistence, 1);
+	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", Plants::Vines::leadVineColor, Plants::Vines::leadResistence, 0);
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rockTreeSeed, rubyTreeSeed, emeraldTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };
