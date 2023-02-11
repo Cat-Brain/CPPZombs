@@ -43,7 +43,6 @@ public:
 
 	float GetBrightness()
 	{
-		return 0.0f;
 		float wrappedTime = fmodf(tTime, dawnTime + dayTime + duskTime + nightTime);
 		float ambientDiff = ambientLight - ambientDark;
 		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));
