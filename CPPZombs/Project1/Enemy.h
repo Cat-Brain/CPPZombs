@@ -488,7 +488,7 @@ namespace Enemies
 
 		bool MUpdate() override
 		{
-			if (pos.Squistance(game->PlayerPos()) - desiredDistance > 2.0f)
+			if (abs(pos.Squistance(game->PlayerPos()) - desiredDistance) > 2.0f)
 				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(pos.Squistance(game->PlayerPos()) > desiredDistance)), mass + mass);
 			return true;
 		}
@@ -928,7 +928,7 @@ namespace Enemies
 		{walker, tanker, spider},
 		{deceiver, exploder, vacuumer, frog},
 		{parent, spiderParent, snake},
-		{/*hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, */pouncerSnake},
+		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

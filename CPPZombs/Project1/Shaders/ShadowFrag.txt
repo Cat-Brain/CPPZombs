@@ -1,9 +1,19 @@
 #version 330 core
 out vec4 FragColor;
 
+in vec2 pos;
+uniform vec2 center;
+uniform ivec2 scrDim;
 uniform sampler2D subScat;
+uniform vec3 color;
 
 void main()
 {
-	FragColor = vec4(color, 1);
+	vec2 disp = pos - center;
+	float squistance = max(abs(disp.x), abs(disp.y));
+	vec2 dir = disp / squistance;
+	vec3 finalColor = color;
+	for (int i = 1; i <= squistance; i++)
+		finalColor -= texture(subScat, (center + 1 + dir * i) / scrDim * 0.5 + 0.5).rgb;
+	FragColor = vec4(finalColor, 1);
 } 

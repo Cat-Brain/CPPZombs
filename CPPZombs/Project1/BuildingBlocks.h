@@ -24,18 +24,18 @@ class LightBlock : public DToCol
 {
 public:
 	JRGB lightColor;
-	int lightFalloff;
+	float range;
 	LightSource* lightSource;
 
-	LightBlock(JRGB lightColor, int lightFalloff = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
+	LightBlock(JRGB lightColor, int range = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
-		lightFalloff(lightFalloff), lightSource(nullptr)
+		range(range), lightSource(nullptr)
 	{ }
 
 	void Start() override
 	{
-		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, lightFalloff);
+		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, range);
 		lightSource = sharedPtr.get();
 		game->entities->lightSources.push_back(std::move(sharedPtr));
 	}
@@ -67,7 +67,7 @@ public:
 
 namespace Shootables
 {
-	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 5, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(25, 25, 50), 1, 4, 4, "Cheese");
+	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 10, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 4, 4, "Cheese");
 }
 
 namespace Resources

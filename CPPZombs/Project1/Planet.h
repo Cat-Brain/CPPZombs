@@ -5,7 +5,7 @@ class Planet
 public:
 	float dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	Enemies::Instance enemies, bosses;
-	JRGB color1, color2;
+	JRGB color1, color2, fog;
 	FastNoiseLite backgroundNoise;
 
 	Planet()
@@ -27,6 +27,10 @@ public:
 		color2.g = color1.g + rand() % 32 + 32;
 		color2.b = color1.b + rand() % 32 + 32;
 
+		fog.r = rand() % 8 + 8;
+		fog.g = rand() % 8 + 8;
+		fog.b = rand() % 8 + 8;
+
 		backgroundNoise.SetFrequency(0.06125f);
 		backgroundNoise.SetFractalLacunarity(2.0f);
 		backgroundNoise.SetFractalGain(0.5f);
@@ -39,6 +43,7 @@ public:
 
 	float GetBrightness()
 	{
+		return 0.0f;
 		float wrappedTime = fmodf(tTime, dawnTime + dayTime + duskTime + nightTime);
 		float ambientDiff = ambientLight - ambientDark;
 		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));

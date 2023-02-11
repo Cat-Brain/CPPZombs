@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL)));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(0, 0, 127), 25, 1, 100, 50, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(), 20, 1, 100, 50, "Player");
 	player = static_cast<Player*>(playerUnique.get());
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -48,11 +48,10 @@ void Game::ApplyLighting()
 
 	currentFramebuffer = 2;
 	UseFramebuffer();
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(planet->fog.r / 255.0f, planet->fog.g / 255.0f, planet->fog.b / 255.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glBlendFunc(GL_ONE, GL_ONE);
 	entities->SubScatUpdate();
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	currentFramebuffer = 3;
 	UseFramebuffer();
@@ -60,41 +59,50 @@ void Game::ApplyLighting()
 	glUseProgram(shadowShader);
 	glClearColor(ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, subScat.textureColorbuffer);
-	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 1);
-	for (int i = 0; i < entities->lightSources.size(); i++)
-	{
-		LightSource* light = entities->lightSources[i].get();
+	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 0);
 
+	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
+		ScrWidth(), ScrHeight());
+
+	for (unique_ptr<LightSource>& light : entities->lightSources)
+	{
+		Vec2f scrPos = light->pos - PlayerPos();
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 2) / ScrWidth(), float(light->range * 2) / ScrHeight());
+			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
 
 		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			float((light->pos.x - PlayerPos().x) * 2) / ScrWidth(),
-			float((light->pos.y - PlayerPos().y) * 2) / ScrHeight());
+			(scrPos.x - light->range) * 2 / ScrWidth(),
+			(scrPos.y - light->range) * 2 / ScrHeight());
 
-		glUniform4f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f, 1.0f);
+		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
 
-		/*glUniform2i(glGetUniformLocation(shadowShader, "center"), light->pos.x, light->pos.y);
-		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
+		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
+			scrPos.x - light->range, scrPos.y - light->range);
 
-		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);*/
+		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
+			scrPos.x + light->range, scrPos.y + light->range);
+
+		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);
+
 		quad.Draw();
 	}
-	
-	glUseProgram(shadingShader);
-	glBindTexture(GL_TEXTURE_2D, framebuffers[currentFramebuffer - 1]->textureColorbuffer);
-	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), currentFramebuffer - 1);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	currentFramebuffer = 1;
 	UseFramebuffer();
+	
+	glUseProgram(shadingShader);
 
-	glBindTexture(GL_TEXTURE_2D, framebuffers[currentFramebuffer - 1]->textureColorbuffer);
-	glUniform1i(glGetUniformLocation(shadingShader, "screenTexture"), currentFramebuffer - 1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, midRes.textureColorbuffer);
+	glUniform1i(glGetUniformLocation(shadingShader, "screenTexture"), 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, shadowMap.textureColorbuffer);
+	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), 1);
 
 	screenSpaceQuad.Draw();
-	glUseProgram(defaultShader);
 }
 
 void Game::TUpdate()
