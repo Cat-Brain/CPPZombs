@@ -58,7 +58,7 @@ public:
 
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
 	{
-		game->SubScat(pos, subScat, dimensions);
+		game->Draw(pos, subScat, dimensions);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,
@@ -96,7 +96,7 @@ public:
 	
 	virtual void SetPos(Vec2 newPos);
 
-	bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
 

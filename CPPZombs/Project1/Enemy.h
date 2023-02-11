@@ -2,7 +2,8 @@
 
 namespace Enemies
 {
-
+#pragma region Enemy types
+	// The base class of all enemies.
 	class Enemy : public DToCol
 	{
 	public:
@@ -112,7 +113,6 @@ namespace Enemies
 			return points;
 		}
 	};
-
 
 
 	class Deceiver : public Enemy
@@ -311,7 +311,12 @@ namespace Enemies
 			Enemy::DUpdate();
 		}
 
-		void SetPos(Vec2 newPos)
+		bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr) override
+		{
+			return false;
+		}
+
+		void SetPos(Vec2 newPos) override
 		{
 			Vec2 lastPos = pos;
 			Enemy::SetPos(newPos);
@@ -323,7 +328,7 @@ namespace Enemies
 		bool MUpdate() override
 		{
 			if (front == nullptr)
-				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * dimensions, mass + mass);
+				Enemy::TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * dimensions, mass + mass);
 
 			return true;
 		}
@@ -340,6 +345,83 @@ namespace Enemies
 		int Cost() override
 		{
 			return points / 5;
+		}
+	};
+
+	class PouncerSnake : public Snake
+	{
+	public:
+		float pounceTime, speed;
+		Vec2f offset, direction;
+
+		PouncerSnake(float pounceTime, float speed, int length, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
+			RGBA subScat = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Snake(length, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, color3, color4, mass, maxHealth, health, name),
+			pounceTime(pounceTime), speed(speed)
+		{ }
+
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		{
+			unique_ptr<PouncerSnake>* enemies = new unique_ptr<PouncerSnake>[length];
+			for (int i = 0; i < length; i++)
+			{
+				enemies[i] = make_unique<PouncerSnake>(*this);
+				enemies[i]->baseClass = baseClass;
+				enemies[i]->pos = pos;
+				enemies[i]->points = points / length;
+				enemies[i]->Start();
+				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
+				enemies[i]->lastTime = tTime;
+			}
+
+			if (length > 1)
+			{
+				enemies[0]->front = enemies[1].get();
+				enemies[length - 1]->back = enemies[length - 2].get();
+			}
+			for (int i = 1; i < length - 1; i++)
+			{
+				enemies[i]->back = enemies[i - 1].get();
+				enemies[i]->front = enemies[i + 1].get();
+			}
+
+			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
+				game->entities->push_back(std::move(enemies[i]));
+			return std::move(enemies[0]); // Do 0 here.
+		}
+
+		bool MUpdate() override
+		{
+			offset = vZero;
+			direction = Vec2f(game->PlayerPos() - pos).Normalized();
+			return true;
+		}
+
+		void Update() override
+		{
+			Enemy::Update();
+
+			if (front == nullptr && tTime - lastMove <= pounceTime)
+			{
+				offset += direction * game->dTime * speed;
+				if (Vec2(offset) != vZero)
+				{
+					Enemy::TryMove(offset, mass + mass);
+					offset -= Vec2(offset);
+				}
+			}
+		}
+
+		void OnDeath(Entity* damageDealer) override
+		{
+			Snake::OnDeath(damageDealer);
+			if (back != nullptr)
+			{
+				((PouncerSnake*)back)->offset = offset;
+				((PouncerSnake*)back)->direction = direction;
+			}
 		}
 	};
 
@@ -406,8 +488,8 @@ namespace Enemies
 
 		bool MUpdate() override
 		{
-			if (fabsf(Vec2f(game->PlayerPos() - pos).SqrMagnitude() - desiredDistance * desiredDistance) > 9.0f)
-				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(Vec2f(game->PlayerPos() - pos).SqrMagnitude() > desiredDistance * desiredDistance)), mass + mass);
+			if (pos.Squistance(game->PlayerPos()) - desiredDistance > 2.0f)
+				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(pos.Squistance(game->PlayerPos()) > desiredDistance)), mass + mass);
 			return true;
 		}
 
@@ -730,41 +812,46 @@ namespace Enemies
 			return Cat::DealDamage(Clamp(damage, -1, 1), damageDealer);
 		}
 	};
+#pragma endregion
 
-	//Predefinitions
+
+#pragma region Enemies
+	//Predefinitions - Special
 	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f);
 	Enemy* child = new Enemy(1.0f, 0.125f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
 
-	// Earlies.
+	// Earlies - 1
 	Enemy* walker = new Enemy(0.75f, 0.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
 	Enemy* tanker = new Enemy(1.0f, 0.75f, 2, 1, 1, vOne * 3, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
 	Spider* spider = new Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 2, 1, 1, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
 
-	// Mids:
+	// Mids - 4
 	Deceiver* deceiver = new Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
 	Exploder* exploder = new Exploder(vOne * 5, 0.0f, 0.375f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
 	Vacuumer* vacuumer = new Vacuumer(12, 12, 0.125f, 0.125f, 3, 4, 0, vOne, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, vOne, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 
-	// Mid-lates:
+	// Mid-lates - 6
 	Parent* parent = new Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 	Parent* spiderParent = new Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
-	Snake* snake = new Snake(30, 0.5f, 0.25f, 30, 6, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 3, 3, "Snake");
+	Snake* snake = new Snake(30, 0.5f, 0.25f, 30, 6, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
 	
-	// Lates:
+	// Lates - 8
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 0.25f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 	Exploder* gigaExploder = new Exploder(vOne * 15, 0.0f, 0.25f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 	Ranger* ranger = new Ranger(12, 12, 0.125f, 0.125f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 5, 12, 12, "Ranger");
-	Snake* bigSnake = new Snake(30, 0.5f, 0.5f, 60, 8, 1, vOne * 3, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255), RGBA(0, 127), 2, 9, 9, "Big Snake");
+	Snake* bigSnake = new Snake(30, 0.5f, 0.5f, 60, 8, 1, vOne * 3, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
+	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 30, 0.5f, 8.0f, 60, 8, 1, vOne, RGBA(0, 0, 255), RGBA(), RGBA(50, 0, 0), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
 
-	// Very lates:
+	// Very lates - 12
 	Cat* cat = new Cat(2.0f, 16.0f, 0.25f, 3.0f, 45, 12, 1, vOne, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), RGBA(), 1, 9, 9, "Cat");
 	BoomCat* boomCat = new BoomCat(vOne * 9, 2.0f, 12.0f, 1.0f, 4.0f, 45, 12, 1, vOne * 3, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), RGBA(), 9, 9, 9, "Boom Cat");
 	Spoobderb* spoobderb = new Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 0.5f, 50, 12, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
 
-	// Bosses:
+	// Bosses - Special
 	Cataclysm* cataclysm = new Cataclysm(cat, boomCat, vOne * 13, 5.0f, 12.0f, 2.0f, 5.0f, 250, 12, 1, vOne * 7, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
+#pragma endregion
 
 	class Instance;
 	class Types : public vector<vector<Enemy*>>
@@ -836,8 +923,17 @@ namespace Enemies
 		return result;
 	}
 
-	Types naturalSpawns{ {walker, tanker, spider}, {deceiver, exploder, vacuumer, frog}, {parent, spiderParent, snake},
-		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake}, {cat, boomCat, spoobderb} };
+	Types naturalSpawns
+	{
+		{walker, tanker, spider},
+		{deceiver, exploder, vacuumer, frog},
+		{parent, spiderParent, snake},
+		{/*hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, */pouncerSnake},
+		{cat, boomCat, spoobderb}
+	};
 
-	Types spawnableBosses{ {cataclysm} };
+	Types spawnableBosses
+	{
+		{cataclysm}
+	};
 }

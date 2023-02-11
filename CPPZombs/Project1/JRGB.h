@@ -122,8 +122,8 @@ public:
 
 	JRGB Lerp(JRGB other, float lerpValue)
 	{
-		return *this + JRGB(static_cast<byte>(static_cast<float>(other.r - r) * lerpValue),
-			static_cast<byte>((other.g - g) * lerpValue), static_cast<byte>(static_cast<float>(other.b - b) * lerpValue));
+		return *this - JRGB(static_cast<byte>(static_cast<float>(r - other.r) * lerpValue), static_cast<byte>(static_cast<float>(g - other.g) * lerpValue),
+			static_cast<byte>(static_cast<float>(b - other.b) * lerpValue));
 	}
 };
 
@@ -250,7 +250,7 @@ public:
 
 	RGBA Lerp(RGBA other, float lerpValue)
 	{
-		return *this + RGBA(static_cast<byte>(static_cast<float>(other.r - r) * lerpValue), static_cast<byte>((other.g - g) * lerpValue),
-			static_cast<byte>(static_cast<float>(other.b - b) * lerpValue), static_cast<byte>(static_cast<float>(other.a - a) * lerpValue));
+		return *this - RGBA(static_cast<byte>(static_cast<float>(r - other.r) * lerpValue), static_cast<byte>(static_cast<float>(g - other.g) * lerpValue),
+			static_cast<byte>(static_cast<float>(b - other.b) * lerpValue), static_cast<byte>(static_cast<float>(a - other.a) * lerpValue));
 	}
 };

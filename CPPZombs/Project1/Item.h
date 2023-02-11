@@ -208,7 +208,7 @@ public:
 namespace Resources
 {
 	Item* copper = new Item("Copper", "Ammo", RGBA(232, 107, 5), RGBA(0, 25, 50), 1);
-	Item* iron = new Item("Iron", "Ammo", RGBA(111, 123, 128), RGBA(50, 50, 25), 3);
+	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Single-use Ammo", RGBA(111, 123, 128), RGBA(50, 50, 25), 12);
 	Item* rock = new Item("Rock", "Ammo", RGBA(145, 141, 118), RGBA(25, 25, 50), 6, 1, 5.0f);
 }
 

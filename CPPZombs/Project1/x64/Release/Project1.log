@@ -6,7 +6,7 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(15,51
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(15,68): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(109,1): warning C4267: 'argument': conversion from 'size_t' to 'char', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Text.h(153,42): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Renderer.h(208,132): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Renderer.h(185,132): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Item.h(193,72): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entity.h(69,86): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(67,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
@@ -38,7 +38,7 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(18
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(190,73): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(192,81): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Defence.h(199,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(58,62): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(59,62): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(149,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(150,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(151,16): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
@@ -51,24 +51,25 @@ C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(164,
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(164,19): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(166,52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(166,40): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(326,76): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(410,158): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(614,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(331,83): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(411,34): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(492,133): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Enemy.h(696,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Player.h(123,97): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(118,97): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(118,78): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(119,88): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(119,75): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(146,108): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(150,35): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(151,77): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(152,73): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(130,97): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(130,78): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(131,88): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(131,75): warning C4244: 'argument': conversion from 'int' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(158,108): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(162,35): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(163,77): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Game2.h(164,73): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\include\memory(3433,56): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\Project1\Entities.h(444,1): message : see reference to function template instantiation 'std::unique_ptr<SpinText,std::default_delete<SpinText>> std::make_unique<SpinText,Vec2,int&,std::string,RGBA,float,float,float,0>(Vec2 &&,int &,std::string &&,RGBA &&,float &&,float &&,float &&)' being compiled
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  160 of 3128 functions ( 5.1%) were compiled, the rest were copied from previous compilation.
+  2 of 3173 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+    15 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\Cat-Brain\CPPZombs\CPPZombs\x64\Release\Project1.exe

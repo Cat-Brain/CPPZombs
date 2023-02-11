@@ -6,5 +6,5 @@ uniform sampler2D shadowTexture, screenTexture;
 
 void main()
 {
-	FragColor = /*texture(shadowTexture, shadUV) * */texture(screenTexture, uv);
+	FragColor = texture(shadowTexture, shadUV) * texture(screenTexture, uv);
 } 

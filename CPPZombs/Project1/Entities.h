@@ -161,7 +161,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, dim) &&
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim) &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
@@ -176,7 +176,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->Overlaps(pos, dim)) overlaps.push_back((*this)[*iter].get());
+				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim)) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
@@ -190,7 +190,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, dim) &&
+				if ((*this)[*iter]->Overlaps(pos, dim) && (*this)[*iter]->active &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
@@ -205,7 +205,7 @@ public:
 		vector<Entity*> corporeals{}, incorporeals{};
 		for (Chunk* chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunk->begin(); iter != chunk->end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, dim) &&
+				if ((*this)[*iter]->Overlaps(pos, dim) && (*this)[*iter]->active &&
 					(((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
 						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
@@ -362,13 +362,13 @@ public:
 
 	void SubScatUpdate()
 	{
-		for (index = 0; index < collectibles.size(); index++)
-			if (collectibles[index]->dActive)
-				collectibles[index]->SubScatUpdate();
-
-		for (index = 0; index < sortedNCEntities.size(); index++)
-			if (sortedNCEntities[index]->dActive)
-				sortedNCEntities[index]->SubScatUpdate();
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), ScrDim() + vOne); // Collectibles then NCs.
+		// Collectibles
+		for (Entity* entity : toRenderPair.second)
+			entity->SubScatUpdate();
+		// Normal entities
+		for (Entity* entity : toRenderPair.first)
+			entity->SubScatUpdate();
 	}
 
 	void Remove(Entity* entityToRemove)
@@ -729,11 +729,11 @@ namespace Hazards
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Ammo", RGBA(168, 50, 100), RGBA(0, 50, 50), 4);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Ammo", RGBA(65, 224, 150), RGBA(50, 0, 50), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Ammo", RGBA(255, 200, 0), RGBA(0, 0, 50), 3, 1, 15.0f, 0.25f, vOne * 3);
-	ExplodeOnLanding* sapphire = new ExplodeOnLanding(vOne * 3, 1, "Sapphire", "Ammo", RGBA(78, 25, 212), RGBA(50, 50, 0), 0, 1, 15.0f, 0.0625f);
-	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", RGBA(80, 43, 92), RGBA(0, 50, 25), 0, 1, 15.0f, true);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Single-use Ammo", RGBA(168, 50, 100), RGBA(0, 50, 50), 4);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Single-use Ammo", RGBA(65, 224, 150), RGBA(50, 0, 50), 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Single-use Ammo", RGBA(255, 200, 0), RGBA(0, 0, 50), 3, 1, 15.0f, 0.25f, vOne * 3);
+	ExplodeOnLanding* sapphire = new ExplodeOnLanding(vOne * 3, 1, "Sapphire", "Single-use Ammo", RGBA(78, 25, 212), RGBA(50, 50, 0), 0, 1, 15.0f, 0.0625f);
+	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Single-use Ammo", RGBA(80, 43, 92), RGBA(0, 50, 25), 0, 1, 15.0f, true);
 }
 
 namespace Collectibles

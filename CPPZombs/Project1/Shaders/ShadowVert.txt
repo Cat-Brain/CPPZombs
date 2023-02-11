@@ -1,12 +1,9 @@
 #version 330 core
 layout (location = 0) in vec2 aPos;
 
-uniform ivec2 center, scrDim;
-uniform int range;
-out vec2 pos;
+uniform vec2 scale, position;
 
 void main()
 {
-	pos = aPos * 2 * range + center - range;
-	gl_Position = vec4(pos / scrDim, 0.0, 1.0);
+   gl_Position = vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);
 } 
