@@ -7,11 +7,11 @@ public:
 	RGBA adultColor, deadColor;
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
-	CollectibleTree(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int chanceForSeed,
+	CollectibleTree(Collectible* collectible, int cyclesToGrow, int deadStage, int chanceForSeed,
 		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
+		collectible(collectible), seed(nullptr), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		FunctionalBlock2(timePer, pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{ }
@@ -114,11 +114,11 @@ class Vine : public CollectibleTree
 public:
 	int maxGenerations, generation;
 
-	Vine(Collectible* collectible, Collectible* seed, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
+	Vine(Collectible* collectible, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
 		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
-		CollectibleTree(collectible, seed, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
+		CollectibleTree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{ }
 
@@ -231,38 +231,38 @@ namespace Plants
 	namespace Trees
 	{
 		RGBA babyCopperTreeColor = RGBA(207, 137, 81), copperTreeColor = RGBA(163, 78, 8), deadCopperTreeColor = RGBA(94, 52, 17), copperResistence = RGBA(0, 0, 50);
-		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
+		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, 5, 25, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
 		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48), ironResistence = RGBA(50, 50, 0);
-		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 240, 270, 10, 0.5f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, 120, 1500, 10, 0.5f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
 		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88), rubyResistence = RGBA(0, 50, 50);
-		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");
+		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");
 
 		RGBA babyEmeraldTreeColor = RGBA(145, 255, 204), emeraldTreeColor = RGBA(65, 166, 119), deadEmeraldTreeColor = RGBA(61, 97, 80), emeraldResistence = RGBA(50, 0, 50);
-		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
+		CollectibleTree* emeraldTree = new CollectibleTree(Collectibles::emerald, 5, 15, 50, 4.0f, vZero, vOne, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 1, 1, 1, "Emerald tree");
 
 		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(130, 130, 130), rockResistence = RGBA(50, 0, 50);
-		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
+		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
 		
 		RGBA babyShadeTreeColor = RGBA(50, 50), shadeTreeColor = RGBA(25, 25), deadShadeTreeColor = RGBA(), shadeResistence = RGBA();
-		CollectibleTree* shadeTree = new CollectibleTree(Collectibles::shades, nullptr, 10, 30, 25, 1.0f, vZero, vOne, babyShadeTreeColor, shadeTreeColor, deadShadeTreeColor, shadeResistence, 1, 1, 1, "Shade tree");
+		CollectibleTree* shadeTree = new CollectibleTree(Collectibles::shades, 10, 30, 25, 1.0f, vZero, vOne, babyShadeTreeColor, shadeTreeColor, deadShadeTreeColor, shadeResistence, 1, 1, 1, "Shade tree");
 	}
 
 
 	namespace Vines
 	{
 		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50), cheeseResistence = RGBA(0, 0, 50);
-		Vine* cheeseVine = new Vine(Collectibles::cheese, nullptr, 5, 10, 5, 10, 2.0f, vZero, vOne, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
+		Vine* cheeseVine = new Vine(Collectibles::cheese, 5, 10, 5, 10, 2.0f, vZero, vOne, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
 
 		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61), leadResistence = RGBA(0, 50, 0);
-		Vine* leadVine = new Vine(Collectibles::lead, nullptr, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
+		Vine* leadVine = new Vine(Collectibles::lead, 2, 6, 15, 5, 3.0f, vZero, vOne, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0), topazResistence = RGBA(25, 0, 50);
-		Vine* topazVine = new Vine(Collectibles::topaz, nullptr, 2, 5, 30, 5, 4.0f, vZero, vOne * 3, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
+		Vine* topazVine = new Vine(Collectibles::topaz, 2, 5, 30, 5, 4.0f, vZero, vOne * 3, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92), sapphireResistence = RGBA(50, 50, 0);
-		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), nullptr, 2, 4, 30, 5, 0.25f, vZero, vOne, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
+		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 2, 4, 30, 5, 0.25f, vZero, vOne, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
 	}
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.

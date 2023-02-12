@@ -78,8 +78,8 @@ private:
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 
 		midRes = Framebuffer(80);
-		subScat = Framebuffer(midRes.width * 3, midRes.height * 3, false);
-		shadowMap = Framebuffer(midRes.width * 3, midRes.height * 3, false);
+		subScat = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB, false);
+		shadowMap = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB16F, false);
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
 		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), static_cast<FT_Long>(defaultFont.size), 128);
 

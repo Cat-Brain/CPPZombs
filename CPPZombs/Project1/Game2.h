@@ -139,24 +139,25 @@ void Game::ApplyLighting()
 
 float Game::BrightnessAtPos(Vec2 pos)
 {
-	JRGB brightness = planet->GetAmbient(planet->GetBrightness());
+	JRGB ambient = planet->GetAmbient(planet->GetBrightness());
+	int r = ambient.r, g = ambient.g, b = ambient.b;
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 		if (pos.Squistance(light->pos) < light->range)
 		{
 			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
-			brightness.r = Clamp(brightness.r + light->color.r * multiplier, 0, 255);
-			brightness.g = Clamp(brightness.g + light->color.g * multiplier, 0, 255);
-			brightness.b = Clamp(brightness.b + light->color.b * multiplier, 0, 255);
+			r += light->color.r * multiplier;
+			g += light->color.g * multiplier;
+			b += light->color.b * multiplier;
 		}
 	for (unique_ptr<LightSource>& light : entities->darkSources)
 		if (pos.Squistance(light->pos) < light->range)
 		{
 			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
-			brightness.r = Clamp(brightness.r - light->color.r * multiplier, 0, 255);
-			brightness.g = Clamp(brightness.g - light->color.g * multiplier, 0, 255);
-			brightness.b = Clamp(brightness.b - light->color.b * multiplier, 0, 255);
+			r -= light->color.r * multiplier;
+			g -= light->color.g * multiplier;
+			b -= light->color.b * multiplier;
 		}
-	return static_cast<float>(brightness.r + brightness.g + brightness.b) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
+	return static_cast<float>(Clamp(r + g + b, 0, 765)) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
 }
 
 void Game::TUpdate()

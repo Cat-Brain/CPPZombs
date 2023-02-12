@@ -4,11 +4,13 @@ class Framebuffer
 {
 public:
 	uint rbo, textureColorbuffer, framebuffer, texturePos, width, height;
+    GLint format;
     bool shouldScreenRes;
 
-	Framebuffer() : rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), shouldScreenRes(true) { }
+	Framebuffer() : rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), format(GL_RGB), shouldScreenRes(true) { }
 
-    Framebuffer(uint width, uint height, bool shouldScreenRes = false) : rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), shouldScreenRes(shouldScreenRes)
+    Framebuffer(uint width, uint height, GLint format = GL_RGB, bool shouldScreenRes = false):
+        rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), format(format), shouldScreenRes(shouldScreenRes)
     {
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -18,7 +20,7 @@ public:
         texturePos = totalTexturesCreated;
         totalTexturesCreated++;
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -37,12 +39,12 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-	Framebuffer(uint height, bool shouldScreenRes = true) : Framebuffer(static_cast<uint>(ceilf(height * screenRatio)), height, shouldScreenRes) { }
+	Framebuffer(uint height, GLint format = GL_RGB, bool shouldScreenRes = true) : Framebuffer(static_cast<uint>(ceilf(height * screenRatio)), height, format, shouldScreenRes) { }
 
     void ResetDim()
     {
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     }

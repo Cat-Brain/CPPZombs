@@ -16,5 +16,5 @@ void main()
 	vec3 finalColor = color * (1 - squistance / range);
 	for (int i = 1; i <= squistance; i++)
 		finalColor -= texture(subScat, (center + 1 + dir * i) / scrDim * 0.5 + 0.5).rgb;
-	FragColor = vec4(finalColor, 1);
+	FragColor = vec4(clamp(finalColor.r, 0.0, 1.0), clamp(finalColor.g, 0.0, 1.0), clamp(finalColor.b, 0.0, 1.0), 1);
 } 

@@ -74,8 +74,8 @@ public:
 
 namespace Shootables
 {
-	LightBlock* cheese = new LightBlock({ 51, 51, 51 }, true, 25, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
-	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, vOne, RGBA(), RGBA(), RGBA(), 1, 1, 1, "Shades");
+	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
+	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, vOne, RGBA(255, 255, 255), RGBA(), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
