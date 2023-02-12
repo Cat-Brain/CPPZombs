@@ -43,4 +43,6 @@ public:
 	void TUpdate();
 
 	void MenuedEntityDied(Entity* entity);
+
+	float BrightnessAtPos(Vec2 pos);
 };

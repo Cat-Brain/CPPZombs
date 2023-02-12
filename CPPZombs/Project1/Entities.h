@@ -47,6 +47,7 @@ public:
 	vector<Entity*> sortedNCEntities; // The NC stands for Non-Collectible.
 	vector<Entity*> collectibles; // sortedNCEntities and collectibles are the most accurate, the others are less so.
 	vector<unique_ptr<LightSource>> lightSources;
+	vector<unique_ptr<LightSource>> darkSources;
 	vector<unique_ptr<Particle>> particles;
 	vector<Chunk> chunks;
 	vector<Chunk*> renderedChunks;
@@ -371,9 +372,14 @@ public:
 		
 	}
 
-	void Remove(LightSource* lightSourceToRemove)
+	void RemoveLight(LightSource* lightSourceToRemove)
 	{
 		lightSources.erase(std::find_if(lightSources.begin(), lightSources.end(), [lightSourceToRemove](std::unique_ptr<LightSource> const& i) { return i.get() == lightSourceToRemove; }));
+	}
+
+	void RemoveDark(LightSource* lightSourceToRemove)
+	{
+		darkSources.erase(std::find_if(darkSources.begin(), darkSources.end(), [lightSourceToRemove](std::unique_ptr<LightSource> const& i) { return i.get() == lightSourceToRemove; }));
 	}
 
 	void Remove(Particle* particleToRemove)
@@ -608,7 +614,7 @@ public:
 
 	void OnDeath(Entity* damageDealer) override
 	{
-		game->entities->Remove(lightSource);
+		game->entities->RemoveLight(lightSource);
 	}
 };
 
@@ -736,11 +742,11 @@ namespace Hazards
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Ammo", 1, RGBA(168, 50, 100), RGBA(0, 50, 50), 4);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), RGBA(50, 0, 50), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), RGBA(0, 0, 50), 3, 1, 15.0f, 0.25f, vOne * 3);
-	ExplodeOnLanding* sapphire = new ExplodeOnLanding(vOne * 3, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), RGBA(50, 50, 0), 0, 1, 15.0f, 0.0625f);
-	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), RGBA(0, 50, 25), 0, 1, 15.0f, true);
+	ExplodeOnLanding* ruby = new ExplodeOnLanding(vOne * 5, 4, "Ruby", "Ammo", 1, RGBA(168, 50, 100), RGBA(0, 10, 10), 4);
+	ExplodeOnLanding* emerald = new ExplodeOnLanding(vOne * 15, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), RGBA(10, 0, 10), 2);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(vOne * 7, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), RGBA(0, 0, 10), 3, 1, 15.0f, 0.25f, vOne * 3);
+	ExplodeOnLanding* sapphire = new ExplodeOnLanding(vOne * 3, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), RGBA(10, 10, 0), 0, 1, 15.0f, 0.0625f);
+	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), RGBA(0, 10, 5), 0, 1, 15.0f, true);
 }
 
 namespace Collectibles

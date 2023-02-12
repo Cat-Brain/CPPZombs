@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL)));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(), 20, 1, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20, 1, 10, 5, "Player");
 	player = static_cast<Player*>(playerUnique.get());
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -90,6 +90,36 @@ void Game::ApplyLighting()
 
 		quad.Draw();
 	}
+
+	// If something is rendered it will subtract from the source, this will be used for dark sources.
+	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+
+	for (unique_ptr<LightSource>& light : entities->darkSources)
+	{
+		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
+
+		Vec2f scrPos = light->pos - PlayerPos();
+		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
+			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
+
+		glUniform2f(glGetUniformLocation(shadowShader, "position"),
+			(scrPos.x - light->range) * 2 / ScrWidth(),
+			(scrPos.y - light->range) * 2 / ScrHeight());
+
+		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
+
+		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
+			scrPos.x - light->range, scrPos.y - light->range);
+
+		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
+			scrPos.x + light->range, scrPos.y + light->range);
+
+		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);
+
+		quad.Draw();
+	}
+
+	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	currentFramebuffer = 1;
@@ -105,6 +135,28 @@ void Game::ApplyLighting()
 	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), 1);
 
 	screenSpaceQuad.Draw();
+}
+
+float Game::BrightnessAtPos(Vec2 pos)
+{
+	JRGB brightness = planet->GetAmbient(planet->GetBrightness());
+	for (unique_ptr<LightSource>& light : entities->lightSources)
+		if (pos.Squistance(light->pos) < light->range)
+		{
+			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
+			brightness.r = Clamp(brightness.r + light->color.r * multiplier, 0, 255);
+			brightness.g = Clamp(brightness.g + light->color.g * multiplier, 0, 255);
+			brightness.b = Clamp(brightness.b + light->color.b * multiplier, 0, 255);
+		}
+	for (unique_ptr<LightSource>& light : entities->darkSources)
+		if (pos.Squistance(light->pos) < light->range)
+		{
+			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
+			brightness.r = Clamp(brightness.r - light->color.r * multiplier, 0, 255);
+			brightness.g = Clamp(brightness.g - light->color.g * multiplier, 0, 255);
+			brightness.b = Clamp(brightness.b - light->color.b * multiplier, 0, 255);
+		}
+	return static_cast<float>(brightness.r + brightness.g + brightness.b) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
 }
 
 void Game::TUpdate()

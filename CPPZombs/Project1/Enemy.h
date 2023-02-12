@@ -247,7 +247,7 @@ namespace Enemies
 
 		bool TUpdate() override
 		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
 			int randomization = rand();
 			for (int i = 0; i < hitEntities.size(); i++)
 			{

@@ -26,18 +26,22 @@ public:
 	JRGB lightColor;
 	float range;
 	LightSource* lightSource;
+	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, int range = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
+	LightBlock(JRGB lightColor, bool lightOrDark, int range = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
-		range(range), lightSource(nullptr)
+		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{ }
 
 	void Start() override
 	{
 		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, range);
 		lightSource = sharedPtr.get();
-		game->entities->lightSources.push_back(std::move(sharedPtr));
+		if (lightOrDark)
+			game->entities->lightSources.push_back(std::move(sharedPtr));
+		else
+			game->entities->darkSources.push_back(std::move(sharedPtr));
 	}
 
 	LightBlock(LightBlock* baseClass, Vec2 pos) :
@@ -61,23 +65,29 @@ public:
 
 	void OnDeath(Entity* damageDealer) override
 	{
-		game->entities->Remove(lightSource);
+		if (lightOrDark)
+			game->entities->RemoveLight(lightSource);
+		else
+			game->entities->RemoveDark(lightSource);
 	}
 };
 
 namespace Shootables
 {
-	LightBlock* cheeseBlock = new LightBlock({ 117, 89, 28 }, 10, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 4, 4, "Cheese");
+	LightBlock* cheese = new LightBlock({ 51, 51, 51 }, true, 25, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
+	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, vOne, RGBA(), RGBA(), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", 3, Shootables::cheeseBlock->color, Shootables::cheeseBlock->subScat, 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, Shootables::cheese->subScat, 0);
+	PlacedOnLanding* shades = new PlacedOnLanding(Shootables::shades, "Shades", "Light", 3, Shootables::shades->color, Shootables::shades->subScat, 0);
 }
 
 namespace Collectibles
 {
 	Collectible* cheese = new Collectible(*Resources::cheese);
+	Collectible* shades = new Collectible(*Resources::shades);
 }
 
 class FunctionalBlock : public Entity

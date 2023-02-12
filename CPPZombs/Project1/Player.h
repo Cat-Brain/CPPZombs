@@ -13,8 +13,8 @@ public:
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
-		RGBA subScat = RGBA(), float range = 10, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(lightColor, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist)
+		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(lightColor, lightOrDark, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		Start();
 	}
@@ -23,8 +23,9 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
-		items.push_back(Resources::emerald->Clone(10));
-		items.push_back(Resources::cheese->Clone(10));
+		items.push_back(Resources::copper->Clone(10));
+		items.push_back(Resources::cheese->Clone(3));
+		items.push_back(Resources::shades->Clone(3));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
 		for (Item* item : Resources::Seeds::plantSeeds)
 			items.push_back(item->Clone());

@@ -37,7 +37,7 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * game->brightness;
+		return game->dTime * game->BrightnessAtPos(pos);
 	}
 
 	void DUpdate() override
@@ -137,7 +137,7 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * (1.0f - game->brightness);
+		return game->dTime * (1.0f - game->BrightnessAtPos(pos));
 	}
 
 	bool TUpdate() override
@@ -234,7 +234,7 @@ namespace Plants
 		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, nullptr, 5, 50, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
 		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48), ironResistence = RGBA(50, 50, 0);
-		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 240, 270, 10, 0.25f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, nullptr, 240, 270, 10, 0.5f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
 		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88), rubyResistence = RGBA(0, 50, 50);
 		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, nullptr, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");
@@ -244,6 +244,9 @@ namespace Plants
 
 		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(130, 130, 130), rockResistence = RGBA(50, 0, 50);
 		CollectibleTree* rockTree = new CollectibleTree(Collectibles::rock, nullptr, 5, 8, 75, 4.0f, vZero, vOne, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 1, 1, 1, "Rock tree");
+		
+		RGBA babyShadeTreeColor = RGBA(50, 50), shadeTreeColor = RGBA(25, 25), deadShadeTreeColor = RGBA(), shadeResistence = RGBA();
+		CollectibleTree* shadeTree = new CollectibleTree(Collectibles::shades, nullptr, 10, 30, 25, 1.0f, vZero, vOne, babyShadeTreeColor, shadeTreeColor, deadShadeTreeColor, shadeResistence, 1, 1, 1, "Shade tree");
 	}
 
 
@@ -264,26 +267,27 @@ namespace Plants
 
 	// Keep a list of all of the plants. CollectibleTree is the base of all plants so it's what we'll use for the pointer.
 	vector<CollectibleTree*> plants{ Trees::copperTree, Trees::ironTree,
-		Trees::rubyTree, Trees::emeraldTree, Trees::rockTree,
+		Trees::rubyTree, Trees::emeraldTree, Trees::rockTree, Trees::shadeTree,
 		Vines::cheeseVine, Vines::topazVine, Vines::sapphireVine, Vines::leadVine };
 }
 
 namespace Resources::Seeds
 {
 	// Trees
-	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", 4, Plants::Trees::copperTreeColor, Plants::Trees::copperResistence, 0);
-	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", 4, Plants::Trees::ironTreeColor, Plants::Trees::ironResistence, 0);
-	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", 4, Plants::Trees::rockTreeColor, Plants::Trees::rockResistence, 0);
-	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", 2, Plants::Trees::rubyTreeColor, Plants::Trees::rubyResistence, 1);
-	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", 2, Plants::Trees::emeraldTreeColor, Plants::Trees::emeraldResistence, 1);
+	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", 4, Plants::Trees::copperTreeColor, Resources::copper->subScat, 0);
+	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", 4, Plants::Trees::ironTreeColor, Resources::iron->subScat, 0);
+	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", 4, Plants::Trees::rockTreeColor, Resources::rock->subScat, 0);
+	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", 2, Plants::Trees::rubyTreeColor, Resources::ruby->subScat, 1);
+	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", 2, Plants::Trees::emeraldTreeColor, Resources::emerald->subScat, 1);
+	PlacedOnLanding* shadeTreeSeed = new PlacedOnLanding(Plants::Trees::shadeTree, "Shade tree seed", "Seed", 4, Plants::Trees::shadeTreeColor, Resources::shades->subScat, 0);
 	// Vines
-	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, Plants::Vines::cheeseResistence, 0);
-	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, Plants::Vines::topazResistence, 0, 1, 15.0f, false, 0.25f, vOne * 3);
-	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, Plants::Vines::sapphireResistence, 1);
-	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, Plants::Vines::leadResistence, 0);
+	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, Resources::cheese->subScat, 0);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, Resources::topaz->subScat, 0, 1, 15.0f, false, 0.25f, vOne * 3);
+	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, Resources::sapphire->subScat, 1);
+	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, Resources::lead->subScat, 0);
 
 	// Keep a list of all of the seeds.
-	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rockTreeSeed, rubyTreeSeed, emeraldTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };
+	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };
 }
 
 namespace Collectibles::Seeds
@@ -294,6 +298,7 @@ namespace Collectibles::Seeds
 	Collectible* rubyTreeSeed = new Collectible(*Resources::Seeds::rubyTreeSeed);
 	Collectible* emeraldTreeSeed = new Collectible(*Resources::Seeds::emeraldTreeSeed);
 	Collectible* rockTreeSeed = new Collectible(*Resources::Seeds::rockTreeSeed);
+	Collectible* shadeTreeSeed = new Collectible(*Resources::Seeds::shadeTreeSeed);
 	// Vines
 	Collectible* cheeseVineSeed = new Collectible(*Resources::Seeds::cheeseVineSeed);
 	Collectible* topazTreeSeed = new Collectible(*Resources::Seeds::topazTreeSeed);
@@ -301,7 +306,7 @@ namespace Collectibles::Seeds
 	Collectible* leadVindSeed = new Collectible(*Resources::Seeds::leadVineSeed);
 
 	// Keep a list of all of the seeds.
-	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVindSeed };
+	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVindSeed };
 }
 
 #pragma endregion

@@ -206,9 +206,9 @@ public:
 
 namespace Resources
 {
-	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), RGBA(0, 25, 50), 1);
-	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(50, 50, 25), 12);
-	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), RGBA(25, 25, 50), 6, 1, 5.0f);
+	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), RGBA(0, 5, 10), 1);
+	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(10, 10, 5), 12);
+	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), RGBA(5, 5, 10), 6, 1, 5.0f);
 }
 
 #pragma endregion
