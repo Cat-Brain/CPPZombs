@@ -68,6 +68,8 @@ void Game::ApplyLighting()
 
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 	{
+		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
+
 		Vec2f scrPos = light->pos - PlayerPos();
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
 			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());

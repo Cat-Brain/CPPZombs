@@ -15,8 +15,18 @@ public:
 		duskTime = RandFloat() * 60.0f;
 		nightTime = RandFloat() * 60.0f;
 
-		ambientDark = RandFloat() * 0.5f;
-		ambientLight = RandFloat() * 0.5f + 0.5f;
+		if (rand() % 2 == 0)
+		{
+			ambientDark = RandFloat();
+			ambientLight = 1;
+		}
+		else
+		{
+			ambientDark = 0;
+			ambientLight = RandFloat();
+		}
+		//ambientDark = RandFloat() * 0.5f;
+		//ambientLight = RandFloat() * 0.5f + 0.5f;
 
 
 		color1.r = rand() % 128 + 64;
@@ -27,9 +37,9 @@ public:
 		color2.g = color1.g + rand() % 32 + 32;
 		color2.b = color1.b + rand() % 32 + 32;
 
-		fog.r = rand() % 8 + 8;
-		fog.g = rand() % 8 + 8;
-		fog.b = rand() % 8 + 8;
+		fog.r = rand() % 8;
+		fog.g = rand() % 8;
+		fog.b = rand() % 8;
 
 		backgroundNoise.SetFrequency(0.06125f);
 		backgroundNoise.SetFractalLacunarity(2.0f);

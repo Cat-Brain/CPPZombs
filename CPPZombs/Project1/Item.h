@@ -186,11 +186,11 @@ public:
 		int height = ScrHeight(), scale = height / (2 * max(8, int(size())));
 		Vec2
 			offset = vZero - ScrDim();
-		game->DrawFBL(offset + Vec2(0, scale * currentIndex * 2), RGBA(), Vec2(scale, scale));
+		game->DrawFBL(offset + Vec2(0, scale * currentIndex * 2), (*this)[currentIndex].color, Vec2(scale, scale));
 		int scale2 = scale / 5;
 		for (int i = 0; i < size(); i++)
 		{
-			game->DrawTextured(spriteSheet, (*this)[i].intType, offset + Vec2(0, scale * i * 2), (*this)[i].color, Vec2(scale, scale));
+			game->DrawTextured(spriteSheet, (*this)[i].intType, offset + Vec2(0, scale * i * 2), i == currentIndex ? RGBA() : (*this)[i].color, Vec2(scale, scale));
 			font.Render(" " + (i == currentIndex ? (*this)[i].name : (*this)[i].typeName) + "  " + to_string((*this)[i].count),
 				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2, (*this)[i].color);
 		}

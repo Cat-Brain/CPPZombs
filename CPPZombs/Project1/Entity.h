@@ -191,9 +191,14 @@ public:
 			DestroySelf(nullptr);
 	}
 
+	float Opacity()
+	{
+		return 1.0f - (tTime - startTime) / totalFadeTime;
+	}
+
 	void DUpdate() override
 	{
-		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
+		color.a = static_cast<uint8_t>(Opacity() * 255);
 		Entity::DUpdate();
 	}
 

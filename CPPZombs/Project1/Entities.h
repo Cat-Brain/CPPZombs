@@ -590,14 +590,20 @@ public:
 class FadeOutGlow : public FadeOut
 {
 public:
-	float startTime, totalFadeTime;
+	float startTime, totalFadeTime, startRange;
 	LightSource* lightSource;
 
 	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
-		FadeOut(totalFadeTime, pos, dimensions, color)
+		FadeOut(totalFadeTime, pos, dimensions, color), startRange(range)
 	{
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
+	}
+
+	void DUpdate() override
+	{
+		lightSource->range = startRange * Opacity();
+		FadeOut::DUpdate();
 	}
 
 	void OnDeath(Entity* damageDealer) override
@@ -662,6 +668,12 @@ public:
 	}
 };
 
+inline void CreateExplosion(Vec2 pos, Vec2 explosionDimensions, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
+{
+	game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionDimensions, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(explosionDimensions.x * 2, explosionDamage + damage, pos, explosionDimensions, color));
+}
+
 class ExplodeOnLanding : public Item
 {
 public:
@@ -675,7 +687,7 @@ public:
 	ExplodeOnLanding(Item* baseClass, Vec2f explosionDimensions = vOne, int explosionDamage = 1, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
 		float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(baseClass, name, typeName, intType, color, subScat, damage, count, shootSpeed, range, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
+		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
 
 	virtual Item Clone(int count)
 	{
@@ -699,8 +711,7 @@ public:
 
 	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
 	{
-		game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionDimensions, color, pos, name + string(" shot by ") + creatorName, creator));
-		game->entities->push_back(make_unique<FadeOutGlow>(explosionDimensions.x, damage, pos, explosionDimensions, color));
+		CreateExplosion(pos, explosionDimensions, color, name + string(" shot by " + creatorName), damage, explosionDamage, creator);
 	}
 };
 

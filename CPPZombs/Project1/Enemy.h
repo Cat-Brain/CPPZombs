@@ -233,11 +233,20 @@ namespace Enemies
 			return newEnemy;
 		}
 
+		void DUpdate() override
+		{
+			Vec2 tempDimensions = dimensions;
+			dimensions = explosionDimensions;
+			byte tempAlpha = color.a;
+			color.a /= 5;
+			Enemy::DUpdate();
+			dimensions = tempDimensions;
+			color.a = tempAlpha;
+			Enemy::DUpdate();
+		}
+
 		bool TUpdate() override
 		{
-			Vec2 disp = (pos - game->PlayerPos()).Abs();
-			if (disp.x <= explosionDimensions.x && disp.y <= explosionDimensions.y)
-				DestroySelf(this);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
 			int randomization = rand();
 			for (int i = 0; i < hitEntities.size(); i++)
@@ -245,18 +254,17 @@ namespace Enemies
 				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
 				if (entity != this && !entity->IsEnemy())
 				{
-					DestroySelf(this);
+					CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
 					return true;
 				}
 			}
-			return true;
+			return false;
 		}
 
 		void OnDeath(Entity* damageDealer) override
 		{
 			Enemy::OnDeath(damageDealer);
-			game->entities->push_back(make_unique<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name));
-			game->entities->push_back(make_unique<FadeOut>(1.5f, pos, explosionDimensions, color));
+			CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
 		}
 	};
 
@@ -777,8 +785,7 @@ namespace Enemies
 
 		bool TUpdate() override
 		{
-			game->entities->push_back(make_unique<ExplodeNextFrame>(damage, explosionDimensions, color, pos, name, this));
-			game->entities->push_back(make_unique<FadeOut>(1.5f, pos, explosionDimensions, color));
+			CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
 			return true;
 		}
 	};
@@ -827,7 +834,7 @@ namespace Enemies
 
 	// Mids - 4
 	Deceiver* deceiver = new Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
-	Exploder* exploder = new Exploder(vOne * 5, 0.0f, 0.375f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
+	Exploder* exploder = new Exploder(vOne * 5, 1.0f, 0.375f, 4, 4, 1, vOne, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
 	Vacuumer* vacuumer = new Vacuumer(12, 12, 0.125f, 0.125f, 3, 4, 0, vOne, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, vOne, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 
@@ -839,7 +846,7 @@ namespace Enemies
 	// Lates - 8
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 0.25f, 8, 8, 1, vOne, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, vOne * 5, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
-	Exploder* gigaExploder = new Exploder(vOne * 15, 0.0f, 0.25f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
+	Exploder* gigaExploder = new Exploder(vOne * 15, 1.0f, 0.25f, 8, 8, 1, vOne * 3, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 	Ranger* ranger = new Ranger(12, 12, 0.125f, 0.125f, 6, 8, 0, vOne * 5, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 5, 12, 12, "Ranger");
 	Snake* bigSnake = new Snake(30, 0.5f, 0.5f, 60, 8, 1, vOne * 3, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
 	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 30, 0.5f, 8.0f, 60, 8, 1, vOne, RGBA(0, 0, 255), RGBA(), RGBA(50, 0, 0), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");

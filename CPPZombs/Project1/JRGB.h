@@ -56,7 +56,7 @@ public:
 
 	JRGB operator *(int scaler)
 	{
-		return JRGB(min(r * scaler, 255), min(g * scaler, 255), min(b * scaler, 255));
+		return *this * JRGB(scaler, scaler, scaler);
 	}
 
 	JRGB operator /(JRGB other)
@@ -248,9 +248,14 @@ public:
 		return true;
 	}
 
-	RGBA Lerp(RGBA other, float lerpValue)
+	inline RGBA Lerp(RGBA other, float lerpValue)
 	{
 		return *this - RGBA(static_cast<byte>(static_cast<float>(r - other.r) * lerpValue), static_cast<byte>(static_cast<float>(g - other.g) * lerpValue),
 			static_cast<byte>(static_cast<float>(b - other.b) * lerpValue), static_cast<byte>(static_cast<float>(a - other.a) * lerpValue));
+	}
+
+	inline JRGB ToJRGB()
+	{
+		return JRGB(r, g, b);
 	}
 };

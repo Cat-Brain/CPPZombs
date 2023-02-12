@@ -23,7 +23,7 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
-		items.push_back(Resources::copper->Clone(10));
+		items.push_back(Resources::emerald->Clone(10));
 		items.push_back(Resources::cheese->Clone(10));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
 		for (Item* item : Resources::Seeds::plantSeeds)
