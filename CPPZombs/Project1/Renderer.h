@@ -69,6 +69,9 @@ private:
 			*(std::get<1>(pairPair)) = CreateShader(vert2, frag2, std::get<2>(pairPair));
 		}
 
+		for (std::tuple<Texture&, int, int, uint>& textureTuple : textures)
+			std::get<0>(textureTuple) = Texture(std::get<1>(textureTuple), std::get<2>(textureTuple), std::get<3>(textureTuple));
+
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
@@ -117,6 +120,10 @@ private:
 		End();
 		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
 			glDeleteProgram(*(std::get<1>(pairPair)));
+		for (Framebuffer* framebuffer : framebuffers)
+			framebuffer->Destroy();
+		for (std::tuple<Texture&, int, int, uint>& textureTuple : textures)
+			std::get<0>(textureTuple).Destroy();
 		for (Mesh* mesh : meshes)
 			mesh->Destroy();
 		glfwTerminate();
@@ -183,6 +190,40 @@ public:
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
 	{
 		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), static_cast<int>(scale), color);
+	}
+
+	void DrawTextured(Texture& texture, uint spriteToDraw, Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	{
+		glUseProgram(texturedShader);
+		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
+		{
+			glUniform2f(glGetUniformLocation(texturedShader, "scale"),
+				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+
+			glUniform2f(glGetUniformLocation(texturedShader, "position"),
+				float(pos.x) / ScrWidth(),
+				float(pos.y) / ScrHeight());
+		}
+		else
+		{
+			// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
+			// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
+			glUniform2f(glGetUniformLocation(texturedShader, "scale"),
+				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+
+			glUniform2f(glGetUniformLocation(texturedShader, "position"),
+				float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
+				float((pos.y - PlayerPos().y) * 2) / ScrHeight());
+		}
+
+		float spriteWidth = 1.0f / texture.spriteCount;
+		glUniform2f(glGetUniformLocation(texturedShader, "uvData"),
+			spriteWidth, spriteWidth * spriteToDraw);
+		texture.Activate(GL_TEXTURE0);
+		glUniform1i(glGetUniformLocation(texturedShader, "tex"), 0);
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(texturedShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		quad.Draw();
 	}
 
 	void DrawLine(Vec2f a, Vec2f b, RGBA color)

@@ -1,7 +1,7 @@
 #include "Item.h"
 
-#define COMMON_TEXT_SCALE ScrHeight() / 20
-#define COMMON_BOARDER_WIDTH ScrHeight() / 80
+#define COMMON_TEXT_SCALE trueScreenHeight / 20
+#define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
 class Entities;
 class Entity

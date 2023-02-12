@@ -155,6 +155,51 @@ public:
         glBindVertexArray(0);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    void RenderRotated(string text, Vec2 pos, float rotation, float scale, RGBA color)
+    {
+        scale /= minimumSize;
+        int xOffset = 0;
+        // activate corresponding render state	
+        glUseProgram(textShader);
+        glUniform4f(glGetUniformLocation(textShader, "textColor"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(vao);
+
+        // iterate through all characters
+        for (string::const_iterator c = text.begin(); c != text.end(); c++)
+        {
+            Character ch = characters[*c];
+
+            float xpos = (pos.x + xOffset + ch.bearing.x * scale) / ScrWidth();
+            float ypos = (pos.y - (ch.size.y - ch.bearing.y) * scale) / ScrHeight();
+
+            float w = ch.size.x * scale / ScrWidth();
+            float h = ch.size.y * scale / ScrHeight();
+            // update VBO for each character
+            float vertices[6][4] = {
+                { xpos,     ypos + h,   0.0f, 0.0f },
+                { xpos,     ypos,       0.0f, 1.0f },
+                { xpos + w, ypos,       1.0f, 1.0f },
+
+                { xpos,     ypos + h,   0.0f, 0.0f },
+                { xpos + w, ypos,       1.0f, 1.0f },
+                { xpos + w, ypos + h,   1.0f, 0.0f }
+            };
+            // render glyph texture over quad
+            glBindTexture(GL_TEXTURE_2D, ch.textureID);
+            // update content of VBO memory
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            // render quad
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+            xOffset += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+        }
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 };
 
 Font font;

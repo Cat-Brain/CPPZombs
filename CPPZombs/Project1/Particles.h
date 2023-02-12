@@ -98,7 +98,8 @@ public:
 
 	void HighResUpdate() override
 	{
-		//game->DrawRotatedStringDecal(ToRSpace(pos) * 4.0f, text, rotation, up * 4.0f + right * text.size() * 4.0f, color, (Vec2f)vOne * scale);
+		std::cout << rotation << ", " << scale << "\n";
+		font.RenderRotated(text, (pos - game->PlayerPos()) * 2 * ScrDim() / midRes.ScrDim(), rotation, scale, color);
 	}
 };
 

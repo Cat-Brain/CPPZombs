@@ -35,9 +35,7 @@ typedef uint8_t byte;
 #define PI_F 3.141592f
 #define PI_D 3.14159275
 
-#define CHUNK_WIDTH 8
-#define MAP_WIDTH 50 // Defined in chunks not units.
-#define MAP_WIDTH_TRUE (CHUNK_WIDTH * MAP_WIDTH)
+#define CHUNK_WIDTH 16
 
 uint trueScreenWidth, trueScreenHeight;
 float screenRatio;

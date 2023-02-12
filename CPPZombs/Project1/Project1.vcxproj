@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClInclude Include="picopng.h" />
     <ClCompile Include="src\glad.c" />
   </ItemGroup>
   <ItemGroup>
@@ -184,6 +185,7 @@
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Text.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vec2.h" />
   </ItemGroup>
   <ItemGroup>

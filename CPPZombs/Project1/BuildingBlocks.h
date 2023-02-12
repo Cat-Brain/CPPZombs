@@ -72,7 +72,7 @@ namespace Shootables
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", Shootables::cheeseBlock->color, Shootables::cheeseBlock->subScat, 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheeseBlock, "Cheese", "Light", 3, Shootables::cheeseBlock->color, Shootables::cheeseBlock->subScat, 0);
 }
 
 namespace Collectibles

@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL)));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vOne * (CHUNK_WIDTH * MAP_WIDTH) / 2, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(), 20, 1, 100, 50, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), RGBA(), 20, 1, 10, 5, "Player");
 	player = static_cast<Player*>(playerUnique.get());
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -125,9 +125,9 @@ void Game::TUpdate()
 		planet->bosses.SpawnRandomEnemies();
 		shouldSpawnBoss = false;
 	}
-	waveCount += int(inputs.e.pressed) - int(inputs.q.pressed);
+	waveCount += int(inputs.period.pressed) - int(inputs.comma.pressed);
 	// New wave:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.c.pressed)
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.slash.pressed)
 	{
 		planet->enemies.SpawnRandomEnemies();
 		lastWave = tTime;
@@ -144,7 +144,7 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
-	Draw(inputs.mousePosition + player->pos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)));// Draw mouse.
+	Draw(inputs.mousePosition + player->pos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64))); // Draw mouse.
 	// Draw mid-res screen onto true screen.
 	DrawFramebufferOnto(0);
 

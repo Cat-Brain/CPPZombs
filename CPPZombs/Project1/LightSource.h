@@ -1,4 +1,4 @@
-#include "Entities.h"
+#include "Collectible.h"
 
 class LightSource
 {

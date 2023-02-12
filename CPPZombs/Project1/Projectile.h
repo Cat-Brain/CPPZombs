@@ -1,4 +1,4 @@
-#include "LightSource.h"
+#include "Entities.h"
 
 class Projectile : public Entity
 {
@@ -165,7 +165,7 @@ public:
 
 namespace Projectiles
 {
-    Item* basicBullet = new Item("Basic bullet", "Ammo", RGBA(55, 55, 55), 2, 1, 30.0f);
+    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), 2, 1, 30.0f);
 }
 
 ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, vOne, 1, 1, 1);

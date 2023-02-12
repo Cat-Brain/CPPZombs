@@ -3,12 +3,12 @@
 class Framebuffer
 {
 public:
-	uint fbo, rbo, textureColorbuffer, framebuffer, texturePos, width, height;
+	uint rbo, textureColorbuffer, framebuffer, texturePos, width, height;
     bool shouldScreenRes;
 
-	Framebuffer() : fbo(0), rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), shouldScreenRes(true) { }
+	Framebuffer() : rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), shouldScreenRes(true) { }
 
-    Framebuffer(uint width, uint height, bool shouldScreenRes = false) : fbo(0), rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), shouldScreenRes(shouldScreenRes)
+    Framebuffer(uint width, uint height, bool shouldScreenRes = false) : rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), shouldScreenRes(shouldScreenRes)
     {
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -74,6 +74,13 @@ public:
     inline Vec2f TScrDim()
     {
         return { TWidth(), (float)height};
+    }
+
+    void Destroy()
+    {
+        glDeleteRenderbuffers(1, &rbo);
+        glDeleteTextures(1, &textureColorbuffer);
+        glDeleteFramebuffers(1, &framebuffer);
     }
 };
 

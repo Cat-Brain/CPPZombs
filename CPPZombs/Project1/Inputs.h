@@ -10,7 +10,8 @@ struct Inputs
 	Key w, a, s, d,
 		enter, c, q, e, p, space,
 		up, left, down, right,
-		leftMouse, rightMouse, middleMouse;
+		leftMouse, rightMouse, middleMouse,
+		comma, period, slash; // <- Command keys.
 	int mouseScroll = 0;
 	Vec2 mousePosition = vZero;
 
@@ -66,6 +67,10 @@ struct Inputs
 		UpdateKey(window, p, GLFW_KEY_P);
 		UpdateKey(window, space, GLFW_KEY_SPACE);
 
+		UpdateKey(window, comma, GLFW_KEY_COMMA);
+		UpdateKey(window, period, GLFW_KEY_PERIOD);
+		UpdateKey(window, slash, GLFW_KEY_SLASH);
+		
 		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
 		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);
 		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
