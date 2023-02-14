@@ -971,7 +971,7 @@ namespace Enemies
 
 	Types naturalSpawns
 	{
-		{/*walker, tanker, spider, */tinyTank},
+		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, frog},
 		{parent, spiderParent, snake},
 		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, pouncerSnake},
