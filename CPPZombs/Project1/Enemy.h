@@ -819,18 +819,57 @@ namespace Enemies
 			return Cat::DealDamage(Clamp(damage, -1, 1), damageDealer);
 		}
 	};
+
+	class Tank : public Enemy
+	{
+	public:
+		Projectile* projectile;
+		Vec2 currentMovingDirection;
+
+		Tank(Projectile* projectile, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), projectile(projectile)
+		{ }
+
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
+		{
+			unique_ptr<Tank> newEnemy = make_unique<Tank>(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->Start();
+			return newEnemy;
+		}
+
+		bool MUpdate() override
+		{
+			Vec2 disp = game->PlayerPos() - pos;
+			if (sgn(float(disp.x)) != sgn(float(currentMovingDirection.x)) && sgn(float(disp.y)) != sgn(float(currentMovingDirection.y)))
+				currentMovingDirection = abs(disp.x) > abs(disp.y) ? Vec2(sgn(float(disp.x)), 0) : Vec2(0, sgn(float(disp.y)));
+			TryMove(currentMovingDirection, mass + mass);
+			return true;
+		}
+
+		bool TUpdate() override
+		{
+			game->entities->push_back(projectile->Clone(pos, (game->PlayerPos() - pos) * projectile->duration, this));
+			return true;
+		}
+	};
 #pragma endregion
 
 
 #pragma region Enemies
 	//Predefinitions - Special
 	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f);
+	Projectile* tinyTankProjectile = new Projectile(15.0f, 1, 8.0f, vOne, RGBA(51, 51, 51), RGBA(5, 5, 5), 1, 1, 1, "Tiny Tank Projectile");
 	Enemy* child = new Enemy(1.0f, 0.125f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
 
 	// Earlies - 1
 	Enemy* walker = new Enemy(0.75f, 0.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
 	Enemy* tanker = new Enemy(1.0f, 0.75f, 2, 1, 1, vOne * 3, RGBA(255), RGBA(), RGBA(0, 25, 25), 5, 12, 12, "Tanker");
 	Spider* spider = new Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 2, 1, 1, vOne, RGBA(79, 0, 26), RGBA(), RGBA(55, 55, 55), 1, 2, 2, "Spider");
+	Tank* tinyTank = new Tank(tinyTankProjectile, 1.0f, 0.25, 2, 1, 1, vOne, RGBA(127, 127), RGBA(), RGBA(25, 25), 1, 1, 1, "Tiny Tank");
 
 	// Mids - 4
 	Deceiver* deceiver = new Deceiver(0.5f, 0.25f, 4, 4, 1, vOne, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
@@ -932,7 +971,7 @@ namespace Enemies
 
 	Types naturalSpawns
 	{
-		{walker, tanker, spider},
+		{/*walker, tanker, spider, */tinyTank},
 		{deceiver, exploder, vacuumer, frog},
 		{parent, spiderParent, snake},
 		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, pouncerSnake},

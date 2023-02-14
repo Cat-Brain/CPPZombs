@@ -91,8 +91,6 @@ public:
 	}
 };
 
-typedef vector<Item> Cost;
-
 class Items : public vector<Item>
 {
 public:
@@ -166,7 +164,7 @@ public:
 		return true;
 	}
 
-	bool TryMake(Cost cost)
+	bool TryMake(vector<Item> cost)
 	{
 		Items clone = *this;
 		for (Item item : cost)
@@ -207,19 +205,6 @@ public:
 namespace Resources
 {
 	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), RGBA(0, 5, 10), 1);
-	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(10, 10, 5), 12);
+	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(10, 10, 5), 12, 1, 15.0f, 0.125f);
 	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), RGBA(5, 5, 10), 6, 1, 5.0f);
 }
-
-#pragma endregion
-
-namespace Costs
-{
-	Cost dRecipe{};
-	Cost basicBullet{ Resources::copper->Clone(3) };
-	Cost copperWall{ Resources::copper->Clone(9) };
-	Cost duct{ Resources::copper->Clone(9), Resources::iron->Clone() };
-	Cost smallVacuum{ Resources::copper->Clone(3), Resources::iron->Clone(5) };
-	Cost largeVacuum{ Resources::copper->Clone(300), Resources::iron->Clone(50) };
-	Cost turret{ Resources::copper->Clone() };//Resources::copper->Clone(100), Resources::iron->Clone(10) };
-};

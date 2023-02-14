@@ -1,9 +1,11 @@
 #version 330 core
-layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 tex>
+layout(location = 0) in vec2 vertex;
 out vec2 TexCoords;
+
+uniform vec2 position, scale;
 
 void main()
 {
-	gl_Position = vec4(vertex.xy, 0.0, 1.0); 
-	TexCoords = vertex.zw; 
+	gl_Position = vec4(vertex * scale + position, 0.0, 1.0);
+	TexCoords = vec2(vertex.x, 1.0 - vertex.y); 
 } 

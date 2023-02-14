@@ -234,7 +234,7 @@ namespace Plants
 		CollectibleTree* copperTree = new CollectibleTree(Collectibles::copper, 5, 25, 25, 4.0f, vZero, vOne, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 1, 1, 1, "Copper tree");
 
 		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48), ironResistence = RGBA(50, 50, 0);
-		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, 120, 1500, 10, 0.5f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
+		CollectibleTree* ironTree = new CollectibleTree(Collectibles::iron, 120, 180, 10, 0.5f, vZero, vOne, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 1, 1, 1, "Iron tree");
 
 		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88), rubyResistence = RGBA(0, 50, 50);
 		CollectibleTree* rubyTree = new CollectibleTree(Collectibles::ruby, 5, 15, 50, 4.0f, vZero, vOne, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 1, 1, 1, "Ruby tree");

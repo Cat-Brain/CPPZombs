@@ -93,9 +93,18 @@ public:
         glGenBuffers(1, &vbo);
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+        float position[] = {
+            0.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+
+            0.0f, 0.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f
+        };
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 2, position, GL_DYNAMIC_DRAW);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
@@ -131,22 +140,10 @@ public:
 
             float w = ch.size.x * scale / ScrWidth();
             float h = ch.size.y * scale / ScrHeight();
-            // update VBO for each character
-            float vertices[6][4] = {
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos,     ypos,       0.0f, 1.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
-
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
-                { xpos + w, ypos + h,   1.0f, 0.0f }
-            };
             // render glyph texture over quad
             glBindTexture(GL_TEXTURE_2D, ch.textureID);
-            // update content of VBO memory
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glUniform2f(glGetUniformLocation(textShader, "position"), xpos, ypos);
+            glUniform2f(glGetUniformLocation(textShader, "scale"), w, h);
             // render quad
             glDrawArrays(GL_TRIANGLES, 0, 6);
             // now advance cursors for next glyph (note that advance is number of 1/64 pixels)
@@ -161,8 +158,9 @@ public:
         scale /= minimumSize;
         int xOffset = 0;
         // activate corresponding render state	
-        glUseProgram(textShader);
-        glUniform4f(glGetUniformLocation(textShader, "textColor"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+        glUseProgram(rotatedTextShader);
+        glUniform1f(glGetUniformLocation(rotatedTextShader, "rotation"), rotation);
+        glUniform4f(glGetUniformLocation(rotatedTextShader, "textColor"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(vao);
 
@@ -176,22 +174,10 @@ public:
 
             float w = ch.size.x * scale / ScrWidth();
             float h = ch.size.y * scale / ScrHeight();
-            // update VBO for each character
-            float vertices[6][4] = {
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos,     ypos,       0.0f, 1.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
-
-                { xpos,     ypos + h,   0.0f, 0.0f },
-                { xpos + w, ypos,       1.0f, 1.0f },
-                { xpos + w, ypos + h,   1.0f, 0.0f }
-            };
             // render glyph texture over quad
             glBindTexture(GL_TEXTURE_2D, ch.textureID);
-            // update content of VBO memory
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glUniform2f(glGetUniformLocation(rotatedTextShader, "position"), xpos, ypos);
+            glUniform2f(glGetUniformLocation(rotatedTextShader, "scale"), w, h);
             // render quad
             glDrawArrays(GL_TRIANGLES, 0, 6);
             // now advance cursors for next glyph (note that advance is number of 1/64 pixels)

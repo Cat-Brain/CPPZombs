@@ -209,9 +209,6 @@ public:
 };
 
 
-typedef std::pair<Cost, Item*> RecipeA;
-typedef std::pair<Cost, Entity*> RecipeB;
-
 Vec2 Game::PlayerPos()
 {
 	return ((Entity*)player)->pos;

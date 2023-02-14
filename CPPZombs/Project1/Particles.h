@@ -98,8 +98,7 @@ public:
 
 	void HighResUpdate() override
 	{
-		std::cout << rotation << ", " << scale << "\n";
-		font.RenderRotated(text, (pos - game->PlayerPos()) * 2 * ScrDim() / midRes.ScrDim(), rotation, scale, color);
+		font.RenderRotated(text, (pos - game->PlayerPos()) * 2 * ScrDim() / midRes.ScrDim() - scale / 2, rotation, scale, color);
 	}
 };
 

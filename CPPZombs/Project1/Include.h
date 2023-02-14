@@ -52,6 +52,10 @@ unique_ptr<Game> game;
 #pragma endregion
 
 #pragma region Math
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
+}
+
 inline float RandFloat()
 {
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);

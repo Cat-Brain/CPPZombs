@@ -11,8 +11,8 @@ public:
     int callType = 0;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
-        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1) :
-        Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health),
+        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+        Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         Start();
