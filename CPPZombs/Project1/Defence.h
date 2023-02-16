@@ -14,7 +14,9 @@ public:
 		collectible(collectible), seed(nullptr), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		FunctionalBlock2(timePer, pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
-	{ }
+	{
+		tUpdate = TUPDATE::TREE;
+	}
 
 	void Start() override
 	{
@@ -120,7 +122,9 @@ public:
 		int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") : 
 		CollectibleTree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
-	{ }
+	{
+		tUpdate = TUPDATE::VINE;
+	}
 
 	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
 		Vine(*baseClass)

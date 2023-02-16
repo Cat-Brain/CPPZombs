@@ -92,14 +92,22 @@ namespace Collectibles
 	Collectible* shades = new Collectible(*Resources::shades);
 }
 
+enum TUPDATE
+{
+	DEFAULT, TREE, VINE
+};
+
+vector<function<bool()>> tUpdates;
+
 class FunctionalBlock : public Entity
 {
 public:
+	uint tUpdate;
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
+		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
@@ -107,7 +115,7 @@ public:
 
 	FunctionalBlock(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
@@ -119,7 +127,8 @@ public:
 	{
 		if (tTime - lastTime >= timePer)
 		{
-			if (TUpdate())
+			std::bind(&tUpdates[tUpdate], this);
+			if (tUpdates[tUpdate]())
 				lastTime = tTime;
 		}
 	}
@@ -130,11 +139,12 @@ public:
 class FunctionalBlock2 : public Entity // Can have speed multipliers.
 {
 public:
+	uint tUpdate;
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
+		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
@@ -142,7 +152,7 @@ public:
 
 	FunctionalBlock2(float timePer, float offset, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
+		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
@@ -158,8 +168,12 @@ public:
 	void Update() override
 	{
 		timeSince += TimeIncrease();
-		if (timeSince >= timePer && TUpdate())
-			timeSince -= timePer;
+		if (timeSince >= timePer)
+		{
+			std::bind(&tUpdates[tUpdate], this);
+			if (tUpdates[tUpdate]())
+				timeSince -= timePer;
+		}
 	}
 
 	virtual bool TUpdate() { return true; }

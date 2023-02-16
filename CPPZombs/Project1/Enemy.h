@@ -4,6 +4,14 @@ namespace Enemies
 {
 #pragma region Enemy types
 	// The base class of all enemies.
+	enum MUPDATE
+	{
+	};
+	
+	enum AUPDATE
+	{
+	};
+
 	class Enemy : public DToCol
 	{
 	public:
@@ -50,7 +58,7 @@ namespace Enemies
 					lastMove = tTime;
 
 			if (tTime - lastTime >= timePer)
-				if (TUpdate())
+				if (AUpdate())
 					lastTime = tTime;
 		}
 
@@ -60,7 +68,7 @@ namespace Enemies
 			return true;
 		}
 
-		virtual bool TUpdate()
+		virtual bool AUpdate()
 		{
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
 			int randomization = rand();
@@ -245,7 +253,7 @@ namespace Enemies
 			Enemy::DUpdate();
 		}
 
-		bool TUpdate() override
+		bool AUpdate() override
 		{
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
 			int randomization = rand();
@@ -501,7 +509,7 @@ namespace Enemies
 			return true;
 		}
 
-		bool TUpdate() override
+		bool AUpdate() override
 		{
 			game->entities->Vacuum(pos, vacDist);
 			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
@@ -510,7 +518,7 @@ namespace Enemies
 				items.push_back(((Collectible*)collectible)->baseItem);
 				collectible->DestroySelf(this);
 			}
-			return Enemy::TUpdate();
+			return Enemy::AUpdate();
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -537,9 +545,9 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		bool TUpdate() override
+		bool AUpdate() override
 		{
-			Vacuumer::TUpdate();
+			Vacuumer::AUpdate();
 
 			if (items.size() > 0)
 			{
@@ -783,7 +791,7 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		bool TUpdate() override
+		bool AUpdate() override
 		{
 			CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
 			return true;
@@ -850,7 +858,7 @@ namespace Enemies
 			return true;
 		}
 
-		bool TUpdate() override
+		bool AUpdate() override
 		{
 			game->entities->push_back(projectile->Clone(pos, (game->PlayerPos() - pos) * projectile->duration, this));
 			return true;
