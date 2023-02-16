@@ -8,7 +8,9 @@ public:
 	DToCol(Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), color2(color2)
-	{ }
+	{
+		dUpdate = DUPDATE::DTOCOL;
+	}
 
 	void DUpdate() override
 	{
@@ -99,6 +101,7 @@ public:
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
+		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
 	}
 
@@ -106,6 +109,7 @@ public:
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
+		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
 	}
 
@@ -132,6 +136,7 @@ public:
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
+		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
 	}
 
@@ -139,6 +144,7 @@ public:
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name)
 	{
+		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
 	}
 

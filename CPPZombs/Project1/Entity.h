@@ -3,10 +3,39 @@
 #define COMMON_TEXT_SCALE trueScreenHeight / 20
 #define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
+enum UPDATE
+{
+	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2
+};
+
+vector<function<void()>> updates;
+
+enum DUPDATE
+{
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL
+};
+
+vector<function<void()>> dUpdates;
+
+enum EDUPDATE // EDUPDATE = early dupdate = early draw update
+{
+	ENTITY, SPIDER
+};
+
+vector<function<void()>> eDUpdates;
+
+enum UIUPDATE
+{
+	ENTITY
+};
+
+vector<function<void()>> uiUpdates;
+
 class Entities;
 class Entity
 {
 public:
+	uint update, dUpdate, earlyDUpdate, uiUpdate;
 	bool shouldUI = false;
 	Entity* baseClass;
 	Entity* creator;
@@ -22,7 +51,8 @@ public:
 	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
-		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
+		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
+		update(UPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY), uiUpdate(UIUPDATE::ENTITY)
 	{
 	}
 
@@ -183,7 +213,11 @@ public:
 	float startTime, totalFadeTime;
 
 	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
-		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime) { }
+		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime)
+	{
+		update = UPDATE::FADEOUT;
+		dUpdate = UPDATE::FADEOUT;
+	}
 
 	void Update() override
 	{

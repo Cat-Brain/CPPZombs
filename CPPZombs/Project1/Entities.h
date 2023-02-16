@@ -278,14 +278,20 @@ public:
 
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
-				collectibles[i]->Update();
+			{
+				std::bind(&updates[collectibles[i]->update], collectibles[i]);
+				updates[collectibles[i]->update]();
+			}
 
 		if (addedEntity)
 			SortEntities();
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
-				sortedNCEntities[index]->Update();
+			{
+				std::bind(&updates[sortedNCEntities[index]->update], sortedNCEntities[index]);
+				updates[sortedNCEntities[index]->update]();
+			}
 
 		if (addedEntity)
 			SortEntities();
@@ -307,14 +313,26 @@ public:
 		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), ScrDim() + vOne); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
-			entity->EarlyDUpdate();
+		{
+			std::bind(&eDUpdates[entity->earlyDUpdate], entity);
+			eDUpdates[entity->earlyDUpdate]();
+		}
 		for (Entity* entity : toRenderPair.second)
-			entity->DUpdate();
+		{
+			std::bind(&dUpdates[entity->dUpdate], entity);
+			dUpdates[entity->dUpdate]();
+		}
 		// Normal entities
 		for (Entity* entity : toRenderPair.first)
-			entity->EarlyDUpdate();
+		{
+			std::bind(&eDUpdates[entity->earlyDUpdate], entity);
+			eDUpdates[entity->earlyDUpdate]();
+		}
 		for (Entity* entity : toRenderPair.first)
-			entity->DUpdate();
+		{
+			std::bind(&dUpdates[entity->dUpdate], entity);
+			dUpdates[entity->dUpdate]();
+		}
 
 		for (unique_ptr<Particle>& particle : particles)
 			particle->LowResUpdate();
@@ -327,11 +345,17 @@ public:
 
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
-				collectibles[index]->UIUpdate();
+			{
+				std::bind(&uiUpdates[collectibles[index]->uiUpdate], collectibles[index]);
+				uiUpdates[collectibles[index]->uiUpdate]();
+			}
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
-				sortedNCEntities[index]->UIUpdate();
+			{
+				std::bind(&uiUpdates[sortedNCEntities[index]->uiUpdate], sortedNCEntities[index]);
+				uiUpdates[sortedNCEntities[index]->uiUpdate]();
+			}
 	}
 
 	void SubScatUpdate()
@@ -518,6 +542,7 @@ public:
 	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, RGBA color = RGBA(), Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
 		Entity(pos, vOne, color, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
 	{
+		update = UPDATE::EXPLODENEXTFRAME;
 		this->creator = creator;
 	}
 
@@ -555,7 +580,11 @@ public:
 	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec2f pos = Vec2f(0, 0),
 		Vec2f dimensions = Vec2f(1, 1), RGBA color = RGBA()) :
 		Entity(pos, dimensions, color, color, 1, 1, 1, "Puddle"),
-		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime) { }
+		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
+	{
+		update = UPDATE::FADEOUTPUDDLE;
+		dUpdate = DUPDATE::FADEOUTPUDDLE;
+	}
 
 	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2f pos) :
 		FadeOutPuddle(*baseClass) {
@@ -602,6 +631,7 @@ public:
 	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
 		FadeOut(totalFadeTime, pos, dimensions, color), startRange(range)
 	{
+		dUpdate = DUPDATE::FADEOUTGLOW;
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
 	}

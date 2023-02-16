@@ -11,6 +11,7 @@
 #include <iostream>
 #include <ft2build.h>
 #include <Windows.h>
+#include <functional>
 #include FT_FREETYPE_H  
 using namespace std::this_thread;
 using namespace std::chrono;
@@ -26,6 +27,7 @@ using std::distance;
 using std::to_string;
 using std::make_unique;
 using std::make_shared;
+using std::function;
 
 typedef unsigned int uint;
 typedef uint8_t byte;

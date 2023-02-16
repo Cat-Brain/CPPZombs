@@ -15,6 +15,7 @@ public:
         Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
+        update = UPDATE::PROJECTILE;
         Start();
     }
 
