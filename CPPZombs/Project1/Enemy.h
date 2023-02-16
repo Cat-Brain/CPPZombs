@@ -7,10 +7,12 @@ namespace Enemies
 	enum MUPDATE
 	{
 	};
+	vector<function<bool()>> mUpdates;
 	
 	enum AUPDATE
 	{
 	};
+	vector<function<bool()>> aUpdates;
 
 	class Enemy : public DToCol
 	{
