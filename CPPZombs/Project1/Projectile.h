@@ -35,30 +35,6 @@ public:
         return make_unique<Projectile>(this, pos, direction, creator);
     }
 
-    void Update() override
-    {
-        if (tTime - begin >= duration / speed)
-            return DestroySelf(this);
-
-        Entity* entity;
-
-        if (CheckPos(entity))
-        {
-            callType = 1 + int(entity == nullptr);
-            DestroySelf(entity);
-            return;
-        }
-        Vec2 oldPos = pos;
-        MovePos();
-        if (oldPos != pos && CheckPos(entity))
-        {
-            if (entity != nullptr)
-                SetPos(oldPos);
-            callType = 1 + int(entity == nullptr);
-            DestroySelf(entity);
-        }
-    }
-
     bool CheckPos(Entity*& hitEntity)
     {
         vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
@@ -98,6 +74,33 @@ public:
     }
 };
 
+namespace Updates
+{
+    void Update(Entity* entity)
+    {
+        Projectile* projectile = static_cast<Projectile*>(entity);
+        if (tTime - projectile->begin >= projectile->duration / projectile->speed)
+            return projectile->DestroySelf(projectile);
+
+        Entity* entity;
+
+        if (projectile->CheckPos(entity))
+        {
+            projectile->callType = 1 + int(entity == nullptr);
+            projectile->DestroySelf(entity);
+            return;
+        }
+        Vec2 oldPos = projectile->pos;
+        projectile->MovePos();
+        if (oldPos != projectile->pos && projectile->CheckPos(entity))
+        {
+            if (entity != nullptr)
+                projectile->SetPos(oldPos);
+            projectile->callType = 1 + int(entity == nullptr);
+            projectile->DestroySelf(entity);
+        }
+    }
+}
 
 class ShotItem : public Projectile
 {

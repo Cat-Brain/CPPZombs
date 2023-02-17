@@ -6,17 +6,20 @@ namespace Enemies
 	// The base class of all enemies.
 	enum MUPDATE
 	{
+		DEFAULT, SNAKE, POUNCERSNAKE, VACUUMER, POUNCER
 	};
 	vector<function<bool()>> mUpdates;
 	
 	enum AUPDATE
 	{
+		DEFAULT, VACUUMER, RANGER
 	};
 	vector<function<bool()>> aUpdates;
 
 	class Enemy : public DToCol
 	{
 	public:
+		uint mUpdate, aUpdate;
 		float timePer, lastTime, timePerMove, lastMove;
 
 		int points, firstWave;
@@ -26,7 +29,8 @@ namespace Enemies
 			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			DToCol(vZero, dimensions, color, color2, subScat, mass, maxHealth, health, name),
-			timePer(timePer), lastTime(0.0f), timePerMove(timePerMove), lastMove(0.0f), points(points), firstWave(firstWave), damage(damage)
+			timePer(timePer), lastTime(0.0f), timePerMove(timePerMove), lastMove(0.0f), points(points), firstWave(firstWave),
+			damage(damage), mUpdate(MUPDATE::DEFAULT), aUpdate(AUPDATE::DEFAULT)
 		{
 		}
 
@@ -56,11 +60,11 @@ namespace Enemies
 		void Update() override
 		{
 			if (tTime - lastMove >= timePerMove)
-				if (MUpdate())
+				if (mUpdates[mUpdate]())
 					lastMove = tTime;
 
 			if (tTime - lastTime >= timePer)
-				if (AUpdate())
+				if (aUpdates[aUpdate]())
 					lastTime = tTime;
 		}
 
@@ -137,6 +141,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
+			dUpdate = DUPDATE::DECEIVER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -192,6 +197,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), child(child)
 		{
 			Start();
+			dUpdate = DUPDATE::PARENT;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -232,7 +238,9 @@ namespace Enemies
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
-		{ }
+		{
+			dUpdate = DUPDATE::EXPLODER;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -290,7 +298,9 @@ namespace Enemies
 			RGBA subScat = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
-		{ }
+		{
+			mUpdate = MUPDATE::SNAKE;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -305,11 +315,11 @@ namespace Enemies
 				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
-
 			if (length > 1)
 			{
 				enemies[0]->front = enemies[1].get();
 				enemies[length - 1]->back = enemies[length - 2].get();
+				enemies[length - 1]->color = color3;
 			}
 			for (int i = 1; i < length - 1; i++)
 			{
@@ -320,13 +330,6 @@ namespace Enemies
 			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
 				game->entities->push_back(std::move(enemies[i]));
 			return std::move(enemies[0]); // Do 0 here.
-		}
-
-		void DUpdate() override
-		{
-			if (front == nullptr)
-				color = color3;
-			Enemy::DUpdate();
 		}
 
 		bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr) override
@@ -355,7 +358,10 @@ namespace Enemies
 		{
 			Enemy::OnDeath(damageDealer);
 			if (back != nullptr)
+			{
 				back->front = nullptr;
+				back->color = color3;
+			}
 			if (front != nullptr)
 				front->back = nullptr;
 		}
@@ -378,7 +384,10 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Snake(length, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, color3, color4, mass, maxHealth, health, name),
 			pounceTime(pounceTime), speed(speed)
-		{ }
+		{
+			update = UPDATE::POUNCERSNAKE;
+			mUpdate = MUPDATE::POUNCERSNAKE;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -454,7 +463,9 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, colorsToCycle[0], color2, RGBA(), mass, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
-		{ }
+		{
+			dUpdate = DUPDATE::COLORCYCLER;
+		}
 
 		void Start() override
 		{
@@ -493,7 +504,10 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
-		{ }
+		{
+			mUpdate = MUPDATE::VACUUMER;
+			aUpdate = AUPDATE::VACUUMER;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -536,7 +550,14 @@ namespace Enemies
 	class Ranger : public Vacuumer
 	{
 	public:
-		using Vacuumer::Vacuumer;
+		Ranger(int vacDist, int desiredDistance, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
+			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Vacuumer(vacDist, desiredDistance, timePer, timePerMove, points, firstWave, damage, dimensions, color,
+				color2, subScat, mass, maxHealth, health, name)
+		{
+			aUpdate = AUPDATE::RANGER;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -577,7 +598,11 @@ namespace Enemies
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
-			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed) { }
+			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
+		{
+			earlyDUpdate = EDUPDATE::SPIDER;
+			update = UPDATE::SPIDER;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -684,7 +709,9 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			pounceTime(pounceTime), speed(speed)
-		{ }
+		{
+			mUpdate = MUPDATE::POUNCER;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{

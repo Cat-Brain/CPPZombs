@@ -279,8 +279,7 @@ public:
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
 			{
-				std::bind(&updates[collectibles[i]->update], collectibles[i]);
-				updates[collectibles[i]->update]();
+				collectibles[i]->Update();
 			}
 
 		if (addedEntity)
@@ -289,8 +288,7 @@ public:
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
 			{
-				std::bind(&updates[sortedNCEntities[index]->update], sortedNCEntities[index]);
-				updates[sortedNCEntities[index]->update]();
+				sortedNCEntities[index]->Update();
 			}
 
 		if (addedEntity)
@@ -314,24 +312,20 @@ public:
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
-			std::bind(&eDUpdates[entity->earlyDUpdate], entity);
-			eDUpdates[entity->earlyDUpdate]();
+			entity->EarlyDUpdate();
 		}
 		for (Entity* entity : toRenderPair.second)
 		{
-			std::bind(&dUpdates[entity->dUpdate], entity);
-			dUpdates[entity->dUpdate]();
+			entity->DUpdate();
 		}
 		// Normal entities
 		for (Entity* entity : toRenderPair.first)
 		{
-			std::bind(&eDUpdates[entity->earlyDUpdate], entity);
-			eDUpdates[entity->earlyDUpdate]();
+			entity->EarlyDUpdate();
 		}
 		for (Entity* entity : toRenderPair.first)
 		{
-			std::bind(&dUpdates[entity->dUpdate], entity);
-			dUpdates[entity->dUpdate]();
+			entity->DUpdate();
 		}
 
 		for (unique_ptr<Particle>& particle : particles)
@@ -346,15 +340,13 @@ public:
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
 			{
-				std::bind(&uiUpdates[collectibles[index]->uiUpdate], collectibles[index]);
-				uiUpdates[collectibles[index]->uiUpdate]();
+				collectibles[index]->UIUpdate();
 			}
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
 			{
-				std::bind(&uiUpdates[sortedNCEntities[index]->uiUpdate], sortedNCEntities[index]);
-				uiUpdates[sortedNCEntities[index]->uiUpdate]();
+				sortedNCEntities[index]->UIUpdate();
 			}
 	}
 
@@ -547,24 +539,6 @@ public:
 	}
 
 
-	void Update() override
-	{
-		if (tTime != startTime)
-		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
-			for (Entity* entity : hitEntities)
-				if (entity != this && entity != creator)
-					entity->DealDamage(damage, this);
-			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
-			{
-				float rotation = RandFloat() * PI_F * 2;
-				game->entities->particles.push_back(make_unique<VelocitySquare>(pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
-					color, EXPLOSION_PARTICLE_DURATION));
-			}
-			DestroySelf(this);
-		}
-	}
-
 	bool Corporeal() override
 	{
 		return false;
@@ -597,25 +571,6 @@ public:
 		return make_unique<FadeOutPuddle>(this, pos);
 	}
 
-	void Update() override
-	{
-		if (tTime - lastTime > timePer)
-		{
-			lastTime = tTime;
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
-			for (Entity* entity : hitEntities)
-				entity->DealDamage(damage, this);
-		}
-		if (tTime - startTime > totalFadeTime)
-			DestroySelf(nullptr);
-	}
-
-	void DUpdate() override
-	{
-		color.a = 255 - static_cast<uint8_t>((tTime - startTime) * 255 / totalFadeTime);
-		Entity::DUpdate();
-	}
-
 	bool Corporeal() override
 	{
 		return false;
@@ -636,17 +591,64 @@ public:
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
 	}
 
-	void DUpdate() override
-	{
-		lightSource->range = startRange * Opacity();
-		FadeOut::DUpdate();
-	}
-
 	void OnDeath(Entity* damageDealer) override
 	{
 		game->entities->RemoveLight(lightSource);
 	}
 };
+
+namespace Updates
+{
+	void ExplodeNextFrameU(Entity* entity)
+	{
+		ExplodeNextFrame* explosion = static_cast<ExplodeNextFrame*>(entity);
+		if (tTime != explosion->startTime)
+		{
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(explosion->pos, explosion->explosionDimensions);
+			for (Entity* entity : hitEntities)
+				if (entity != explosion && entity != explosion->creator)
+					entity->DealDamage(explosion->damage, explosion);
+			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
+			{
+				float rotation = RandFloat() * PI_F * 2;
+				game->entities->particles.push_back(make_unique<VelocitySquare>(explosion->pos, Vec2f(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
+					explosion->color, EXPLOSION_PARTICLE_DURATION));
+			}
+			explosion->DestroySelf(explosion);
+		}
+	}
+
+	void FadeOutPuddleU(Entity* entity)
+	{
+		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
+		if (tTime - puddle->lastTime > puddle->timePer)
+		{
+			puddle->lastTime = tTime;
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(puddle->pos, puddle->dimensions);
+			for (Entity* entity : hitEntities)
+				entity->DealDamage(puddle->damage, puddle);
+		}
+		if (tTime - puddle->startTime > puddle->totalFadeTime)
+			puddle->DestroySelf(puddle);
+	}
+}
+
+namespace DUpdates
+{
+	void FadeOutPuddleDU(Entity* entity)
+	{
+		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
+		puddle->color.a = 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
+		puddle->DUpdate(DUPDATE::ENTITY);
+	}
+
+	void FadeOutGlowDU(Entity* entity)
+	{
+		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
+		glow->lightSource->range = glow->startRange * glow->Opacity();
+		glow->DUpdate(DUPDATE::FADEOUT);
+	}
+}
 
 // Post entities definition items:
 

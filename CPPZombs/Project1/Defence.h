@@ -15,6 +15,8 @@ public:
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		FunctionalBlock2(timePer, pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
+		dUpdate = DUPDATE::TREE;
+		uiUpdate = UIUPDATE::TREE;
 		tUpdate = TUPDATE::TREE;
 	}
 
@@ -123,6 +125,7 @@ public:
 		CollectibleTree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{
+		uiUpdate = UIUPDATE::VINE;
 		tUpdate = TUPDATE::VINE;
 	}
 

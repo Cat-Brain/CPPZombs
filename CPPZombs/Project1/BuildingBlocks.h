@@ -11,16 +11,23 @@ public:
 	{
 		dUpdate = DUPDATE::DTOCOL;
 	}
+};
 
-	void DUpdate() override
+namespace DUpdates
+{
+	void DToColDU(Entity* entity)
 	{
-		float t = (float)health / (float)maxHealth;
-		RGBA tempColor = color;
-		color = RGBA(int(color2.r + t * (color.r - color2.r)), int(color2.g + t * (color.g - color2.g)), int(color2.b + t * (color.b - color2.b)), int(color2.a + t * (color.a - color2.a)));
+		DToCol* dToCol = static_cast<DToCol*>(entity);
+		float t = (float)dToCol->health / (float)dToCol->maxHealth;
+		RGBA tempColor = dToCol->color;
+		dToCol->color = RGBA(int(dToCol->color2.r + t * (dToCol->color.r - dToCol->color2.r)),
+			int(dToCol->color2.g + t * (dToCol->color.g - dToCol->color2.g)),
+			int(dToCol->color2.b + t * (dToCol->color.b - dToCol->color2.b)),
+			int(dToCol->color2.a + t * (dToCol->color.a - dToCol->color2.a)));
 		Entity::DUpdate();
 		color = tempColor;
 	}
-};
+}
 
 class LightBlock : public DToCol
 {

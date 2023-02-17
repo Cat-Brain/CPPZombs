@@ -5,37 +5,40 @@
 
 enum UPDATE
 {
-	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2
+	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, SPIDER, POUNCER
 };
 
-vector<function<void()>> updates;
+vector<function<void(Entity*)>> updates;
 
 enum DUPDATE
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, COLORCYCLER, CAT
 };
 
-vector<function<void()>> dUpdates;
+vector<function<void(Entity*)>> dUpdates;
 
 enum EDUPDATE // EDUPDATE = early dupdate = early draw update
 {
 	ENTITY, SPIDER
 };
 
-vector<function<void()>> eDUpdates;
+vector<function<void(Entity*)>> eDUpdates;
 
 enum UIUPDATE
 {
-	ENTITY
+	ENTITY, TREE, VINE
 };
 
-vector<function<void()>> uiUpdates;
+vector<function<void(Entity*)>> uiUpdates;
 
 class Entities;
 class Entity
 {
 public:
-	uint update, dUpdate, earlyDUpdate, uiUpdate;
+	UPDATE update;
+	DUPDATE dUpdate;
+	EDUPDATE earlyDUpdate;
+	UIUPDATE uiUpdate;
 	bool shouldUI = false;
 	Entity* baseClass;
 	Entity* creator;
@@ -71,7 +74,7 @@ public:
 
 	virtual void Start() { }
 
-	virtual void Draw(Vec2 pos, Vec2 dir = vZero)
+	void Draw(Vec2 pos, Vec2 dir = vZero)
 	{
 		Vec2 tempPos = this->pos;
 		this->pos = pos;
@@ -79,11 +82,48 @@ public:
 		this->pos = tempPos;
 	}
 
-	virtual void EarlyDUpdate() { } // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
-
-	virtual void DUpdate() // Normally only draws.
+	void Update() // Normally doesn't draw.
 	{
-		game->Draw(pos, color, dimensions);
+		std::bind(&updates[update], this);
+		updates[update](this);
+	}
+	void Update(UPDATE tempUpdate) // Normally doesn't draw.
+	{
+		std::bind(&updates[tempUpdate], this);
+		updates[tempUpdate](this);
+	}
+
+	void DUpdate() // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
+	{
+		std::bind(&dUpdates[dUpdate], this);
+		dUpdates[dUpdate](this);
+	}
+	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
+	{
+		std::bind(&dUpdates[tempDUpdate], this);
+		dUpdates[tempDUpdate](this);
+	}
+
+	void EarlyDUpdate() // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
+	{
+		std::bind(&eDUpdates[earlyDUpdate], this);
+		eDUpdates[earlyDUpdate](this);
+	}
+	void EarlyDUpdate(EDUPDATE tempEDUpdate) // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
+	{
+		std::bind(&eDUpdates[tempEDUpdate], this);
+		eDUpdates[tempEDUpdate](this);
+	}
+
+	void UIUpdate() // Draws when shouldUI is true.
+	{
+		std::bind(&uiUpdates[uiUpdate], this);
+		uiUpdates[uiUpdate](this);
+	}
+	void UIUpdate(UIUPDATE tempUIUpdate) // Draws when shouldUI is true.
+	{
+		std::bind(&uiUpdates[tempUIUpdate], this);
+		uiUpdates[tempUIUpdate](this);
 	}
 
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
@@ -109,11 +149,6 @@ public:
 		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 	}
 
-	virtual void UIUpdate() // Draws when shouldUI is true.
-	{
-		DrawUIBox(BottomLeft(), TopRight(), COMMON_BOARDER_WIDTH, name, color);
-	}
-
 	virtual bool PosInUIBounds(Vec2 screenSpacePos)
 	{
 		Vec2 topLeft = BottomLeft();
@@ -121,8 +156,6 @@ public:
 		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
 			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 	}
-
-	virtual void Update() { } // Normally doesn't draw.
 	
 	virtual void SetPos(Vec2 newPos);
 
@@ -216,13 +249,7 @@ public:
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
 		update = UPDATE::FADEOUT;
-		dUpdate = UPDATE::FADEOUT;
-	}
-
-	void Update() override
-	{
-		if (tTime - startTime > totalFadeTime)
-			DestroySelf(nullptr);
+		dUpdate = DUPDATE::FADEOUT;
 	}
 
 	float Opacity()
@@ -230,17 +257,47 @@ public:
 		return 1.0f - (tTime - startTime) / totalFadeTime;
 	}
 
-	void DUpdate() override
-	{
-		color.a = static_cast<uint8_t>(Opacity() * 255);
-		Entity::DUpdate();
-	}
 
 	bool Corporeal() override
 	{
 		return false;
 	}
 };
+
+namespace Updates
+{
+	void EntityU(Entity* entity) { }
+
+	void FadeOutU(Entity* entity)
+	{
+		if (tTime - ((FadeOut*)entity)->startTime > ((FadeOut*)entity)->totalFadeTime)
+			entity->DestroySelf(entity);
+	}
+}
+
+namespace DUpdates
+{
+	void EntityDU(Entity* entity) // Normally only draws.
+	{
+		game->Draw(entity->pos, entity->color, entity->dimensions);
+	}
+
+	void FadeOutDU(Entity* entity)
+	{
+		entity->color.a = static_cast<uint8_t>(((FadeOut*)entity)->Opacity() * 255);
+		entity->DUpdate();
+	}
+}
+
+namespace EDUpdates { void EntityEDU(Entity* entity) { } }
+
+namespace UIUpdates
+{
+	void UIUpdate(Entity* entity)
+	{
+		entity->DrawUIBox(entity->BottomLeft(), entity->TopRight(), COMMON_BOARDER_WIDTH, entity->name, entity->color);
+	}
+}
 
 
 Vec2 Game::PlayerPos()
