@@ -288,7 +288,8 @@ public:
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active)
 			{
-				sortedNCEntities[index]->Update();
+				Entity* entity = sortedNCEntities[index];
+				entity->Update();
 			}
 
 		if (addedEntity)
@@ -465,6 +466,11 @@ bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEnti
 {
 	Vec2 newPos = pos + direction;
 	vector<int> chunkOverlaps;
+	if (!Corporeal())
+	{
+		SetPos(newPos);
+		return true;
+	}
 	if (force >= mass && direction != Vec2(0, 0))
 	{
 		chunkOverlaps = game->entities->FindCreateChunkOverlaps(newPos, dimensions);
@@ -534,7 +540,7 @@ public:
 	ExplodeNextFrame(int damage = 1, Vec2 explosionDimensions = vOne, RGBA color = RGBA(), Vec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
 		Entity(pos, vOne, color, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionDimensions(explosionDimensions), startTime(tTime)
 	{
-		update = UPDATE::EXPLODENEXTFRAME;
+		update = UPDATE::EXPLODENEXTFRAMEU;
 		this->creator = creator;
 	}
 
@@ -556,8 +562,8 @@ public:
 		Entity(pos, dimensions, color, color, 1, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
 	{
-		update = UPDATE::FADEOUTPUDDLE;
-		dUpdate = DUPDATE::FADEOUTPUDDLE;
+		update = UPDATE::FADEOUTPUDDLEU;
+		dUpdate = DUPDATE::FADEOUTPUDDLEDU;
 	}
 
 	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2f pos) :
@@ -586,7 +592,7 @@ public:
 	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
 		FadeOut(totalFadeTime, pos, dimensions, color), startRange(range)
 	{
-		dUpdate = DUPDATE::FADEOUTGLOW;
+		dUpdate = DUPDATE::FADEOUTGLOWDU;
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
 	}
@@ -639,14 +645,14 @@ namespace DUpdates
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		puddle->color.a = 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
-		puddle->DUpdate(DUPDATE::ENTITY);
+		puddle->DUpdate(DUPDATE::ENTITYDU);
 	}
 
 	void FadeOutGlowDU(Entity* entity)
 	{
 		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
 		glow->lightSource->range = glow->startRange * glow->Opacity();
-		glow->DUpdate(DUPDATE::FADEOUT);
+		glow->DUpdate(DUPDATE::FADEOUTDU);
 	}
 }
 

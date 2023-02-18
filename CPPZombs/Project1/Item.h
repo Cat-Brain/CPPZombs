@@ -12,31 +12,37 @@ public:
 	int count;
 	float range, shootSpeed;
 	Vec2f dimensions;
+	bool corporeal;
+	int mass;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		baseClass(this), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
+	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1,
+		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, int mass = 1) :
+		baseClass(this), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
+		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), mass(mass) { }
 
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count), range(range), shootSpeed(shootSpeed), dimensions(dimensions) { }
+	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
+		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, int mass = 1) :
+		baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
+		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), mass(mass) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item Clone()
 	{
-		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	Item operator * (int multiplier)
@@ -72,22 +78,22 @@ public:
 
 	virtual Item Clone(int count)
 	{
-		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item Clone()
 	{
-		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item* Clone2(int count)
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 
 	virtual Item* Clone2()
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, mass);
 	}
 };
 
@@ -207,4 +213,5 @@ namespace Resources
 	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), RGBA(0, 5, 10), 1);
 	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(10, 10, 5), 12, 1, 15.0f, 0.125f);
 	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), RGBA(5, 5, 10), 6, 1, 5.0f);
+	Item* bowler = new Item("Bowler", "Push Ammo", 1, RGBA(), RGBA(5, 0, 10), 0, 1, 15, 1, vOne * 5, true, 25);
 }

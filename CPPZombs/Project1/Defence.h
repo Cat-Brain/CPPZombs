@@ -15,9 +15,9 @@ public:
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		FunctionalBlock2(timePer, pos, dimensions, color, subsurfaceResistance, mass, maxHealth, health, name)
 	{
-		dUpdate = DUPDATE::TREE;
-		uiUpdate = UIUPDATE::TREE;
-		tUpdate = TUPDATE::TREE;
+		dUpdate = DUPDATE::TREEDU;
+		uiUpdate = UIUPDATE::TREEUIU;
+		tUpdate = TUPDATE::TREETU;
 	}
 
 	void Start() override
@@ -43,74 +43,20 @@ public:
 	{
 		return game->dTime * game->BrightnessAtPos(pos);
 	}
-
-	void DUpdate() override
-	{
-		if (currentLifespan >= deadStage)
-			color = deadColor;
-		else if (currentLifespan >= cyclesToGrow)
-			color = adultColor;
-		FunctionalBlock2::DUpdate();
-	}
-
-	bool TUpdate() override
-	{
-		if (currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
-		{
-			if (rand() % 100 < chanceForSeed)
-				game->entities->push_back(seed->Clone(pos + (dimensions + seed->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
-			else
-				game->entities->push_back(collectible->Clone(pos + (dimensions + collectible->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
-		}
-		currentLifespan++;
-		return true;
-	}
-
-	void UIUpdate() override
-	{
-		Vec2f bottomLeft = BottomLeft();
-		if (currentLifespan < cyclesToGrow)
-		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
-				COMMON_BOARDER_WIDTH, "Baby " + name, color, deadColor, collectible->color);
-			font.Render(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-		}
-		else if (currentLifespan < deadStage)
-		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
-				COMMON_BOARDER_WIDTH, "Adult " + name, color, deadColor, collectible->color);
-			font.Render(ToStringWithPrecision(timePer - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-			font.Render(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-		}
-		else
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 4),
-				COMMON_BOARDER_WIDTH, "Dead " + name, deadColor, color, collectible->color);
-	}
-
-	bool PosInUIBounds(Vec2 screenSpacePos) override
-	{
-		Vec2 bottomLeft = BottomLeft(), topRight;
-		if (currentLifespan < cyclesToGrow)
-		{
-			topRight = bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 15);
-		}
-		else if (currentLifespan < deadStage)
-		{
-			topRight = bottomLeft + Vec2f(48 + static_cast<int>(name.length()) * 8, 22);
-		}
-		else
-		{
-			topRight = bottomLeft + Vec2f(40 + static_cast<int>(name.length()) * 8, 8);
-		}
-		return screenSpacePos.x >= bottomLeft.x && screenSpacePos.x <= topRight.x &&
-			screenSpacePos.y >= bottomLeft.y && screenSpacePos.y <= topRight.y;
-	}
 };
 
-
+namespace DUpdates
+{
+	void TreeDU(Entity* entity)
+	{
+		CollectibleTree* tree = static_cast<CollectibleTree*>(entity);
+		if (tree->currentLifespan >= tree->deadStage)
+			tree->color = tree->deadColor;
+		else if (tree->currentLifespan >= tree->cyclesToGrow)
+			tree->color = tree->adultColor;
+		tree->DUpdate(DUPDATE::ENTITYDU);
+	}
+}
 
 
 class Vine : public CollectibleTree
@@ -125,8 +71,8 @@ public:
 		CollectibleTree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{
-		uiUpdate = UIUPDATE::VINE;
-		tUpdate = TUPDATE::VINE;
+		uiUpdate = UIUPDATE::VINEUIU;
+		tUpdate = TUPDATE::VINETU;
 	}
 
 	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
@@ -147,25 +93,6 @@ public:
 		return game->dTime * (1.0f - game->BrightnessAtPos(pos));
 	}
 
-	bool TUpdate() override
-	{
-		if (generation < maxGenerations && currentLifespan >= cyclesToGrow && currentLifespan < deadStage)
-		{
-			Vec2 placementPos = pos;
-			while (placementPos == pos)
-				placementPos = pos + dimensions * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, dimensions);
-			if (!hitEntities.size())
-			{
-				unique_ptr<Entity> newVine = baseClass->Clone(placementPos, up, this);
-				((Vine*)newVine.get())->generation = generation + 1;
-				game->entities->push_back(std::move(newVine));
-			}
-		}
-		currentLifespan++;
-		return true;
-	}
-
 	void OnDeath(Entity* damageDealer) override
 	{
 		CollectibleTree::OnDeath(damageDealer);
@@ -174,61 +101,108 @@ public:
 		else
 			game->entities->push_back(collectible->Clone(pos));
 	}
-
-	void UIUpdate() override
-	{
-		Vec2f bottomLeft = BottomLeft();
-		if (currentLifespan < cyclesToGrow)
-		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
-				COMMON_BOARDER_WIDTH, "Baby " + name, color, deadColor, collectible->color);
-			font.Render(ToStringWithPrecision(timePer * (cyclesToGrow - currentLifespan) - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-			font.Render("Gen " + to_string(generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-		}
-		else if (currentLifespan < deadStage)
-		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp),
-				COMMON_BOARDER_WIDTH, "Adult " + name, color, deadColor, collectible->color);
-			font.Render(ToStringWithPrecision(timePer - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-			font.Render(ToStringWithPrecision(timePer * (deadStage - currentLifespan) - timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-			font.Render("Gen " + to_string(generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-		}
-		else
-		{
-			DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
-				COMMON_BOARDER_WIDTH, "Dead " + name, deadColor, color, collectible->color);
-			font.Render("Gen " + to_string(generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, color);
-		}
-	}
-
-	bool PosInUIBounds(Vec2 screenSpacePos) override
-	{
-		Vec2 bottomLeft = BottomLeft(), topRight;
-		if (currentLifespan < cyclesToGrow)
-		{
-			topRight = bottomLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 22);
-		}
-		else if (currentLifespan < deadStage)
-		{
-			topRight = bottomLeft + Vec2(48 + static_cast<int>(name.length()) * 8, 29);
-		}
-		else
-		{
-			topRight = bottomLeft + Vec2(40 + static_cast<int>(name.length()) * 8, 15);
-		}
-		return screenSpacePos.x >= bottomLeft.x && screenSpacePos.x <= topRight.x &&
-			screenSpacePos.y >= bottomLeft.y && screenSpacePos.y <= topRight.y;
-	}
 };
 
 
+namespace TUpdates
+{
+	bool TreeTU(Entity* entity)
+	{
+		CollectibleTree* tree = static_cast<CollectibleTree*>(entity);
+		if (tree->currentLifespan >= tree->cyclesToGrow && tree->currentLifespan < tree->deadStage)
+		{
+			if (rand() % 100 < tree->chanceForSeed)
+				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->dimensions + tree->seed->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+			else
+				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->dimensions + tree->collectible->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+		}
+		tree->currentLifespan++;
+		return true;
+	}
 
+	bool VineTU(Entity* entity)
+	{
+		Vine* vine = static_cast<Vine*>(entity);
+		if (vine->generation < vine->maxGenerations && vine->currentLifespan >= vine->cyclesToGrow && vine->currentLifespan < vine->deadStage)
+		{
+			Vec2 placementPos = vine->pos;
+			while (placementPos == vine->pos)
+				placementPos = vine->pos + vine->dimensions * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, vine->dimensions);
+			if (!hitEntities.size())
+			{
+				unique_ptr<Entity> newVine = vine->baseClass->Clone(placementPos, up, vine);
+				((Vine*)newVine.get())->generation = vine->generation + 1;
+				game->entities->push_back(std::move(newVine));
+			}
+		}
+		vine->currentLifespan++;
+		return true;
+	}
+}
+
+
+namespace UIUpdates
+{
+	void TreeUIU(Entity* entity)
+	{
+		CollectibleTree* tree = static_cast<CollectibleTree*>(entity);
+
+		Vec2f bottomLeft = tree->BottomLeft();
+		if (tree->currentLifespan < tree->cyclesToGrow)
+		{
+			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+				COMMON_BOARDER_WIDTH, "Baby " + tree->name, tree->color, tree->deadColor, tree->collectible->color);
+			font.Render(ToStringWithPrecision(tree->timePer * (tree->cyclesToGrow - tree->currentLifespan) - tree->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, tree->color);
+		}
+		else if (tree->currentLifespan < tree->deadStage)
+		{
+			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+				COMMON_BOARDER_WIDTH, "Adult " + tree->name, tree->color, tree->deadColor, tree->collectible->color);
+			font.Render(ToStringWithPrecision(tree->timePer - tree->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, tree->color);
+			font.Render(ToStringWithPrecision(tree->timePer * (tree->deadStage - tree->currentLifespan) - tree->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, tree->color);
+		}
+		else
+			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 4),
+				COMMON_BOARDER_WIDTH, "Dead " + tree->name, tree->deadColor, tree->color, tree->collectible->color);
+	}
+
+	void VineUIU(Entity* entity)
+	{
+		Vine* vine = static_cast<Vine*>(entity);
+		Vec2f bottomLeft = vine->BottomLeft();
+		if (vine->currentLifespan < vine->cyclesToGrow)
+		{
+			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+				COMMON_BOARDER_WIDTH, "Baby " + vine->name, vine->color, vine->deadColor, vine->collectible->color);
+			font.Render(ToStringWithPrecision(vine->timePer * (vine->cyclesToGrow - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+		}
+		else if (vine->currentLifespan < vine->deadStage)
+		{
+			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp),
+				COMMON_BOARDER_WIDTH, "Adult " + vine->name, vine->color, vine->deadColor, vine->collectible->color);
+			font.Render(ToStringWithPrecision(vine->timePer - vine->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+			font.Render(ToStringWithPrecision(vine->timePer * (vine->deadStage - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+		}
+		else
+		{
+			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+				COMMON_BOARDER_WIDTH, "Dead " + vine->name, vine->deadColor, vine->color, vine->collectible->color);
+			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), COMMON_TEXT_SCALE, vine->color);
+		}
+	}
+}
 
 
 #pragma region Plants

@@ -3,30 +3,31 @@
 #define COMMON_TEXT_SCALE trueScreenHeight / 20
 #define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
-enum UPDATE
+enum UPDATE // Update
 {
-	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, SPIDER, POUNCER
+	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, SPIDERU,
+	POUNCERU, PLAYERU
 };
 
 vector<function<void(Entity*)>> updates;
 
-enum DUPDATE
+enum DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, COLORCYCLER, CAT
+	ENTITYDU, FADEOUTDU, FADEOUTPUDDLEDU, FADEOUTGLOWDU, DTOCOLDU, TREEDU, DECEIVERDU, PARENTDU, EXPLODERDU, COLORCYCLERDU, CATDU
 };
 
 vector<function<void(Entity*)>> dUpdates;
 
-enum EDUPDATE // EDUPDATE = early dupdate = early draw update
+enum EDUPDATE // Early Draw Update
 {
-	ENTITY, SPIDER
+	ENTITYEDU, SPIDEREDU
 };
 
 vector<function<void(Entity*)>> eDUpdates;
 
-enum UIUPDATE
+enum UIUPDATE // User-Interface Update
 {
-	ENTITY, TREE, VINE
+	ENTITYUIU, TREEUIU, VINEUIU, ENEMYUIU
 };
 
 vector<function<void(Entity*)>> uiUpdates;
@@ -55,7 +56,7 @@ public:
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
-		update(UPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY), uiUpdate(UIUPDATE::ENTITY)
+		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU)
 	{
 	}
 
@@ -84,45 +85,37 @@ public:
 
 	void Update() // Normally doesn't draw.
 	{
-		std::bind(&updates[update], this);
 		updates[update](this);
 	}
 	void Update(UPDATE tempUpdate) // Normally doesn't draw.
 	{
-		std::bind(&updates[tempUpdate], this);
 		updates[tempUpdate](this);
 	}
 
 	void DUpdate() // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
-		std::bind(&dUpdates[dUpdate], this);
 		dUpdates[dUpdate](this);
 	}
 	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
-		std::bind(&dUpdates[tempDUpdate], this);
 		dUpdates[tempDUpdate](this);
 	}
 
 	void EarlyDUpdate() // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
-		std::bind(&eDUpdates[earlyDUpdate], this);
 		eDUpdates[earlyDUpdate](this);
 	}
 	void EarlyDUpdate(EDUPDATE tempEDUpdate) // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
-		std::bind(&eDUpdates[tempEDUpdate], this);
 		eDUpdates[tempEDUpdate](this);
 	}
 
 	void UIUpdate() // Draws when shouldUI is true.
 	{
-		std::bind(&uiUpdates[uiUpdate], this);
 		uiUpdates[uiUpdate](this);
 	}
 	void UIUpdate(UIUPDATE tempUIUpdate) // Draws when shouldUI is true.
 	{
-		std::bind(&uiUpdates[tempUIUpdate], this);
 		uiUpdates[tempUIUpdate](this);
 	}
 
@@ -149,14 +142,6 @@ public:
 		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 	}
 
-	virtual bool PosInUIBounds(Vec2 screenSpacePos)
-	{
-		Vec2 topLeft = BottomLeft();
-		Vec2 bottomRight = TopRight();
-		return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
-			screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
-	}
-	
 	virtual void SetPos(Vec2 newPos);
 
 	virtual bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
@@ -248,8 +233,8 @@ public:
 	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
-		update = UPDATE::FADEOUT;
-		dUpdate = DUPDATE::FADEOUT;
+		update = UPDATE::FADEOUTU;
+		dUpdate = DUPDATE::FADEOUTDU;
 	}
 
 	float Opacity()
@@ -266,7 +251,7 @@ public:
 
 namespace Updates
 {
-	void EntityU(Entity* entity) { }
+	void EntityU(Entity* entity) { /*printf("Test test");*/ }
 
 	void FadeOutU(Entity* entity)
 	{
@@ -285,7 +270,7 @@ namespace DUpdates
 	void FadeOutDU(Entity* entity)
 	{
 		entity->color.a = static_cast<uint8_t>(((FadeOut*)entity)->Opacity() * 255);
-		entity->DUpdate();
+		entity->DUpdate(DUPDATE::ENTITYDU);
 	}
 }
 
@@ -293,7 +278,7 @@ namespace EDUpdates { void EntityEDU(Entity* entity) { } }
 
 namespace UIUpdates
 {
-	void UIUpdate(Entity* entity)
+	void EntityUIU(Entity* entity)
 	{
 		entity->DrawUIBox(entity->BottomLeft(), entity->TopRight(), COMMON_BOARDER_WIDTH, entity->name, entity->color);
 	}

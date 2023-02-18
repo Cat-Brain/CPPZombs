@@ -19,36 +19,27 @@ int main()
 
 #pragma region Update functions
 	using namespace Updates;
-	updates = { &EntityU, &FadeOutU, &ExplodeNextFrameU, &FadeOutPuddleU };
+	using namespace Enemies::Updates;
+	updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
+	EnemyU, PouncerSnakeU, SpiderU, PouncerU, PlayerU };
 	using namespace DUpdates;
-	dUpdates = { &EntityDU, &FadeOutDU, &FadeOutPuddleDU, &FadeOutGlowDU };
-	/*
-enum UPDATE
-{
-	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, SPIDER, POUNCER
-};
+	using namespace Enemies::DUpdates;
+	dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
+	CatDU };
+	using namespace EDUpdates;
+	using namespace Enemies::EDUpdates;
+	eDUpdates = { EntityEDU, SpiderEDU };
+	using namespace UIUpdates;
+	using namespace Enemies::UIUpdates;
+	uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };
 
-vector<function<void()>> updates;
+	using namespace TUpdates;
+	tUpdates = { DefaultTU, TreeTU, VineTU };
 
-enum DUPDATE
-{
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, COLORCYCLER, CAT
-};
-
-vector<function<void()>> dUpdates;
-
-enum EDUPDATE // EDUPDATE = early dupdate = early draw update
-{
-	ENTITY, SPIDER
-};
-
-vector<function<void()>> eDUpdates;
-
-enum UIUPDATE
-{
-	ENTITY, TREE, VINE
-};*/
-
+	using namespace Enemies::MUpdates;
+	Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, PouncerMU, TankMU };
+	using namespace Enemies::AUpdates;
+	Enemies::aUpdates = { DefaultAU, ExploderAU, VacuumerAU, RangerAU, BoomcatAU, TankAU };
 #pragma endregion
 
 	game = make_unique<Game>();

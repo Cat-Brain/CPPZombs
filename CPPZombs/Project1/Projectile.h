@@ -4,18 +4,19 @@ class Projectile : public Entity
 {
 public:
     Vec2f direction;
-    Vec2f fPos;
+    Vec2f offset; // Should rarely be outside of the range (0, 0) to (1, 1), whenever it exceeds subtract from it and add to pos.
     float duration;
     int damage;
     float speed, begin;
     int callType = 0;
+    bool corporeal;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
-        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
         Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
-        duration(duration), damage(damage), speed(speed), begin(tTime)
+        duration(duration), damage(damage), speed(speed), begin(tTime), corporeal(corporeal)
     {
-        update = UPDATE::PROJECTILE;
+        update = UPDATE::PROJECTILEU;
         Start();
     }
 
@@ -24,7 +25,7 @@ public:
     {
         this->creator = creator;
         this->direction = Vec2f(direction).Normalized();
-        fPos = pos + Vec2f(0.01f, 0.01f);
+        offset = vZero;
         this->pos = pos;
         begin = tTime;
         Start();
@@ -54,8 +55,12 @@ public:
 
     virtual void MovePos()
     {
-        fPos += direction * game->dTime * speed;
-        SetPos(Vec2(static_cast<int>(roundf(fPos.x)), static_cast<int>(roundf(fPos.y))));
+        offset += direction * game->dTime * speed;
+        if (Vec2(offset) != vZero)
+        {
+            TryMove(Vec2(offset), mass + mass, creator);
+            offset -= Vec2(offset);
+        }
     }
 
     int SortOrder() override
@@ -70,15 +75,15 @@ public:
 
     bool Corporeal() override
     {
-        return false;
+        return corporeal;
     }
 };
 
 namespace Updates
 {
-    void Update(Entity* entity)
+    void ProjectileU(Entity* _entity)
     {
-        Projectile* projectile = static_cast<Projectile*>(entity);
+        Projectile* projectile = static_cast<Projectile*>(_entity);
         if (tTime - projectile->begin >= projectile->duration / projectile->speed)
             return projectile->DestroySelf(projectile);
 
@@ -121,7 +126,7 @@ public:
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
-        fPos = pos + Vec2f(0.01f, 0.01f);
+        offset = vZero;
         this->pos = pos;
         begin = tTime;
         damage = item.damage;
@@ -136,13 +141,15 @@ public:
         float magnitude = direction.Magnitude();
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
-        fPos = pos + Vec2f(0.01f, 0.01f);
+        offset = vZero;
         this->pos = pos;
         begin = tTime;
         damage = item.damage;
         this->item = item;
         color = item.color;
         subScat = item.subScat;
+        mass = item.mass;
+        corporeal = item.corporeal;
         dimensions = item.dimensions;
         if (creator == nullptr)
             name = item.name;

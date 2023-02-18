@@ -4,22 +4,24 @@ namespace Enemies
 {
 #pragma region Enemy types
 	// The base class of all enemies.
+	class Enemy;
 	enum MUPDATE
 	{
-		DEFAULT, SNAKE, POUNCERSNAKE, VACUUMER, POUNCER
+		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, POUNCERMU, TANKMU
 	};
-	vector<function<bool()>> mUpdates;
-	
+	vector<function<bool(Enemy*)>> mUpdates;
+
 	enum AUPDATE
 	{
-		DEFAULT, VACUUMER, RANGER
+		DEFAULTAU, EXPLODERAU, VACUUMERAU, RANGERAU, BOOMCATAU, TANKAU
 	};
-	vector<function<bool()>> aUpdates;
+	vector<function<bool(Enemy*)>> aUpdates;
 
 	class Enemy : public DToCol
 	{
 	public:
-		uint mUpdate, aUpdate;
+		MUPDATE mUpdate;
+		AUPDATE aUpdate;
 		float timePer, lastTime, timePerMove, lastMove;
 
 		int points, firstWave;
@@ -30,8 +32,10 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			DToCol(vZero, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			timePer(timePer), lastTime(0.0f), timePerMove(timePerMove), lastMove(0.0f), points(points), firstWave(firstWave),
-			damage(damage), mUpdate(MUPDATE::DEFAULT), aUpdate(AUPDATE::DEFAULT)
+			damage(damage), mUpdate(MUPDATE::DEFAULTMU), aUpdate(AUPDATE::DEFAULTAU)
 		{
+			update = UPDATE::ENEMYU;
+			uiUpdate = UIUPDATE::ENEMYUIU;
 		}
 
 		Enemy(Enemy* baseClass, Vec2f pos) :
@@ -57,56 +61,27 @@ namespace Enemies
 			return true;
 		}
 
-		void Update() override
+		bool MUpdate()
 		{
-			if (tTime - lastMove >= timePerMove)
-				if (mUpdates[mUpdate]())
-					lastMove = tTime;
-
-			if (tTime - lastTime >= timePer)
-				if (aUpdates[aUpdate]())
-					lastTime = tTime;
+			return mUpdates[mUpdate](this);
+		}
+		bool MUpdate(MUPDATE tempMUpdate)
+		{
+			return mUpdates[tempMUpdate](this);
 		}
 
-		virtual bool MUpdate()
+		bool AUpdate()
 		{
-			TryMove(Vec2f(game->PlayerPos() - pos).Rormalized(), mass + mass);
-			return true;
+			return aUpdates[aUpdate](this);
 		}
-
-		virtual bool AUpdate()
+		bool AUpdate(AUPDATE tempAUpdate)
 		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions + vOne);
-			int randomization = rand();
-			for (int i = 0; i < hitEntities.size(); i++)
-			{
-				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
-				if (entity != this && !entity->IsEnemy())
-				{
-					entity->DealDamage(damage, this);
-					break;
-				}
-			}
-
-			return true;
+			return aUpdates[tempAUpdate](this);
 		}
 
 		Vec2 TopRight() override
 		{
 			return BottomLeft() + Vec2(font.TextWidth(name + " " + to_string(health)) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
-		}
-
-		void UIUpdate() override
-		{
-			DrawUIBox(BottomLeft(), TopRight(), COMMON_BOARDER_WIDTH, name + " " + to_string(health), color);
-		}
-
-		bool PosInUIBounds(Vec2 screenSpacePos) override
-		{
-			Vec2 topLeft = BottomLeft();
-			Vec2 bottomRight = TopRight();
-			return screenSpacePos.x >= topLeft.x && screenSpacePos.x <= bottomRight.x &&
-				screenSpacePos.y >= topLeft.y && screenSpacePos.y <= bottomRight.y;
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -141,7 +116,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
-			dUpdate = DUPDATE::DECEIVER;
+			dUpdate = DUPDATE::DECEIVERDU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -155,35 +130,6 @@ namespace Enemies
 			newEnemy->noise3.SetSeed(PsuedoRandom());
 			return std::move(newEnemy);
 		}
-
-		void DUpdate() override
-		{
-			float r = noise1.GetNoise(tTime, 0.0f);
-			float g = noise2.GetNoise(tTime, 0.0f);
-			float b = noise3.GetNoise(tTime, 0.0f);
-			color.r = r * 255;
-			color.g = g * 255;
-			color.b = b * 255;
-
-			Enemy::DUpdate();
-
-			float healthRatio = (float)health / maxHealth;
-			color.r = r * color3.r;
-			color.g = g * color3.g;
-			color.b = b * color3.b;
-
-			Vec2f tempPos = pos;
-
-			pos = Vec2f(game->PlayerPos().x * 2 - pos.x, pos.y);
-			Enemy::DUpdate();
-			pos = Vec2f(pos.x, game->PlayerPos().y * 2 - pos.y);
-			Enemy::DUpdate();
-			pos = Vec2f(game->PlayerPos().x * 2 - pos.x, pos.y);
-			Enemy::DUpdate();
-
-			pos = tempPos;
-		}
-
 	};
 
 	class Parent : public Enemy
@@ -197,7 +143,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), child(child)
 		{
 			Start();
-			dUpdate = DUPDATE::PARENT;
+			dUpdate = DUPDATE::PARENTDU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -207,15 +153,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return std::move(newEnemy);
-		}
-
-		void DUpdate() override
-		{
-			Enemy::DUpdate();
-			child->Draw(pos + up);
-			child->Draw(pos + left);
-			child->Draw(pos + down);
-			child->Draw(pos + right);
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -239,7 +176,8 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
 		{
-			dUpdate = DUPDATE::EXPLODER;
+			dUpdate = DUPDATE::EXPLODERDU;
+			aUpdate = AUPDATE::EXPLODERAU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -249,34 +187,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
-		}
-
-		void DUpdate() override
-		{
-			Vec2 tempDimensions = dimensions;
-			dimensions = explosionDimensions;
-			byte tempAlpha = color.a;
-			color.a /= 5;
-			Enemy::DUpdate();
-			dimensions = tempDimensions;
-			color.a = tempAlpha;
-			Enemy::DUpdate();
-		}
-
-		bool AUpdate() override
-		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, explosionDimensions);
-			int randomization = rand();
-			for (int i = 0; i < hitEntities.size(); i++)
-			{
-				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
-				if (entity != this && !entity->IsEnemy())
-				{
-					CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
-					return true;
-				}
-			}
-			return false;
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -299,7 +209,7 @@ namespace Enemies
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
 		{
-			mUpdate = MUPDATE::SNAKE;
+			mUpdate = MUPDATE::SNAKEMU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -346,14 +256,6 @@ namespace Enemies
 					back->SetPos(lastPos);
 		}
 
-		bool MUpdate() override
-		{
-			if (front == nullptr)
-				Enemy::TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * dimensions, mass + mass);
-
-			return true;
-		}
-
 		void OnDeath(Entity* damageDealer) override
 		{
 			Enemy::OnDeath(damageDealer);
@@ -385,8 +287,8 @@ namespace Enemies
 			Snake(length, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, color3, color4, mass, maxHealth, health, name),
 			pounceTime(pounceTime), speed(speed)
 		{
-			update = UPDATE::POUNCERSNAKE;
-			mUpdate = MUPDATE::POUNCERSNAKE;
+			update = UPDATE::POUNCERSNAKEU;
+			mUpdate = MUPDATE::POUNCERSNAKEMU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -407,6 +309,7 @@ namespace Enemies
 			{
 				enemies[0]->front = enemies[1].get();
 				enemies[length - 1]->back = enemies[length - 2].get();
+				enemies[length - 1]->color = color3;
 			}
 			for (int i = 1; i < length - 1; i++)
 			{
@@ -417,28 +320,6 @@ namespace Enemies
 			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
 				game->entities->push_back(std::move(enemies[i]));
 			return std::move(enemies[0]); // Do 0 here.
-		}
-
-		bool MUpdate() override
-		{
-			offset = vZero;
-			direction = Vec2f(game->PlayerPos() - pos).Normalized();
-			return true;
-		}
-
-		void Update() override
-		{
-			Enemy::Update();
-
-			if (front == nullptr && tTime - lastMove <= pounceTime)
-			{
-				offset += direction * game->dTime * speed;
-				if (Vec2(offset) != vZero)
-				{
-					Enemy::TryMove(offset, mass + mass);
-					offset -= Vec2(offset);
-				}
-			}
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -464,7 +345,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, colorsToCycle[0], color2, RGBA(), mass, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
 		{
-			dUpdate = DUPDATE::COLORCYCLER;
+			dUpdate = DUPDATE::COLORCYCLERDU;
 		}
 
 		void Start() override
@@ -481,16 +362,6 @@ namespace Enemies
 			newEnemy->Start();
 			return newEnemy;
 		}
-
-		void DUpdate() override
-		{
-			float currentPlace = (tTime * colorCycleSpeed + colorOffset);
-			int intCurrentPlace = static_cast<int>(currentPlace);
-			color = colorsToCycle[intCurrentPlace % colorsToCycle.size()].Lerp(
-				colorsToCycle[(intCurrentPlace + 1) % colorsToCycle.size()], currentPlace - floorf(currentPlace));
-
-			Enemy::DUpdate();
-		}
 	};
 
 	class Vacuumer : public Enemy
@@ -505,8 +376,8 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{
-			mUpdate = MUPDATE::VACUUMER;
-			aUpdate = AUPDATE::VACUUMER;
+			mUpdate = MUPDATE::VACUUMERMU;
+			aUpdate = AUPDATE::VACUUMERAU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -516,25 +387,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
-		}
-
-		bool MUpdate() override
-		{
-			if (abs(pos.Squistance(game->PlayerPos()) - desiredDistance) > 2.0f)
-				TryMove(Vec2f(game->PlayerPos() - pos).Rormalized() * (-1 + 2 * int(pos.Squistance(game->PlayerPos()) > desiredDistance)), mass + mass);
-			return true;
-		}
-
-		bool AUpdate() override
-		{
-			game->entities->Vacuum(pos, vacDist);
-			vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
-			for (Entity* collectible : collectibles)
-			{
-				items.push_back(((Collectible*)collectible)->baseItem);
-				collectible->DestroySelf(this);
-			}
-			return Enemy::AUpdate();
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -556,7 +408,7 @@ namespace Enemies
 			Vacuumer(vacDist, desiredDistance, timePer, timePerMove, points, firstWave, damage, dimensions, color,
 				color2, subScat, mass, maxHealth, health, name)
 		{
-			aUpdate = AUPDATE::RANGER;
+			aUpdate = AUPDATE::RANGERAU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -566,20 +418,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return std::move(newEnemy);
-		}
-
-		bool AUpdate() override
-		{
-			Vacuumer::AUpdate();
-
-			if (items.size() > 0)
-			{
-				Item shotItem = items[0].Clone(1);
-				items.TryTakeIndex(0);
-				game->entities->push_back(basicShotItem->Clone(shotItem, pos, Vec2f((game->PlayerPos() - pos) * static_cast<int>(shotItem.range)), this));
-			}
-
-			return true;
 		}
 	};
 
@@ -600,8 +438,8 @@ namespace Enemies
 			Enemy(timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
 		{
-			earlyDUpdate = EDUPDATE::SPIDER;
-			update = UPDATE::SPIDER;
+			earlyDUpdate = EDUPDATE::SPIDEREDU;
+			update = UPDATE::SPIDERU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -636,29 +474,6 @@ namespace Enemies
 		{
 			float rotation = (float(index) / legCount + legRotation) * 2 * PI_F;
 			return pos + Vec2f(sinf(rotation), cosf(rotation)) * legLength;
-		}
-
-		void EarlyDUpdate() override
-		{
-			for (int i = 0; i < legCount; i++)
-				legs[i]->LowResUpdate();
-			Enemy::EarlyDUpdate();
-		}
-
-		void Update() override
-		{
-			Enemy::Update();
-			for (int i = 0; i < legCount; i++)
-			{
-				if (tTime - lastLegUpdates[i] > legCycleSpeed)
-				{
-					lastLegUpdates[i] += legCycleSpeed;
-					Vec2f desiredPos = LegPos(i) + Vec2f(game->PlayerPos() - pos).Normalized() * legTolerance * 0.5f;
-					if (legs[i]->desiredPos.Distance(desiredPos) > legTolerance)
-						legs[i]->desiredPos = desiredPos;
-				}
-				legs[i]->Update();
-			}
 		}
 
 		void OnDeath(Entity* damageDealer) override
@@ -710,7 +525,8 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			pounceTime(pounceTime), speed(speed)
 		{
-			mUpdate = MUPDATE::POUNCER;
+			mUpdate = MUPDATE::POUNCERMU;
+			update = UPDATE::POUNCERU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -720,28 +536,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return std::move(newEnemy);
-		}
-
-		bool MUpdate() override
-		{
-			offset = vZero;
-			direction = Vec2f(game->PlayerPos() - pos).Normalized();
-			return true;
-		}
-
-		void Update() override
-		{
-			Enemy::Update();
-
-			if (tTime - lastMove <= pounceTime)
-			{
-				offset += direction * game->dTime * speed;
-				if (Vec2(offset) != vZero)
-				{
-					TryMove(offset, mass + mass);
-					offset -= Vec2(offset);
-				}
-			}
 		}
 	};
 
@@ -754,7 +548,9 @@ namespace Enemies
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Pouncer(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), color3(color3)
-		{ }
+		{
+			dUpdate = DUPDATE::CATDU;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -777,27 +573,6 @@ namespace Enemies
 			}
 			return Enemy::DealDamage(Clamp(damage, -1, 1), damageDealer);
 		}
-
-		void DUpdate() override
-		{
-			int count = maxHealth - health + 1;
-
-			Vec2 tempPos = pos;
-			Vec2f fPos = pos;
-			RGBA tempColor = color;
-			color = color3;
-
-			for (int i = 1; i < count; i++)
-			{
-				fPos = (fPos - game->PlayerPos()).Rotate(PI_F * 2 / count) + game->PlayerPos();
-				pos = fPos;
-				Pouncer::DUpdate();
-			}
-
-			color = tempColor;
-			pos = tempPos;
-			Pouncer::DUpdate();
-		}
 	};
 
 	class BoomCat : public Cat
@@ -809,7 +584,9 @@ namespace Enemies
 			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Cat(pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subScat, mass, maxHealth, health, name), explosionDimensions(explosionDimensions)
-		{ }
+		{
+			aUpdate = AUPDATE::BOOMCATAU;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -818,12 +595,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return std::move(newEnemy);
-		}
-
-		bool AUpdate() override
-		{
-			CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
-			return true;
 		}
 	};
 
@@ -867,9 +638,12 @@ namespace Enemies
 			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), projectile(projectile)
-		{ }
+		{
+			mUpdate = MUPDATE::TANKMU;
+			aUpdate = AUPDATE::TANKAU;
+		}
 
-		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity * creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
 			unique_ptr<Tank> newEnemy = make_unique<Tank>(*this);
 			newEnemy->baseClass = baseClass;
@@ -877,22 +651,311 @@ namespace Enemies
 			newEnemy->Start();
 			return newEnemy;
 		}
-
-		bool MUpdate() override
-		{
-			Vec2 disp = game->PlayerPos() - pos;
-			if (sgn(float(disp.x)) != sgn(float(currentMovingDirection.x)) && sgn(float(disp.y)) != sgn(float(currentMovingDirection.y)))
-				currentMovingDirection = abs(disp.x) > abs(disp.y) ? Vec2(sgn(float(disp.x)), 0) : Vec2(0, sgn(float(disp.y)));
-			TryMove(currentMovingDirection, mass + mass);
-			return true;
-		}
-
-		bool AUpdate() override
-		{
-			game->entities->push_back(projectile->Clone(pos, (game->PlayerPos() - pos) * projectile->duration, this));
-			return true;
-		}
 	};
+
+	namespace Updates
+	{
+		void EnemyU(Entity* entity)
+		{
+			Enemy* enemy = static_cast<Enemy*>(entity);
+			if (tTime - enemy->lastMove >= enemy->timePerMove)
+				if (enemy->MUpdate())
+					enemy->lastMove = tTime;
+
+			if (tTime - enemy->lastTime >= enemy->timePer)
+				if (enemy->AUpdate())
+					enemy->lastTime = tTime;
+		}
+
+		void PouncerSnakeU(Entity* entity)
+		{
+			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
+			pSnake->Update(UPDATE::ENEMYU);
+
+			if (pSnake->front == nullptr && tTime - pSnake->lastMove <= pSnake->pounceTime)
+			{
+				pSnake->offset += pSnake->direction * game->dTime * pSnake->speed;
+				if (Vec2(pSnake->offset) != vZero)
+				{
+					pSnake->Enemy::TryMove(pSnake->offset, pSnake->mass * 2);
+					pSnake->offset -= Vec2(pSnake->offset);
+				}
+			}
+		}
+
+		void SpiderU(Entity* entity)
+		{
+			Spider* spider = static_cast<Spider*>(entity);
+
+			spider->Update(UPDATE::ENEMYU);
+			for (int i = 0; i < spider->legCount; i++)
+			{
+				if (tTime - spider->lastLegUpdates[i] > spider->legCycleSpeed)
+				{
+					spider->lastLegUpdates[i] += spider->legCycleSpeed;
+					Vec2f desiredPos = spider->LegPos(i) + Vec2f(game->PlayerPos() - spider->pos).Normalized() * spider->legTolerance * 0.5f;
+					if (spider->legs[i]->desiredPos.Distance(desiredPos) > spider->legTolerance)
+						spider->legs[i]->desiredPos = desiredPos;
+				}
+				spider->legs[i]->Update();
+			}
+		}
+
+		void PouncerU(Entity* entity)
+		{
+			Pouncer* pouncer = static_cast<Pouncer*>(entity);
+
+			pouncer->Update(UPDATE::ENEMYU);
+
+			if (tTime - pouncer->lastMove <= pouncer->pounceTime)
+			{
+				pouncer->offset += pouncer->direction * game->dTime * pouncer->speed;
+				if (Vec2(pouncer->offset) != vZero)
+				{
+					pouncer->TryMove(pouncer->offset, pouncer->mass * 2);
+					pouncer->offset -= Vec2(pouncer->offset);
+				}
+			}
+		}
+	}
+
+	namespace DUpdates
+	{
+		void DeceiverDU(Entity* entity)
+		{
+			Deceiver* deceiver = static_cast<Deceiver*>(entity);
+			float r = deceiver->noise1.GetNoise(tTime, 0.0f);
+			float g = deceiver->noise2.GetNoise(tTime, 0.0f);
+			float b = deceiver->noise3.GetNoise(tTime, 0.0f);
+			deceiver->color.r = r * 255;
+			deceiver->color.g = g * 255;
+			deceiver->color.b = b * 255;
+
+			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+
+			float healthRatio = (float)deceiver->health / deceiver->maxHealth;
+			deceiver->color.r = r * deceiver->color3.r;
+			deceiver->color.g = g * deceiver->color3.g;
+			deceiver->color.b = b * deceiver->color3.b;
+
+			Vec2f tempPos = deceiver->pos;
+
+			deceiver->pos = Vec2f(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
+			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->pos = Vec2f(deceiver->pos.x, game->PlayerPos().y * 2 - deceiver->pos.y);
+			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->pos = Vec2f(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
+			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+
+			deceiver->pos = tempPos;
+		}
+
+		void ParentDU(Entity* entity)
+		{
+			Parent* parent = static_cast<Parent*>(entity);
+			parent->DUpdate(DUPDATE::DTOCOLDU);
+			parent->child->Draw(parent->pos + up);
+			parent->child->Draw(parent->pos + left);
+			parent->child->Draw(parent->pos + down);
+			parent->child->Draw(parent->pos + right);
+		}
+
+		void ExploderDU(Entity* entity)
+		{
+			Exploder* exploder = static_cast<Exploder*>(entity);
+			Vec2 tempDimensions = exploder->dimensions;
+			exploder->dimensions = exploder->explosionDimensions;
+			byte tempAlpha = exploder->color.a;
+			exploder->color.a /= 5;
+			exploder->DUpdate(DUPDATE::DTOCOLDU);
+			exploder->dimensions = tempDimensions;
+			exploder->color.a = tempAlpha;
+			exploder->DUpdate(DUPDATE::DTOCOLDU);
+		}
+
+		void ColorCyclerDU(Entity* entity)
+		{
+			ColorCycler* colorCycler = static_cast<ColorCycler*>(entity);
+			float currentPlace = (tTime * colorCycler->colorCycleSpeed + colorCycler->colorOffset);
+			int intCurrentPlace = static_cast<int>(currentPlace);
+			colorCycler->color = colorCycler->colorsToCycle[intCurrentPlace % colorCycler->colorsToCycle.size()].Lerp(
+				colorCycler->colorsToCycle[(intCurrentPlace + 1) % colorCycler->colorsToCycle.size()], currentPlace - floorf(currentPlace));
+
+			colorCycler->DUpdate(DUPDATE::DTOCOLDU);
+		}
+
+		void CatDU(Entity* entity)
+		{
+			Cat* cat = static_cast<Cat*>(entity);
+
+			int count = cat->maxHealth - cat->health + 1;
+
+			Vec2 tempPos = cat->pos;
+			Vec2f fPos = cat->pos;
+			RGBA tempColor = cat->color;
+			cat->color = cat->color3;
+
+			for (int i = 1; i < count; i++)
+			{
+				fPos = (fPos - game->PlayerPos()).Rotate(PI_F * 2 / count) + game->PlayerPos();
+				cat->pos = fPos;
+				cat->DUpdate(DUPDATE::ENTITYDU);
+			}
+
+			cat->color = tempColor;
+			cat->pos = tempPos;
+			cat->DUpdate(DUPDATE::DTOCOLDU);
+		}
+	}
+
+	namespace EDUpdates
+	{
+		void SpiderEDU(Entity* entity)
+		{
+			Spider* spider = static_cast<Spider*>(entity);
+			for (int i = 0; i < spider->legCount; i++)
+				spider->legs[i]->LowResUpdate();
+		}
+	}
+
+	namespace UIUpdates
+	{
+		void EnemyUIU(Entity* entity)
+		{
+			entity->DrawUIBox(entity->BottomLeft(), entity->TopRight(), COMMON_BOARDER_WIDTH, entity->name + " " + to_string(entity->health), entity->color);
+		}
+	}
+
+	namespace MUpdates
+	{
+		bool DefaultMU(Enemy* enemy)
+		{
+			enemy->TryMove(Vec2f(game->PlayerPos() - enemy->pos).Rormalized(), enemy->mass * 2);
+			return true;
+		}
+	
+		bool SnakeMU(Enemy* enemy)
+		{
+			Snake* snake = static_cast<Snake*>(enemy);
+			if (snake->front == nullptr)
+				snake->Enemy::TryMove(Vec2f(game->PlayerPos() - snake->pos).Rormalized() * snake->dimensions, snake->mass * 2);
+
+			return true;
+		}
+
+		bool PouncerSnakeMU(Enemy* enemy)
+		{
+			PouncerSnake* pSnake = static_cast<PouncerSnake*>(enemy);
+			pSnake->offset = vZero;
+			pSnake->direction = Vec2f(game->PlayerPos() - pSnake->pos).Normalized();
+			return true;
+		}
+
+		bool VacuumerMU(Enemy* enemy)
+		{
+			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
+			if (abs(vacuumer->pos.Squistance(game->PlayerPos()) - vacuumer->desiredDistance) > 2.0f)
+				vacuumer->TryMove(Vec2f(game->PlayerPos() - vacuumer->pos).Rormalized() * (-1 + 2 * int(vacuumer->pos.Squistance(game->PlayerPos()) > vacuumer->desiredDistance)), vacuumer->mass * 2);
+			return true;
+		}
+
+		bool PouncerMU(Enemy* enemy)
+		{
+			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
+			pouncer->offset = vZero;
+			pouncer->direction = Vec2f(game->PlayerPos() - pouncer->pos).Normalized();
+			return true;
+		}
+
+		bool TankMU(Enemy* enemy)
+		{
+			Tank* tank = static_cast<Tank*>(enemy);
+			Vec2 disp = game->PlayerPos() - tank->pos;
+			if (sgn(float(disp.x)) != sgn(float(tank->currentMovingDirection.x)) && sgn(float(disp.y)) != sgn(float(tank->currentMovingDirection.y)))
+				tank->currentMovingDirection = abs(disp.x) > abs(disp.y) ? Vec2(sgn(float(disp.x)), 0) : Vec2(0, sgn(float(disp.y)));
+			tank->TryMove(tank->currentMovingDirection, tank->mass * 2);
+			return true;
+		}
+	}
+
+	namespace AUpdates
+	{
+		bool DefaultAU(Enemy* enemy)
+		{
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(enemy->pos, enemy->dimensions + vOne);
+			int randomization = rand();
+			for (int i = 0; i < hitEntities.size(); i++)
+			{
+				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
+				if (entity != enemy && !entity->IsEnemy())
+				{
+					entity->DealDamage(enemy->damage, enemy);
+					break;
+				}
+			}
+
+			return true;
+		}
+
+		bool ExploderAU(Enemy* enemy)
+		{
+			Exploder* exploder = static_cast<Exploder*>(enemy);
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(exploder->pos, exploder->explosionDimensions);
+			int randomization = rand();
+			for (int i = 0; i < hitEntities.size(); i++)
+			{
+				Entity* entity = hitEntities[(i + randomization) % hitEntities.size()];
+				if (entity != exploder && !entity->IsEnemy())
+				{
+					CreateExplosion(exploder->pos, exploder->explosionDimensions, exploder->color, exploder->name, 0, exploder->damage, exploder);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool VacuumerAU(Enemy* enemy)
+		{
+			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
+			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist);
+			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->dimensions, game->entities->collectibles);
+			for (Entity* collectible : collectibles)
+			{
+				vacuumer->items.push_back(((Collectible*)collectible)->baseItem);
+				collectible->DestroySelf(vacuumer);
+			}
+			return vacuumer->AUpdate(AUPDATE::DEFAULTAU);
+		}
+
+		bool RangerAU(Enemy* enemy)
+		{
+			enemy->AUpdate(AUPDATE::VACUUMERAU);
+
+			Ranger* ranger = static_cast<Ranger*>(enemy);
+			if (ranger->items.size() > 0)
+			{
+				Item shotItem = ranger->items[0].Clone(1);
+				ranger->items.TryTakeIndex(0);
+				game->entities->push_back(basicShotItem->Clone(shotItem, ranger->pos, Vec2f((game->PlayerPos() - ranger->pos) * static_cast<int>(shotItem.range)), ranger));
+			}
+
+			return true;
+		}
+
+		bool BoomcatAU(Enemy* enemy)
+		{
+			BoomCat* bCat = static_cast<BoomCat*>(enemy);
+			CreateExplosion(bCat->pos, bCat->explosionDimensions, bCat->color, bCat->name, 0, bCat->damage, bCat);
+			return true;
+		}
+
+		bool TankAU(Enemy* enemy)
+		{
+			Tank* tank = static_cast<Tank*>(enemy);
+			game->entities->push_back(tank->projectile->Clone(tank->pos, (game->PlayerPos() - tank->pos) * tank->projectile->duration, tank));
+			return true;
+		}
+	}
 #pragma endregion
 
 

@@ -16,6 +16,7 @@ public:
 		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		LightBlock(lightColor, lightOrDark, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist)
 	{
+		update = UPDATE::PLAYERU;
 		Start();
 	}
 
@@ -32,40 +33,55 @@ public:
 		items.currentIndex = 0; // Copper
 	}
 
-	void Update() override
+	void OnDeath(Entity* damageDealer) override
 	{
+		LightBlock::OnDeath(damageDealer);
+		playerAlive = false;
+		if (damageDealer != nullptr)
+			deathCauseName = damageDealer->name;
+		else
+			deathCauseName = "The planet";
+	}
+};
+
+namespace Updates
+{
+	void PlayerU(Entity* entity)
+	{
+		Player* player = static_cast<Player*>(entity);
+
 		bool exitedMenu = false;
-		if (currentMenuedEntity != nullptr && (game->inputs.leftMouse.pressed || game->inputs.rightMouse.pressed)/* &&
+		if (player->currentMenuedEntity != nullptr && (game->inputs.leftMouse.pressed || game->inputs.rightMouse.pressed)/* &&
 			!currentMenuedEntity->PosInUIBounds(game->inputs.mousePosition + pos)*/)
 		{
-			currentMenuedEntity->shouldUI = false;
-			currentMenuedEntity = nullptr;
+			player->currentMenuedEntity->shouldUI = false;
+			player->currentMenuedEntity = nullptr;
 			exitedMenu = true;
-			lastClick = tTime;
+			player->lastClick = tTime;
 		}
 
 		vector<Entity*> hitEntities;
 		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != vZero &&
-			(currentMenuedEntity == nullptr || !currentMenuedEntity->Overlaps(game->inputs.mousePosition + pos, vOne))
-			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + pos, dimensions)).size())
+			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + player->pos, vOne))
+			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, player->dimensions)).size())
 		{
-			if (currentMenuedEntity != nullptr)
-				currentMenuedEntity->shouldUI = false;
-			currentMenuedEntity = hitEntities[0];
-			currentMenuedEntity->shouldUI = true;
+			if (player->currentMenuedEntity != nullptr)
+				player->currentMenuedEntity->shouldUI = false;
+			player->currentMenuedEntity = hitEntities[0];
+			player->currentMenuedEntity->shouldUI = true;
 		}
 
-		#pragma region Movement
+#pragma region Movement
 
 		if (game->inputs.w.pressed || game->inputs.up.pressed || game->inputs.a.pressed || game->inputs.left.pressed ||
 			game->inputs.s.pressed || game->inputs.down.pressed || game->inputs.d.pressed || game->inputs.right.pressed)
-			lastMove = tTime;
+			player->lastMove = tTime;
 
-		if (tTime - lastMove >= timePerMove)
+		if (tTime - player->lastMove >= player->timePerMove)
 		{
 			Vec2 direction(0, 0);
 
-			#pragma region Inputs
+#pragma region Inputs
 			if (game->inputs.a.held || game->inputs.left.held)
 			{
 				game->inputs.a.held = false;
@@ -90,80 +106,70 @@ public:
 				game->inputs.up.held = false;
 				direction.y++;
 			}
-			#pragma endregion
+#pragma endregion
 
-			Vec2 oldPos = pos;
+			Vec2 oldPos = player->pos;
 			if (direction != vZero)
 			{
-				lastMove = tTime;
-				TryMove(direction, 3);
+				player->lastMove = tTime;
+				player->TryMove(direction, 3);
 			}
 
-			game->inputs.mousePosition += pos - oldPos;
+			game->inputs.mousePosition += player->pos - oldPos;
 		}
 
-		#pragma endregion
+#pragma endregion
 
-		if (heldEntity == nullptr && items.size() > 0) // You can't mod by 0.
-			items.currentIndex = JMod(items.currentIndex + game->inputs.mouseScroll, static_cast<int>(items.size()));
+		if (player->heldEntity == nullptr && player->items.size() > 0) // You can't mod by 0.
+			player->items.currentIndex = JMod(player->items.currentIndex + game->inputs.mouseScroll, static_cast<int>(player->items.size()));
 
-		Item currentShootingItem = items.GetCurrentItem();
+		Item currentShootingItem = player->items.GetCurrentItem();
 
-		if (game->inputs.middleMouse.released && heldEntity != nullptr)
+		if (game->inputs.middleMouse.released && player->heldEntity != nullptr)
 		{
-			heldEntity->holder = nullptr;
-			heldEntity = nullptr;
+			player->heldEntity->holder = nullptr;
+			player->heldEntity = nullptr;
 		}
 
-		if (heldEntity != nullptr)
+		if (player->heldEntity != nullptr)
 		{
-			heldEntity->dir.RotateLeft(game->inputs.mouseScroll);
-			if (tTime - lastHoldMove > timePerHoldMove)
+			player->heldEntity->dir.RotateLeft(game->inputs.mouseScroll);
+			if (tTime - player->lastHoldMove > player->timePerHoldMove)
 			{
-				lastHoldMove = tTime;
-				heldEntity->TryMove(Vec2f(pos + game->inputs.mousePosition - heldEntity->pos).Rormalized(), mass);
+				player->lastHoldMove = tTime;
+				player->heldEntity->TryMove(Vec2f(player->pos + game->inputs.mousePosition - player->heldEntity->pos).Rormalized(), player->mass);
 			}
 		}
-		
-		
+
+
 		Vec2 normalizedDir = Vec2f(game->inputs.mousePosition).Normalized();
-		if (heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
-			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + pos, vOne)).size())
+		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
+			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, vOne)).size())
 		{
-			heldEntity = hitEntities[0];
-			heldEntity->holder = this;
+			player->heldEntity = hitEntities[0];
+			player->heldEntity->holder = player;
 		}
-		else if (!game->inputs.space.held && tTime - lastClick > currentShootingItem.shootSpeed && currentMenuedEntity == nullptr &&
-			game->inputs.mousePosition != vZero && currentShootingItem != *dItem && game->inputs.leftMouse.held && items.TryTake(currentShootingItem))
+		else if (!game->inputs.space.held && tTime - player->lastClick > currentShootingItem.shootSpeed && player->currentMenuedEntity == nullptr &&
+			game->inputs.mousePosition != vZero && currentShootingItem != *dItem && game->inputs.leftMouse.held && player->items.TryTake(currentShootingItem))
 		{
-			lastClick = tTime;
+			player->lastClick = tTime;
 			game->entities->push_back(basicShotItem->Clone(currentShootingItem,
-				pos, game->inputs.mousePosition, this));
+				player->pos, game->inputs.mousePosition, player));
 		}
 
-		if (heldEntity == nullptr && game->inputs.space.held && tTime - lastVac > timePerVac)
+		if (player->heldEntity == nullptr && game->inputs.space.held && tTime - player->lastVac > player->timePerVac)
 		{
-			game->entities->Vacuum(pos, vacDist);
-			lastVac = tTime;
+			game->entities->Vacuum(player->pos, player->vacDist);
+			player->lastVac = tTime;
 		}
 
-		vector<Entity*> collectibles = EntitiesOverlaps(pos, dimensions, game->entities->collectibles);
+		vector<Entity*> collectibles = EntitiesOverlaps(player->pos, player->dimensions, game->entities->collectibles);
 		for (Entity* collectible : collectibles)
 		{
-			items.push_back(((Collectible*)collectible)->baseItem);
-			collectible->DestroySelf(this);
+			player->items.push_back(((Collectible*)collectible)->baseItem);
+			collectible->DestroySelf(player);
 		}
 
 		game->inputs.mouseScroll = 0;
 	}
-
-	void OnDeath(Entity* damageDealer) override
-	{
-		LightBlock::OnDeath(damageDealer);
-		playerAlive = false;
-		if (damageDealer != nullptr)
-			deathCauseName = damageDealer->name;
-		else
-			deathCauseName = "The planet";
-	}
-};
+}

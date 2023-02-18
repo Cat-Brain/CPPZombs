@@ -9,7 +9,7 @@ public:
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), color2(color2)
 	{
-		dUpdate = DUPDATE::DTOCOL;
+		dUpdate = DUPDATE::DTOCOLDU;
 	}
 };
 
@@ -24,8 +24,8 @@ namespace DUpdates
 			int(dToCol->color2.g + t * (dToCol->color.g - dToCol->color2.g)),
 			int(dToCol->color2.b + t * (dToCol->color.b - dToCol->color2.b)),
 			int(dToCol->color2.a + t * (dToCol->color.a - dToCol->color2.a)));
-		Entity::DUpdate();
-		color = tempColor;
+		dToCol->DUpdate(DUPDATE::ENTITYDU);
+		dToCol->color = tempColor;
 	}
 }
 
@@ -101,67 +101,64 @@ namespace Collectibles
 
 enum TUPDATE
 {
-	DEFAULT, TREE, VINE
+	DEFAULTTU, TREETU, VINETU
 };
 
-vector<function<bool()>> tUpdates;
+vector<function<bool(Entity*)>> tUpdates;
 
 class FunctionalBlock : public Entity
 {
 public:
-	uint tUpdate;
+	TUPDATE tUpdate;
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
-		update = UPDATE::FUNCTIONALBLOCK;
+		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
 	}
 
 	FunctionalBlock(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
-		update = UPDATE::FUNCTIONALBLOCK;
+		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
 	}
 
 	FunctionalBlock() = default;
 
-	void Update() override
+	bool TUpdate()
 	{
-		if (tTime - lastTime >= timePer)
-		{
-			std::bind(&tUpdates[tUpdate], this);
-			if (tUpdates[tUpdate]())
-				lastTime = tTime;
-		}
+		return tUpdates[tUpdate](this);
 	}
-
-	virtual bool TUpdate() { return true; }
+	bool TUpdate(TUPDATE tempTUpdate)
+	{
+		return tUpdates[tempTUpdate](this);
+	}
 };
 
 class FunctionalBlock2 : public Entity // Can have speed multipliers.
 {
 public:
-	uint tUpdate;
+	TUPDATE tUpdate;
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2;
+		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();
 	}
 
 	FunctionalBlock2(float timePer, float offset, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2;
+		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();
 	}
 
@@ -172,16 +169,41 @@ public:
 		return game->dTime;
 	}
 
-	void Update() override
+	bool TUpdate()
 	{
-		timeSince += TimeIncrease();
-		if (timeSince >= timePer)
+		std::bind(&tUpdates[tUpdate], this);
+		return tUpdates[tUpdate](this);
+	}
+	bool TUpdate(TUPDATE tempTUpdate)
+	{
+		std::bind(&tUpdates[tempTUpdate], this);
+		return tUpdates[tempTUpdate](this);
+	}
+};
+
+namespace Updates
+{
+	void FunctionalBlockU(Entity* entity)
+	{
+		FunctionalBlock* block = static_cast<FunctionalBlock*>(entity);
+		if (tTime - block->lastTime >= block->timePer)
 		{
-			std::bind(&tUpdates[tUpdate], this);
-			if (tUpdates[tUpdate]())
-				timeSince -= timePer;
+			if (block->TUpdate())
+				block->lastTime = tTime;
 		}
 	}
 
-	virtual bool TUpdate() { return true; }
-};
+	void FunctionalBlock2U(Entity* entity)
+	{
+		FunctionalBlock2* block = static_cast<FunctionalBlock2*>(entity);
+		block->timeSince += block->TimeIncrease();
+		if (block->timeSince >= block->timePer)
+		{
+			std::bind(&tUpdates[block->tUpdate], block);
+			if (block->TUpdate())
+				block->timeSince -= block->timePer;
+		}
+	}
+}
+
+namespace TUpdates { bool DefaultTU(Entity* entity) { return true; } }
