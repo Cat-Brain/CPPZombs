@@ -5,6 +5,11 @@ class Entities;
 class Player;
 class Planet;
 
+enum UIMODE
+{
+	MAINMENU, INGAME, PAUSED
+};
+
 class Game : public Renderer
 {
 public:
@@ -12,7 +17,8 @@ public:
 	Player* player;
 	std::unique_ptr<Planet> planet;
 
-	bool showUI = true, paused = false;
+	bool showUI = true;
+	UIMODE uiMode = UIMODE::MAINMENU;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;

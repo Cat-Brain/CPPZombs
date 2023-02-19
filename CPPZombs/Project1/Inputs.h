@@ -8,12 +8,12 @@ struct Key
 struct Inputs
 {
 	Key w, a, s, d,
-		enter, c, q, e, p, space,
+		enter, c, q, e, escape, space,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse,
 		comma, period, slash; // <- Command keys.
 	int mouseScroll = 0;
-	Vec2 mousePosition = vZero;
+	Vec2 mousePosition = vZero, screenMousePosition = vZero;
 
 	Inputs() = default;
 
@@ -64,7 +64,7 @@ struct Inputs
 		UpdateKey(window, c, GLFW_KEY_C);
 		UpdateKey(window, q, GLFW_KEY_Q);
 		UpdateKey(window, e, GLFW_KEY_E);
-		UpdateKey(window, p, GLFW_KEY_P);
+		UpdateKey(window, escape, GLFW_KEY_ESCAPE);
 		UpdateKey(window, space, GLFW_KEY_SPACE);
 
 		UpdateKey(window, comma, GLFW_KEY_COMMA);
@@ -80,9 +80,9 @@ struct Inputs
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
+		screenMousePosition = { static_cast<int>(xPos), static_cast<int>(trueScreenHeight) - static_cast<int>(yPos) };
 		xPos /= trueScreenHeight;
-		xPos /= screenRatio;
-		xPos *= ScrHeight() * screenRatio;
+		xPos *= ScrHeight();
 		xPos -= 0.5 * int(ScrWidth() % 2 == 0);
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= ScrHeight();

@@ -17,40 +17,96 @@ void Game::Start()
 
 	planet = std::make_unique<Planet>();
 }
+
+bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
+{
+	return game->inputs.screenMousePosition.x > minPos.x && game->inputs.screenMousePosition.x < minPos.x + font.TextWidth(text)* scale / font.minimumSize &&
+		game->inputs.screenMousePosition.y > minPos.y + scale * font.mininumVertOffset / font.minimumSize &&
+		game->inputs.screenMousePosition.y < minPos.y + scale * font.maxVertOffset / font.minimumSize;
+}
+
+bool InputHoverSquare(Vec2 minPos, float scale, string text) // Renders and returns if this was clicked on(not hovered over).
+{
+		if (CheckInputSquareHover(minPos, scale, text))
+		{
+			font.Render(text, minPos * 2 - ScrDim(), scale * 2, RGBA(127, 127, 127, 255));
+			return game->inputs.leftMouse.pressed;
+		}
+		else
+			font.Render(text, { minPos * 2 - ScrDim() }, scale * 2, RGBA(255, 255, 255, 255));
+		return false;
+}
 	
 void Game::Update()
 {
-	if (inputs.p.pressed)
-		paused = !paused;
-	/*if (GetKey(olc::F1).bPressed)
+	inputs.Update(window);
+	if (uiMode == UIMODE::MAINMENU)
 	{
-		paused = true;
-		ConsoleShow(olc::F1, false);
-	}*/
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
 
-	if (!paused)
-	{
-		if (playerAlive)
-			TUpdate();
-		else
+		inputs.FindMousePos(window);
+
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin"))
 		{
-			if (currentFramebuffer != 0)
-			{
-				currentFramebuffer = 0;
-				UseFramebuffer();
-			}
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.9f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
-			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.7f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
-			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.6f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
-			font.Render("Press enter to restart or esc to close.", { -ScrWidth(), int(ScrHeight() * 0.4f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
-			if (inputs.enter.pressed)
-				Start();
+			Start();
+			uiMode = UIMODE::INGAME;
 		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Exit"))
+			glfwSetWindowShouldClose(window, GL_TRUE);
+		else if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+			Fullscreen();
 	}
 	else
-		font.Render("Paused", { -ScrWidth(), 0 }, ScrHeight() / 5.0f, {255, 255, 255});
+	{
+		if (playerAlive && inputs.escape.pressed)
+			uiMode = uiMode == UIMODE::INGAME ? UIMODE::PAUSED : UIMODE::INGAME;
+
+		if (uiMode == UIMODE::INGAME)
+		{
+			if (playerAlive)
+				TUpdate();
+			else
+			{
+				if (currentFramebuffer != 0)
+				{
+					currentFramebuffer = 0;
+					UseFramebuffer();
+				}
+				glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+				glClear(GL_COLOR_BUFFER_BIT);
+				font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+				font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+				font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+
+				inputs.FindMousePos(window);
+
+				if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Restart"))
+				{
+					Start();
+					uiMode = UIMODE::INGAME;
+				}
+				if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Main menu"))
+					uiMode = UIMODE::MAINMENU;
+			}
+		}
+		if (uiMode == UIMODE::PAUSED)
+		{
+			currentFramebuffer = 0;
+			UseFramebuffer();
+
+			inputs.FindMousePos(window);
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Return"))
+			{
+				player->lastClick = tTime;
+				uiMode = UIMODE::INGAME;
+			}
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Main menu"))
+				uiMode = UIMODE::MAINMENU;
+		}
+	}
 }
 
 void Game::ApplyLighting()

@@ -16,6 +16,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+#define START_SCR_WIDTH 990
+#define START_SCR_HEIGHT 990
+
 class Renderer
 {
 private:
@@ -27,8 +30,8 @@ private:
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		trueScreenWidth = 990;
-		trueScreenHeight = 990;
+		trueScreenWidth = START_SCR_WIDTH;
+		trueScreenHeight = START_SCR_HEIGHT;
 		screenRatio = (float)trueScreenWidth / (float)trueScreenHeight;
 		window = glfwCreateWindow(trueScreenWidth, trueScreenHeight, name.c_str(), NULL, NULL);
 		if (window == NULL)
@@ -86,7 +89,6 @@ private:
 		currentFramebuffer = 1;
 		UseFramebuffer();
 
-		Start();
 		return true;
 	}
 
@@ -102,9 +104,6 @@ private:
 		}
 		lastTime = static_cast<float>(glfwGetTime());
 
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-			glfwSetWindowShouldClose(window, true);
-		inputs.Update(window);
 		Update();
 
 		glfwSwapBuffers(window);
@@ -260,6 +259,23 @@ public:
 	inline virtual Vec2 PlayerPos() // The position of the player in normal coordinates.
 	{
 		return vZero;
+	}
+
+	bool IsFullscreen()
+	{
+		return glfwGetWindowMonitor(window) != nullptr;
+	}
+
+	void Fullscreen()
+	{
+		if (IsFullscreen())
+		{
+			glfwSetWindowMonitor(window, NULL, 100, 100, START_SCR_WIDTH, START_SCR_HEIGHT, 0);
+			return;
+		}
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
 	}
 };
 
