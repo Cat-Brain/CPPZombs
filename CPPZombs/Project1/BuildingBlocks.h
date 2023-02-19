@@ -6,7 +6,7 @@ public:
 	RGBA color2;
 
 	DToCol(Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
-		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), color2(color2)
 	{
 		dUpdate = DUPDATE::DTOCOLDU;
@@ -37,8 +37,8 @@ public:
 	LightSource* lightSource;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, bool lightOrDark, int range = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA color2 = RGBA(), RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
+		RGBA color2 = RGBA(), RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{ }
@@ -113,7 +113,7 @@ public:
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
@@ -121,7 +121,7 @@ public:
 	}
 
 	FunctionalBlock(float timePer, float offset, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
@@ -147,7 +147,7 @@ public:
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec2f pos = Vec2f(0, 0), Vec2f dimensions = vOne, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
@@ -155,7 +155,7 @@ public:
 	}
 
 	FunctionalBlock2(float timePer, float offset, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
@@ -171,12 +171,10 @@ public:
 
 	bool TUpdate()
 	{
-		std::bind(&tUpdates[tUpdate], this);
 		return tUpdates[tUpdate](this);
 	}
 	bool TUpdate(TUPDATE tempTUpdate)
 	{
-		std::bind(&tUpdates[tempTUpdate], this);
 		return tUpdates[tempTUpdate](this);
 	}
 };
@@ -199,7 +197,6 @@ namespace Updates
 		block->timeSince += block->TimeIncrease();
 		if (block->timeSince >= block->timePer)
 		{
-			std::bind(&tUpdates[block->tUpdate], block);
 			if (block->TUpdate())
 				block->timeSince -= block->timePer;
 		}

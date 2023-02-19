@@ -27,7 +27,7 @@ public:
 
 	static Vec2 ToSpace(Vec2f pos)
 	{
-		return Vec2(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
+		return Vec2f(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
 	}
 
 	static std::pair<Vec2, Vec2> MinMaxPos(Vec2 pos, Vec2 dimensions)
@@ -59,7 +59,7 @@ public:
 	void push_back(unique_ptr<Entity> entity)
 	{
 		addedEntity = true;
-		if (entity->IsCollectible())
+		if (entity->isCollectible)
 			collectibles.push_back(entity.get());
 		else
 		{
@@ -104,7 +104,7 @@ public:
 					result[i++] = chunk;
 					continue;
 				}
-				result[i++] = chunks.size();
+				result[i++] = static_cast<int>(chunks.size());
 				chunks.push_back(Chunk(Vec2(x * CHUNK_WIDTH, y * CHUNK_WIDTH)));
 			}
 		return result;
@@ -130,7 +130,7 @@ public:
 		for (Entity* entity : nearbyEntities)
 		{
 			float dist;
-			if (entity->IsEnemy() && (dist = Vec2f(pos - entity->pos).SqrMagnitude()) < currentBestDist)
+			if (entity->isEnemy && (dist = Vec2f(pos - entity->pos).SqrMagnitude()) < currentBestDist)
 			{
 				currentBestDist = dist;
 				currentBest = entity;
@@ -144,7 +144,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim) &&
+				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim) &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
@@ -159,7 +159,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Corporeal() && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim)) overlaps.push_back((*this)[*iter].get());
+				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim)) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
@@ -189,10 +189,10 @@ public:
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
 				if ((*this)[*iter]->Overlaps(pos, dim) && (*this)[*iter]->active &&
-					(((*this)[*iter]->Corporeal() && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
-						(!(*this)[*iter]->Corporeal() && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
+					(((*this)[*iter]->corporeal && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
+						(!(*this)[*iter]->corporeal && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
-					if ((*this)[*iter]->Corporeal())
+					if ((*this)[*iter]->corporeal)
 						corporeals.push_back((*this)[*iter].get());
 					else
 						incorporeals.push_back((*this)[*iter].get());
@@ -205,39 +205,6 @@ public:
 		return FindPairOverlaps(FindCreateChunkOverlaps(pos, dim), pos, dim);
 	}
 
-	vector<Entity*> RayTraceIntersections(Vec2 startPos, Vec2 endPos)
-	{
-		vector<Entity*> overlaps(0);
-
-		Vec2f start = Chunk::ToSpace(startPos), end = Chunk::ToSpace(endPos);
-		Vec2f absDelta = (end - start).Abs();
-		Vec2f currentPos = startPos;
-		int n = 1 + absDelta.x + absDelta.y;
-		Vec2f inc = Vec2f(int(end.x > start.x) * 2 - 1, int(end.y > start.y) * 2 - 1);
-		int error = absDelta.x - absDelta.y;
-		absDelta *= 2;
-
-		for (; n > 0; --n)
-		{
-#pragma region Raytrace on the chunk
-
-
-
-#pragma endregion
-
-			if (error > 0)
-			{
-				currentPos.x += inc.x;
-				error -= absDelta.y;
-			}
-			else
-			{
-				currentPos.y += inc.y;
-				error += absDelta.x;
-			}
-		}
-	}
-
 	// Add more overlap functions.
 #pragma endregion
 
@@ -245,19 +212,19 @@ public:
 	{
 		int length = static_cast<int>(size());
 		for (unique_ptr<Entity>& entity : *this)
-			length -= int(entity->IsCollectible());
+			length -= int(entity->isCollectible);
 		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(length);
 		for (int i = 0, j = 0; i < size(); i++)
-			if (!(*this)[i]->IsCollectible())
+			if (!(*this)[i]->isCollectible)
 			{
-				unsortedToSorted[j] = EntityIndex(i, (*this)[i]->SortOrder());
+				unsortedToSorted[j] = EntityIndex(i, (*this)[i]->sortLayer);
 				j++;
 			}
 		std::sort(unsortedToSorted.begin(), unsortedToSorted.end());
 
 		sortedNCEntities = vector<Entity*>(length);
 		for (int i = 0, j = 0; i < size(); i++)
-			if (!(*this)[i]->IsCollectible())
+			if (!(*this)[i]->isCollectible)
 			{
 				sortedNCEntities[j] = (*this)[unsortedToSorted[j].index].get();
 				j++;
@@ -266,7 +233,7 @@ public:
 		collectibles = vector<Entity*>(size() - length);
 		length = 0;
 		for (unique_ptr<Entity>& entity : *this)
-			if (entity->IsCollectible())
+			if (entity->isCollectible)
 				collectibles[length++] = entity.get();
 		addedEntity = false;
 	}
@@ -365,7 +332,7 @@ public:
 	void Remove(Entity* entityToRemove)
 	{
 		// Remove from sortedNCEntities or from collectibles.
-		if (!entityToRemove->IsCollectible())
+		if (!entityToRemove->isCollectible)
 		{
 			vector<Entity*>::iterator pos = std::find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove);
 			index -= int(index >= distance(sortedNCEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
@@ -416,11 +383,11 @@ public:
 		}
 	}
 
-	void VacuumCone(Vec2f pos, Vec2f dir, int vacDist, float fov)
+	void VacuumCone(Vec2 pos, Vec2f dir, int vacDist, float fov)
 	{
 		for (Entity* collectible : collectibles)
 		{
-			int distance = pos.Distance(collectible->pos);
+			int distance = pos.Squistance(collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && dir.Dot(Vec2f(collectible->pos - pos + dir).Normalized()) >= 1 - fov)
 			{
 				collectible->SetPos(collectible->pos + Vec2f(pos - collectible->pos).Rormalized());
@@ -434,9 +401,9 @@ public:
 int Entity::DealDamage(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
-		game->entities->particles.push_back(make_unique<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (dimensions * 2 - vOne) - up, damage, to_string(damage),
+		game->entities->particles.push_back(make_unique<SpinText>(pos + Vec2f(RandFloat(), RandFloat()) * (dimensions * 2 - vOne) - up, static_cast<float>(damage), to_string(damage),
 			RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
-			COMMON_TEXT_SCALE, RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
+			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 	
 	health -= damage;
 	if (health <= 0)
@@ -445,11 +412,6 @@ int Entity::DealDamage(int damage, Entity* damageDealer)
 		return 1;
 	}
 	return 0;
-}
-
-void Item::OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
-{
-	game->entities->push_back(make_unique<Collectible>(*this, pos));
 }
 
 void Entity::DestroySelf(Entity* damageDealer)
@@ -462,11 +424,11 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
-bool Entity::TryMove(Vec2 direction, int force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction, float force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
 {
 	Vec2 newPos = pos + direction;
 	vector<int> chunkOverlaps;
-	if (!Corporeal())
+	if (!corporeal)
 	{
 		SetPos(newPos);
 		return true;
@@ -542,12 +504,7 @@ public:
 	{
 		update = UPDATE::EXPLODENEXTFRAMEU;
 		this->creator = creator;
-	}
-
-
-	bool Corporeal() override
-	{
-		return false;
+		corporeal = false;
 	}
 };
 
@@ -564,6 +521,7 @@ public:
 	{
 		update = UPDATE::FADEOUTPUDDLEU;
 		dUpdate = DUPDATE::FADEOUTPUDDLEDU;
+		corporeal = false;
 	}
 
 	FadeOutPuddle(FadeOutPuddle* baseClass, Vec2f pos) :
@@ -576,17 +534,12 @@ public:
 	{
 		return make_unique<FadeOutPuddle>(this, pos);
 	}
-
-	bool Corporeal() override
-	{
-		return false;
-	}
 };
 
 class FadeOutGlow : public FadeOut
 {
 public:
-	float startTime, totalFadeTime, startRange;
+	float startRange;
 	LightSource* lightSource;
 
 	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
@@ -666,56 +619,74 @@ public:
 	string creatorName;
 
 	PlacedOnLanding(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(entityToPlace->name, typeName, intType, entityToPlace->color, entityToPlace->subScat, damage, count, range, shootSpeed, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator){ }
+		float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(entityToPlace->name, typeName, intType, entityToPlace->color, entityToPlace->subScat, damage, count, range, shootSpeed, dimensions,
+			corporeal, shouldCollide, mass, health), entityToPlace(entityToPlace), sayCreator(sayCreator)
+	{
+		itemOD = ITEMOD::PLACEDONLANDING;
+	}
 
-	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions), entityToPlace(entityToPlace), sayCreator(sayCreator) { }
+	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health),
+		entityToPlace(entityToPlace), sayCreator(sayCreator)
+	{
+		itemOD = ITEMOD::PLACEDONLANDING;
+	}
 
 	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
 		RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions),
-		entityToPlace(entityToPlace), sayCreator(sayCreator) { }
+		float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health),
+		entityToPlace(entityToPlace), sayCreator(sayCreator)
+	{
+		itemOD = ITEMOD::PLACEDONLANDING;
+	}
 
 	Item Clone(int count) override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions);
-	}
-
-	Item Clone() override
-	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
+	}
+};
+
+class CorruptOnKill : public PlacedOnLanding
+{
+public:
+	CorruptOnKill(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
+		float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(entityToPlace, typeName, intType, damage, count, range, sayCreator,
+			shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
+	{
+		itemOD = ITEMOD::CORRUPTONKILL;
 	}
 
-	Item* Clone2() override
+	CorruptOnKill(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, Vec2f dimensions = vOne,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions);
+		itemOD = ITEMOD::CORRUPTONKILL;
 	}
 
-	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
+	CorruptOnKill(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
+		float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(baseClass, entityToPlace, name, typeName, intType, color, subScat, damage, count, range, sayCreator, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
 	{
-		if (((Entity*)game->player)->Overlaps(pos, dimensions))
-		{
-			Item::OnDeath(pos, creator, creatorName, callReason, callType);
-			return;
-		}
-		unique_ptr<Entity> placedEntity = entityToPlace->Clone(pos, up, creator);
-		if (sayCreator)
-			placedEntity->name += " from " + creatorName;
-		game->entities->push_back(std::move(placedEntity));
+		itemOD = ITEMOD::CORRUPTONKILL;
 	}
 };
 
 inline void CreateExplosion(Vec2 pos, Vec2 explosionDimensions, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
 	game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionDimensions, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(explosionDimensions.x * 2, explosionDamage + damage, pos, explosionDimensions, color));
+	game->entities->push_back(make_unique<FadeOutGlow>(explosionDimensions.x * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionDimensions, color));
 }
 
 class ExplodeOnLanding : public Item
@@ -725,53 +696,65 @@ public:
 	Vec2f explosionDimensions;
 
 	ExplodeOnLanding(Vec2f explosionDimensions = vOne, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
+		RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health),
+		explosionDimensions(explosionDimensions), explosionDamage(explosionDamage)
+	{
+		itemOD = ITEMOD::EXPLODEONLANDING;
+	}
 
 	ExplodeOnLanding(Item* baseClass, Vec2f explosionDimensions = vOne, int explosionDamage = 1, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float shootSpeed = 0.25f, Vec2f dimensions = vOne) :
-		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions), explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
+		float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health),
+		explosionDimensions(explosionDimensions), explosionDamage(explosionDamage) { }
 
-	virtual Item Clone(int count)
+	Item Clone(int count) override
 	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
+		return ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
 	}
 
-	virtual Item Clone()
-	{
-		return ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
-	}
-
-	virtual Item* Clone2(int count)
+	Item* Clone2(int count) override
 	{
 		return new ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
-	}
-
-	virtual Item* Clone2()
-	{
-		return new ExplodeOnLanding(baseClass, explosionDimensions, explosionDamage, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions);
-	}
-
-	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
-	{
-		CreateExplosion(pos, explosionDimensions, color, name + string(" shot by " + creatorName), damage, explosionDamage, creator);
 	}
 };
 
-class CorruptOnKill : public PlacedOnLanding
+namespace ItemODs
 {
-public:
-	using PlacedOnLanding::PlacedOnLanding;
-
-	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) override
+	void ItemOD(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		if (callType == 2)
-			PlacedOnLanding::OnDeath(pos, creator, creatorName, callReason, callType);
-		else
-			Item::OnDeath(pos, creator, creatorName, callReason, callType);
+		game->entities->push_back(make_unique<Collectible>(*item, pos));
 	}
-};
+
+	void PlacedOnLandingOD(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item);
+
+		if (((Entity*)game->player)->Overlaps(pos, pOL->dimensions))
+		{
+			pOL->OnDeath(ITEMOD::ITEM, pos, creator, creatorName, callReason, callType);
+			return;
+		}
+		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, up, creator);
+		if (pOL->sayCreator)
+			placedEntity->name += " from " + creatorName;
+		game->entities->push_back(std::move(placedEntity));
+	}
+
+	void CorruptOnKillOD(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::ITEM, pos, creator, creatorName, callReason, callType);
+	}
+
+	void ExplodeOnLandingOD(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item);
+		CreateExplosion(pos, explosion->explosionDimensions, explosion->color, explosion->name + string(" shot by " + creatorName),
+			explosion->damage, explosion->explosionDamage, creator);
+	}
+}
 
 namespace Hazards
 {

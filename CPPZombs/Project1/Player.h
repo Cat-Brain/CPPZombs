@@ -13,7 +13,7 @@ public:
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
 	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
-		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		LightBlock(lightColor, lightOrDark, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist)
 	{
 		update = UPDATE::PLAYERU;
@@ -24,6 +24,7 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
+		items.push_back(Resources::bowler->Clone(100));
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::cheese->Clone(3));
 		items.push_back(Resources::shades->Clone(3));
@@ -114,8 +115,6 @@ namespace Updates
 				player->lastMove = tTime;
 				player->TryMove(direction, 3);
 			}
-
-			game->inputs.mousePosition += player->pos - oldPos;
 		}
 
 #pragma endregion

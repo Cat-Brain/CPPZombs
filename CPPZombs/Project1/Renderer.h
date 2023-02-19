@@ -101,15 +101,11 @@ private:
 			fpsCount = 0;
 		}
 		lastTime = static_cast<float>(glfwGetTime());
-		tTime += dTime;
 
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 		inputs.Update(window);
 		Update();
-		// Prepare current framebuffer to be used in rendering of the frame.
-		currentFramebuffer = 1;
-		UseFramebuffer();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -189,7 +185,7 @@ public:
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), static_cast<int>(scale), color);
+		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), scale, color);
 	}
 
 	void DrawTextured(Texture& texture, uint spriteToDraw, Vec2 pos, RGBA color, Vec2 dimensions = vOne)

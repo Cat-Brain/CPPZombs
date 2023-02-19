@@ -1,10 +1,10 @@
 #include "Shader.h"
 
 struct Character {
-    uint textureID;  // ID handle of the glyph texture
-    Vec2         size;       // Size of glyph
-    Vec2         bearing;    // Offset from baseline to left/top of glyph
-    uint advance;    // Offset to advance to next glyph
+    uint textureID = 0;  // ID handle of the glyph texture
+    Vec2 size;          // Size of glyph
+    Vec2 bearing;      // Offset from baseline to left/top of glyph
+    uint advance = 0; // Offset to advance to next glyph
 };
 
 class Font
@@ -12,7 +12,7 @@ class Font
 public:
     std::map<char, Character> characters{};
     uint minimumSize = 0, vao = 0, vbo = 0;
-    int mininumVertOffset = 0.0f, maxVertOffset = 0.0f, vertDisp = 0.0f;
+    int mininumVertOffset = 0, maxVertOffset = 0, vertDisp = 0;
 
     Font() { }
 
@@ -51,7 +51,7 @@ public:
                 continue;
             }
             // generate texture
-            unsigned int texture;
+            uint texture;
             glGenTextures(1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
             glTexImage2D(
@@ -111,11 +111,11 @@ public:
 
     int TextWidth(string text)
     {
-        int result = 0;
+        uint result = 0;
 
         for (int i = 0; i < text.size() - 1; i++)
-            result += characters[i].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
-        result += characters[text.size() - 1].size.x/* >> 6*/;
+            result += characters[text[i]].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
+        result += characters[text[text.size() - 1]].size.x/* >> 6*/;
 
         return result;
     }
@@ -123,7 +123,7 @@ public:
     void Render(string text, Vec2 pos, float scale, RGBA color)
     {
         scale /= minimumSize;
-        int xOffset = 0;
+        float xOffset = 0;
         // activate corresponding render state	
         glUseProgram(textShader);
         glUniform4f(glGetUniformLocation(textShader, "textColor"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
@@ -156,7 +156,7 @@ public:
     void RenderRotated(string text, Vec2 pos, float rotation, float scale, RGBA color)
     {
         scale /= minimumSize;
-        int xOffset = 0;
+        float xOffset = 0;
         // activate corresponding render state	
         glUseProgram(rotatedTextShader);
         glUniform1f(glGetUniformLocation(rotatedTextShader, "rotation"), rotation);

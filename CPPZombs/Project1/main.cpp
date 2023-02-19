@@ -17,29 +17,40 @@ int main()
 	for (int i = 0; i < Plants::plants.size(); i++)
 		Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
 
-#pragma region Update functions
-	using namespace Updates;
-	using namespace Enemies::Updates;
-	updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-	EnemyU, PouncerSnakeU, SpiderU, PouncerU, PlayerU };
-	using namespace DUpdates;
-	using namespace Enemies::DUpdates;
-	dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
-	CatDU };
-	using namespace EDUpdates;
-	using namespace Enemies::EDUpdates;
-	eDUpdates = { EntityEDU, SpiderEDU };
-	using namespace UIUpdates;
-	using namespace Enemies::UIUpdates;
-	uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };
+#pragma region Virtaul functions
+	{
+	#pragma region Update functions
+		using namespace Updates;
+		using namespace Enemies::Updates;
+		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
+		EnemyU, PouncerSnakeU, SpiderU, PouncerU, PlayerU };
+		using namespace DUpdates;
+		using namespace Enemies::DUpdates;
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
+		CatDU };
+		using namespace EDUpdates;
+		using namespace Enemies::EDUpdates;
+		eDUpdates = { EntityEDU, SpiderEDU };
+		using namespace UIUpdates;
+		using namespace Enemies::UIUpdates;
+		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };
 
-	using namespace TUpdates;
-	tUpdates = { DefaultTU, TreeTU, VineTU };
+		using namespace TUpdates;
+		tUpdates = { DefaultTU, TreeTU, VineTU };
 
-	using namespace Enemies::MUpdates;
-	Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, PouncerMU, TankMU };
-	using namespace Enemies::AUpdates;
-	Enemies::aUpdates = { DefaultAU, ExploderAU, VacuumerAU, RangerAU, BoomcatAU, TankAU };
+		using namespace Enemies::MUpdates;
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, PouncerMU, TankMU };
+		using namespace Enemies::AUpdates;
+		Enemies::aUpdates = { DefaultAU, ExploderAU, VacuumerAU, RangerAU, BoomcatAU, TankAU };
+	#pragma endregion
+		
+		using namespace OverlapFuns;
+		overlapFuns = { EntityOF };
+
+		using namespace ItemODs;
+		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD };
+	}
+	
 #pragma endregion
 
 	game = make_unique<Game>();

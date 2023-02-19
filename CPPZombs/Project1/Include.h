@@ -1,7 +1,5 @@
 #pragma region Basic include stuff
 #include "resource.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include "FastNoiseLite.h"
 #include<string>
 #include<set>
@@ -11,6 +9,8 @@
 #include <iostream>
 #include <ft2build.h>
 #include <Windows.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <functional>
 #include FT_FREETYPE_H  
 using namespace std::this_thread;
@@ -56,6 +56,11 @@ unique_ptr<Game> game;
 #pragma region Math
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
+}
+
+inline int CeilToInt(float f)
+{
+	return static_cast<int>(ceilf(f));
 }
 
 inline float RandFloat()

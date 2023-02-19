@@ -5,11 +5,15 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL)));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20, 1, 10, 5, "Player");
-	player = static_cast<Player*>(playerUnique.get());
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
+	player = playerUnique.get();
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
 	totalGamePoints = 0;
+
+	lastWave = tTime;
+	waveCount = 0;
+	shouldSpawnBoss = false;
 
 	planet = std::make_unique<Planet>();
 }
@@ -30,16 +34,23 @@ void Game::Update()
 			TUpdate();
 		else
 		{
-			currentFramebuffer = 0;
-			UseFramebuffer();
+			if (currentFramebuffer != 0)
+			{
+				currentFramebuffer = 0;
+				UseFramebuffer();
+			}
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
-			font.Render(to_string(totalGamePoints) + " points", {-ScrWidth(), int(ScrHeight() * 0.9f)}, ScrHeight() / 10.0f, { 255, 255, 255 });
-			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.7f)  }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.9f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.7f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
 			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.6f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
-			font.Render("Press esc to close.", { -ScrWidth(), int(ScrHeight() * 0.4f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			font.Render("Press enter to restart or esc to close.", { -ScrWidth(), int(ScrHeight() * 0.4f) }, ScrHeight() / 10.0f, { 255, 255, 255 });
+			if (inputs.enter.pressed)
+				Start();
 		}
 	}
+	else
+		font.Render("Paused", { -ScrWidth(), 0 }, ScrHeight() / 5.0f, {255, 255, 255});
 }
 
 void Game::ApplyLighting()
@@ -140,7 +151,7 @@ void Game::ApplyLighting()
 float Game::BrightnessAtPos(Vec2 pos)
 {
 	JRGB ambient = planet->GetAmbient(planet->GetBrightness());
-	int r = ambient.r, g = ambient.g, b = ambient.b;
+	float r = ambient.r, g = ambient.g, b = ambient.b;
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 		if (pos.Squistance(light->pos) < light->range)
 		{
@@ -157,11 +168,16 @@ float Game::BrightnessAtPos(Vec2 pos)
 			g -= light->color.g * multiplier;
 			b -= light->color.b * multiplier;
 		}
-	return static_cast<float>(Clamp(r + g + b, 0, 765)) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
+	return static_cast<float>(ClampF(r + g + b, 0, 765)) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
 }
 
 void Game::TUpdate()
 {
+	// Prepare current framebuffer to be used in rendering of the frame.
+	currentFramebuffer = 1;
+	UseFramebuffer();
+	// In TUpdate such that time doesn't progress whilst paused.
+	tTime += dTime;
 	inputs.FindMousePos(window);
 
 	brightness = planet->GetBrightness();
@@ -190,8 +206,8 @@ void Game::TUpdate()
 	}
 
 	glUseProgram(backgroundShader);
-	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x * 2, PlayerPos().y * 2);
-	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), ScrWidth(), ScrHeight());
+	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x * 2.0f, PlayerPos().y * 2.0f);
+	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), static_cast<float>(ScrWidth()), static_cast<float>(ScrHeight()));
 	glUniform3f(glGetUniformLocation(backgroundShader, "col1"), planet->color1.r / 255.0f, planet->color1.g / 255.0f, planet->color1.b / 255.0f);
 	glUniform3f(glGetUniformLocation(backgroundShader, "col2"), planet->color2.r / 255.0f, planet->color2.g / 255.0f, planet->color2.b / 255.0f);
 	screenSpaceQuad.Draw();
@@ -218,13 +234,13 @@ void Game::TUpdate()
 			font.Render(std::to_string(int(timeTillNextWave)) + "." +
 				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
 				std::to_string(int(timeTillNextBoss)) + "." +
-				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), Vec2(-ScrWidth(), ScrHeight() * 0.95f), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
 		}
 		else
 			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
-				Vec2(-ScrWidth(), ScrHeight() * 0.95f), ScrHeight() / 20.0f, RGBA(0, 255, 255));
-		font.Render(std::to_string(player->health), Vec2(-ScrWidth(), ScrHeight() * 0.9f), ScrHeight() / 20.0f, RGBA(63));
-		font.Render(to_string(totalGamePoints), Vec2(-ScrWidth(), ScrHeight() * 0.85f), ScrHeight() / 20.0f, RGBA(63, 63));
+				Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+		font.Render(std::to_string(player->health), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
+		font.Render(to_string(totalGamePoints), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();
 	}
 

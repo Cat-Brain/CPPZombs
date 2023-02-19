@@ -32,6 +32,13 @@ enum UIUPDATE // User-Interface Update
 
 vector<function<void(Entity*)>> uiUpdates;
 
+enum OVERLAPFUN
+{
+	ENTITYOF
+};
+
+vector<function<bool(Entity*, Vec2, Vec2)>> overlapFuns;
+
 class Entities;
 class Entity
 {
@@ -40,6 +47,7 @@ public:
 	DUPDATE dUpdate;
 	EDUPDATE earlyDUpdate;
 	UIUPDATE uiUpdate;
+	OVERLAPFUN overlapFun;
 	bool shouldUI = false;
 	Entity* baseClass;
 	Entity* creator;
@@ -51,12 +59,14 @@ public:
 	float mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
+	int sortLayer = 0;
+	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
 	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
-		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU)
+		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), overlapFun(OVERLAPFUN::ENTITYOF)
 	{
 	}
 
@@ -124,27 +134,22 @@ public:
 		game->Draw(pos, subScat, dimensions);
 	}
 
+	Vec2 BottomLeft() // Not always accurate.
+	{
+		return (pos + right * (dimensions.x / 2 + 1) - game->PlayerPos() + down * (dimensions.y / 2)) * 2 * trueScreenHeight / midRes.height;
+	}
+
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth); // + 2 * boarder is to avoid clipping to avoid overlapping the text.
 		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
-		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2), COMMON_TEXT_SCALE, textColor);
-	}
-
-	virtual Vec2 BottomLeft()
-	{
-		return (pos + right - game->PlayerPos() + dimensions / 2) * 2 * trueScreenHeight / midRes.height;
-	}
-
-	virtual Vec2 TopRight() 
-	{
-		return BottomLeft() + Vec2(font.TextWidth(name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
+		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
 	virtual void SetPos(Vec2 newPos);
 
-	virtual bool TryMove(Vec2 direction, int force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
@@ -152,59 +157,10 @@ public:
 
 	virtual void OnDeath(Entity* damageDealer) { }
 
-	virtual int SortOrder()
+	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
-		return 0;
+		return overlapFuns[overlapFun](this, pos, dimensions);
 	}
-
-	virtual bool Overlaps(Vec2 pos, Vec2 dim)
-	{
-		return labs(this->pos.x - pos.x) < float(dimensions.x + dim.x) / 2 && labs(this->pos.y - pos.y) < float(dimensions.y + dim.y) / 2;
-	}
-
-	#pragma region bool functions
-
-	virtual bool IsLight()
-	{
-		return true;
-	}
-
-	virtual bool CanAttack()
-	{
-		return true;
-	}
-
-	virtual bool CanConveyer()
-	{
-		return false;
-	}
-
-	virtual bool IsConveyer()
-	{
-		return false;
-	}
-
-	virtual bool IsEnemy()
-	{
-		return false;
-	}
-
-	virtual bool IsProjectile()
-	{
-		return false;
-	}
-
-	virtual bool Corporeal()
-	{
-		return true;
-	}
-
-	virtual bool IsCollectible()
-	{
-		return false;
-	}
-
-	#pragma endregion
 };
 
 
@@ -235,17 +191,12 @@ public:
 	{
 		update = UPDATE::FADEOUTU;
 		dUpdate = DUPDATE::FADEOUTDU;
+		corporeal = false;
 	}
 
 	float Opacity()
 	{
 		return 1.0f - (tTime - startTime) / totalFadeTime;
-	}
-
-
-	bool Corporeal() override
-	{
-		return false;
 	}
 };
 
@@ -280,7 +231,17 @@ namespace UIUpdates
 {
 	void EntityUIU(Entity* entity)
 	{
-		entity->DrawUIBox(entity->BottomLeft(), entity->TopRight(), COMMON_BOARDER_WIDTH, entity->name, entity->color);
+		Vec2 bottomLeft = entity->BottomLeft();
+		Vec2 topRight = bottomLeft + Vec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
+		entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name, entity->color);
+	}
+}
+
+namespace OverlapFuns
+{
+	bool EntityOF(Entity* entity, Vec2 pos, Vec2 dimensions)
+	{
+		return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
 	}
 }
 

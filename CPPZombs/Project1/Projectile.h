@@ -9,14 +9,16 @@ public:
     int damage;
     float speed, begin;
     int callType = 0;
-    bool corporeal;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
-        RGBA subScat = RGBA(), int mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
+        RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
         Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
-        duration(duration), damage(damage), speed(speed), begin(tTime), corporeal(corporeal)
+        duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         update = UPDATE::PROJECTILEU;
+        isProjectile = true;
+        sortLayer = 1;
+        this->corporeal = corporeal;
         Start();
     }
 
@@ -62,21 +64,6 @@ public:
             offset -= Vec2(offset);
         }
     }
-
-    int SortOrder() override
-    {
-        return 1;
-    }
-
-    bool IsProjectile() override
-    {
-        return true;
-    }
-
-    bool Corporeal() override
-    {
-        return corporeal;
-    }
 };
 
 namespace Updates
@@ -84,8 +71,13 @@ namespace Updates
     void ProjectileU(Entity* _entity)
     {
         Projectile* projectile = static_cast<Projectile*>(_entity);
-        if (tTime - projectile->begin >= projectile->duration / projectile->speed)
+
+        if (tTime - projectile->begin >= (projectile->duration + 1) / projectile->speed)
             return projectile->DestroySelf(projectile);
+
+        // Change to looking at other more custom variable that can be stored in item better.
+        if (projectile->corporeal)
+            return projectile->MovePos();
 
         Entity* entity;
 
@@ -113,7 +105,7 @@ public:
     Item item;
     string creatorName;
 
-    ShotItem(Item item, float speed = 8.0f, Vec2f dimensions = Vec2f(1, 1), int mass = 1, int maxHealth = 1, int health = 1) :
+    ShotItem(Item item, float speed = 8.0f, Vec2f dimensions = Vec2f(1, 1), float mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, dimensions, item.color, RGBA(), mass, maxHealth, health), item(item)
     {
         Start();
@@ -131,6 +123,7 @@ public:
         begin = tTime;
         damage = item.damage;
         creatorName = creator->name;
+        health = item.health;
         Start();
     }
 
@@ -151,9 +144,9 @@ public:
         mass = item.mass;
         corporeal = item.corporeal;
         dimensions = item.dimensions;
-        if (creator == nullptr)
+        health = item.health;
             name = item.name;
-        else
+        if (creator != nullptr)
             creatorName = creator->name;
         Start();
     }
@@ -176,7 +169,7 @@ public:
 
 namespace Projectiles
 {
-    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), 2, 1, 30.0f);
+    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), RGBA(), 2, 1, 30.0f);
 }
 
 ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, vOne, 1, 1, 1);

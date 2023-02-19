@@ -6,10 +6,18 @@ public:
 	Item baseItem;
 
 	Collectible(Item baseItem, Vec2 pos = vZero) :
-		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.subScat, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, baseItem.color, baseItem.subScat, 1, 1, 1, baseItem.name), baseItem(baseItem)
+	{
+		corporeal = false;
+		isCollectible = true;
+	}
 
 	Collectible(Item baseItem, Vec2 pos, RGBA color) :
-		Entity(pos, baseItem.dimensions, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem) { }
+		Entity(pos, baseItem.dimensions, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
+	{
+		corporeal = false;
+		isCollectible = true;
+	}
 
 	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
 
@@ -23,16 +31,6 @@ public:
 	{
 		return new Collectible(baseItem.Clone(count), pos, color);
 	}
-
-	bool Corporeal() override
-	{
-		return false;
-	}
-
-	bool IsCollectible() override
-	{
-		return true;
-	}
 };
 
 namespace Collectibles
@@ -40,4 +38,5 @@ namespace Collectibles
 	Collectible* copper = new Collectible(*Resources::copper, vZero);
 	Collectible* iron = new Collectible(*Resources::iron, vZero);
 	Collectible* rock = new Collectible(*Resources::rock, vZero);
+	Collectible* bowler = new Collectible(*Resources::bowler, vZero);
 }
