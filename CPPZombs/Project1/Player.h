@@ -24,7 +24,6 @@ public:
 	{
 		LightBlock::Start();
 		items = Items();
-		items.push_back(Resources::bowler->Clone(100));
 		items.push_back(Resources::copper->Clone(10));
 		items.push_back(Resources::cheese->Clone(3));
 		items.push_back(Resources::shades->Clone(3));

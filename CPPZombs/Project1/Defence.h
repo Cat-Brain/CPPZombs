@@ -1,5 +1,8 @@
 #include "BuildingBlocks.h"
 
+
+float difficultyGrowthModifier[] = { 2.0f, 1.0f, 0.5f };
+
 class Tree : public FunctionalBlock2
 {
 public:
@@ -41,7 +44,7 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * game->BrightnessAtPos(pos);
+		return game->dTime * game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->difficulty];
 	}
 };
 
@@ -90,7 +93,7 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * (1.0f - game->BrightnessAtPos(pos));
+		return game->dTime * (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->difficulty];
 	}
 
 	void OnDeath(Entity* damageDealer) override

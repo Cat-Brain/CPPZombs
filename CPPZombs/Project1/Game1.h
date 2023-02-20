@@ -10,6 +10,13 @@ enum UIMODE
 	MAINMENU, INGAME, PAUSED
 };
 
+enum DIFFICULTY
+{
+	EASY, MEDIUM, HARD
+};
+
+string difficultyStrs[] = { "Easy", "Medium", "Hard" };
+
 class Game : public Renderer
 {
 public:
@@ -19,6 +26,7 @@ public:
 
 	bool showUI = true;
 	UIMODE uiMode = UIMODE::MAINMENU;
+	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;

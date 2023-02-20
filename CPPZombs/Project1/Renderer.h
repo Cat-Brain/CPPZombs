@@ -241,7 +241,7 @@ public:
 	void DrawFramebufferOnto(uint newFramebuffer)
 	{
 		glUseProgram(framebufferShader);
-		glBindTexture(GL_TEXTURE_2D, framebuffers[currentFramebuffer - 1]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
+		glBindTexture(GL_TEXTURE_2D, framebuffers[static_cast<size_t>(currentFramebuffer) - 1]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
 		glUniform1i(glGetUniformLocation(framebufferShader, "screenTexture"), currentFramebuffer - 1);
 		glUniform1f(glGetUniformLocation(framebufferShader, "currentScrRat"), (float)ScrWidth() / (float)ScrHeight());
 

@@ -1001,7 +1001,12 @@ namespace Enemies
 
 		static int GetRoundPoints()
 		{
-			return static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
+			if (game->difficulty == DIFFICULTY::EASY)
+				return static_cast<int>(pow(1.25, waveCount)) + waveCount * 2 - 1;
+			else if (game->difficulty == DIFFICULTY::MEDIUM)
+				return static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
+			else // difficulty == hard
+				return static_cast<int>(pow(1.45, waveCount)) + waveCount * 5 + 3;
 		}
 
 		Instance RandomClone();

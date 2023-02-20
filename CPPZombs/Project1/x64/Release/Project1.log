@@ -1,15 +1,8 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(52,44): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(57,44): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(59,49): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(86,46): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(91,46): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(101,45): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(106,45): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  259 of 3750 functions ( 6.9%) were compiled, the rest were copied from previous compilation.
-    4 functions were new in current compilation
-    158 functions had inline decision re-evaluated but remain unchanged
+  210 of 3752 functions ( 5.6%) were compiled, the rest were copied from previous compilation.
+    3 functions were new in current compilation
+    122 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

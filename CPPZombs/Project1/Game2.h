@@ -25,15 +25,15 @@ bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if 
 		game->inputs.screenMousePosition.y < minPos.y + scale * font.maxVertOffset / font.minimumSize;
 }
 
-bool InputHoverSquare(Vec2 minPos, float scale, string text) // Renders and returns if this was clicked on(not hovered over).
+bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
 {
 		if (CheckInputSquareHover(minPos, scale, text))
 		{
-			font.Render(text, minPos * 2 - ScrDim(), scale * 2, RGBA(127, 127, 127, 255));
+			font.Render(text, minPos * 2 - ScrDim(), scale * 2, color2);
 			return game->inputs.leftMouse.pressed;
 		}
 		else
-			font.Render(text, { minPos * 2 - ScrDim() }, scale * 2, RGBA(255, 255, 255, 255));
+			font.Render(text, { minPos * 2 - ScrDim() }, scale * 2, color1);
 		return false;
 }
 	
@@ -49,15 +49,24 @@ void Game::Update()
 
 		inputs.FindMousePos(window);
 
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin"))
+		if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
 			Start();
 			uiMode = UIMODE::INGAME;
 		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Exit"))
+		if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		else if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
+		else if (InputHoverSquare(Vec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], difficulty == DIFFICULTY::EASY ?
+			RGBA(0, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
+			difficulty = DIFFICULTY::EASY;
+		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], difficulty == DIFFICULTY::MEDIUM ?
+			RGBA(255, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
+			difficulty = DIFFICULTY::MEDIUM;
+		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
+			RGBA(255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
+			difficulty = DIFFICULTY::HARD;
 	}
 	else
 	{
@@ -83,13 +92,16 @@ void Game::Update()
 
 				inputs.FindMousePos(window);
 
-				if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Restart"))
+				if (InputHoverSquare(Vec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
 				{
 					Start();
 					uiMode = UIMODE::INGAME;
 				}
-				if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Main menu"))
+				if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
 					uiMode = UIMODE::MAINMENU;
+
+				font.Render(difficultyStrs[difficulty], {-ScrWidth(), int(ScrHeight() * -0.5f)}, ScrHeight() / 5.0f,
+					{difficulty == DIFFICULTY::EASY ? 0u : 255u, difficulty == DIFFICULTY::HARD ? 0u : 255u});
 			}
 		}
 		if (uiMode == UIMODE::PAUSED)
@@ -98,12 +110,12 @@ void Game::Update()
 			UseFramebuffer();
 
 			inputs.FindMousePos(window);
-			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Return"))
+			if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 			{
 				player->lastClick = tTime;
 				uiMode = UIMODE::INGAME;
 			}
-			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Main menu"))
+			if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
 				uiMode = UIMODE::MAINMENU;
 		}
 	}
