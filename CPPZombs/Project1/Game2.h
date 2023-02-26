@@ -259,7 +259,7 @@ void Game::TUpdate()
 		timeStartBossPrep = tTime;
 	}
 
-	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 0.0f)
+	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
 	{
 		planet->bosses.SpawnOneRandom();
 		shouldSpawnBoss = false;
@@ -268,9 +268,9 @@ void Game::TUpdate()
 	// New wave:
 	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.slash.pressed)
 	{
+		waveCount++;
 		planet->enemies.SpawnRandomEnemies();
 		lastWave = tTime;
-		waveCount++;
 	}
 
 	glUseProgram(backgroundShader);
