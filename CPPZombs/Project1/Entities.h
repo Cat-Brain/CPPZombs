@@ -546,13 +546,9 @@ public:
 		FadeOut(totalFadeTime, pos, dimensions, color), startRange(range)
 	{
 		dUpdate = DUPDATE::FADEOUTGLOWDU;
+		onDeath = ONDEATH::FADEOUTGLOWOD;
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
-	}
-
-	void OnDeath(Entity* damageDealer) override
-	{
-		game->entities->RemoveLight(lightSource);
 	}
 };
 
@@ -606,6 +602,14 @@ namespace DUpdates
 		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
 		glow->lightSource->range = glow->startRange * glow->Opacity();
 		glow->DUpdate(DUPDATE::FADEOUTDU);
+	}
+}
+
+namespace OnDeaths
+{
+	void FadeOutGlowOD(Entity* entity, Entity* damageDealer)
+	{
+		game->entities->RemoveLight(((FadeOutGlow*)entity)->lightSource);
 	}
 }
 

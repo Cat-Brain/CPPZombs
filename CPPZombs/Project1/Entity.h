@@ -6,14 +6,14 @@
 enum UPDATE // Update
 {
 	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, SPIDERU,
-	POUNCERU, PLAYERU
+	CENTICRAWLERU, POUNCERU, CATACLYSMU, PLAYERU
 };
 
 vector<function<void(Entity*)>> updates;
 
 enum DUPDATE // Draw Update
 {
-	ENTITYDU, FADEOUTDU, FADEOUTPUDDLEDU, FADEOUTGLOWDU, DTOCOLDU, TREEDU, DECEIVERDU, PARENTDU, EXPLODERDU, COLORCYCLERDU, CATDU
+	ENTITYDU, FADEOUTDU, FADEOUTPUDDLEDU, FADEOUTGLOWDU, DTOCOLDU, TREEDU, DECEIVERDU, PARENTDU, EXPLODERDU, COLORCYCLERDU, CATDU, CATACLYSMDU
 };
 
 vector<function<void(Entity*)>> dUpdates;
@@ -39,6 +39,14 @@ enum OVERLAPFUN
 
 vector<function<bool(Entity*, Vec2, Vec2)>> overlapFuns;
 
+enum ONDEATH
+{
+	ENTITYOD, FADEOUTGLOWOD, SHOTITEMOD, LIGHTBLOCKOD, VINEOD, ENEMYOD, PARENTOD, EXPLODEROD, SNAKEOD, POUNCERSNAKEOD, VACUUMEROD, SPIDEROD,
+	CENTICRAWLEROD, PLAYEROD
+};
+
+vector<function<void(Entity*, Entity*)>> onDeaths;
+
 class Entities;
 class Entity
 {
@@ -47,6 +55,7 @@ public:
 	DUPDATE dUpdate;
 	EDUPDATE earlyDUpdate;
 	UIUPDATE uiUpdate;
+	ONDEATH onDeath;
 	OVERLAPFUN overlapFun;
 	bool shouldUI = false;
 	Entity* baseClass;
@@ -66,7 +75,7 @@ public:
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
-		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), overlapFun(OVERLAPFUN::ENTITYOF)
+		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), onDeath(ONDEATH::ENTITYOD), overlapFun(OVERLAPFUN::ENTITYOF)
 	{
 	}
 
@@ -129,6 +138,15 @@ public:
 		uiUpdates[tempUIUpdate](this);
 	}
 
+	void OnDeath(Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
+	{
+		onDeaths[onDeath](this, damageDealer);
+	}
+	void OnDeath(ONDEATH tempOnDeath, Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
+	{
+		onDeaths[tempOnDeath](this, damageDealer);
+	}
+
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
 	{
 		game->Draw(pos, subScat, dimensions);
@@ -154,8 +172,6 @@ public:
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
-
-	virtual void OnDeath(Entity* damageDealer) { }
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
@@ -236,6 +252,8 @@ namespace UIUpdates
 		entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name, entity->color);
 	}
 }
+
+namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
 
 namespace OverlapFuns
 {

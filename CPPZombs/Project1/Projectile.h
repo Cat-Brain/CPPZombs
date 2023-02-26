@@ -108,6 +108,7 @@ public:
     ShotItem(Item item, float speed = 8.0f, Vec2f dimensions = Vec2f(1, 1), float mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, dimensions, item.color, RGBA(), mass, maxHealth, health), item(item)
     {
+        onDeath = ONDEATH::SHOTITEMOD;
         Start();
     }
 
@@ -160,12 +161,16 @@ public:
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }
-
-    void OnDeath(Entity* damageDealer) override
-    {
-        item.baseClass->OnDeath(pos, creator, creatorName, damageDealer, callType);
-    }
 };
+
+namespace OnDeaths
+{
+    void ShotItemOD(Entity* entity, Entity* damageDealer)
+    {
+        ShotItem* shot = static_cast<ShotItem*>(entity);
+        shot->item.baseClass->OnDeath(shot->pos, shot->creator, shot->creatorName, damageDealer, shot->callType);
+    }
+}
 
 namespace Projectiles
 {

@@ -41,7 +41,9 @@ public:
 		RGBA color2 = RGBA(), RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
-	{ }
+	{
+		onDeath = ONDEATH::LIGHTBLOCKOD;
+	}
 
 	void Start() override
 	{
@@ -71,15 +73,18 @@ public:
 		DToCol::SetPos(newPos);
 		lightSource->pos = pos;
 	}
-
-	void OnDeath(Entity* damageDealer) override
-	{
-		if (lightOrDark)
-			game->entities->RemoveLight(lightSource);
-		else
-			game->entities->RemoveDark(lightSource);
-	}
 };
+
+namespace OnDeaths {
+	void LightBlockOD(Entity* entity, Entity* damageDealer)
+	{
+		LightBlock* light = static_cast<LightBlock*>(entity);
+		if (light->lightOrDark)
+			game->entities->RemoveLight(light->lightSource);
+		else
+			game->entities->RemoveDark(light->lightSource);
+	}
+}
 
 namespace Shootables
 {

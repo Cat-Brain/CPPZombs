@@ -259,9 +259,9 @@ void Game::TUpdate()
 		timeStartBossPrep = tTime;
 	}
 
-	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
+	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 0.0f)
 	{
-		planet->bosses.SpawnRandomEnemies();
+		planet->bosses.SpawnOneRandom();
 		shouldSpawnBoss = false;
 	}
 	waveCount += int(inputs.period.pressed) - int(inputs.comma.pressed);

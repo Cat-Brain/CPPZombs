@@ -7,7 +7,7 @@ namespace Enemies
 	class Enemy;
 	enum MUPDATE
 	{
-		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, POUNCERMU, TANKMU
+		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, CENTICRAWLER, POUNCERMU, TANKMU
 	};
 	vector<function<bool(Enemy*)>> mUpdates;
 
@@ -36,6 +36,7 @@ namespace Enemies
 		{
 			update = UPDATE::ENEMYU;
 			uiUpdate = UIUPDATE::ENEMYUIU;
+			onDeath = ONDEATH::ENEMYOD;
 			isEnemy = true;
 		}
 
@@ -73,19 +74,6 @@ namespace Enemies
 		bool AUpdate(AUPDATE tempAUpdate)
 		{
 			return aUpdates[tempAUpdate](this);
-		}
-
-		void OnDeath(Entity* damageDealer) override
-		{
-			totalGamePoints += points;
-			int randomValue = rand() % 2048; // 0-2047
-			if (randomValue > 1022) // Half of the time is true I think.
-			{
-				if (randomValue > 1500) // 1501-2047 ~= 1/4
-					game->entities->push_back(Collectibles::copper->Clone(pos));
-				else if (randomValue % 16 < Collectibles::Seeds::plantSeeds.size()) // This system will work until there's > 16 plants.
-					game->entities->push_back(Collectibles::Seeds::plantSeeds[randomValue % 16]->Clone(pos));
-			}
 		}
 
 		virtual int Cost()
@@ -135,6 +123,7 @@ namespace Enemies
 		{
 			Start();
 			dUpdate = DUPDATE::PARENTDU;
+			onDeath = ONDEATH::PARENTOD;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -144,16 +133,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return std::move(newEnemy);
-		}
-
-		void OnDeath(Entity* damageDealer) override
-		{
-			Enemy::OnDeath(damageDealer);
-
-			game->entities->push_back(child->Clone(pos + up));
-			game->entities->push_back(child->Clone(pos + right));
-			game->entities->push_back(child->Clone(pos + down));
-			game->entities->push_back(child->Clone(pos + left));
 		}
 	};
 
@@ -169,6 +148,7 @@ namespace Enemies
 		{
 			dUpdate = DUPDATE::EXPLODERDU;
 			aUpdate = AUPDATE::EXPLODERAU;
+			onDeath = ONDEATH::EXPLODEROD;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -178,12 +158,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
-		}
-
-		void OnDeath(Entity* damageDealer) override
-		{
-			Enemy::OnDeath(damageDealer);
-			CreateExplosion(pos, explosionDimensions, color, name, 0, damage, this);
 		}
 	};
 
@@ -200,6 +174,7 @@ namespace Enemies
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name), length(length), color3(color3), color4(color4)
 		{
+			onDeath = ONDEATH::SNAKEOD;
 			mUpdate = MUPDATE::SNAKEMU;
 		}
 
@@ -247,18 +222,6 @@ namespace Enemies
 					back->SetPos(lastPos);
 		}
 
-		void OnDeath(Entity* damageDealer) override
-		{
-			Enemy::OnDeath(damageDealer);
-			if (back != nullptr)
-			{
-				back->front = nullptr;
-				back->color = color3;
-			}
-			if (front != nullptr)
-				front->back = nullptr;
-		}
-
 		int Cost() override
 		{
 			return points / 5;
@@ -279,6 +242,7 @@ namespace Enemies
 			pounceTime(pounceTime), speed(speed)
 		{
 			update = UPDATE::POUNCERSNAKEU;
+			onDeath = ONDEATH::POUNCERSNAKEOD;
 			mUpdate = MUPDATE::POUNCERSNAKEMU;
 		}
 
@@ -311,16 +275,6 @@ namespace Enemies
 			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
 				game->entities->push_back(std::move(enemies[i]));
 			return std::move(enemies[0]); // Do 0 here.
-		}
-
-		void OnDeath(Entity* damageDealer) override
-		{
-			Snake::OnDeath(damageDealer);
-			if (back != nullptr)
-			{
-				((PouncerSnake*)back)->offset = offset;
-				((PouncerSnake*)back)->direction = direction;
-			}
 		}
 	};
 
@@ -367,6 +321,7 @@ namespace Enemies
 			Enemy(timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name),
 			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
 		{
+			onDeath = ONDEATH::VACUUMEROD;
 			mUpdate = MUPDATE::VACUUMERMU;
 			aUpdate = AUPDATE::VACUUMERAU;
 		}
@@ -378,15 +333,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
-		}
-
-		void OnDeath(Entity* damageDealer) override
-		{
-			Enemy::OnDeath(damageDealer);
-			for (Item item : items)
-			{
-				game->entities->push_back(make_unique<Collectible>(item, pos));
-			}
 		}
 	};
 
@@ -430,6 +376,7 @@ namespace Enemies
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
 		{
 			earlyDUpdate = EDUPDATE::SPIDEREDU;
+			onDeath = ONDEATH::SPIDEROD;
 			update = UPDATE::SPIDERU;
 		}
 
@@ -467,11 +414,19 @@ namespace Enemies
 			return pos + Vec2f(sinf(rotation), cosf(rotation)) * legLength;
 		}
 
-		void OnDeath(Entity* damageDealer) override
+		void UpdateLegs()
 		{
-			Enemy::OnDeath(damageDealer);
 			for (int i = 0; i < legCount; i++)
-				delete legs[i];
+			{
+				if (tTime - lastLegUpdates[i] > legCycleSpeed)
+				{
+					lastLegUpdates[i] += legCycleSpeed;
+					Vec2f desiredPos = LegPos(i) + Vec2f(game->PlayerPos() - pos).Normalized() * legTolerance * 0.5f;
+					if (legs[i]->desiredPos.Distance(desiredPos) > legTolerance)
+						legs[i]->desiredPos = desiredPos;
+				}
+				legs[i]->Update();
+			}
 		}
 	};
 
@@ -501,6 +456,48 @@ namespace Enemies
 			for (int i = 0; i < damage; i++)
 				game->entities->push_back(baseChild->Clone(pos - dimensions + vOne + Vec2f(RandFloat() * ((dimensions.x + 1) * 2), RandFloat() * ((dimensions.y + 1) * 2)), up, this));
 			return Spider::DealDamage(damage, damageDealer);
+		}
+	};
+
+	class Centicrawler : public Spider
+	{
+	public:
+		Centicrawler* back = nullptr, * front = nullptr;
+
+		Centicrawler(LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+			float timePer = 0.5f, float moveSpeed = 2.0f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2f dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
+			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed, timePer, moveSpeed, points, firstWave, damage, dimensions, color, color2, subScat, mass, maxHealth, health, name)
+		{
+			update = UPDATE::CENTICRAWLERU;
+			onDeath = ONDEATH::CENTICRAWLEROD;
+			mUpdate = MUPDATE::CENTICRAWLER;
+		}
+
+		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
+		{
+			unique_ptr<Centicrawler> newEnemy = make_unique<Centicrawler>(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->back = nullptr;
+			newEnemy->front = nullptr;
+			newEnemy->Start();
+			return std::move(newEnemy);
+		}
+
+		bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr) override
+		{
+			return false;
+		}
+
+		void SetPos(Vec2 newPos) override
+		{
+			Vec2 lastPos = pos;
+			Spider::SetPos(newPos);
+			if (lastPos != pos)
+				if (back != nullptr)
+					back->SetPos(lastPos);
 		}
 	};
 
@@ -592,13 +589,21 @@ namespace Enemies
 	class Cataclysm : public BoomCat
 	{
 	public:
-		Cat* normalChild, * boomChild;
+		float lastStartedCircle = -100, circleTime, circleRadius, spinSpeed;
+		float lastShoot = -100, timePerShot;
+		Projectile* projectile;
+		RGBA color4;
 
-		Cataclysm(Cat* normalChild, Cat* boomChild, Vec2 explosionDimensions, float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
-			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA subScat = RGBA(),
+		Cataclysm(float circleTime, float circleRadius, float spinSpeed, Projectile* projectile, float timePerShot, Vec2 explosionDimensions,
+			float pounceTime, float speed, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+			Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(), RGBA subScat = RGBA(),
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			BoomCat(explosionDimensions, pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3, subScat, mass, maxHealth, health, name), normalChild(normalChild), boomChild(boomChild)
-		{ }
+			BoomCat(explosionDimensions, pounceTime, speed, timePer, timePerMove, points, firstWave, damage, dimensions, color, color2, color3,
+				subScat, mass, maxHealth, health, name), circleTime(circleTime), circleRadius(circleRadius), spinSpeed(spinSpeed), projectile(projectile), timePerShot(timePerShot), color4(color4)
+		{
+			update = UPDATE::CATACLYSMU;
+			dUpdate = DUPDATE::CATACLYSMDU;
+		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
 		{
@@ -611,11 +616,15 @@ namespace Enemies
 
 		int DealDamage(int damage, Entity* damageDealer) override
 		{
-			if (health == 1 && damage > 0)
-				game->entities->push_back(boomChild->Clone(pos, up, this));
-			else if (damage > 0)
-				game->entities->push_back(normalChild->Clone(pos, up, this));
-			return Cat::DealDamage(Clamp(damage, -1, 1), damageDealer);
+			if (tTime - lastStartedCircle > circleTime)
+			{
+				if (damage > 0)
+				{
+					lastStartedCircle = tTime;
+				}
+				return Cat::DealDamage(damage, damageDealer);
+			}
+			return 0;
 		}
 	};
 
@@ -679,17 +688,32 @@ namespace Enemies
 			Spider* spider = static_cast<Spider*>(entity);
 
 			spider->Update(UPDATE::ENEMYU);
-			for (int i = 0; i < spider->legCount; i++)
+			spider->UpdateLegs();
+		}
+
+		void CenticrawlerU(Entity* entity)
+		{
+			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
+
+			if (centicrawler->front == nullptr)
 			{
-				if (tTime - spider->lastLegUpdates[i] > spider->legCycleSpeed)
+				centicrawler->Update(UPDATE::SPIDERU);
+				Centicrawler* farthestBack = centicrawler;
+				while (farthestBack->back != nullptr)
+					farthestBack = farthestBack->back;
+				vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(centicrawler->pos, centicrawler->dimensions + 1);
+				for (int i = 0; i < hitEntities.size(); i++)
 				{
-					spider->lastLegUpdates[i] += spider->legCycleSpeed;
-					Vec2f desiredPos = spider->LegPos(i) + Vec2f(game->PlayerPos() - spider->pos).Normalized() * spider->legTolerance * 0.5f;
-					if (spider->legs[i]->desiredPos.Distance(desiredPos) > spider->legTolerance)
-						spider->legs[i]->desiredPos = desiredPos;
+					Centicrawler* currentCenticrawler = static_cast<Centicrawler*>(hitEntities[i]);
+					if (currentCenticrawler != centicrawler && currentCenticrawler->baseClass == centicrawler->baseClass && currentCenticrawler->back == nullptr && currentCenticrawler != farthestBack)
+					{
+						currentCenticrawler->back = centicrawler;
+						centicrawler->front = currentCenticrawler;
+						return;
+					}
 				}
-				spider->legs[i]->Update();
 			}
+			else centicrawler->UpdateLegs();
 		}
 
 		void PouncerU(Entity* entity)
@@ -707,6 +731,35 @@ namespace Enemies
 					pouncer->offset -= Vec2(pouncer->offset);
 				}
 			}
+		}
+
+		void CataclysmU(Entity* entity)
+		{
+			Cataclysm* cat = static_cast<Cataclysm*>(entity);
+
+			if (tTime - cat->lastStartedCircle < cat->circleTime)
+			{
+				float rotation = (tTime - cat->lastStartedCircle) * cat->spinSpeed;
+				cat->TryMove(game->PlayerPos() - cat->pos + Vec2(sinf(rotation) * cat->circleRadius, cosf(rotation) * cat->circleRadius), cat->mass * 2);
+
+				if (tTime - cat->lastShoot > cat->timePerShot)
+				{
+					cat->lastShoot = tTime;
+					int count = cat->maxHealth - cat->health + 1;
+					Vec2f fPos = cat->pos;
+
+					for (int i = 1; i < count; i++)
+					{
+						fPos = (fPos - game->PlayerPos()).Rotate(PI_F * 2 / count) + game->PlayerPos();
+						Vec2 pos = fPos;
+						game->entities->push_back(cat->projectile->Clone(pos, game->PlayerPos() - pos/*(game->PlayerPos() - pos) * CeilToInt(cat->projectile->duration)*/, cat));
+					}
+
+					game->entities->push_back(cat->projectile->Clone(cat->pos, game->PlayerPos() - cat->pos/*(game->PlayerPos() - cat->pos) * CeilToInt(cat->projectile->duration)*/, cat));
+
+				}
+			}
+			else cat->Update(UPDATE::POUNCERU);
 		}
 	}
 
@@ -797,6 +850,16 @@ namespace Enemies
 			cat->pos = tempPos;
 			cat->DUpdate(DUPDATE::DTOCOLDU);
 		}
+
+		void CataclysmDU(Entity* entity)
+		{
+			Cataclysm* cat = static_cast<Cataclysm*>(entity);
+			RGBA tempColor = cat->color;
+			if (tTime - cat->lastStartedCircle < cat->circleTime)
+				cat->color = cat->color.Lerp(cat->color4, sinf(tTime / 2));
+			cat->DUpdate(DUPDATE::CATDU);
+			cat->color = tempColor;
+		}
 	}
 
 	namespace EDUpdates
@@ -817,6 +880,93 @@ namespace Enemies
 			Vec2 bottomLeft = entity->BottomLeft();
 			Vec2 topRight = bottomLeft + Vec2(font.TextWidth(entity->name + " " + health) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 			entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name + " " + health, entity->color);
+		}
+	}
+
+	namespace OnDeaths
+	{
+		void EnemyOD(Entity* entity, Entity* damageDealer)
+		{
+			Enemy* enemy = static_cast<Enemy*>(entity);
+			totalGamePoints += enemy->points;
+			int randomValue = rand() % 2048; // 0-2047
+			if (randomValue > 1022) // Half of the time is true I think.
+			{
+				if (randomValue > 1500) // 1501-2047 ~= 1/4
+					game->entities->push_back(Collectibles::copper->Clone(enemy->pos));
+				else if (randomValue % 16 < Collectibles::Seeds::plantSeeds.size()) // This system will work until there's > 16 plants.
+					game->entities->push_back(Collectibles::Seeds::plantSeeds[randomValue % 16]->Clone(enemy->pos));
+			}
+		}
+
+		void ParentOD(Entity* entity, Entity* damageDealer)
+		{
+			Parent* parent = static_cast<Parent*>(entity);
+			parent->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+
+			game->entities->push_back(parent->child->Clone(parent->pos + up));
+			game->entities->push_back(parent->child->Clone(parent->pos + right));
+			game->entities->push_back(parent->child->Clone(parent->pos + down));
+			game->entities->push_back(parent->child->Clone(parent->pos + left));
+		}
+
+		void ExploderOD(Entity* entity, Entity* damageDealer)
+		{
+			Exploder* exploder = static_cast<Exploder*>(entity);
+			exploder->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			CreateExplosion(exploder->pos, exploder->explosionDimensions, exploder->color, exploder->name, 0, exploder->damage, exploder);
+		}
+
+		void SnakeOD(Entity* entity, Entity* damageDealer)
+		{
+			Snake* snake = static_cast<Snake*>(entity);
+			snake->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			if (snake->back != nullptr)
+			{
+				snake->back->front = nullptr;
+				snake->back->color = snake->color3;
+			}
+			if (snake->front != nullptr)
+				snake->front->back = nullptr;
+		}
+
+		void PouncerSnakeOD(Entity* entity, Entity* damageDealer)
+		{
+			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
+			pSnake->OnDeath(ONDEATH::SNAKEOD, damageDealer);
+			if (pSnake->back != nullptr)
+			{
+				((PouncerSnake*)pSnake->back)->offset = pSnake->offset;
+				((PouncerSnake*)pSnake->back)->direction = pSnake->direction;
+			}
+		}
+
+		void VacuumerOD(Entity* entity, Entity* damageDealer)
+		{
+			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
+			vacuumer->OnDeath(ENEMYOD, damageDealer);
+			for (Item item : vacuumer->items)
+			{
+				game->entities->push_back(make_unique<Collectible>(item, vacuumer->pos));
+			}
+		}
+
+		void SpiderOD(Entity* entity, Entity* damageDealer)
+		{
+			Spider* spider = static_cast<Spider*>(entity);
+			spider->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			for (int i = 0; i < spider->legCount; i++)
+				delete spider->legs[i];
+		}
+
+		void CenticrawlerOD(Entity* entity, Entity* damageDealer)
+		{
+			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
+			centicrawler->OnDeath(ONDEATH::SPIDEROD, damageDealer);
+			if (centicrawler->back != nullptr)
+				centicrawler->back->front = nullptr;
+			if (centicrawler->front != nullptr)
+				centicrawler->front->back = nullptr;
 		}
 	}
 
@@ -850,6 +1000,15 @@ namespace Enemies
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
 			if (abs(vacuumer->pos.Squistance(game->PlayerPos()) - vacuumer->desiredDistance) > 2.0f)
 				vacuumer->TryMove(Vec2f(game->PlayerPos() - vacuumer->pos).Rormalized() * (-1 + 2 * int(vacuumer->pos.Squistance(game->PlayerPos()) > vacuumer->desiredDistance)), vacuumer->mass * 2);
+			return true;
+		}
+
+		bool CenticrawlerMU(Enemy* enemy)
+		{
+			Centicrawler* centicrawler = static_cast<Centicrawler*>(enemy);
+			if (centicrawler->front == nullptr)
+				centicrawler->Enemy::TryMove(Vec2f(game->PlayerPos() - centicrawler->pos).Rormalized() * centicrawler->dimensions, centicrawler->mass * 2);
+
 			return true;
 		}
 
@@ -958,6 +1117,7 @@ namespace Enemies
 	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f);
 	Projectile* tinyTankProjectile = new Projectile(15.0f, 1, 8.0f, vOne, RGBA(51, 51, 51), RGBA(5, 5, 5), 1, 1, 1, "Tiny Tank Projectile");
 	Enemy* child = new Enemy(1.0f, 0.125f, 0, 0, 1, vOne, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
+	Centicrawler* centicrawler = new Centicrawler(*spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 0, 0, 1, vOne, RGBA(186, 7, 66), RGBA(), RGBA(55, 55, 55), 1, 6, 6, "Centicrawler");
 
 	// Earlies - 1
 	Enemy* walker = new Enemy(0.75f, 0.5f, 1, 1, 1, vOne, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
@@ -973,7 +1133,7 @@ namespace Enemies
 
 	// Mid-lates - 6
 	Parent* parent = new Parent(child, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
-	Parent* spiderParent = new Parent(spider, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
+	Parent* spiderParent = new Parent(centicrawler, 1.0f, 1.0f, 4, 6, 1, vOne * 5, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
 	Snake* snake = new Snake(30, 0.5f, 0.25f, 30, 6, 1, vOne, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
 	
 	// Lates - 8
@@ -987,10 +1147,11 @@ namespace Enemies
 	// Very lates - 12
 	Cat* cat = new Cat(2.0f, 16.0f, 0.25f, 3.0f, 45, 12, 1, vOne, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), RGBA(), 1, 9, 9, "Cat");
 	BoomCat* boomCat = new BoomCat(vOne * 9, 2.0f, 12.0f, 1.0f, 4.0f, 45, 12, 1, vOne * 3, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), RGBA(), 9, 9, 9, "Boom Cat");
-	Spoobderb* spoobderb = new Spoobderb(spider, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 0.5f, 50, 12, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
+	Spoobderb* spoobderb = new Spoobderb(centicrawler, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 0.5f, 50, 12, 1, vOne * 7, RGBA(77, 14, 35), RGBA(), RGBA(55, 55, 55), 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 	// Bosses - Special
-	Cataclysm* cataclysm = new Cataclysm(cat, boomCat, vOne * 13, 5.0f, 12.0f, 2.0f, 5.0f, 250, 12, 1, vOne * 7, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, cat->dimensions, cat->color, cat->subScat, 1, 1, 1, "Cataclysmic Bullet");
+	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, 0.0625f, vOne * 13, 5.0f, 12.0f, 0.5f, 5.0f, 1000, 12, 1, vOne * 7, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 	class Instance;
@@ -1036,6 +1197,12 @@ namespace Enemies
 				game->entities->push_back(currentlySpawnableEnemies[currentIndex]->Clone(Vec2f(cosf(randomValue), sinf(randomValue)) * ScrDim() * 0.5f * 1.415f + game->PlayerPos()));
 				totalCost += currentlySpawnableEnemies[currentIndex]->Cost();
 			}
+		}
+
+		void SpawnOneRandom()
+		{
+			float randomValue = RandFloat() * 6.283184f;
+			game->entities->push_back((*this)[rand() % size()]->Clone(Vec2f(cosf(randomValue), sinf(randomValue)) * ScrDim() * 0.5f * 1.415f + game->PlayerPos()));
 		}
 
 		void SpawnRandomEnemies(int cost)

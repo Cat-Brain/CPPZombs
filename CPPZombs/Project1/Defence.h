@@ -75,6 +75,7 @@ public:
 		maxGenerations(maxGenerations), generation(0)
 	{
 		uiUpdate = UIUPDATE::VINEUIU;
+		onDeath = ONDEATH::VINEOD;
 		tUpdate = TUPDATE::VINETU;
 	}
 
@@ -95,16 +96,19 @@ public:
 	{
 		return game->dTime * (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->difficulty];
 	}
-
-	void OnDeath(Entity* damageDealer) override
-	{
-		Tree::OnDeath(damageDealer);
-		if (rand() % 100 < chanceForSeed)
-			game->entities->push_back(seed->Clone(pos));
-		else
-			game->entities->push_back(collectible->Clone(pos));
-	}
 };
+
+namespace OnDeaths
+{
+	void VineOD(Entity* entity, Entity* damageDealer)
+	{
+		Vine* vine = static_cast<Vine*>(entity);
+		if (rand() % 100 < vine->chanceForSeed)
+			game->entities->push_back(vine->seed->Clone(vine->pos));
+		else
+			game->entities->push_back(vine->collectible->Clone(vine->pos));
+	}
+}
 
 
 namespace TUpdates

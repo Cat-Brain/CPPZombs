@@ -23,11 +23,11 @@ int main()
 		using namespace Updates;
 		using namespace Enemies::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, PouncerSnakeU, SpiderU, PouncerU, PlayerU };
+		EnemyU, PouncerSnakeU, SpiderU, CenticrawlerU, PouncerU, CataclysmU, PlayerU };
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
-		CatDU };
+		CatDU, CataclysmDU };
 		using namespace EDUpdates;
 		using namespace Enemies::EDUpdates;
 		eDUpdates = { EntityEDU, SpiderEDU };
@@ -39,11 +39,16 @@ int main()
 		tUpdates = { DefaultTU, TreeTU, VineTU };
 
 		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, PouncerMU, TankMU };
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, CenticrawlerMU, PouncerMU, TankMU };
 		using namespace Enemies::AUpdates;
 		Enemies::aUpdates = { DefaultAU, ExploderAU, VacuumerAU, RangerAU, BoomcatAU, TankAU };
 	#pragma endregion
 		
+		using namespace OnDeaths;
+		using namespace Enemies::OnDeaths;
+		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD, VacuumerOD,
+		SpiderOD, CenticrawlerOD, PlayerOD };
+
 		using namespace OverlapFuns;
 		overlapFuns = { EntityOF };
 
