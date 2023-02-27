@@ -1,385 +1,132 @@
 #include "Texture.h"
 
-class Vec2
+typedef glm::ivec2 iVec2;
+
+#pragma region iVec2 functions
+inline iVec2 RotateLeft(iVec2 a)
 {
-public:
-	int x, y;
+	return iVec2(-a.y, a.x);
+}
 
-	Vec2(int x = 0, int y = 0) :
-		x(x), y(y) { }
-
-
-	inline Vec2 RotateLeft()
-	{
-		return Vec2(-y, x);
-	}
-
-	Vec2 RotateLeft(int amount)
-	{
-		int rotation = JMod(amount, 4);
-		return Vec2(x * int(rotation == 0) - y * int(rotation == 1) - x * int(rotation = 2) + y * int(rotation == 3),
-			y * int(rotation == 0) + x * int(rotation == 1) - y * int(rotation = 2) - x * int(rotation == 3));
-	}
-
-	inline Vec2 RotateRight()
-	{
-		return Vec2(y, -x);
-	}
-
-	Vec2 RotateRight(int amount)
-	{
-		int rotation = JMod(amount, 4);
-		return Vec2(x * int(rotation == 0) + y * int(rotation == 1) - x * int(rotation = 2) - y * int(rotation == 3),
-			y * int(rotation == 0) - x * int(rotation == 1) - y * int(rotation = 2) + x * int(rotation == 3));
-	}
-
-	inline Vec2 RotateRight45()
-	{
-		return Vec2(int((x + y) / 1.41f), int((y - x) / 1.41f));
-	}
-
-	inline Vec2 ClampV(Vec2 minimum, Vec2 maximum)
-	{
-		return Vec2(Clamp(x, minimum.x, maximum.x), Clamp(y, minimum.y, maximum.y));
-	}
-
-	inline Vec2 Abs()
-	{
-		return Vec2(abs(x), abs(y));
-	}
-
-	inline int Squagnitude()
-	{
-		return static_cast<int>(max(labs(static_cast<long>(x)), labs(static_cast<long>(y))));
-	}
-
-	inline int Diagnitude()
-	{
-		return abs(x) + abs(y);
-	}
-
-	inline int Squistance(Vec2 other)
-	{
-		return (*this - other).Squagnitude();
-	}
-
-	inline int Diagnistance(Vec2 other)
-	{
-		return (*this - other).Diagnitude();
-	}
-
-	inline Vec2 Squarmalized()
-	{
-		return *this / max(1, Squagnitude());
-	}
-
-
-	Vec2 operator+(Vec2 other)
-	{
-		return Vec2(x + other.x, y + other.y);
-	}
-	Vec2 operator+(int scaler)
-	{
-		return Vec2(x + scaler, y + scaler);
-	}
-
-	Vec2 operator-(Vec2 other)
-	{
-		return Vec2(x - other.x, y - other.y);
-	}
-	Vec2 operator-(int scaler)
-	{
-		return Vec2(x - scaler, y - scaler);
-	}
-
-	Vec2 operator*(Vec2 other)
-	{
-		return Vec2(x * other.x, y * other.y);
-	}
-	Vec2 operator*(int scaler)
-	{
-		return Vec2(x * scaler, y * scaler);
-	}
-
-	Vec2 operator/(Vec2 other)
-	{
-		return Vec2(x / other.x, y / other.y);
-	}
-	Vec2 operator/(int scaler)
-	{
-		return Vec2(x / scaler, y / scaler);
-	}
-
-	Vec2 operator%(Vec2 other)
-	{
-		return Vec2(x % other.x, y % other.y);
-	}
-	Vec2 operator%(int scaler)
-	{
-		return Vec2(x % scaler, y % scaler);
-	}
-
-
-	Vec2 operator+=(Vec2 other)
-	{
-		*this = *this + other;
-		return *this;
-	}
-	Vec2 operator+=(int scaler)
-	{
-		*this = *this + scaler;
-		return *this;
-	}
-
-	Vec2 operator-=(Vec2 other)
-	{
-		*this = *this - other;
-		return *this;
-	}
-	Vec2 operator-=(int scaler)
-	{
-		*this = *this - scaler;
-		return *this;
-	}
-
-	Vec2 operator*=(Vec2 other)
-	{
-		*this = *this * other;
-		return *this;
-	}
-	Vec2 operator*=(int scaler)
-	{
-		*this = *this * scaler;
-		return *this;
-	}
-
-	Vec2 operator/=(Vec2 other)
-	{
-		*this = *this / other;
-		return *this;
-	}
-	Vec2 operator/=(int scaler)
-	{
-		*this = *this / scaler;
-		return *this;
-	}
-
-	Vec2 operator%=(Vec2 other)
-	{
-		*this = *this % other;
-		return *this;
-	}
-	Vec2 operator%=(int scaler)
-	{
-		*this = *this % scaler;
-		return *this;
-	}
-
-	bool operator==(Vec2 other)
-	{
-		return x == other.x && y == other.y;
-	}
-	bool operator!=(Vec2 other)
-	{
-		return !(*this == other);
-	}
-};
-
-class Vec2f
+iVec2 RotateLeft(iVec2 a, int amount)
 {
-public:
-	float x, y;
+	int rotation = JMod(amount, 4);
+	return iVec2(a.x * int(rotation == 0) - a.y * int(rotation == 1) - a.x * int(rotation = 2) + a.y * int(rotation == 3),
+		a.y * int(rotation == 0) + a.x * int(rotation == 1) - a.y * int(rotation = 2) - a.x * int(rotation == 3));
+}
 
-	Vec2f(float x = 0.0f, float y = 0.0f) :
-		x(x), y(y) { }
+inline iVec2 RotateRight(iVec2 a)
+{
+	return iVec2(a.y, -a.x);
+}
 
-	Vec2f(Vec2 pos) :
-		x(static_cast<float>(pos.x)), y(static_cast<float>(pos.y)) { }
+iVec2 RotateRight(iVec2 a, int amount)
+{
+	int rotation = JMod(amount, 4);
+	return iVec2(a.x * int(rotation == 0) + a.y * int(rotation == 1) - a.x * int(rotation = 2) - a.y * int(rotation == 3),
+		a.y * int(rotation == 0) - a.x * int(rotation == 1) - a.y * int(rotation = 2) + a.x * int(rotation == 3));
+}
 
+inline iVec2 RotateRight45(iVec2 a)
+{
+	return iVec2(int((a.x + a.y) / 1.41f), int((a.y - a.x) / 1.41f));
+}
 
-	Vec2f RotateLeft()
-	{
-		return Vec2f(-y, x);
-	}
+inline iVec2 ClampV(iVec2 a, iVec2 minimum, iVec2 maximum)
+{
+	return iVec2(Clamp(a.x, minimum.x, maximum.x), Clamp(a.y, minimum.y, maximum.y));
+}
 
-	Vec2f RotateLeft(int amount)
-	{
-		int rotation = JMod(amount, 4);
-		return Vec2f(x * int(rotation == 0) - y * int(rotation == 1) - x * int(rotation = 2) + y * int(rotation == 3),
-			y * int(rotation == 0) + x * int(rotation == 1) - y * int(rotation = 2) - x * int(rotation == 3));
-	}
+inline iVec2 Abs(iVec2 a)
+{
+	return iVec2(abs(a.x), abs(a.y));
+}
 
-	Vec2f RotateRight()
-	{
-		return Vec2f(y, -x);
-	}
+inline int Squagnitude(iVec2 a)
+{
+	return static_cast<int>(max(labs(static_cast<long>(a.x)), labs(static_cast<long>(a.y))));
+}
 
-	Vec2f RotateRight(int amount)
-	{
-		int rotation = JMod(amount, 4);
-		return Vec2f(x * int(rotation == 0) + y * int(rotation == 1) - x * int(rotation = 2) - y * int(rotation == 3),
-			y * int(rotation == 0) - x * int(rotation == 1) - y * int(rotation = 2) + x * int(rotation == 3));
-	}
+inline int Diagnitude(iVec2 a)
+{
+	return abs(a.x) + abs(a.y);
+}
 
-	Vec2f RotateRight45()
-	{
-		return Vec2f((x + y) / 1.41f, (y - x) / 1.41f);
-	}
+inline int Squistance(iVec2 a, iVec2 b)
+{
+	return Squagnitude(a - b);
+}
 
-	Vec2f Rotate(float theta)
-	{
-		float cs = cos(theta);
-		float sn = sin(theta);
+inline int Diagnistance(iVec2 a, iVec2 b)
+{
+	return Diagnitude(a - b);
+}
 
-		return { x * cs - y * sn, x * sn + y * cs };
-	}
+inline iVec2 Squarmalized(iVec2 a)
+{
+	return a / max(1, Squagnitude(a));
+}
+#pragma endregion
 
-	inline Vec2f ClampV(Vec2f minimum, Vec2f maximum)
-	{
-		return Vec2f(ClampF(x, minimum.x, maximum.x), ClampF(y, minimum.y, maximum.y));
-	}
+iVec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);
 
-	inline Vec2f Abs()
-	{
-		return Vec2f(abs(x), abs(y));
-	}
+typedef glm::vec2 Vec2;
 
-	inline float SqrMagnitude()
-	{
-		return x * x + y * y;
-	}
+#pragma region Vec2 functions
+inline Vec2 RotateLeft(Vec2 a)
+{
+	return Vec2(-a.y, a.x);
+}
 
-	inline float Magnitude()
-	{
-		return std::sqrtf(SqrMagnitude());
-	}
+inline Vec2 RotateLeft(Vec2 a, int amount)
+{
+	int rotation = JMod(amount, 4);
+	return Vec2(a.x * int(rotation == 0) - a.y * int(rotation == 1) - a.x * int(rotation = 2) + a.y * int(rotation == 3),
+		a.y * int(rotation == 0) + a.x * int(rotation == 1) - a.y * int(rotation = 2) - a.x * int(rotation == 3));
+}
 
-	inline Vec2f Normalized()
-	{
-		return *this / max(0.001f, Magnitude());
-	}
+inline Vec2 RotateRight(Vec2 a)
+{
+	return Vec2(a.y, -a.x);
+}
 
-	inline Vec2 Rormalized()
-	{
-		Vec2f normalized = Normalized();
-		return Vec2(static_cast<int>(roundf(normalized.x)), static_cast<int>(roundf(normalized.y)));
-	}
+inline Vec2 RotateRight(Vec2 a, int amount)
+{
+	return RotateLeft(a, -amount);
+}
 
-	inline Vec2f V2fMin(Vec2f other)
-	{
-		return SqrMagnitude() < other.SqrMagnitude() ? *this : other;
-	}
+inline Vec2 RotateRight45(Vec2 a)
+{
+	return Vec2((a.x + a.y) / 1.41f, (a.y - a.x) / 1.41f);
+}
 
-	inline float Distance(Vec2f other)
-	{
-		return (*this - other).Magnitude();
-	}
+inline Vec2 ClampV(Vec2 a, Vec2 minimum, Vec2 maximum)
+{
+	return Vec2(ClampF(a.x, minimum.x, maximum.x), ClampF(a.y, minimum.y, maximum.y));
+}
 
-	inline float Dot(Vec2f other)
-	{
-		return x * other.x + y * other.y;
-	}
+inline Vec2 Abs(Vec2 a)
+{
+	return Vec2(abs(a.x), abs(a.y));
+}
 
-	inline Vec2f Ceil()
-	{
-		return Vec2f(ceilf(x), ceilf(y));
-	}
+inline iVec2 Rormalized(Vec2 a)
+{
+	Vec2 normalized = glm::normalize(a);
+	return iVec2(static_cast<int>(roundf(normalized.x)), static_cast<int>(roundf(normalized.y)));
+}
 
+inline Vec2 V2fMin(Vec2 a, Vec2 b)
+{
+	return glm::length2(a) < glm::length2(b) ? a : b;
+}
 
-	Vec2f operator+(Vec2f other)
-	{
-		return Vec2f(x + other.x, y + other.y);
-	}
-	Vec2f operator+(float scaler)
-	{
-		return Vec2f(x + scaler, y + scaler);
-	}
+inline float Distance(Vec2 a, Vec2 b)
+{
+	return glm::length(a - b);
+}
 
-	Vec2f operator-(Vec2f other)
-	{
-		return Vec2f(x - other.x, y - other.y);
-	}
-	Vec2f operator-(float scaler)
-	{
-		return Vec2f(x - scaler, y - scaler);
-	}
-
-	Vec2f operator*(Vec2f other)
-	{
-		return Vec2f(x * other.x, y * other.y);
-	}
-	Vec2f operator*(float scaler)
-	{
-		return Vec2f(x * scaler, y * scaler);
-	}
-
-	Vec2f operator/(Vec2f other)
-	{
-		return Vec2f(x / other.x, y / other.y);
-	}
-	Vec2f operator/(float scaler)
-	{
-		return Vec2f(x / scaler, y / scaler);
-	}
-
-
-	Vec2f operator+=(Vec2f other)
-	{
-		*this = *this + other;
-		return *this;
-	}
-	Vec2f operator+=(float scaler)
-	{
-		*this = *this + scaler;
-		return *this;
-	}
-
-	Vec2f operator-=(Vec2f other)
-	{
-		*this = *this - other;
-		return *this;
-	}
-	Vec2f operator-=(float scaler)
-	{
-		*this = *this - scaler;
-		return *this;
-	}
-
-	Vec2f operator*=(Vec2f other)
-	{
-		*this = *this * other;
-		return *this;
-	}
-	Vec2f operator*=(float scaler)
-	{
-		*this = *this * scaler;
-		return *this;
-	}
-
-	Vec2f operator/=(Vec2f other)
-	{
-		*this = *this / other;
-		return *this;
-	}
-	Vec2f operator/=(float scaler)
-	{
-		*this = *this / scaler;
-		return *this;
-	}
-
-	bool operator==(Vec2f other)
-	{
-		return x == other.x && y == other.y;
-	}
-	bool operator!=(Vec2f other)
-	{
-		return !(*this == other);
-	}
-
-	operator Vec2()
-	{
-		return Vec2(static_cast<int>(x), static_cast<int>(y));
-	}
-};
-
-Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);
+inline Vec2 Ceil(Vec2 a)
+{
+	return Vec2(ceilf(a.x), ceilf(a.y));
+}

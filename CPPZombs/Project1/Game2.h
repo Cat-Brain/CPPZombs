@@ -18,14 +18,14 @@ void Game::Start()
 	planet = std::make_unique<Planet>();
 }
 
-bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
+bool CheckInputSquareHover(iVec2 minPos, float scale, string text) // Returns if square is being hovered over.
 {
 	return game->inputs.screenMousePosition.x > minPos.x && game->inputs.screenMousePosition.x < minPos.x + font.TextWidth(text)* scale / font.minimumSize &&
 		game->inputs.screenMousePosition.y > minPos.y + scale * font.mininumVertOffset / font.minimumSize &&
 		game->inputs.screenMousePosition.y < minPos.y + scale * font.maxVertOffset / font.minimumSize;
 }
 
-bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
+bool InputHoverSquare(iVec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
 {
 		if (CheckInputSquareHover(minPos, scale, text))
 		{
@@ -49,22 +49,22 @@ void Game::Update()
 
 		inputs.FindMousePos(window);
 
-		if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
 			Start();
 			uiMode = UIMODE::INGAME;
 		}
-		if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
-		else if (InputHoverSquare(Vec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], difficulty == DIFFICULTY::EASY ?
+		else if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], difficulty == DIFFICULTY::EASY ?
 			RGBA(0, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
 			difficulty = DIFFICULTY::EASY;
-		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], difficulty == DIFFICULTY::MEDIUM ?
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], difficulty == DIFFICULTY::MEDIUM ?
 			RGBA(255, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
 			difficulty = DIFFICULTY::MEDIUM;
-		else if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
 			RGBA(255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 			difficulty = DIFFICULTY::HARD;
 	}
@@ -92,12 +92,12 @@ void Game::Update()
 
 				inputs.FindMousePos(window);
 
-				if (InputHoverSquare(Vec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
+				if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
 				{
 					Start();
 					uiMode = UIMODE::INGAME;
 				}
-				if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
 					uiMode = UIMODE::MAINMENU;
 
 				font.Render(difficultyStrs[difficulty], {-ScrWidth(), int(ScrHeight() * -0.5f)}, ScrHeight() / 5.0f,
@@ -110,12 +110,12 @@ void Game::Update()
 			UseFramebuffer();
 
 			inputs.FindMousePos(window);
-			if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 			{
 				player->lastClick = tTime;
 				uiMode = UIMODE::INGAME;
 			}
-			if (InputHoverSquare(Vec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
 				uiMode = UIMODE::MAINMENU;
 		}
 	}
@@ -149,7 +149,7 @@ void Game::ApplyLighting()
 	{
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
 
-		Vec2f scrPos = light->pos - PlayerPos();
+		Vec2 scrPos = light->pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
 			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
 
@@ -177,7 +177,7 @@ void Game::ApplyLighting()
 	{
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
 
-		Vec2f scrPos = light->pos - PlayerPos();
+		Vec2 scrPos = light->pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
 			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
 
@@ -216,22 +216,22 @@ void Game::ApplyLighting()
 	screenSpaceQuad.Draw();
 }
 
-float Game::BrightnessAtPos(Vec2 pos)
+float Game::BrightnessAtPos(iVec2 pos)
 {
 	JRGB ambient = planet->GetAmbient(planet->GetBrightness());
 	float r = ambient.r, g = ambient.g, b = ambient.b;
 	for (unique_ptr<LightSource>& light : entities->lightSources)
-		if (pos.Squistance(light->pos) < light->range)
+		if (Squistance(pos, light->pos) < light->range)
 		{
-			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
+			float multiplier = 1.0f - Squistance(pos, light->pos) / light->range;
 			r += light->color.r * multiplier;
 			g += light->color.g * multiplier;
 			b += light->color.b * multiplier;
 		}
 	for (unique_ptr<LightSource>& light : entities->darkSources)
-		if (pos.Squistance(light->pos) < light->range)
+		if (Squistance(pos, light->pos) < light->range)
 		{
-			float multiplier = 1.0f - pos.Squistance(light->pos) / light->range;
+			float multiplier = 1.0f - Squistance(pos, light->pos) / light->range;
 			r -= light->color.r * multiplier;
 			g -= light->color.g * multiplier;
 			b -= light->color.b * multiplier;
@@ -302,13 +302,13 @@ void Game::TUpdate()
 			font.Render(std::to_string(int(timeTillNextWave)) + "." +
 				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
 				std::to_string(int(timeTillNextBoss)) + "." +
-				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
 		}
 		else
 			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
-				Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
-		font.Render(std::to_string(player->health), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
-		font.Render(to_string(totalGamePoints), Vec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
+				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
+		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();
 	}
 

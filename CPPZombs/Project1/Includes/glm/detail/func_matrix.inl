@@ -328,13 +328,13 @@ namespace detail
 
 			vec<4, T, Q> Vec0(m[1][0], m[0][0], m[0][0], m[0][0]);
 			vec<4, T, Q> Vec1(m[1][1], m[0][1], m[0][1], m[0][1]);
-			vec<4, T, Q> Vec2(m[1][2], m[0][2], m[0][2], m[0][2]);
+			vec<4, T, Q> iVec2(m[1][2], m[0][2], m[0][2], m[0][2]);
 			vec<4, T, Q> Vec3(m[1][3], m[0][3], m[0][3], m[0][3]);
 
-			vec<4, T, Q> Inv0(Vec1 * Fac0 - Vec2 * Fac1 + Vec3 * Fac2);
-			vec<4, T, Q> Inv1(Vec0 * Fac0 - Vec2 * Fac3 + Vec3 * Fac4);
+			vec<4, T, Q> Inv0(Vec1 * Fac0 - iVec2 * Fac1 + Vec3 * Fac2);
+			vec<4, T, Q> Inv1(Vec0 * Fac0 - iVec2 * Fac3 + Vec3 * Fac4);
 			vec<4, T, Q> Inv2(Vec0 * Fac1 - Vec1 * Fac3 + Vec3 * Fac5);
-			vec<4, T, Q> Inv3(Vec0 * Fac2 - Vec1 * Fac4 + Vec2 * Fac5);
+			vec<4, T, Q> Inv3(Vec0 * Fac2 - Vec1 * Fac4 + iVec2 * Fac5);
 
 			vec<4, T, Q> SignA(+1, -1, +1, -1);
 			vec<4, T, Q> SignB(-1, +1, -1, +1);

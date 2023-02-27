@@ -6,7 +6,7 @@ enum ITEMOD // Item on-deaths
 };
 
 class Item;
-vector<function<void(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
+vector<function<void(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 
 class Item
 {
@@ -20,19 +20,19 @@ public:
 	int damage;
 	int count;
 	float range, shootSpeed;
-	Vec2f dimensions;
+	Vec2 dimensions;
 	bool corporeal; // Is this corporeal when shot? Ignored by collectible which is never corporeal.
 	bool shouldCollide; // Should this as a projectile be destroyed upon contact?
 	float mass;
 	int health;
 
 	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemOD(ITEMOD::ITEM), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
 		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemOD(ITEMOD::ITEM), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
 		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
@@ -76,12 +76,12 @@ public:
 		return typeName[0] < b.typeName[0];
 	}
 
-	void OnDeath(ITEMOD itemOD, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ITEMOD itemOD, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		itemODs[itemOD](this, pos, creator, creatorName, callReason, callType);
 	}
 
-	void OnDeath(Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		OnDeath(itemOD, pos, creator, creatorName, callReason, callType);
 	}
@@ -92,14 +92,14 @@ class GoneOnLandItem : public Item
 {
 public:
 	GoneOnLandItem(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	GoneOnLandItem(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2f dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
@@ -118,7 +118,7 @@ public:
 
 namespace ItemODs
 {
-	void GoneOnLandItemOD(Item* item, Vec2f pos, Entity* creator, string creatorName, Entity* callReason, int callType) { }
+	void GoneOnLandItemOD(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType) { }
 }
 
 class Items : public vector<Item>
@@ -213,15 +213,15 @@ public:
 			return;
 		int height = ScrHeight();
 		float scale = height / (2.0f * max(8, int(size()))), scale2 = scale / 5.0f;
-		Vec2
+		iVec2
 			offset = vZero - ScrDim();
-		game->DrawFBL(offset + Vec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex].color, Vec2f(scale, scale));
+		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex].color, Vec2(scale, scale));
 		for (int i = 0; i < size(); i++)
 		{
-			game->DrawTextured(spriteSheet, (*this)[i].intType, offset + Vec2(0, static_cast<int>(scale * i * 2)),
-				i == currentIndex ? RGBA() : (*this)[i].color, Vec2f(scale, scale));
+			game->DrawTextured(spriteSheet, (*this)[i].intType, offset + iVec2(0, static_cast<int>(scale * i * 2)),
+				i == currentIndex ? RGBA() : (*this)[i].color, Vec2(scale, scale));
 			font.Render(" " + (*this)[i].name + "  " + to_string((*this)[i].count) + "  " + (*this)[i].typeName,
-				Vec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i].color);
+				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i].color);
 		}
 	}
 

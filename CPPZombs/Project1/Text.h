@@ -2,8 +2,8 @@
 
 struct Character {
     uint textureID = 0;  // ID handle of the glyph texture
-    Vec2 size;          // Size of glyph
-    Vec2 bearing;      // Offset from baseline to left/top of glyph
+    iVec2 size;          // Size of glyph
+    iVec2 bearing;      // Offset from baseline to left/top of glyph
     uint advance = 0; // Offset to advance to next glyph
 };
 
@@ -73,8 +73,8 @@ public:
             // now store character for later use
             Character character = {
                 texture,
-                Vec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-                Vec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+                iVec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+                iVec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
                 static_cast<uint>(face->glyph->advance.x)
             };
             characters.insert(std::pair<char, Character>(c, character));
@@ -120,7 +120,7 @@ public:
         return result;
     }
 
-    void Render(string text, Vec2 pos, float scale, RGBA color)
+    void Render(string text, iVec2 pos, float scale, RGBA color)
     {
         scale /= minimumSize;
         float xOffset = 0;
@@ -153,7 +153,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void RenderRotated(string text, Vec2 pos, float rotation, float scale, RGBA color)
+    void RenderRotated(string text, iVec2 pos, float rotation, float scale, RGBA color)
     {
         scale /= minimumSize;
         float xOffset = 0;

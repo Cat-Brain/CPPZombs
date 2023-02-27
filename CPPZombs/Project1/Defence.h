@@ -11,7 +11,7 @@ public:
 	int cyclesToGrow, deadStage, currentLifespan, chanceForSeed;
 
 	Tree(Collectible* collectible, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		float timePer, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(nullptr), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
@@ -29,7 +29,7 @@ public:
 		timeSince = timePer * RandFloat();
 	}
 
-	Tree(Tree* baseClass, Vec2 dir, Vec2 pos) :
+	Tree(Tree* baseClass, iVec2 dir, iVec2 pos) :
 		Tree(*baseClass)
 	{
 		this->pos = pos;
@@ -37,7 +37,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Tree>(this, dir, pos);
 	}
@@ -68,7 +68,7 @@ public:
 	int maxGenerations, generation;
 
 	Vine(Collectible* collectible, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
-		float timePer, Vec2 pos = vZero, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
+		float timePer, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Tree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, dimensions, color, adultColor, deadColor, subsurfaceResistance, mass, maxHealth, health, name),
@@ -79,7 +79,7 @@ public:
 		tUpdate = TUPDATE::VINETU;
 	}
 
-	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
+	Vine(Vine* baseClass, iVec2 dir, iVec2 pos) :
 		Vine(*baseClass)
 	{
 		this->pos = pos;
@@ -87,7 +87,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Vine>(this, dir, pos);
 	}
@@ -119,9 +119,9 @@ namespace TUpdates
 		if (tree->currentLifespan >= tree->cyclesToGrow && tree->currentLifespan < tree->deadStage)
 		{
 			if (rand() % 100 < tree->chanceForSeed)
-				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->dimensions + tree->seed->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->dimensions + tree->seed->dimensions) / 2 * iVec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 			else
-				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->dimensions + tree->collectible->dimensions) / 2 * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->dimensions + tree->collectible->dimensions) / 2 * iVec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
 		}
 		tree->currentLifespan++;
 		return true;
@@ -132,9 +132,9 @@ namespace TUpdates
 		Vine* vine = static_cast<Vine*>(entity);
 		if (vine->generation < vine->maxGenerations && vine->currentLifespan >= vine->cyclesToGrow && vine->currentLifespan < vine->deadStage)
 		{
-			Vec2 placementPos = vine->pos;
+			iVec2 placementPos = vine->pos;
 			while (placementPos == vine->pos)
-				placementPos = vine->pos + vine->dimensions * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
+				placementPos = vine->pos + vine->dimensions * iVec2((rand() % 3) - 1, (rand() % 3) - 1);
 			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, vine->dimensions);
 			if (!hitEntities.size())
 			{
@@ -155,58 +155,58 @@ namespace UIUpdates
 	{
 		Tree* tree = static_cast<Tree*>(entity);
 
-		Vec2f bottomLeft = tree->BottomLeft();
+		iVec2 bottomLeft = tree->BottomLeft();
 		if (tree->currentLifespan < tree->cyclesToGrow)
 		{
-			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+			tree->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Baby " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
 				COMMON_BOARDER_WIDTH, "Baby " + tree->name, tree->color, tree->deadColor, tree->collectible->color);
 			font.Render(ToStringWithPrecision(tree->timePer * (tree->cyclesToGrow - tree->currentLifespan) - tree->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
 		}
 		else if (tree->currentLifespan < tree->deadStage)
 		{
-			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+			tree->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Adult " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
 				COMMON_BOARDER_WIDTH, "Adult " + tree->name, tree->color, tree->deadColor, tree->collectible->color);
 			font.Render(ToStringWithPrecision(tree->timePer - tree->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
 			font.Render(ToStringWithPrecision(tree->timePer * (tree->deadStage - tree->currentLifespan) - tree->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), tree->color);
 		}
 		else
-			tree->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 4),
+			tree->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Dead " + tree->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 4),
 				COMMON_BOARDER_WIDTH, "Dead " + tree->name, tree->deadColor, tree->color, tree->collectible->color);
 	}
 
 	void VineUIU(Entity* entity)
 	{
 		Vine* vine = static_cast<Vine*>(entity);
-		Vec2f bottomLeft = vine->BottomLeft();
+		iVec2 bottomLeft = vine->BottomLeft();
 		if (vine->currentLifespan < vine->cyclesToGrow)
 		{
-			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Baby " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
+			vine->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Baby " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp * 3 / 4),
 				COMMON_BOARDER_WIDTH, "Baby " + vine->name, vine->color, vine->deadColor, vine->collectible->color);
 			font.Render(ToStringWithPrecision(vine->timePer * (vine->cyclesToGrow - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 			font.Render("Gen " + to_string(vine->generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 		else if (vine->currentLifespan < vine->deadStage)
 		{
-			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Adult " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp),
+			vine->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Adult " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp),
 				COMMON_BOARDER_WIDTH, "Adult " + vine->name, vine->color, vine->deadColor, vine->collectible->color);
 			font.Render(ToStringWithPrecision(vine->timePer - vine->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 			font.Render(ToStringWithPrecision(vine->timePer * (vine->deadStage - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 			font.Render("Gen " + to_string(vine->generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 		else
 		{
-			vine->DrawUIBox(bottomLeft, bottomLeft + Vec2(font.TextWidth("Dead " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
+			vine->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Dead " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
 				COMMON_BOARDER_WIDTH, "Dead " + vine->name, vine->deadColor, vine->color, vine->collectible->color);
 			font.Render("Gen " + to_string(vine->generation), bottomLeft +
-				Vec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
+				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 	}
 }

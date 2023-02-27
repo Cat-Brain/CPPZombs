@@ -39,7 +39,7 @@ public:
 
 	void End() override;
 
-	inline Vec2 PlayerPos() override;
+	inline iVec2 PlayerPos() override;
 
 	void ApplyLighting();
 
@@ -47,5 +47,5 @@ public:
 
 	void MenuedEntityDied(Entity* entity);
 
-	float BrightnessAtPos(Vec2 pos);
+	float BrightnessAtPos(iVec2 pos);
 };

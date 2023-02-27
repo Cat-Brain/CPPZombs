@@ -37,7 +37,7 @@ enum OVERLAPFUN
 	ENTITYOF
 };
 
-vector<function<bool(Entity*, Vec2, Vec2)>> overlapFuns;
+vector<function<bool(Entity*, iVec2, iVec2)>> overlapFuns;
 
 enum ONDEATH
 {
@@ -62,8 +62,8 @@ public:
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
-	Vec2 pos, dir;
-	Vec2 dimensions;
+	iVec2 pos, dir;
+	iVec2 dimensions;
 	RGBA color, subScat;
 	float mass;
 	int maxHealth, health;
@@ -71,7 +71,7 @@ public:
 	int sortLayer = 0;
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
-	Entity(Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
+	Entity(iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
@@ -79,7 +79,7 @@ public:
 	{
 	}
 
-	Entity(Entity* baseClass, Vec2f pos):
+	Entity(Entity* baseClass, Vec2 pos):
 		Entity(*baseClass)
 	{
 		this->pos = pos;
@@ -87,16 +87,16 @@ public:
 		Start();
 	}
 
-	virtual unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
+	virtual unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = up, Entity* creator = nullptr)
 	{
 		return make_unique<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
 
-	void Draw(Vec2 pos, Vec2 dir = vZero)
+	void Draw(iVec2 pos, iVec2 dir = vZero)
 	{
-		Vec2 tempPos = this->pos;
+		iVec2 tempPos = this->pos;
 		this->pos = pos;
 		DUpdate();
 		this->pos = tempPos;
@@ -152,12 +152,12 @@ public:
 		game->Draw(pos, subScat, dimensions);
 	}
 
-	Vec2 BottomLeft() // Not always accurate.
+	iVec2 BottomLeft() // Not always accurate.
 	{
-		return (pos + right * (dimensions.x / 2 + 1) - game->PlayerPos() + down * (dimensions.y / 2)) * 2 * trueScreenHeight / midRes.height;
+		return (pos + right * (dimensions.x / 2 + 1) - game->PlayerPos() + down * (dimensions.y / 2)) * int(2 * trueScreenHeight / midRes.height);
 	}
 
-	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, int boarderWidth, string text, RGBA textColor,
+	void DrawUIBox(iVec2 bottomLeft, iVec2 topRight, int boarderWidth, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth); // + 2 * boarder is to avoid clipping to avoid overlapping the text.
@@ -165,15 +165,15 @@ public:
 		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
-	virtual void SetPos(Vec2 newPos);
+	virtual void SetPos(iVec2 newPos);
 
-	virtual bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
+	virtual bool TryMove(iVec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 
-	bool Overlaps(Vec2 pos, Vec2 dimensions)
+	bool Overlaps(iVec2 pos, iVec2 dimensions)
 	{
 		return overlapFuns[overlapFun](this, pos, dimensions);
 	}
@@ -184,7 +184,7 @@ public:
 
 #pragma region Other Entity funcitons
 
-vector<Entity*> EntitiesOverlaps(Vec2 pos, Vec2 dimensions, vector<Entity*> entities)
+vector<Entity*> EntitiesOverlaps(iVec2 pos, iVec2 dimensions, vector<Entity*> entities)
 {
 	vector<Entity*> foundEntities(0);
 	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
@@ -202,7 +202,7 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = 0, Vec2 dimensions = vOne, RGBA color = RGBA()) :
+	FadeOut(float totalFadeTime = 1.0f, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA()) :
 		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
 		update = UPDATE::FADEOUTU;
@@ -247,8 +247,8 @@ namespace UIUpdates
 {
 	void EntityUIU(Entity* entity)
 	{
-		Vec2 bottomLeft = entity->BottomLeft();
-		Vec2 topRight = bottomLeft + Vec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
+		iVec2 bottomLeft = entity->BottomLeft();
+		iVec2 topRight = bottomLeft + iVec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
 		entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name, entity->color);
 	}
 }
@@ -257,14 +257,14 @@ namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
 
 namespace OverlapFuns
 {
-	bool EntityOF(Entity* entity, Vec2 pos, Vec2 dimensions)
+	bool EntityOF(Entity* entity, iVec2 pos, iVec2 dimensions)
 	{
 		return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
 	}
 }
 
 
-Vec2 Game::PlayerPos()
+iVec2 Game::PlayerPos()
 {
 	return ((Entity*)player)->pos;
 }

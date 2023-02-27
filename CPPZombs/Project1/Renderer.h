@@ -148,7 +148,7 @@ public:
 	virtual void End() { }
 
 	// FBL stands for From Bottom Left.
-	void DrawFBL(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	void DrawFBL(iVec2 pos, RGBA color, iVec2 dimensions = vOne)
 	{
 		glUseProgram(defaultShader);
 		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
@@ -177,17 +177,17 @@ public:
 		quad.Draw();
 	}
 
-	inline void Draw(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	inline void Draw(iVec2 pos, RGBA color, iVec2 dimensions = vOne)
 	{
 		DrawFBL(pos - dimensions / 2, color, dimensions);
 	}
 
-	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, Vec2 pixelOffset = vZero) // In normal coordinates.
+	inline void DrawString(string text, iVec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + static_cast<Vec2>(Vec2f((pos - PlayerPos()) * 2) / midRes.ScrDim() * ScrDim()), scale, color);
+		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2) / Vec2(midRes.ScrDim()) * Vec2(ScrDim())), scale, color);
 	}
 
-	void DrawTextured(Texture& texture, uint spriteToDraw, Vec2 pos, RGBA color, Vec2 dimensions = vOne)
+	void DrawTextured(Texture& texture, uint spriteToDraw, iVec2 pos, RGBA color, iVec2 dimensions = vOne)
 	{
 		glUseProgram(texturedShader);
 		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
@@ -221,7 +221,7 @@ public:
 		quad.Draw();
 	}
 
-	void DrawLine(Vec2f a, Vec2f b, RGBA color)
+	void DrawLine(Vec2 a, Vec2 b, RGBA color)
 	{
 		glUseProgram(lineShader);
 		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
@@ -256,7 +256,7 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec2 PlayerPos() // The position of the player in normal coordinates.
+	inline virtual iVec2 PlayerPos() // The position of the player in normal coordinates.
 	{
 		return vZero;
 	}

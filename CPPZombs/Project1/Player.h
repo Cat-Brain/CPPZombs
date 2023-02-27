@@ -7,12 +7,12 @@ public:
 	Items items;
 	int vacDist;
 	bool placedBlock;
-	Vec2f placingDir = up;
+	Vec2 placingDir = up;
 	float timePerMove = 0.125f, lastMove = 0.0f, maxSpeed = 4.0f, lastVac = -1.0f,
 		timePerVac = 0.0625f, lastClick = 0.0f,
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
-	Player(Vec2 pos = vZero, Vec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
+	Player(iVec2 pos = vZero, iVec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		LightBlock(lightColor, lightOrDark, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
 	{
@@ -26,7 +26,6 @@ public:
 		LightBlock::Start();
 		items = Items();
 		items.push_back(Resources::copper->Clone(10));
-		items.push_back(Resources::sapphire->Clone(1000));
 		items.push_back(Resources::cheese->Clone(3));
 		items.push_back(Resources::shades->Clone(3));
 		items.push_back(Resources::Seeds::copperTreeSeed->Clone(2));
@@ -71,7 +70,7 @@ namespace Updates
 
 		if (tTime - player->lastMove >= player->timePerMove)
 		{
-			Vec2 direction(0, 0);
+			iVec2 direction(0, 0);
 
 #pragma region Inputs
 			if (game->inputs.a.held || game->inputs.left.held)
@@ -100,7 +99,7 @@ namespace Updates
 			}
 #pragma endregion
 
-			Vec2 oldPos = player->pos;
+			iVec2 oldPos = player->pos;
 			if (direction != vZero)
 			{
 				player->lastMove = tTime;
@@ -123,16 +122,16 @@ namespace Updates
 
 		if (player->heldEntity != nullptr)
 		{
-			player->heldEntity->dir.RotateLeft(game->inputs.mouseScroll);
+			RotateLeft(player->heldEntity->dir, game->inputs.mouseScroll);
 			if (tTime - player->lastHoldMove > player->timePerHoldMove)
 			{
 				player->lastHoldMove = tTime;
-				player->heldEntity->TryMove(Vec2f(player->pos + game->inputs.mousePosition - player->heldEntity->pos).Rormalized(), player->mass);
+				player->heldEntity->TryMove(Rormalized(Vec2(player->pos + game->inputs.mousePosition - player->heldEntity->pos)), player->mass);
 			}
 		}
 
 
-		Vec2 normalizedDir = Vec2f(game->inputs.mousePosition).Normalized();
+		iVec2 normalizedDir = glm::normalize(Vec2(game->inputs.mousePosition));
 		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, vOne)).size())
 		{

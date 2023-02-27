@@ -3,16 +3,16 @@
 class Projectile : public Entity
 {
 public:
-    Vec2f direction;
-    Vec2f offset; // Should rarely be outside of the range (0, 0) to (1, 1), whenever it exceeds subtract from it and add to pos.
+    Vec2 direction;
+    Vec2 offset; // Should rarely be outside of the range (0, 0) to (1, 1), whenever it exceeds subtract from it and add to pos.
     float duration;
     int damage;
     float speed, begin;
     int callType = 0;
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), RGBA color = RGBA(),
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, iVec2 dimensions = iVec2(1, 1), RGBA color = RGBA(),
         RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
-        Entity(Vec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
+        Entity(iVec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         update = UPDATE::PROJECTILEU;
@@ -22,18 +22,18 @@ public:
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
+    Projectile(Projectile* baseClass, iVec2 pos, iVec2 direction, Entity* creator) :
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->direction = Vec2f(direction).Normalized();
+        this->direction = glm::normalize(Vec2(direction));
         offset = vZero;
         this->pos = pos;
         begin = tTime;
         Start();
     }
 
-    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(iVec2 pos, iVec2 direction, Entity* creator) override
     {
         return make_unique<Projectile>(this, pos, direction, creator);
     }
@@ -58,10 +58,10 @@ public:
     virtual void MovePos()
     {
         offset += direction * game->dTime * speed;
-        if (Vec2(offset) != vZero)
+        if (iVec2(offset) != vZero)
         {
-            TryMove(Vec2(offset), mass + mass, creator);
-            offset -= Vec2(offset);
+            TryMove(iVec2(offset), mass + mass, creator);
+            offset -= iVec2(offset);
         }
     }
 };
@@ -87,7 +87,7 @@ namespace Updates
             projectile->DestroySelf(entity);
             return;
         }
-        Vec2 oldPos = projectile->pos;
+        iVec2 oldPos = projectile->pos;
         projectile->MovePos();
         if (oldPos != projectile->pos && projectile->CheckPos(entity))
         {
@@ -105,18 +105,18 @@ public:
     Item item;
     string creatorName;
 
-    ShotItem(Item item, float speed = 8.0f, Vec2f dimensions = Vec2f(1, 1), float mass = 1, int maxHealth = 1, int health = 1) :
+    ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), float mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, dimensions, item.color, RGBA(), mass, maxHealth, health), item(item)
     {
         onDeath = ONDEATH::SHOTITEMOD;
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Vec2f pos, Vec2f direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->creator = creator;
-        float magnitude = direction.Magnitude();
+        float magnitude = glm::length(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
         offset = vZero;
@@ -128,11 +128,11 @@ public:
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Item item, Vec2f pos, Vec2f direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->creator = creator;
-        float magnitude = direction.Magnitude();
+        float magnitude = glm::length(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
         offset = vZero;
@@ -152,12 +152,12 @@ public:
         Start();
     }
 
-    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(iVec2 pos, iVec2 direction, Entity* creator) override
     {
         return make_unique<ShotItem>(this, pos, direction, creator);
     }
 
-    unique_ptr<Entity> Clone(Item baseItem, Vec2f pos, Vec2f direction, Entity* creator)
+    unique_ptr<Entity> Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }

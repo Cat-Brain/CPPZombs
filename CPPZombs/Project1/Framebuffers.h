@@ -68,12 +68,12 @@ public:
         return height * screenRatio;
     }
 
-    inline Vec2 ScrDim()
+    inline iVec2 ScrDim()
     {
         return { (int)width, (int)height };
     }
 
-    inline Vec2f TScrDim()
+    inline Vec2 TScrDim()
     {
         return { TWidth(), (float)height};
     }
@@ -117,7 +117,7 @@ int ScrHeight()
     return framebuffers[currentFramebuffer - 1]->height;
 }
 
-Vec2 ScrDim()
+iVec2 ScrDim()
 {
     if (currentFramebuffer == 0)
         return { int(trueScreenWidth), int(trueScreenHeight) };

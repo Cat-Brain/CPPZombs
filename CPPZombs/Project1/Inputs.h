@@ -13,7 +13,7 @@ struct Inputs
 		leftMouse, rightMouse, middleMouse,
 		comma, period, slash; // <- Command keys.
 	int mouseScroll = 0;
-	Vec2 mousePosition = vZero, screenMousePosition = vZero;
+	iVec2 mousePosition = vZero, screenMousePosition = vZero;
 
 	Inputs() = default;
 
