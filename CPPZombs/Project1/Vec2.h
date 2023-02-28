@@ -110,9 +110,16 @@ inline Vec2 Abs(Vec2 a)
 	return Vec2(abs(a.x), abs(a.y));
 }
 
+inline Vec2 Normalized(Vec2 a) // Safe version of glm::normalize
+{
+	if (a == Vec2(vZero))
+		return vZero;
+	return glm::normalize(a);
+}
+
 inline iVec2 Rormalized(Vec2 a)
 {
-	Vec2 normalized = glm::normalize(a);
+	Vec2 normalized = Normalized(a);
 	return iVec2(static_cast<int>(roundf(normalized.x)), static_cast<int>(roundf(normalized.y)));
 }
 

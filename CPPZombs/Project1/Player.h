@@ -129,9 +129,8 @@ namespace Updates
 				player->heldEntity->TryMove(Rormalized(Vec2(player->pos + game->inputs.mousePosition - player->heldEntity->pos)), player->mass);
 			}
 		}
+		std::cout << game->inputs.mousePosition.x << ", " << game->inputs.mousePosition.y << '\n';
 
-
-		iVec2 normalizedDir = glm::normalize(Vec2(game->inputs.mousePosition));
 		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, vOne)).size())
 		{

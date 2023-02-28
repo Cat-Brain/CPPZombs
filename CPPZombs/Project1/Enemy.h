@@ -421,7 +421,7 @@ namespace Enemies
 				if (tTime - lastLegUpdates[i] > legCycleSpeed)
 				{
 					lastLegUpdates[i] += legCycleSpeed;
-					Vec2 desiredPos = LegPos(i) + glm::normalize(Vec2(game->PlayerPos() - pos)) * legTolerance * 0.5f;
+					Vec2 desiredPos = LegPos(i) + Normalized(Vec2(game->PlayerPos() - pos)) * legTolerance * 0.5f;
 					if (glm::distance(legs[i]->desiredPos, desiredPos) > legTolerance)
 						legs[i]->desiredPos = desiredPos;
 				}
@@ -991,7 +991,7 @@ namespace Enemies
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(enemy);
 			pSnake->offset = vZero;
-			pSnake->direction = glm::normalize(Vec2(game->PlayerPos() - pSnake->pos));
+			pSnake->direction = Normalized(Vec2(game->PlayerPos() - pSnake->pos));
 			return true;
 		}
 
@@ -1016,7 +1016,7 @@ namespace Enemies
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
 			pouncer->offset = vZero;
-			pouncer->direction = glm::normalize(Vec2(game->PlayerPos() - pouncer->pos));
+			pouncer->direction = Normalized(Vec2(game->PlayerPos() - pouncer->pos));
 			return true;
 		}
 

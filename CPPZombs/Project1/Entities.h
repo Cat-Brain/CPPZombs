@@ -388,7 +388,7 @@ public:
 		for (Entity* collectible : collectibles)
 		{
 			int distance = Squistance(pos, collectible->pos);
-			if (collectible->active && distance > 0 && distance <= vacDist && glm::dot(dir, glm::normalize(Vec2(Vec2(collectible->pos - pos) + dir))) >= 1 - fov)
+			if (collectible->active && distance > 0 && distance <= vacDist && glm::dot(dir, Normalized(Vec2(Vec2(collectible->pos - pos) + dir))) >= 1 - fov)
 			{
 				collectible->SetPos(collectible->pos + Rormalized(Vec2(pos - collectible->pos)));
 			}

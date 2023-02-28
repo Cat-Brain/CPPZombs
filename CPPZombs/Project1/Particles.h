@@ -120,7 +120,7 @@ public:
 
 	void Update() override
 	{
-		pos += V2fMin(glm::normalize(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
+		pos += V2fMin(Normalized(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
 	}
 
 	void LowResUpdate() override

@@ -26,7 +26,7 @@ public:
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->direction = glm::normalize(Vec2(direction));
+        this->direction = Normalized(Vec2(direction));
         offset = vZero;
         this->pos = pos;
         begin = tTime;
