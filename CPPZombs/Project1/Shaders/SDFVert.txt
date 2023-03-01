@@ -2,11 +2,11 @@
 layout (location = 0) in vec2 aPos;
 
 uniform vec2 scale, position;
-uniform mat4 camera;
 
 out vec2 pos;
 
 void main()
 {
-   gl_Position = camera * vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);
+	pos = aPos;
+	gl_Position = vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);
 } 

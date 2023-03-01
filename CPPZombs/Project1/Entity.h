@@ -232,6 +232,7 @@ namespace DUpdates
 	void EntityDU(Entity* entity) // Normally only draws.
 	{
 		game->Draw(entity->pos, entity->color, entity->dimensions);
+		game->DrawCircle(Vec2(entity->pos) + Vec2(0.5f, 0.5f), entity->color, entity->dimensions.x);
 	}
 
 	void FadeOutDU(Entity* entity)

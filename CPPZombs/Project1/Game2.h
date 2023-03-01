@@ -312,6 +312,8 @@ void Game::TUpdate()
 		player->items.DUpdate();
 	}
 
+	DrawCircle(vZero, RGBA());
+
 	frameCount++;
 }
 

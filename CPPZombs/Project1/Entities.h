@@ -276,7 +276,7 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), ScrDim() + vOne); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), iVec2(game->zoom + 1)); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -320,7 +320,7 @@ public:
 
 	void SubScatUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), ScrDim() + vOne); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), Vec2(game->zoom + 1)); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 			entity->SubScatUpdate();

@@ -41,7 +41,8 @@ uint CreateShader(char* vertexShaderSource, char* fragmentShaderSource, string s
 
 }
 
-uint defaultShader, framebufferShader, backgroundShader, lineShader, textShader, rotatedTextShader, shadowShader, shadingShader, texturedShader;
+uint defaultShader, framebufferShader, backgroundShader, lineShader, textShader, rotatedTextShader, shadowShader, shadingShader,
+texturedShader, circleShader;
 
 vector<std::tuple<std::pair<int, int>, uint*, string>> shaders{ {{DEFAULT_VERT, DEFAULT_FRAG}, &defaultShader, "Default Shader"},
 	{{FRAMEBUFFER_VERT, FRAMEBUFFER_FRAG}, &framebufferShader, "Framebuffer Shader"},
@@ -51,4 +52,5 @@ vector<std::tuple<std::pair<int, int>, uint*, string>> shaders{ {{DEFAULT_VERT, 
 	{{ROTATED_TEXT_VERT, ROTATED_TEXT_FRAG}, &rotatedTextShader, "Rotated Text Shader"},
 	{{SHADOW_VERT, SHADOW_FRAG}, &shadowShader, "Shadow Shader"},
 	{{SHADING_VERT, SHADING_FRAG}, &shadingShader, "Shading Shader"},
-	{{TEXTURED_VERT, TEXTURED_FRAG}, &texturedShader, "Textured Shader"} };
+	{{TEXTURED_VERT, TEXTURED_FRAG}, &texturedShader, "Textured Shader"},
+	{{SDF_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader"} };

@@ -49,6 +49,9 @@
 #define TEXTURED_VERT 117
 #define TEXTURED_FRAG 118
 
+#define SDF_VERT 119
+#define CIRCLE_FRAG 120
+
 
 #define PNG_FILE 200
 #define SPRITE_SHEET 201

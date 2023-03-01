@@ -80,7 +80,7 @@ private:
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 
-		midRes = Framebuffer(80);
+		midRes = Framebuffer(trueScreenHeight);
 		subScat = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB, false);
 		shadowMap = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB16F, false);
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
@@ -128,6 +128,7 @@ public:
 	GLFWwindow* window = nullptr;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
+	float zoom = 80.0f;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
@@ -180,6 +181,18 @@ public:
 	inline void Draw(iVec2 pos, RGBA color, iVec2 dimensions = vOne)
 	{
 		DrawFBL(pos - dimensions / 2, color, dimensions);
+	}
+
+	inline void DrawCircle(Vec2 pos, RGBA color, float radius = 1)
+	{
+		glUseProgram(circleShader);
+		radius /= zoom;
+		glUniform2f(glGetUniformLocation(circleShader, "scale"), radius / screenRatio, radius);
+
+		glUniform2f(glGetUniformLocation(circleShader, "position"), pos.x, pos.y);
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		screenSpaceQuad.Draw();
 	}
 
 	inline void DrawString(string text, iVec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
