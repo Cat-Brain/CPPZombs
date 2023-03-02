@@ -30,9 +30,9 @@ public:
 		return Vec2(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
 	}
 
-	static std::pair<iVec2, iVec2> MinMaxPos(iVec2 pos, iVec2 dimensions)
+	static std::pair<iVec2, iVec2> MinMaxPos(iVec2 pos, float radius)
 	{
-		return { ToSpace(pos - dimensions / 2), ToSpace((pos + dimensions / 2)) };
+		return { ToSpace(Vec2(pos) - radius), ToSpace((Vec2(pos) + radius)) };
 	}
 };
 
@@ -67,7 +67,7 @@ public:
 			sortedNCEntities.insert(sortedNCEntities.begin(), entity.get());
 		}
 		int index = static_cast<int>(size());
-		vector<int> chunkOverlaps = FindCreateChunkOverlaps(entity->pos, Vec2(entity->radius * 2));
+		vector<int> chunkOverlaps = FindCreateChunkOverlaps(entity->pos, entity->radius);
 		for (int chunk : chunkOverlaps)
 			chunks[chunk].push_back(index);
 
@@ -110,19 +110,19 @@ public:
 		return result;
 	}
 
-	vector<int> ChunkOverlaps(iVec2 pos, iVec2 dimensions)
+	vector<int> ChunkOverlaps(iVec2 pos, float radius)
 	{
-		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
+		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
-	vector<int> FindCreateChunkOverlaps(iVec2 pos, iVec2 dimensions)
+	vector<int> FindCreateChunkOverlaps(iVec2 pos, float radius)
 	{
-		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, dimensions);
+		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return FindCreateChunkOverlapsMain(minMaxPos.first, minMaxPos.second);
 	}
 
-	Entity* FindNearestEnemy(iVec2 pos, iVec2 farthestDimensions)
+	/*Entity* FindNearestEnemy(iVec2 pos, iVec2 farthestDimensions)
 	{
 		vector<Entity*> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
 		float currentBestDist = 9999.0f; // Sqr magnitude not real magnitude.
@@ -137,58 +137,58 @@ public:
 			}
 		}
 		return currentBest;
-	}
+	}*/
 
-	vector<Entity*> FindCorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, iVec2 dim)
+	vector<Entity*> FindCorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim) &&
+				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius) &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
-	vector<Entity*> FindCorpOverlaps(iVec2 pos, iVec2 dim)
+	vector<Entity*> FindCorpOverlaps(iVec2 pos, float radius)
 	{
-		return FindCorpOverlaps(FindCreateChunkOverlaps(pos, dim), pos, dim);
+		return FindCorpOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	vector<Entity*> FindIncorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, iVec2 dim)
+	vector<Entity*> FindIncorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, dim)) overlaps.push_back((*this)[*iter].get());
+				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius)) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
-	vector<Entity*> FindIncorpOverlaps(iVec2 pos, iVec2 dim)
+	vector<Entity*> FindIncorpOverlaps(iVec2 pos, float radius)
 	{
-		return FindIncorpOverlaps(FindCreateChunkOverlaps(pos, dim), pos, dim);
+		return FindIncorpOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	vector<Entity*> FindAllOverlaps(vector<int> chunkOverlaps, iVec2 pos, iVec2 dim)
+	vector<Entity*> FindAllOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, dim) && (*this)[*iter]->active &&
+				if ((*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
-	vector<Entity*> FindAllOverlaps(iVec2 pos, iVec2 dim)
+	vector<Entity*> FindAllOverlaps(iVec2 pos, float radius)
 	{
-		return FindAllOverlaps(FindCreateChunkOverlaps(pos, dim), pos, dim);
+		return FindAllOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, iVec2 pos, iVec2 dim) // Returns {corporeals, incorporeals}
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius) // Returns {corporeals, incorporeals}
 	{
 		vector<Entity*> corporeals{}, incorporeals{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, dim) && (*this)[*iter]->active &&
+				if ((*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
 					(((*this)[*iter]->corporeal && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
 						(!(*this)[*iter]->corporeal && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
@@ -200,9 +200,9 @@ public:
 		return { corporeals, incorporeals };
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(iVec2 pos, iVec2 dim)
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(iVec2 pos, float radius)
 	{
-		return FindPairOverlaps(FindCreateChunkOverlaps(pos, dim), pos, dim);
+		return FindPairOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
 	// Add more overlap functions.
@@ -276,7 +276,7 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), iVec2(game->zoom * 2 + 1)); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), game->zoom * 2 + 1); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -320,7 +320,7 @@ public:
 
 	void SubScatUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), Vec2(game->zoom + 1)); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), game->zoom * 0.5f + 0.5f); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 			entity->SubScatUpdate();
@@ -343,7 +343,7 @@ public:
 		// Remove from every chunk that this object overlaps.
 		vector<unique_ptr<Entity>>::iterator mainPos = std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; });;
 		int removalIndex = static_cast<int>(distance(begin(), mainPos));
-		vector<int> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, Vec2(entityToRemove->radius * 2));
+		vector<int> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, entityToRemove->radius);
 		for (int chunk : chunkOverlaps)
 			chunks[chunk].erase(find(chunks[chunk].begin(), chunks[chunk].end(), removalIndex));
 
@@ -435,17 +435,17 @@ bool Entity::TryMove(iVec2 direction, float force, Entity* ignore, Entity** hitE
 	}
 	if (force >= mass && direction != iVec2(0, 0))
 	{
-		chunkOverlaps = game->entities->FindCreateChunkOverlaps(newPos, iVec2(CeilToInt(radius * 2)));
-		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, iVec2(CeilToInt(radius * 2)));
+		chunkOverlaps = game->entities->FindCreateChunkOverlaps(newPos, radius);
+		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, radius);
 		for (Entity* entity : overlaps)
 			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
 			{
 				if (hitEntity != nullptr)
 					*hitEntity = entity;
-				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, iVec2(CeilToInt(radius * 2))))
+				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, radius))
 				{
 					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, iVec2(CeilToInt(radius * 2)));
+					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, radius);
 					bool successful = false;
 					for (Entity* entity2 : overlaps2)
 						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
@@ -469,8 +469,8 @@ bool Entity::TryMove(iVec2 direction, float force, Entity* ignore, Entity** hitE
 
 void Entity::SetPos(iVec2 newPos)
 {
-	std::pair<iVec2, iVec2> minMaxOldPos = Chunk::MinMaxPos(pos, iVec2(CeilToInt(radius * 2)));
-	std::pair<iVec2, iVec2> minMaxNewPos = Chunk::MinMaxPos(newPos, iVec2(CeilToInt(radius * 2)));
+	std::pair<iVec2, iVec2> minMaxOldPos = Chunk::MinMaxPos(pos, radius);
+	std::pair<iVec2, iVec2> minMaxNewPos = Chunk::MinMaxPos(newPos, radius);
 	if (minMaxOldPos.first != minMaxNewPos.first || minMaxOldPos.second != minMaxNewPos.second)
 	{
 		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
@@ -559,7 +559,7 @@ namespace Updates
 		ExplodeNextFrame* explosion = static_cast<ExplodeNextFrame*>(entity);
 		if (tTime != explosion->startTime)
 		{
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(explosion->pos, Vec2(explosion->explosionRadius * 2));
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(explosion->pos, explosion->explosionRadius);
 			for (Entity* entity : hitEntities)
 				if (entity != explosion && entity != explosion->creator)
 					entity->DealDamage(explosion->damage, explosion);
@@ -579,7 +579,7 @@ namespace Updates
 		if (tTime - puddle->lastTime > puddle->timePer)
 		{
 			puddle->lastTime = tTime;
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(puddle->pos, Vec2(puddle->radius * 2));
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(puddle->pos, puddle->radius);
 			for (Entity* entity : hitEntities)
 				entity->DealDamage(puddle->damage, puddle);
 		}
@@ -736,7 +736,7 @@ namespace ItemODs
 	{
 		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item);
 
-		if (((Entity*)game->player)->Overlaps(pos, Vec2(pOL->radius)))
+		if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
 		{
 			pOL->OnDeath(ITEMOD::ITEM, pos, creator, creatorName, callReason, callType);
 			return;

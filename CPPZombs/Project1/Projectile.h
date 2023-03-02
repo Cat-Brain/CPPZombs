@@ -40,7 +40,7 @@ public:
 
     bool CheckPos(Entity*& hitEntity)
     {
-        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, Vec2(radius * 2));
+        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, radius);
 
         for (Entity* entity : hitEntities)
         {

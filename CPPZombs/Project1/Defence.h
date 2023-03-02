@@ -135,7 +135,7 @@ namespace TUpdates
 			iVec2 placementPos = vine->pos;
 			while (placementPos == vine->pos)
 				placementPos = Vec2(vine->pos) + vine->radius * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, Vec2(vine->radius * 2));
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, vine->radius);
 			if (!hitEntities.size())
 			{
 				unique_ptr<Entity> newVine = vine->baseClass->Clone(placementPos, up, vine);

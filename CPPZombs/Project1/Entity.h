@@ -173,9 +173,9 @@ public:
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 
-	bool Overlaps(iVec2 pos, iVec2 dimensions)
+	bool Overlaps(iVec2 pos, float radius)
 	{
-		return overlapFuns[overlapFun](this, pos, dimensions);
+		return overlapFuns[overlapFun](this, pos, radius);
 	}
 };
 
@@ -184,11 +184,11 @@ public:
 
 #pragma region Other Entity funcitons
 
-vector<Entity*> EntitiesOverlaps(iVec2 pos, iVec2 dimensions, vector<Entity*> entities)
+vector<Entity*> EntitiesOverlaps(iVec2 pos, float radius, vector<Entity*> entities)
 {
 	vector<Entity*> foundEntities(0);
 	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
-		if ((*i)->Overlaps(pos, dimensions))
+		if ((*i)->Overlaps(pos, radius))
 			foundEntities.push_back(*i);
 	return foundEntities;
 }

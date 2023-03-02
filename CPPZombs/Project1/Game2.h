@@ -2,10 +2,10 @@
 
 void Game::Start()
 {
-	srand(static_cast<uint>(time(NULL)));
+	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, vOne, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
 	player = playerUnique.get();
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -143,19 +143,18 @@ void Game::ApplyLighting()
 	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 0);
 
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
-		screenRatio * zoom, zoom);
-
+		screenRatio * zoom * 2, zoom * 2);
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 	{
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
 
 		Vec2 scrPos = light->pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 4 + 2) / (zoom * screenRatio), float(light->range * 4 + 2) / zoom);
+			float(light->range * 4 + 2) / (zoom * 4 * screenRatio), float(light->range * 4 + 2) / (zoom * 4));
 
 		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - light->range) * 2 / (zoom * screenRatio),
-			(scrPos.y - light->range) * 2 / zoom);
+			(scrPos.x - light->range) / (zoom * screenRatio * 2),
+			(scrPos.y - light->range) / (zoom * 2));
 
 		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
 
@@ -171,7 +170,6 @@ void Game::ApplyLighting()
 	}
 
 	// If something is rendered it will subtract from the source, this will be used for dark sources.
-	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
 
 	for (unique_ptr<LightSource>& light : entities->darkSources)
 	{

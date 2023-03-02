@@ -12,9 +12,9 @@ public:
 		timePerVac = 0.0625f, lastClick = 0.0f,
 		timePerHoldMove = timePerMove, lastHoldMove = 0.0f;
 
-	Player(iVec2 pos = vZero, iVec2 dimensions = vOne, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
+	Player(iVec2 pos = vZero, float radius = 0.5f, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(lightColor, lightOrDark, range, pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
+		LightBlock(lightColor, lightOrDark, range, pos, radius, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
 	{
 		update = UPDATE::PLAYERU;
 		onDeath = ONDEATH::PLAYEROD;
@@ -53,8 +53,8 @@ namespace Updates
 
 		vector<Entity*> hitEntities;
 		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
-			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + Vec2(player->pos), vOne))
-			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), iVec2(CeilToInt(player->radius)))).size())
+			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f))
+			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), player->radius)).size())
 		{
 			if (player->currentMenuedEntity != nullptr)
 				player->currentMenuedEntity->shouldUI = false;
@@ -132,7 +132,7 @@ namespace Updates
 		std::cout << game->inputs.mousePosition.x << ", " << game->inputs.mousePosition.y << '\n';
 
 		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
-			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), vOne)).size())
+			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f)).size())
 		{
 			player->heldEntity = hitEntities[0];
 			player->heldEntity->holder = player;
@@ -151,7 +151,7 @@ namespace Updates
 			player->lastVac = tTime;
 		}
 
-		vector<Entity*> collectibles = EntitiesOverlaps(player->pos, Vec2(player->radius * 2), game->entities->collectibles);
+		vector<Entity*> collectibles = EntitiesOverlaps(player->pos, player->radius, game->entities->collectibles);
 		for (Entity* collectible : collectibles)
 		{
 			player->items.push_back(((Collectible*)collectible)->baseItem);
