@@ -20,25 +20,25 @@ public:
 	int damage;
 	int count;
 	float range, shootSpeed;
-	Vec2 dimensions;
+	float radius;
 	bool corporeal; // Is this corporeal when shot? Ignored by collectible which is never corporeal.
 	bool shouldCollide; // Should this as a projectile be destroyed upon contact?
 	float mass;
 	int health;
 
 	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemOD(ITEMOD::ITEM), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
-		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
+		range(range), shootSpeed(shootSpeed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemOD(ITEMOD::ITEM), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), subScat(subScat), damage(damage), count(count),
-		range(range), shootSpeed(shootSpeed), dimensions(dimensions), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
+		range(range), shootSpeed(shootSpeed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	virtual Item Clone(int count)
 	{
-		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
+		return Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item Clone()
@@ -48,7 +48,7 @@ public:
 
 	virtual Item* Clone2(int count)
 	{
-		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
+		return new Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2()
@@ -92,27 +92,27 @@ class GoneOnLandItem : public Item
 {
 public:
 	GoneOnLandItem(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
+		int count = 1, float range = 15.0f, float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	GoneOnLandItem(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), RGBA subScat = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, Vec2 dimensions = vOne, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health)
+		int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	Item Clone(int count) override
 	{
-		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
+		return GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, dimensions, corporeal, shouldCollide, mass, health);
+		return new GoneOnLandItem(baseClass, name, typeName, intType, color, subScat, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health);
 	}
 };
 
@@ -238,5 +238,5 @@ namespace Resources
 	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), RGBA(0, 5, 10), 1);
 	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), RGBA(10, 10, 5), 12, 1, 15, 0.125f);
 	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), RGBA(5, 5, 10), 6, 1, 5);
-	Item* bowler = new Item("Bowler", "Push Ammo", 1, RGBA(36, 15, 110), RGBA(5, 0, 10), 0, 1, 15, 0.5f, vOne * 5, true, false, 25, 5);
+	Item* bowler = new Item("Bowler", "Push Ammo", 1, RGBA(36, 15, 110), RGBA(5, 0, 10), 0, 1, 15, 0.5f, 2.5f, true, false, 25, 5);
 }

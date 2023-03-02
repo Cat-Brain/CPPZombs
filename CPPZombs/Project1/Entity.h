@@ -37,7 +37,7 @@ enum OVERLAPFUN
 	ENTITYOF
 };
 
-vector<function<bool(Entity*, iVec2, iVec2)>> overlapFuns;
+vector<function<bool(Entity*, iVec2, float)>> overlapFuns;
 
 enum ONDEATH
 {
@@ -63,7 +63,7 @@ public:
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
 	iVec2 pos, dir;
-	iVec2 dimensions;
+	float radius;
 	RGBA color, subScat;
 	float mass;
 	int maxHealth, health;
@@ -71,9 +71,9 @@ public:
 	int sortLayer = 0;
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
-	Entity(iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(), RGBA subScat = RGBA(),
+	Entity(iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), dimensions(dimensions), dir(0, 0), color(color), subScat(subScat),
+		pos(pos), radius(radius), dir(0, 0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), onDeath(ONDEATH::ENTITYOD), overlapFun(OVERLAPFUN::ENTITYOF)
 	{
@@ -149,12 +149,12 @@ public:
 
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
 	{
-		game->Draw(pos, subScat, dimensions);
+		//game->Draw(pos, subScat, radius);
 	}
 
 	iVec2 BottomLeft() // Not always accurate.
 	{
-		return (pos + right * (dimensions.x / 2 + 1) - game->PlayerPos() + down * (dimensions.y / 2)) * int(2 * trueScreenHeight / midRes.height);
+		return (Vec2(pos) + Vec2(right) * Vec2(radius / 2 + 1) - Vec2(game->PlayerPos()) + Vec2(down) * Vec2(radius / 2)) * 2.f;
 	}
 
 	void DrawUIBox(iVec2 bottomLeft, iVec2 topRight, int boarderWidth, string text, RGBA textColor,
@@ -202,8 +202,8 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA()) :
-		Entity(pos, dimensions, color), totalFadeTime(totalFadeTime), startTime(tTime)
+	FadeOut(float totalFadeTime = 1.0f, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
+		Entity(pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
 		update = UPDATE::FADEOUTU;
 		dUpdate = DUPDATE::FADEOUTDU;
@@ -231,8 +231,7 @@ namespace DUpdates
 {
 	void EntityDU(Entity* entity) // Normally only draws.
 	{
-		game->Draw(entity->pos, entity->color, entity->dimensions);
-		game->DrawCircle(Vec2(entity->pos) + Vec2(0.5f, 0.5f), entity->color, entity->dimensions.x);
+		game->DrawCircle(Vec2(entity->pos), entity->color, entity->radius);
 	}
 
 	void FadeOutDU(Entity* entity)
@@ -258,9 +257,10 @@ namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
 
 namespace OverlapFuns
 {
-	bool EntityOF(Entity* entity, iVec2 pos, iVec2 dimensions)
+	bool EntityOF(Entity* entity, iVec2 pos, float radius)
 	{
-		return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
+		return glm::length2(Vec2(entity->pos - pos)) < (entity->radius + radius) * (entity->radius + radius);
+		//return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
 	}
 }
 

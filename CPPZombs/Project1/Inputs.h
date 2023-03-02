@@ -13,7 +13,7 @@ struct Inputs
 		leftMouse, rightMouse, middleMouse,
 		comma, period, slash; // <- Command keys.
 	int mouseScroll = 0;
-	iVec2 mousePosition = vZero, screenMousePosition = vZero;
+	Vec2 mousePosition = vZero, screenMousePosition = vZero;
 
 	Inputs() = default;
 
@@ -76,18 +76,16 @@ struct Inputs
 		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
 	}
 
-	void FindMousePos(GLFWwindow* window)
+	void FindMousePos(GLFWwindow* window, float zoom)
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 		screenMousePosition = { static_cast<int>(xPos), static_cast<int>(trueScreenHeight) - static_cast<int>(yPos) };
 		xPos /= trueScreenHeight;
-		xPos *= ScrHeight();
-		xPos -= 0.5 * int(ScrWidth() % 2 == 0);
+		xPos *= zoom * 2;
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
-		yPos *= ScrHeight();
-		yPos -= 0.5 * int(ScrHeight() % 2 == 0);
-		mousePosition.x = static_cast<int>(round(xPos - ScrWidth() / 2.0));
-		mousePosition.y = static_cast<int>(round(yPos - ScrHeight() / 2.0));
+		yPos *= zoom * 2;
+		mousePosition.x = xPos - zoom * screenRatio;
+		mousePosition.y = yPos - zoom;
 	}
 };

@@ -18,22 +18,22 @@ void Game::Start()
 	planet = std::make_unique<Planet>();
 }
 
-bool CheckInputSquareHover(iVec2 minPos, float scale, string text) // Returns if square is being hovered over.
+bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
 {
 	return game->inputs.screenMousePosition.x > minPos.x && game->inputs.screenMousePosition.x < minPos.x + font.TextWidth(text)* scale / font.minimumSize &&
 		game->inputs.screenMousePosition.y > minPos.y + scale * font.mininumVertOffset / font.minimumSize &&
 		game->inputs.screenMousePosition.y < minPos.y + scale * font.maxVertOffset / font.minimumSize;
 }
 
-bool InputHoverSquare(iVec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
+bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
 {
 		if (CheckInputSquareHover(minPos, scale, text))
 		{
-			font.Render(text, minPos * 2 - ScrDim(), scale * 2, color2);
+			font.Render(text, minPos * 2.f - Vec2(ScrDim()), scale * 2, color2);
 			return game->inputs.leftMouse.pressed;
 		}
 		else
-			font.Render(text, { minPos * 2 - ScrDim() }, scale * 2, color1);
+			font.Render(text, { minPos * 2.f - Vec2(ScrDim())}, scale * 2, color1);
 		return false;
 }
 	
@@ -47,7 +47,7 @@ void Game::Update()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		inputs.FindMousePos(window);
+		inputs.FindMousePos(window, zoom);
 
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
@@ -90,7 +90,7 @@ void Game::Update()
 				font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 				font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 
-				inputs.FindMousePos(window);
+				inputs.FindMousePos(window, zoom);
 
 				if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
 				{
@@ -109,7 +109,7 @@ void Game::Update()
 			currentFramebuffer = 0;
 			UseFramebuffer();
 
-			inputs.FindMousePos(window);
+			inputs.FindMousePos(window, zoom);
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 			{
 				player->lastClick = tTime;
@@ -143,7 +143,7 @@ void Game::ApplyLighting()
 	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 0);
 
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
-		ScrWidth(), ScrHeight());
+		screenRatio * zoom, zoom);
 
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 	{
@@ -151,11 +151,11 @@ void Game::ApplyLighting()
 
 		Vec2 scrPos = light->pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
+			float(light->range * 4 + 2) / (zoom * screenRatio), float(light->range * 4 + 2) / zoom);
 
 		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - light->range) * 2 / ScrWidth(),
-			(scrPos.y - light->range) * 2 / ScrHeight());
+			(scrPos.x - light->range) * 2 / (zoom * screenRatio),
+			(scrPos.y - light->range) * 2 / zoom);
 
 		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
 
@@ -179,11 +179,11 @@ void Game::ApplyLighting()
 
 		Vec2 scrPos = light->pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 4 + 2) / ScrWidth(), float(light->range * 4 + 2) / ScrHeight());
+			float(light->range * 4 + 2) / (screenRatio * zoom), float(light->range * 4 + 2) / zoom);
 
 		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - light->range) * 2 / ScrWidth(),
-			(scrPos.y - light->range) * 2 / ScrHeight());
+			(scrPos.x - light->range) * 2 / (screenRatio * zoom),
+			(scrPos.y - light->range) * 2 / zoom);
 
 		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
 
@@ -246,7 +246,7 @@ void Game::TUpdate()
 	UseFramebuffer();
 	// In TUpdate such that time doesn't progress whilst paused.
 	tTime += dTime;
-	inputs.FindMousePos(window);
+	inputs.FindMousePos(window, zoom);
 
 	brightness = planet->GetBrightness();
 
@@ -274,8 +274,8 @@ void Game::TUpdate()
 	}
 
 	glUseProgram(backgroundShader);
-	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x * 2.0f, PlayerPos().y * 2.0f);
-	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), static_cast<float>(ScrWidth()), static_cast<float>(ScrHeight()));
+	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x, PlayerPos().y);
+	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), screenRatio * zoom, zoom);
 	glUniform3f(glGetUniformLocation(backgroundShader, "col1"), planet->color1.r / 255.0f, planet->color1.g / 255.0f, planet->color1.b / 255.0f);
 	glUniform3f(glGetUniformLocation(backgroundShader, "col2"), planet->color2.r / 255.0f, planet->color2.g / 255.0f, planet->color2.b / 255.0f);
 	screenSpaceQuad.Draw();
@@ -283,7 +283,7 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
-	Draw(inputs.mousePosition + player->pos, RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64))); // Draw mouse.
+	DrawCircle(inputs.mousePosition + Vec2(player->pos), RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)), 0.5f); // Draw mouse.
 	// Draw mid-res screen onto true screen.
 	DrawFramebufferOnto(0);
 
@@ -311,8 +311,6 @@ void Game::TUpdate()
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();
 	}
-
-	DrawCircle(vZero, RGBA());
 
 	frameCount++;
 }

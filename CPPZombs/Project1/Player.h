@@ -52,9 +52,9 @@ namespace Updates
 		}
 
 		vector<Entity*> hitEntities;
-		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != vZero &&
-			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + player->pos, vOne))
-			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, player->dimensions)).size())
+		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
+			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + Vec2(player->pos), vOne))
+			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), iVec2(CeilToInt(player->radius)))).size())
 		{
 			if (player->currentMenuedEntity != nullptr)
 				player->currentMenuedEntity->shouldUI = false;
@@ -126,19 +126,19 @@ namespace Updates
 			if (tTime - player->lastHoldMove > player->timePerHoldMove)
 			{
 				player->lastHoldMove = tTime;
-				player->heldEntity->TryMove(Rormalized(Vec2(player->pos + game->inputs.mousePosition - player->heldEntity->pos)), player->mass);
+				player->heldEntity->TryMove(Rormalized(game->inputs.mousePosition + Vec2(player->pos - player->heldEntity->pos)), player->mass);
 			}
 		}
 		std::cout << game->inputs.mousePosition.x << ", " << game->inputs.mousePosition.y << '\n';
 
-		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != vZero &&
-			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + player->pos, vOne)).size())
+		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
+			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), vOne)).size())
 		{
 			player->heldEntity = hitEntities[0];
 			player->heldEntity->holder = player;
 		}
 		else if (!game->inputs.space.held && tTime - player->lastClick > currentShootingItem.shootSpeed && player->currentMenuedEntity == nullptr &&
-			game->inputs.mousePosition != vZero && currentShootingItem != *dItem && game->inputs.leftMouse.held && player->items.TryTake(currentShootingItem))
+			game->inputs.mousePosition != Vec2(0) && currentShootingItem != *dItem && game->inputs.leftMouse.held && player->items.TryTake(currentShootingItem))
 		{
 			player->lastClick = tTime;
 			game->entities->push_back(basicShotItem->Clone(currentShootingItem,
@@ -151,7 +151,7 @@ namespace Updates
 			player->lastVac = tTime;
 		}
 
-		vector<Entity*> collectibles = EntitiesOverlaps(player->pos, player->dimensions, game->entities->collectibles);
+		vector<Entity*> collectibles = EntitiesOverlaps(player->pos, Vec2(player->radius * 2), game->entities->collectibles);
 		for (Entity* collectible : collectibles)
 		{
 			player->items.push_back(((Collectible*)collectible)->baseItem);

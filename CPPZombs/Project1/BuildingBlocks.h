@@ -5,9 +5,9 @@ class DToCol : public Entity
 public:
 	RGBA color2;
 
-	DToCol(iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(), RGBA color2 = RGBA(),
+	DToCol(iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), color2(color2)
+		Entity(pos, radius, color, subScat, mass, maxHealth, health, name), color2(color2)
 	{
 		dUpdate = DUPDATE::DTOCOLDU;
 	}
@@ -37,9 +37,9 @@ public:
 	LightSource* lightSource;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(),
+	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, dimensions, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
+		DToCol(pos, radius, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{
 		onDeath = ONDEATH::LIGHTBLOCKOD;
@@ -88,8 +88,8 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, vOne, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
-	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, vOne, RGBA(255, 255, 255), RGBA(), RGBA(), 1, 1, 1, "Shades");
+	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
+	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
@@ -117,17 +117,17 @@ public:
 	TUPDATE tUpdate;
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
@@ -151,17 +151,17 @@ public:
 	TUPDATE tUpdate;
 	float timePer, timeSince;
 
-	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), Vec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), timeSince(0), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();
 	}
 
-	FunctionalBlock2(float timePer, float offset, iVec2 pos = vZero, iVec2 dimensions = vOne, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, float offset, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, dimensions, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();

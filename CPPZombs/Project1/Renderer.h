@@ -128,7 +128,7 @@ public:
 	GLFWwindow* window = nullptr;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
-	float zoom = 80.0f;
+	float zoom = 40.0f;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
@@ -189,6 +189,9 @@ public:
 		radius /= zoom;
 		glUniform2f(glGetUniformLocation(circleShader, "scale"), radius / screenRatio, radius);
 
+		pos -= PlayerPos();
+		pos.x /= screenRatio;
+		pos /= zoom;
 		glUniform2f(glGetUniformLocation(circleShader, "position"), pos.x, pos.y);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);

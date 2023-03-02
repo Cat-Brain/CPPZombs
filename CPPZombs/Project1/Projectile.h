@@ -10,9 +10,9 @@ public:
     float speed, begin;
     int callType = 0;
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, iVec2 dimensions = iVec2(1, 1), RGBA color = RGBA(),
+    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
         RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
-        Entity(iVec2(0, 0), dimensions, color, subScat, mass, maxHealth, health, name),
+        Entity(iVec2(0, 0), radius, color, subScat, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         update = UPDATE::PROJECTILEU;
@@ -40,7 +40,7 @@ public:
 
     bool CheckPos(Entity*& hitEntity)
     {
-        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, dimensions);
+        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, Vec2(radius * 2));
 
         for (Entity* entity : hitEntities)
         {
@@ -105,8 +105,8 @@ public:
     Item item;
     string creatorName;
 
-    ShotItem(Item item, float speed = 8.0f, Vec2 dimensions = Vec2(1, 1), float mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item.range, item.damage, speed, dimensions, item.color, RGBA(), mass, maxHealth, health), item(item)
+    ShotItem(Item item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(item.range, item.damage, speed, radius, item.color, RGBA(), mass, maxHealth, health), item(item)
     {
         onDeath = ONDEATH::SHOTITEMOD;
         Start();
@@ -144,7 +144,7 @@ public:
         subScat = item.subScat;
         mass = item.mass;
         corporeal = item.corporeal;
-        dimensions = item.dimensions;
+        radius = item.radius;
         health = item.health;
             name = item.name;
         if (creator != nullptr)
@@ -177,4 +177,4 @@ namespace Projectiles
     Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), RGBA(), 2, 1, 30.0f);
 }
 
-ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, vOne, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);
