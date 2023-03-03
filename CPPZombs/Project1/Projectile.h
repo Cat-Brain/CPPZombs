@@ -33,7 +33,7 @@ public:
         Start();
     }
 
-    unique_ptr<Entity> Clone(iVec2 pos, iVec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
     {
         return make_unique<Projectile>(this, pos, direction, creator);
     }
@@ -57,12 +57,7 @@ public:
 
     virtual void MovePos()
     {
-        offset += direction * game->dTime * speed;
-        if (iVec2(offset) != vZero)
-        {
-            TryMove(iVec2(offset), mass + mass, creator);
-            offset -= iVec2(offset);
-        }
+        TryMove(direction * game->dTime * speed, mass + mass, creator);
     }
 };
 
@@ -87,7 +82,7 @@ namespace Updates
             projectile->DestroySelf(entity);
             return;
         }
-        iVec2 oldPos = projectile->pos;
+        Vec2 oldPos = projectile->pos;
         projectile->MovePos();
         if (oldPos != projectile->pos && projectile->CheckPos(entity))
         {
@@ -152,7 +147,7 @@ public:
         Start();
     }
 
-    unique_ptr<Entity> Clone(iVec2 pos, iVec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
     {
         return make_unique<ShotItem>(this, pos, direction, creator);
     }

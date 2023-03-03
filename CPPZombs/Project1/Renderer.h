@@ -198,9 +198,9 @@ public:
 		screenSpaceQuad.Draw();
 	}
 
-	inline void DrawString(string text, iVec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
+	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2) / Vec2(midRes.ScrDim()) * Vec2(ScrDim())), scale, color);
+		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2.f) / Vec2(midRes.ScrDim()) * Vec2(ScrDim())), scale, color);
 	}
 
 	void DrawTextured(Texture& texture, uint spriteToDraw, iVec2 pos, RGBA color, iVec2 dimensions = vOne)
@@ -254,6 +254,31 @@ public:
 		line.Draw();
 	}
 
+	void DrawLight(Vec2 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
+	{
+		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
+
+		Vec2 scrPos = pos - Vec2(PlayerPos());
+		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
+			range / (zoom * 1.5f * screenRatio), range / (zoom * 1.5f));
+
+		glUniform2f(glGetUniformLocation(shadowShader, "position"),
+			(scrPos.x - range) / (zoom * 3 * screenRatio),
+			(scrPos.y - range) / (zoom * 3));
+
+		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
+
+		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
+			scrPos.x - range, scrPos.y - range);
+
+		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
+			scrPos.x + range, scrPos.y + range);
+
+		glUniform3f(glGetUniformLocation(shadowShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
+
+		quad.Draw();
+	}
+
 	void DrawFramebufferOnto(uint newFramebuffer)
 	{
 		glUseProgram(framebufferShader);
@@ -272,7 +297,7 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual iVec2 PlayerPos() // The position of the player in normal coordinates.
+	inline virtual Vec2 PlayerPos() // The position of the player in normal coordinates.
 	{
 		return vZero;
 	}

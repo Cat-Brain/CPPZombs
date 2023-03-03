@@ -29,7 +29,7 @@ public:
 		timeSince = timePer * RandFloat();
 	}
 
-	Tree(Tree* baseClass, iVec2 dir, iVec2 pos) :
+	Tree(Tree* baseClass, Vec2 dir, Vec2 pos) :
 		Tree(*baseClass)
 	{
 		this->pos = pos;
@@ -37,7 +37,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Tree>(this, dir, pos);
 	}
@@ -79,7 +79,7 @@ public:
 		tUpdate = TUPDATE::VINETU;
 	}
 
-	Vine(Vine* baseClass, iVec2 dir, iVec2 pos) :
+	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
 		Vine(*baseClass)
 	{
 		this->pos = pos;
@@ -87,7 +87,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Vine>(this, dir, pos);
 	}
@@ -119,9 +119,9 @@ namespace TUpdates
 		if (tree->currentLifespan >= tree->cyclesToGrow && tree->currentLifespan < tree->deadStage)
 		{
 			if (rand() % 100 < tree->chanceForSeed)
-				game->entities->push_back(tree->seed->Clone(Vec2(tree->pos) + (tree->radius + tree->seed->radius) * 0.5f * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->radius + tree->seed->radius) * RandCircPoint()));
 			else
-				game->entities->push_back(tree->collectible->Clone(Vec2(tree->pos) + (tree->radius + tree->collectible->radius) * 0.5f * Vec2((rand() % 2) * 2 - 1, (rand() % 2) * 2 - 1)));
+				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->radius + tree->collectible->radius) * RandCircPoint()));
 		}
 		tree->currentLifespan++;
 		return true;
@@ -132,16 +132,10 @@ namespace TUpdates
 		Vine* vine = static_cast<Vine*>(entity);
 		if (vine->generation < vine->maxGenerations && vine->currentLifespan >= vine->cyclesToGrow && vine->currentLifespan < vine->deadStage)
 		{
-			iVec2 placementPos = vine->pos;
-			while (placementPos == vine->pos)
-				placementPos = Vec2(vine->pos) + vine->radius * Vec2((rand() % 3) - 1, (rand() % 3) - 1);
-			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(placementPos, vine->radius);
-			if (!hitEntities.size())
-			{
-				unique_ptr<Entity> newVine = vine->baseClass->Clone(placementPos, up, vine);
-				((Vine*)newVine.get())->generation = vine->generation + 1;
-				game->entities->push_back(std::move(newVine));
-			}
+			Vec2 placementPos = vine->pos + vine->radius * 2 * RandCircPoint();
+			unique_ptr<Entity> newVine = vine->baseClass->Clone(placementPos, up, vine);
+			((Vine*)newVine.get())->generation = vine->generation + 1;
+			game->entities->push_back(std::move(newVine));
 		}
 		vine->currentLifespan++;
 		return true;

@@ -213,8 +213,7 @@ public:
 			return;
 		int height = ScrHeight();
 		float scale = height / (2.0f * max(8, int(size()))), scale2 = scale / 5.0f;
-		iVec2
-			offset = vZero - ScrDim();
+		iVec2 offset = vZeroI - ScrDim();
 		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex].color, Vec2(scale, scale));
 		for (int i = 0; i < size(); i++)
 		{

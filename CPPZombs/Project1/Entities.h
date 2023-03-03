@@ -110,13 +110,13 @@ public:
 		return result;
 	}
 
-	vector<int> ChunkOverlaps(iVec2 pos, float radius)
+	vector<int> ChunkOverlaps(Vec2 pos, float radius)
 	{
 		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return MainChunkOverlaps(minMaxPos.first, minMaxPos.second);
 	}
 
-	vector<int> FindCreateChunkOverlaps(iVec2 pos, float radius)
+	vector<int> FindCreateChunkOverlaps(Vec2 pos, float radius)
 	{
 		std::pair<iVec2, iVec2> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return FindCreateChunkOverlapsMain(minMaxPos.first, minMaxPos.second);
@@ -139,7 +139,7 @@ public:
 		return currentBest;
 	}*/
 
-	vector<Entity*> FindCorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
+	vector<Entity*> FindCorpOverlaps(vector<int> chunkOverlaps, Vec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
@@ -149,12 +149,12 @@ public:
 		return overlaps;
 	}
 
-	vector<Entity*> FindCorpOverlaps(iVec2 pos, float radius)
+	vector<Entity*> FindCorpOverlaps(Vec2 pos, float radius)
 	{
 		return FindCorpOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	vector<Entity*> FindIncorpOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
+	vector<Entity*> FindIncorpOverlaps(vector<int> chunkOverlaps, Vec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
@@ -163,12 +163,12 @@ public:
 		return overlaps;
 	}
 
-	vector<Entity*> FindIncorpOverlaps(iVec2 pos, float radius)
+	vector<Entity*> FindIncorpOverlaps(Vec2 pos, float radius)
 	{
 		return FindIncorpOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	vector<Entity*> FindAllOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius)
+	vector<Entity*> FindAllOverlaps(vector<int> chunkOverlaps, Vec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
@@ -178,12 +178,12 @@ public:
 		return overlaps;
 	}
 
-	vector<Entity*> FindAllOverlaps(iVec2 pos, float radius)
+	vector<Entity*> FindAllOverlaps(Vec2 pos, float radius)
 	{
 		return FindAllOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, iVec2 pos, float radius) // Returns {corporeals, incorporeals}
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, Vec2 pos, float radius) // Returns {corporeals, incorporeals}
 	{
 		vector<Entity*> corporeals{}, incorporeals{};
 		for (int chunk : chunkOverlaps)
@@ -200,7 +200,7 @@ public:
 		return { corporeals, incorporeals };
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(iVec2 pos, float radius)
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec2 pos, float radius)
 	{
 		return FindPairOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
@@ -257,6 +257,12 @@ public:
 			{
 				Entity* entity = sortedNCEntities[index];
 				entity->Update();
+			}
+		for (index = 0; index < sortedNCEntities.size(); index++)
+			if (sortedNCEntities[index]->active && sortedNCEntities[index]->corporeal)
+			{
+				Entity* entity = sortedNCEntities[index];
+				entity->UpdateCollision();
 			}
 
 		if (addedEntity)
@@ -371,27 +377,23 @@ public:
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
-	void Vacuum(iVec2 pos, int vacDist)
+	void Vacuum(Vec2 pos, float vacDist, float speed)
 	{
 		for (Entity* collectible : collectibles)
 		{
-			int distance = Squistance(pos, collectible->pos);
+			int distance = Distance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist)
-			{
-				collectible->SetPos(collectible->pos + Rormalized(Vec2(pos - collectible->pos)));
-			}
+				collectible->SetPos(collectible->pos + Normalized(Vec2(pos - collectible->pos)) * game->dTime * speed);
 		}
 	}
 
-	void VacuumCone(iVec2 pos, Vec2 dir, int vacDist, float fov)
+	void VacuumCone(Vec2 pos, Vec2 dir, int vacDist, float fov)
 	{
 		for (Entity* collectible : collectibles)
 		{
 			int distance = Squistance(pos, collectible->pos);
 			if (collectible->active && distance > 0 && distance <= vacDist && glm::dot(dir, Normalized(Vec2(Vec2(collectible->pos - pos) + dir))) >= 1 - fov)
-			{
-				collectible->SetPos(collectible->pos + Rormalized(Vec2(pos - collectible->pos)));
-			}
+				collectible->SetPos(collectible->pos + Normalized(Vec2(pos - collectible->pos)) * game->dTime);
 		}
 	}
 };
@@ -424,16 +426,16 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
-bool Entity::TryMove(iVec2 direction, float force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction, float force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
 {
-	iVec2 newPos = pos + direction;
-	vector<int> chunkOverlaps;
+	Vec2 newPos = pos + direction;
+	/*vector<int> chunkOverlaps;
 	if (!corporeal)
 	{
 		SetPos(newPos);
 		return true;
 	}
-	if (force >= mass && direction != iVec2(0, 0))
+	if (force >= mass && direction != Vec2(0))
 	{
 		chunkOverlaps = game->entities->FindCreateChunkOverlaps(newPos, radius);
 		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, radius);
@@ -445,7 +447,7 @@ bool Entity::TryMove(iVec2 direction, float force, Entity* ignore, Entity** hitE
 				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, radius))
 				{
 					// something in front of them, however if they're stuck, we want to let them move anyways.
-					vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, radius);
+					/*vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, radius);
 					bool successful = false;
 					for (Entity* entity2 : overlaps2)
 						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
@@ -455,19 +457,19 @@ bool Entity::TryMove(iVec2 direction, float force, Entity* ignore, Entity** hitE
 							break;
 						}
 					if (successful)
-						break;
+						break;/
 					return false; // The entity is not stuck inside another entity and are blocked.
 				}
 			}
 	}
-	else return false;
+	else return false;*/
 
 	SetPos(newPos);
 
 	return true;
 }
 
-void Entity::SetPos(iVec2 newPos)
+void Entity::SetPos(Vec2 newPos)
 {
 	std::pair<iVec2, iVec2> minMaxOldPos = Chunk::MinMaxPos(pos, radius);
 	std::pair<iVec2, iVec2> minMaxNewPos = Chunk::MinMaxPos(newPos, radius);
@@ -482,6 +484,14 @@ void Entity::SetPos(iVec2 newPos)
 			game->entities->chunks[chunk].push_back(position);
 	}
 	pos = newPos;
+}
+
+void Entity::UpdateCollision()
+{
+	vector<Entity*> entities = game->entities->FindCorpOverlaps(pos, radius);
+	for (Entity* entity : entities)
+		if (entity->pos != pos)
+			OverlapRes::CircleOR(this, entity);
 }
 
 #pragma endregion
@@ -530,7 +540,7 @@ public:
 		startTime = tTime;
 	}
 
-	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
 		return make_unique<FadeOutPuddle>(this, pos);
 	}

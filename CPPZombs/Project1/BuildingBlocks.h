@@ -63,12 +63,12 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
 		return make_unique<LightBlock>(this, pos);
 	}
 
-	void SetPos(iVec2 newPos) override
+	void SetPos(Vec2 newPos) override
 	{
 		DToCol::SetPos(newPos);
 		lightSource->pos = pos;

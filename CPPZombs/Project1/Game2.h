@@ -145,56 +145,13 @@ void Game::ApplyLighting()
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
 		screenRatio * zoom * 2, zoom * 2);
 	for (unique_ptr<LightSource>& light : entities->lightSources)
-	{
-		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
-
-		Vec2 scrPos = light->pos - Vec2(PlayerPos());
-		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 4 + 2) / (zoom * 4 * screenRatio), float(light->range * 4 + 2) / (zoom * 4));
-
-		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - light->range) / (zoom * screenRatio * 2),
-			(scrPos.y - light->range) / (zoom * 2));
-
-		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
-			scrPos.x - light->range, scrPos.y - light->range);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
-			scrPos.x + light->range, scrPos.y + light->range);
-
-		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);
-
-		quad.Draw();
-	}
+		DrawLight(light->pos, light->range, light->color);
 
 	// If something is rendered it will subtract from the source, this will be used for dark sources.
+	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
 
 	for (unique_ptr<LightSource>& light : entities->darkSources)
-	{
-		glUniform1f(glGetUniformLocation(shadowShader, "range"), light->range);
-
-		Vec2 scrPos = light->pos - Vec2(PlayerPos());
-		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			float(light->range * 4 + 2) / (screenRatio * zoom), float(light->range * 4 + 2) / zoom);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - light->range) * 2 / (screenRatio * zoom),
-			(scrPos.y - light->range) * 2 / zoom);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
-			scrPos.x - light->range, scrPos.y - light->range);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
-			scrPos.x + light->range, scrPos.y + light->range);
-
-		glUniform3f(glGetUniformLocation(shadowShader, "color"), light->color.r / 255.0f, light->color.g / 255.0f, light->color.b / 255.0f);
-
-		quad.Draw();
-	}
+		DrawLight(light->pos, light->range, light->color);
 
 	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

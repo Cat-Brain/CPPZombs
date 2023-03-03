@@ -5,14 +5,14 @@ class Collectible : public Entity
 public:
 	Item baseItem;
 
-	Collectible(Item baseItem, iVec2 pos = vZero) :
+	Collectible(Item baseItem, Vec2 pos = Vec2(0)) :
 		Entity(pos, baseItem.radius, baseItem.color, baseItem.subScat, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
 		isCollectible = true;
 	}
 
-	Collectible(Item baseItem, iVec2 pos, RGBA color) :
+	Collectible(Item baseItem, Vec2 pos, RGBA color) :
 		Entity(pos, baseItem.radius, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
@@ -21,7 +21,7 @@ public:
 
 	Collectible(Collectible* baseClass, iVec2 pos) : Collectible(*baseClass) { this->pos = pos; }
 
-	unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec2 pos = Vec2(0), Vec2 dir = up, Entity* creator = nullptr) override
 	{
 		return make_unique<Collectible>(this, pos);
 	}

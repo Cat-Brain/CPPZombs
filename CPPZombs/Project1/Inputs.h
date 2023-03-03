@@ -50,15 +50,15 @@ struct Inputs
 
 	void Update(GLFWwindow* window)
 	{
-		UpdateKey2(window, w, GLFW_KEY_W);
-		UpdateKey2(window, a, GLFW_KEY_A);
-		UpdateKey2(window, s, GLFW_KEY_S);
-		UpdateKey2(window, d, GLFW_KEY_D);
+		UpdateKey(window, w, GLFW_KEY_W);
+		UpdateKey(window, a, GLFW_KEY_A);
+		UpdateKey(window, s, GLFW_KEY_S);
+		UpdateKey(window, d, GLFW_KEY_D);
 
-		UpdateKey2(window, up, GLFW_KEY_UP);
-		UpdateKey2(window, left, GLFW_KEY_LEFT);
-		UpdateKey2(window, down, GLFW_KEY_DOWN);
-		UpdateKey2(window, right, GLFW_KEY_RIGHT);
+		UpdateKey(window, up, GLFW_KEY_UP);
+		UpdateKey(window, left, GLFW_KEY_LEFT);
+		UpdateKey(window, down, GLFW_KEY_DOWN);
+		UpdateKey(window, right, GLFW_KEY_RIGHT);
 
 		UpdateKey(window, enter, GLFW_KEY_ENTER);
 		UpdateKey(window, c, GLFW_KEY_C);

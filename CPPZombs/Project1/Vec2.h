@@ -68,7 +68,7 @@ inline iVec2 Squarmalized(iVec2 a)
 }
 #pragma endregion
 
-iVec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0, 0), vOne(1, 1);
+iVec2 upI(0, 1), rightI(1, 0), downI(0, -1), leftI(-1, 0), vZeroI(0, 0), vOneI(1, 1);
 
 typedef glm::vec2 Vec2;
 
@@ -112,8 +112,8 @@ inline Vec2 Abs(Vec2 a)
 
 inline Vec2 Normalized(Vec2 a) // Safe version of glm::normalize
 {
-	if (a == Vec2(vZero))
-		return vZero;
+	if (a == Vec2(0))
+		return Vec2(0);
 	return glm::normalize(a);
 }
 
@@ -137,3 +137,12 @@ inline Vec2 Ceil(Vec2 a)
 {
 	return Vec2(ceilf(a.x), ceilf(a.y));
 }
+
+inline Vec2 RandCircPoint()
+{
+	float rValue = RandFloat() * 2 * PI_F;
+	return Vec2(cos(rValue), sin(rValue));
+}
+#pragma endregion
+
+Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0), vOne(1);

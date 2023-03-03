@@ -39,6 +39,13 @@ enum OVERLAPFUN
 
 vector<function<bool(Entity*, iVec2, float)>> overlapFuns;
 
+enum OVERLAPRES // Overlap resolutions
+{
+	CIRCLE
+};
+
+vector<function<void(Entity*, Entity*)>> overlapRes; // Overlap resolutions.
+
 enum ONDEATH
 {
 	ENTITYOD, FADEOUTGLOWOD, SHOTITEMOD, LIGHTBLOCKOD, VINEOD, ENEMYOD, PARENTOD, EXPLODEROD, SNAKEOD, POUNCERSNAKEOD, VACUUMEROD, SPIDEROD,
@@ -62,7 +69,7 @@ public:
 	Entity* creator;
 	Entity* holder = nullptr, *heldEntity = nullptr;
 	string name;
-	iVec2 pos, dir;
+	Vec2 pos, dir;
 	float radius;
 	RGBA color, subScat;
 	float mass;
@@ -71,9 +78,9 @@ public:
 	int sortLayer = 0;
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
-	Entity(iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA subScat = RGBA(),
+	Entity(Vec2 pos = Vec2(0), float radius = 0.5f, RGBA color = RGBA(), RGBA subScat = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), radius(radius), dir(0, 0), color(color), subScat(subScat),
+		pos(pos), radius(radius), dir(0), color(color), subScat(subScat),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), onDeath(ONDEATH::ENTITYOD), overlapFun(OVERLAPFUN::ENTITYOF)
 	{
@@ -87,21 +94,22 @@ public:
 		Start();
 	}
 
-	virtual unique_ptr<Entity> Clone(iVec2 pos = vZero, iVec2 dir = up, Entity* creator = nullptr)
+	virtual unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
 	{
 		return make_unique<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
 
-	void Draw(iVec2 pos, iVec2 dir = vZero)
+	void Draw(Vec2 pos)
 	{
-		iVec2 tempPos = this->pos;
+		Vec2 tempPos = this->pos;
 		this->pos = pos;
 		DUpdate();
 		this->pos = tempPos;
 	}
 
+#pragma region Psuedo-virtual functions
 	void Update() // Normally doesn't draw.
 	{
 		updates[update](this);
@@ -146,6 +154,7 @@ public:
 	{
 		onDeaths[tempOnDeath](this, damageDealer);
 	}
+#pragma endregion
 
 	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
 	{
@@ -154,7 +163,7 @@ public:
 
 	iVec2 BottomLeft() // Not always accurate.
 	{
-		return (Vec2(pos) + Vec2(right) * Vec2(radius / 2 + 1) - Vec2(game->PlayerPos()) + Vec2(down) * Vec2(radius / 2)) * 2.f;
+		return (pos + Vec2(right) * Vec2(radius / 2 + 1) - Vec2(game->PlayerPos()) + Vec2(down) * Vec2(radius / 2)) * 2.f;
 	}
 
 	void DrawUIBox(iVec2 bottomLeft, iVec2 topRight, int boarderWidth, string text, RGBA textColor,
@@ -162,21 +171,23 @@ public:
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth); // + 2 * boarder is to avoid clipping to avoid overlapping the text.
 		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
-		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2), static_cast<float>(COMMON_TEXT_SCALE), textColor);
+		font.Render(text, bottomLeft + boarderWidth + downI * (font.mininumVertOffset / 2), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
-	virtual void SetPos(iVec2 newPos);
+	virtual void SetPos(Vec2 newPos);
 
-	virtual bool TryMove(iVec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
+	virtual bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 
-	bool Overlaps(iVec2 pos, float radius)
+	bool Overlaps(Vec2 pos, float radius)
 	{
 		return overlapFuns[overlapFun](this, pos, radius);
 	}
+
+	void UpdateCollision();
 };
 
 
@@ -231,7 +242,7 @@ namespace DUpdates
 {
 	void EntityDU(Entity* entity) // Normally only draws.
 	{
-		game->DrawCircle(Vec2(entity->pos), entity->color, entity->radius);
+		game->DrawCircle(entity->pos, entity->color, entity->radius);
 	}
 
 	void FadeOutDU(Entity* entity)
@@ -257,15 +268,28 @@ namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
 
 namespace OverlapFuns
 {
-	bool EntityOF(Entity* entity, iVec2 pos, float radius)
+	bool EntityOF(Entity* entity, Vec2 pos, float radius)
 	{
-		return glm::length2(Vec2(entity->pos - pos)) < (entity->radius + radius) * (entity->radius + radius);
+		return glm::length2(entity->pos - pos) < (entity->radius + radius) * (entity->radius + radius);
 		//return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
 	}
 }
 
+namespace OverlapRes
+{
+	void CircleOR(Entity* a, Entity* b)
+	{
+		float dist = glm::length(b->pos - a->pos);
+		// Add some collision detection here to debug Entity OF.
 
-iVec2 Game::PlayerPos()
+		Vec2 multiplier = (b->pos - a->pos) * (1.1f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
+		a->SetPos(a->pos + multiplier * b->mass);
+		b->SetPos(b->pos - multiplier * a->mass);
+	}
+}
+
+
+Vec2 Game::PlayerPos()
 {
 	return ((Entity*)player)->pos;
 }

@@ -39,7 +39,7 @@ public:
 
 	void End() override;
 
-	inline iVec2 PlayerPos() override;
+	inline Vec2 PlayerPos() override;
 
 	void ApplyLighting();
 
