@@ -19,7 +19,7 @@ public:
 	Chunk(iVec2 pos = vZero) :
 		vector{}, pos(pos) { }
 
-	bool Overlaps(iVec2 pos, iVec2 dimensions)
+	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
 		return pos.x - dimensions.x >= this->pos.x + dimensions.x && pos.x < this->pos.x + CHUNK_WIDTH &&
 			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
@@ -27,12 +27,12 @@ public:
 
 	static iVec2 ToSpace(Vec2 pos)
 	{
-		return Vec2(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
+		return iVec2(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
 	}
 
-	static std::pair<iVec2, iVec2> MinMaxPos(iVec2 pos, float radius)
+	static std::pair<iVec2, iVec2> MinMaxPos(Vec2 pos, float radius)
 	{
-		return { ToSpace(Vec2(pos) - radius), ToSpace((Vec2(pos) + radius)) };
+		return { ToSpace(pos - radius), ToSpace((pos + radius)) };
 	}
 };
 
@@ -267,17 +267,6 @@ public:
 
 		if (addedEntity)
 			SortEntities();
-
-		for (int i = 0; i < particles.size(); i++)
-		{
-			particles[i]->Update();
-			if (particles[i]->ShouldEnd())
-			{
-				Particle* toDestroyParticle = particles[i].get();
-				particles.erase(particles.begin() + i);
-				i--;
-			}
-		}
 	}
 
 	void DUpdate()
@@ -302,15 +291,20 @@ public:
 			entity->DUpdate();
 		}
 
-		for (unique_ptr<Particle>& particle : particles)
-			particle->LowResUpdate();
+		for (int i = 0; i < particles.size(); i++)
+		{
+			particles[i]->Update();
+			if (particles[i]->ShouldEnd())
+			{
+				Particle* toDestroyParticle = particles[i].get();
+				particles.erase(particles.begin() + i);
+				i--;
+			}
+		}
 	}
 
 	void UIUpdate()
 	{
-		for (unique_ptr<Particle>& particle : particles)
-			particle->HighResUpdate();
-
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
 			{
@@ -490,7 +484,7 @@ void Entity::UpdateCollision()
 {
 	vector<Entity*> entities = game->entities->FindCorpOverlaps(pos, radius);
 	for (Entity* entity : entities)
-		if (entity->pos != pos)
+		if (entity->pos != pos && entity->creator != this && creator != entity)
 			OverlapRes::CircleOR(this, entity);
 }
 
@@ -576,7 +570,7 @@ namespace Updates
 			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
 			{
 				float rotation = RandFloat() * PI_F * 2;
-				game->entities->particles.push_back(make_unique<VelocitySquare>(explosion->pos, Vec2(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
+				game->entities->particles.push_back(make_unique<VelocityCircle>(0.25f, explosion->pos, Vec2(sinf(rotation), cosf(rotation)) * EXPLOSION_PARTICLE_SPEED,
 					explosion->color, EXPLOSION_PARTICLE_DURATION));
 			}
 			explosion->DestroySelf(explosion);

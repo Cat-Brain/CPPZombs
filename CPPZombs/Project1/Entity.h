@@ -20,7 +20,7 @@ vector<function<void(Entity*)>> dUpdates;
 
 enum EDUPDATE // Early Draw Update
 {
-	ENTITYEDU, SPIDEREDU
+	ENTITYEDU
 };
 
 vector<function<void(Entity*)>> eDUpdates;
@@ -37,7 +37,7 @@ enum OVERLAPFUN
 	ENTITYOF
 };
 
-vector<function<bool(Entity*, iVec2, float)>> overlapFuns;
+vector<function<bool(Entity*, Vec2, float)>> overlapFuns;
 
 enum OVERLAPRES // Overlap resolutions
 {
@@ -195,7 +195,7 @@ public:
 
 #pragma region Other Entity funcitons
 
-vector<Entity*> EntitiesOverlaps(iVec2 pos, float radius, vector<Entity*> entities)
+vector<Entity*> EntitiesOverlaps(Vec2 pos, float radius, vector<Entity*> entities)
 {
 	vector<Entity*> foundEntities(0);
 	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
@@ -280,7 +280,6 @@ namespace OverlapRes
 	void CircleOR(Entity* a, Entity* b)
 	{
 		float dist = glm::length(b->pos - a->pos);
-		// Add some collision detection here to debug Entity OF.
 
 		Vec2 multiplier = (b->pos - a->pos) * (1.1f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
 		a->SetPos(a->pos + multiplier * b->mass);

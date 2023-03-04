@@ -29,8 +29,7 @@ int main()
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
 		CatDU, CataclysmDU };
 		using namespace EDUpdates;
-		using namespace Enemies::EDUpdates;
-		eDUpdates = { EntityEDU, SpiderEDU };
+		eDUpdates = { EntityEDU };
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
 		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };

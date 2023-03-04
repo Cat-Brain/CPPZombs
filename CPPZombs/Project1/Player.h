@@ -9,7 +9,7 @@ public:
 	bool placedBlock;
 	Vec2 placingDir = up;
 	float moveSpeed = 8.0f, maxSpeed = 4.0f, vacSpeed = 16.0f, lastClick = 0.0f,
-		timePerHoldMove = 0.125, lastHoldMove = 0.0f;
+		holdMoveSpeed = moveSpeed;
 
 	Player(iVec2 pos = vZero, float radius = 0.5f, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
@@ -93,13 +93,9 @@ namespace Updates
 		if (player->heldEntity != nullptr)
 		{
 			RotateLeft(player->heldEntity->dir, game->inputs.mouseScroll);
-			if (tTime - player->lastHoldMove > player->timePerHoldMove)
-			{
-				player->lastHoldMove = tTime;
-				player->heldEntity->TryMove(Rormalized(game->inputs.mousePosition + Vec2(player->pos - player->heldEntity->pos)), player->mass);
-			}
+			player->heldEntity->TryMove(Normalized(game->inputs.mousePosition + player->pos - player->heldEntity->pos)
+				* game->dTime * player->holdMoveSpeed / player->heldEntity->mass, player->mass);
 		}
-		std::cout << game->inputs.mousePosition.x << ", " << game->inputs.mousePosition.y << '\n';
 
 		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
 			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f)).size())

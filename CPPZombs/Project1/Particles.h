@@ -15,10 +15,6 @@ public:
 	}
 
 	virtual void Update() { }
-
-	virtual void LowResUpdate() { }
-
-	virtual void HighResUpdate() { }
 };
 
 class VelocityParticle : public Particle
@@ -35,17 +31,19 @@ public:
 	}
 };
 
-class VelocitySquare : public VelocityParticle
+class VelocityCircle : public VelocityParticle
 {
 public:
+	float radius;
 	RGBA color;
 
-	VelocitySquare(Vec2 pos, Vec2 velocity, RGBA color, float duration) :
-		VelocityParticle(pos, velocity, duration), color(color) { }
+	VelocityCircle(float radius, Vec2 pos, Vec2 velocity, RGBA color, float duration) :
+		VelocityParticle(pos, velocity, duration), radius(radius), color(color) { }
 
-	void LowResUpdate() override
+	void Update() override
 	{
-		game->Draw(pos, color);
+		VelocityParticle::Update();
+		game->DrawCircle(pos, color, radius);
 	}
 };
 
@@ -96,9 +94,10 @@ public:
 	SpinText(Vec2 pos, float duration, string text, RGBA color, float scale, float wobbleSpeed, float wobbleStrength) :
 		WobbleScaler(pos, duration, scale, wobbleSpeed, wobbleStrength), text(text), color(color) { }
 
-	void HighResUpdate() override
+	void Update() override
 	{
-		font.RenderRotated(text, (pos - Vec2(game->PlayerPos())) * 2.f * Vec2(ScrDim()) / Vec2(midRes.ScrDim()) - scale / 2, rotation, scale, color);
+		WobbleScaler::Update();
+		font.RenderRotated(text, (pos - game->PlayerPos()) * Vec2(ScrDim()) / game->zoom - scale / 2, rotation, scale, color);
 	}
 };
 
@@ -109,9 +108,10 @@ public:
 	Vec2 desiredPos;
 	RGBA color;
 	float moveSpeed;
+	float thickness;
 
-	LegParticle(Vec2 pos, Entity* parent, RGBA color, float moveSpeed) :
-		Particle(pos, 0), parent(parent), desiredPos(pos), color(color), moveSpeed(moveSpeed) { }
+	LegParticle(Vec2 pos, Entity* parent, RGBA color, float moveSpeed, float thickness) :
+		Particle(pos, 0), parent(parent), desiredPos(pos), color(color), moveSpeed(moveSpeed), thickness(thickness) { }
 
 	bool ShouldEnd() override
 	{
@@ -121,10 +121,6 @@ public:
 	void Update() override
 	{
 		pos += V2fMin(Normalized(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
-	}
-
-	void LowResUpdate() override
-	{
-		game->DrawLine(pos, parent->pos, color);
+		game->DrawLineThick(pos, parent->pos, color, thickness);
 	}
 };

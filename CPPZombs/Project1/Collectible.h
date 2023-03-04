@@ -19,7 +19,7 @@ public:
 		isCollectible = true;
 	}
 
-	Collectible(Collectible* baseClass, iVec2 pos) : Collectible(*baseClass) { this->pos = pos; }
+	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
 
 	unique_ptr<Entity> Clone(Vec2 pos = Vec2(0), Vec2 dir = up, Entity* creator = nullptr) override
 	{

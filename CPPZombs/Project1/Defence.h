@@ -181,7 +181,7 @@ namespace UIUpdates
 				COMMON_BOARDER_WIDTH, "Baby " + vine->name, vine->color, vine->deadColor, vine->collectible->color);
 			font.Render(ToStringWithPrecision(vine->timePer * (vine->cyclesToGrow - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
-			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+			font.Render("Gen " + to_string(vine->generation) + " / " + to_string(vine->maxGenerations), bottomLeft +
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 		else if (vine->currentLifespan < vine->deadStage)
@@ -192,14 +192,14 @@ namespace UIUpdates
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 			font.Render(ToStringWithPrecision(vine->timePer * (vine->deadStage - vine->currentLifespan) - vine->timeSince, 1), bottomLeft +
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
-			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+			font.Render("Gen " + to_string(vine->generation) + " / " + to_string(vine->maxGenerations), bottomLeft +
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp * 3 / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 		else
 		{
 			vine->DrawUIBox(bottomLeft, bottomLeft + iVec2(font.TextWidth("Dead " + vine->name) * COMMON_TEXT_SCALE / font.minimumSize / 2, font.vertDisp / 2),
 				COMMON_BOARDER_WIDTH, "Dead " + vine->name, vine->deadColor, vine->color, vine->collectible->color);
-			font.Render("Gen " + to_string(vine->generation), bottomLeft +
+			font.Render("Gen " + to_string(vine->generation) + " / " + to_string(vine->maxGenerations), bottomLeft +
 				iVec2(COMMON_BOARDER_WIDTH, font.vertDisp / 2 - font.mininumVertOffset), static_cast<float>(COMMON_TEXT_SCALE), vine->color);
 		}
 	}
@@ -238,16 +238,16 @@ namespace Plants
 	namespace Vines
 	{
 		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50), cheeseResistence = RGBA(0, 0, 50);
-		Vine* cheeseVine = new Vine(Collectibles::cheese, 5, 10, 5, 10, 2.0f, vZero, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
+		Vine* cheeseVine = new Vine(Collectibles::cheese, 5, 10, 3, 7, 2.0f, vZero, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
 
 		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61), leadResistence = RGBA(0, 50, 0);
-		Vine* leadVine = new Vine(Collectibles::lead, 2, 6, 15, 5, 3.0f, vZero, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
+		Vine* leadVine = new Vine(Collectibles::lead, 2, 6, 4, 2, 6.0f, vZero, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0), topazResistence = RGBA(25, 0, 50);
-		Vine* topazVine = new Vine(Collectibles::topaz, 2, 5, 30, 5, 4.0f, vZero, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
+		Vine* topazVine = new Vine(Collectibles::topaz, 2, 5, 7, 5, 12.0f, vZero, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92), sapphireResistence = RGBA(50, 50, 0);
-		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 2, 4, 30, 5, 0.25f, vZero, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
+		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 10, 210, 1, 5, 0.0625f, vZero, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
 	}
 
 	// Keep a list of all of the plants. Tree is the base of all plants so it's what we'll use for the pointer.

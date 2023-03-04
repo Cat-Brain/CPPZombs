@@ -185,7 +185,7 @@ namespace Enemies
 			{
 				enemies[i] = make_unique<Snake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos;
+				enemies[i]->pos = pos + RandCircPoint();
 				enemies[i]->points = points / length;
 				enemies[i]->Start();
 				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
@@ -206,20 +206,6 @@ namespace Enemies
 			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
 				game->entities->push_back(std::move(enemies[i]));
 			return std::move(enemies[0]); // Do 0 here.
-		}
-
-		bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr) override
-		{
-			return false;
-		}
-
-		void SetPos(Vec2 newPos) override
-		{
-			Vec2 lastPos = pos;
-			Enemy::SetPos(newPos);
-			if (lastPos != pos)
-				if (back != nullptr)
-					back->SetPos(lastPos);
 		}
 
 		int Cost() override
@@ -254,7 +240,7 @@ namespace Enemies
 			{
 				enemies[i] = make_unique<PouncerSnake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos;
+				enemies[i]->pos = pos + RandCircPoint();
 				enemies[i]->points = points / length;
 				enemies[i]->Start();
 				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
@@ -376,7 +362,6 @@ namespace Enemies
 			Enemy(timePer, moveSpeed, points, firstWave, damage, radius, color, color2, subScat, mass, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
 		{
-			earlyDUpdate = EDUPDATE::SPIDEREDU;
 			onDeath = ONDEATH::SPIDEROD;
 			update = UPDATE::SPIDERU;
 		}
@@ -423,7 +408,7 @@ namespace Enemies
 				{
 					lastLegUpdates[i] += legCycleSpeed;
 					Vec2 desiredPos = LegPos(i) + Normalized(Vec2(game->PlayerPos() - pos)) * legTolerance * 0.5f;
-					if (glm::distance(legs[i]->desiredPos, desiredPos) > legTolerance)
+					if (glm::distance2(legs[i]->desiredPos, desiredPos) > legTolerance * legTolerance)
 						legs[i]->desiredPos = desiredPos;
 				}
 				legs[i]->Update();
@@ -486,27 +471,13 @@ namespace Enemies
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
-
-		bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr) override
-		{
-			return false;
-		}
-
-		void SetPos(Vec2 newPos) override
-		{
-			Vec2 lastPos = pos;
-			Spider::SetPos(newPos);
-			if (lastPos != pos)
-				if (back != nullptr)
-					back->SetPos(lastPos);
-		}
 	};
 
 	class Pouncer : public Enemy
 	{
 	public:
 		float pounceTime;
-		Vec2 offset, direction;
+		Vec2 direction;
 
 		Pouncer(float pounceTime, float moveSpeed = 2, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
@@ -557,7 +528,6 @@ namespace Enemies
 			{
 				int count = maxHealth - health + 2;
 				int index = rand() % count;
-				offset = vZero;
 				direction = glm::rotate(direction, PI_F * 2 * index / count);
 				SetPos(game->PlayerPos() + Vec2(glm::rotate(Vec2(pos - game->PlayerPos()), PI_F * 2 * index / count)));
 			}
@@ -674,8 +644,16 @@ namespace Enemies
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
 			pSnake->Update(UPDATE::ENEMYU);
 
-			if (pSnake->front == nullptr && tTime - pSnake->lastMove <= pSnake->pounceTime)
-				pSnake->Enemy::TryMove(pSnake->direction * game->dTime * pSnake->speed, pSnake->mass * 2);
+			if (pSnake->front == nullptr)
+			{
+				if (tTime - pSnake->lastMove <= pSnake->pounceTime)
+					pSnake->TryMove(pSnake->direction * game->dTime * pSnake->speed, pSnake->mass * 2);
+			}
+			else
+			{
+				float dist = glm::distance(pSnake->front->pos, pSnake->pos);
+				pSnake->TryMove((pSnake->front->pos - pSnake->pos) / dist * (dist - pSnake->radius - pSnake->front->radius), 1);
+			}
 		}
 
 		void SpiderU(Entity* entity)
@@ -690,9 +668,9 @@ namespace Enemies
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
 
+			centicrawler->Update(UPDATE::SPIDERU);
 			if (centicrawler->front == nullptr)
 			{
-				centicrawler->Update(UPDATE::SPIDERU);
 				Centicrawler* farthestBack = centicrawler;
 				while (farthestBack->back != nullptr)
 					farthestBack = farthestBack->back;
@@ -708,7 +686,6 @@ namespace Enemies
 					}
 				}
 			}
-			else centicrawler->UpdateLegs();
 		}
 
 		void PouncerU(Entity* entity)
@@ -769,13 +746,13 @@ namespace Enemies
 			deceiver->color.g = static_cast<byte>(g * deceiver->color3.g);
 			deceiver->color.b = static_cast<byte>(b * deceiver->color3.b);
 
-			iVec2 tempPos = deceiver->pos;
+			Vec2 tempPos = deceiver->pos;
 
-			deceiver->pos = iVec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
+			deceiver->pos = Vec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
 			deceiver->DUpdate(DUPDATE::DTOCOLDU);
-			deceiver->pos = iVec2(deceiver->pos.x, game->PlayerPos().y * 2 - deceiver->pos.y);
+			deceiver->pos = Vec2(deceiver->pos.x, game->PlayerPos().y * 2 - deceiver->pos.y);
 			deceiver->DUpdate(DUPDATE::DTOCOLDU);
-			deceiver->pos = iVec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
+			deceiver->pos = Vec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
 			deceiver->DUpdate(DUPDATE::DTOCOLDU);
 
 			deceiver->pos = tempPos;
@@ -821,15 +798,13 @@ namespace Enemies
 
 			int count = cat->maxHealth - cat->health + 1;
 
-			iVec2 tempPos = cat->pos;
-			Vec2 fPos = cat->pos;
+			Vec2 tempPos = cat->pos;
 			RGBA tempColor = cat->color;
 			cat->color = cat->color3;
 
 			for (int i = 1; i < count; i++)
 			{
-				fPos = glm::rotate(fPos - Vec2(game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos());
-				cat->pos = fPos;
+				cat->pos = glm::rotate(cat->pos - Vec2(game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos());
 				cat->DUpdate(DUPDATE::ENTITYDU);
 			}
 
@@ -846,16 +821,6 @@ namespace Enemies
 				cat->color = cat->color4.Lerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CATDU);
 			cat->color = tempColor;
-		}
-	}
-
-	namespace EDUpdates
-	{
-		void SpiderEDU(Entity* entity)
-		{
-			Spider* spider = static_cast<Spider*>(entity);
-			for (int i = 0; i < spider->legCount; i++)
-				spider->legs[i]->LowResUpdate();
 		}
 	}
 
@@ -912,9 +877,37 @@ namespace Enemies
 			{
 				snake->back->front = nullptr;
 				snake->back->color = snake->color3;
+				/*Snake* currentSegment = snake;
+				int length = 0;
+				while (currentSegment->back != nullptr)
+				{
+					length++;
+					currentSegment = currentSegment->back;
+				}
+				currentSegment = snake;
+				for (int i = 0; i < length; i++)
+				{
+					currentSegment = currentSegment->back;
+					currentSegment->length = length;
+				}*/
 			}
 			if (snake->front != nullptr)
+			{
 				snake->front->back = nullptr;
+				/*Snake* currentSegment = snake;
+				int length = 0;
+				while (currentSegment->front != nullptr)
+				{
+					length++;
+					currentSegment = currentSegment->front;
+				}
+				currentSegment = snake;
+				for (int i = 0; i < length; i++)
+				{
+					currentSegment = currentSegment->front;
+					currentSegment->length = length;
+				}*/
+			}
 		}
 
 		void PouncerSnakeOD(Entity* entity, Entity* damageDealer)
@@ -969,9 +962,13 @@ namespace Enemies
 		{
 			Snake* snake = static_cast<Snake*>(enemy);
 			if (snake->front == nullptr)
-				snake->Enemy::TryMove(Vec2(Rormalized(Vec2(game->PlayerPos() - snake->pos))) * snake->radius * 2.f, snake->mass * 2);
-
-			return true;
+				snake->TryMove(Normalized(game->PlayerPos() - snake->pos) * game->dTime * snake->speed, snake->mass * 2);
+			else
+			{
+				float dist = glm::distance(snake->front->pos, snake->pos);
+				snake->TryMove((snake->front->pos - snake->pos) / dist * (dist - snake->radius - snake->front->radius), 1);
+			}
+			return false;
 		}
 
 		bool PouncerSnakeMU(Enemy* enemy)
@@ -986,23 +983,28 @@ namespace Enemies
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
 			if (abs(Squistance(vacuumer->pos, game->PlayerPos()) - vacuumer->desiredDistance) > 2.0f)
-				vacuumer->TryMove(Normalized(Vec2(game->PlayerPos() - enemy->pos)) * enemy->speed * (-1.f + 2 * int(Squistance(vacuumer->pos, game->PlayerPos()) > vacuumer->desiredDistance)), vacuumer->mass * 2);
-			return true;
+				vacuumer->TryMove(Normalized(Vec2(game->PlayerPos() - enemy->pos)) * enemy->speed * game->dTime *
+					(-1.f + 2 * int(Squistance(vacuumer->pos, game->PlayerPos()) > vacuumer->desiredDistance)), vacuumer->mass * 2);
+			return false;
 		}
 
 		bool CenticrawlerMU(Enemy* enemy)
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(enemy);
 			if (centicrawler->front == nullptr)
-				centicrawler->Enemy::TryMove(Vec2(game->PlayerPos() - centicrawler->pos) * centicrawler->radius, centicrawler->mass * 2);
-
+				centicrawler->TryMove(Normalized(game->PlayerPos() - centicrawler->pos) * game->dTime * centicrawler->speed, centicrawler->mass * 2);
+			else
+			{
+				float dist = glm::distance(centicrawler->front->pos, centicrawler->pos);
+				centicrawler->TryMove((centicrawler->front->pos - centicrawler->pos) / dist * (dist - centicrawler->radius - centicrawler->front->radius), 1);
+			}
+			return false;
 			return true;
 		}
 
 		bool PouncerMU(Enemy* enemy)
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
-			pouncer->offset = vZero;
 			pouncer->direction = Normalized(Vec2(game->PlayerPos() - pouncer->pos));
 			return true;
 		}
@@ -1101,10 +1103,10 @@ namespace Enemies
 
 #pragma region Enemies
 	//Predefinitions - Special
-	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f);
+	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f, 0.25f);
 	Projectile* tinyTankProjectile = new Projectile(15.0f, 1, 8.0f, 0.5f, RGBA(51, 51, 51), RGBA(5, 5, 5), 1, 1, 1, "Tiny Tank Projectile");
 	Enemy* child = new Enemy(1.0f, 8, 0, 0, 1, 0.5f, RGBA(255, 0, 255), RGBA(), RGBA(0, 50), 1, 1, 1, "Child");
-	Centicrawler* centicrawler = new Centicrawler(*spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 0.25f, 0, 0, 1, 0.5f, RGBA(186, 7, 66), RGBA(), RGBA(55, 55, 55), 1, 6, 6, "Centicrawler");
+	Centicrawler* centicrawler = new Centicrawler(*spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 4, 0, 0, 1, 0.5f, RGBA(186, 7, 66), RGBA(), RGBA(55, 55, 55), 1, 6, 6, "Centicrawler");
 
 	// Earlies - 1
 	Enemy* walker = new Enemy(0.75f, 2, 1, 1, 1, 0.5f, RGBA(0, 255, 255), RGBA(), RGBA(50), 1, 3, 3, "Walker");
@@ -1121,14 +1123,14 @@ namespace Enemies
 	// Mid-lates - 6
 	Parent* parent = new Parent(child, 1.0f, 1.0f, 4, 6, 1, 2.5f, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 	Parent* spiderParent = new Parent(centicrawler, 1.0f, 1.0f, 4, 6, 1, 2.5f, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
-	Snake* snake = new Snake(30, 0.5f, 0.25f, 30, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
+	Snake* snake = new Snake(30, 0.5f, 4, 30, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
 	
 	// Lates - 8
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 4, 8, 8, 1, 0.5f, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, 2.5f, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 8, 8, 1, 1.5f, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 	Ranger* ranger = new Ranger(12, 12, 0.125f, 8, 6, 8, 0, 2.5f, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 5, 12, 12, "Ranger");
-	Snake* bigSnake = new Snake(30, 0.5f, 0.5f, 60, 8, 1, 1.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
+	Snake* bigSnake = new Snake(30, 0.5f, 4, 60, 8, 1, 1.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
 	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 30, 0.5f, 8.0f, 60, 8, 1, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(50, 0, 0), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
 
 	// Very lates - 12
@@ -1229,8 +1231,8 @@ namespace Enemies
 	{
 		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, frog},
-		{parent, spiderParent/*, snake*/},
-		{hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, pouncerSnake},
+		{parent, spiderParent, snake},
+		{/*hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, */pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

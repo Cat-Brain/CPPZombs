@@ -120,7 +120,7 @@ public:
         return result;
     }
 
-    void Render(string text, iVec2 pos, float scale, RGBA color)
+    void Render(string text, Vec2 pos, float scale, RGBA color)
     {
         scale /= minimumSize;
         float xOffset = 0;
@@ -153,7 +153,7 @@ public:
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void RenderRotated(string text, iVec2 pos, float rotation, float scale, RGBA color)
+    void RenderRotated(string text, Vec2 pos, float rotation, float scale, RGBA color) // FIX THIS TO ROTATE AROUND CENTER
     {
         scale /= minimumSize;
         float xOffset = 0;

@@ -240,18 +240,25 @@ public:
 	void DrawLine(Vec2 a, Vec2 b, RGBA color)
 	{
 		glUseProgram(lineShader);
-		// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
-		// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
-		glUniform2f(glGetUniformLocation(lineShader, "a"),
-			(a.x - PlayerPos().x) * 2 / ScrWidth(),
-			(a.y - PlayerPos().y) * 2 / ScrHeight());
-		glUniform2f(glGetUniformLocation(lineShader, "b"),
-			(b.x - PlayerPos().x) * 2 / ScrWidth(),
-			(b.y - PlayerPos().y) * 2 / ScrHeight());
+		a -= PlayerPos();
+		a.x /= screenRatio;
+		a /= zoom;
+
+		b -= PlayerPos();
+		b.x /= screenRatio;
+		b /= zoom;
+		glUniform2f(glGetUniformLocation(lineShader, "a"), a.x, a.y);
+		glUniform2f(glGetUniformLocation(lineShader, "b"), b.x, b.y);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(lineShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		line.Draw();
+	}
+
+	inline void DrawLineThick(Vec2 a, Vec2 b, RGBA color, float thickness)
+	{
+		glLineWidth(thickness * trueScreenHeight / zoom);
+		DrawLine(a, b, color);
 	}
 
 	void DrawLight(Vec2 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
