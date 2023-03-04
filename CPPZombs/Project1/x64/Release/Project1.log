@@ -9,15 +9,22 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Inputs.h(89,26): warni
           [
               T=float
           ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entity.h(265,43): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(378,17): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1062,50): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(156,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(163,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(171,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(181,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(190,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(201,5): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(827,44): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(115,46): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(146,32): warning C4244: 'argument': conversion from 'float' to 'GLint', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(146,22): warning C4244: 'argument': conversion from 'float' to 'GLint', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  974 of 3865 functions (25.2%) were compiled, the rest were copied from previous compilation.
-    221 functions were new in current compilation
-    139 functions had inline decision re-evaluated but remain unchanged
+  239 of 3839 functions ( 6.2%) were compiled, the rest were copied from previous compilation.
+    11 functions were new in current compilation
+    67 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

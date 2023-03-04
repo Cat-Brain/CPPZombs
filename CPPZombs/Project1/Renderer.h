@@ -149,17 +149,17 @@ public:
 	virtual void End() { }
 
 	// FBL stands for From Bottom Left.
-	void DrawFBL(iVec2 pos, RGBA color, iVec2 dimensions = vOne)
+	void DrawFBL(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
 	{
 		glUseProgram(defaultShader);
 		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
 		{
 			glUniform2f(glGetUniformLocation(defaultShader, "scale"),
-				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+				dimensions.x * 2 / ScrWidth(), dimensions.y * 2 / ScrHeight());
 
 			glUniform2f(glGetUniformLocation(defaultShader, "position"),
-				float(pos.x) / ScrWidth(),
-				float(pos.y) / ScrHeight());
+				pos.x / ScrWidth(),
+				pos.y / ScrHeight());
 		}
 		else
 		{
@@ -178,9 +178,9 @@ public:
 		quad.Draw();
 	}
 
-	inline void Draw(iVec2 pos, RGBA color, iVec2 dimensions = vOne)
+	inline void Draw(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
 	{
-		DrawFBL(pos - dimensions / 2, color, dimensions);
+		DrawFBL(pos - dimensions / 2.f, color, dimensions);
 	}
 
 	inline void DrawCircle(Vec2 pos, RGBA color, float radius = 1)

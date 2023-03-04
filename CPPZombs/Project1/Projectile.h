@@ -12,7 +12,7 @@ public:
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
         RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
-        Entity(iVec2(0, 0), radius, color, subScat, mass, maxHealth, health, name),
+        Entity(vZero, radius, color, subScat, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         update = UPDATE::PROJECTILEU;
@@ -22,7 +22,7 @@ public:
         Start();
     }
 
-    Projectile(Projectile* baseClass, iVec2 pos, iVec2 direction, Entity* creator) :
+    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
         Projectile(*baseClass)
     {
         this->creator = creator;
@@ -67,7 +67,7 @@ namespace Updates
     {
         Projectile* projectile = static_cast<Projectile*>(_entity);
 
-        if (tTime - projectile->begin >= (projectile->duration + 1) / projectile->speed)
+        if (tTime - projectile->begin >= projectile->duration / projectile->speed)
             return projectile->DestroySelf(projectile);
 
         // Change to looking at other more custom variable that can be stored in item better.

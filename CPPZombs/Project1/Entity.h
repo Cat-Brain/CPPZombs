@@ -3,9 +3,10 @@
 #define COMMON_TEXT_SCALE trueScreenHeight / 20
 #define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
+#pragma region Psuedo-virtual functions
 enum UPDATE // Update
 {
-	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, SPIDERU,
+	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, VACUUMERU, SPIDERU,
 	CENTICRAWLERU, POUNCERU, CATACLYSMU, PLAYERU
 };
 
@@ -53,6 +54,7 @@ enum ONDEATH
 };
 
 vector<function<void(Entity*, Entity*)>> onDeaths;
+#pragma endregion
 
 class Entities;
 class Entity
@@ -161,17 +163,17 @@ public:
 		//game->Draw(pos, subScat, radius);
 	}
 
-	iVec2 BottomLeft() // Not always accurate.
+	Vec2 BottomLeft() // Not always accurate.
 	{
-		return (pos + Vec2(right) * Vec2(radius / 2 + 1) - Vec2(game->PlayerPos()) + Vec2(down) * Vec2(radius / 2)) * 2.f;
+		return (pos - game->PlayerPos() + Vec2(1, -1) * radius) / game->zoom * Vec2(ScrDim()) * Vec2(1, 1);
 	}
 
-	void DrawUIBox(iVec2 bottomLeft, iVec2 topRight, int boarderWidth, string text, RGBA textColor,
+	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, float boarderWidth, string text, RGBA textColor,
 		RGBA borderColor = RGBA(127, 127, 127), RGBA fillColor = RGBA(63, 63, 63))
 	{
-		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth); // + 2 * boarder is to avoid clipping to avoid overlapping the text.
+		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth);
 		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
-		font.Render(text, bottomLeft + boarderWidth + downI * (font.mininumVertOffset / 2), static_cast<float>(COMMON_TEXT_SCALE), textColor);
+		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2.f), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
 	virtual void SetPos(Vec2 newPos);
@@ -258,8 +260,8 @@ namespace UIUpdates
 {
 	void EntityUIU(Entity* entity)
 	{
-		iVec2 bottomLeft = entity->BottomLeft();
-		iVec2 topRight = bottomLeft + iVec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
+		Vec2 bottomLeft = entity->BottomLeft();
+		Vec2 topRight = bottomLeft + Vec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) * 0.5f;
 		entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name, entity->color);
 	}
 }

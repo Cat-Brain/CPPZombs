@@ -13,7 +13,7 @@ namespace Enemies
 
 	enum AUPDATE
 	{
-		DEFAULTAU, EXPLODERAU, VACUUMERAU, RANGERAU, BOOMCATAU, TANKAU
+		DEFAULTAU, EXPLODERAU, BOOMCATAU, TANKAU
 	};
 	vector<function<bool(Enemy*)>> aUpdates;
 
@@ -299,18 +299,18 @@ namespace Enemies
 	class Vacuumer : public Enemy
 	{
 	public:
-		int vacDist, desiredDistance;
+		float vacDist, vacSpeed, desiredDistance;
 		Items items;
 
-		Vacuumer(int vacDist, int desiredDistance, float timePer = 0.5f, float speed = 2, int points = 1, int firstWave = 1, int damage = 1,
+		Vacuumer(float vacDist, float vacSpeed, float desiredDistance, float timePer = 0.5f, float speed = 2, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, speed, points, firstWave, damage, radius, color, color2, subScat, mass, maxHealth, health, name),
-			vacDist(vacDist), desiredDistance(desiredDistance), items(0)
+			vacDist(vacDist), vacSpeed(vacSpeed), desiredDistance(desiredDistance), items(0)
 		{
+			update = UPDATE::VACUUMERU;
 			onDeath = ONDEATH::VACUUMEROD;
 			mUpdate = MUPDATE::VACUUMERMU;
-			aUpdate = AUPDATE::VACUUMERAU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -320,28 +320,6 @@ namespace Enemies
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
-		}
-	};
-
-	class Ranger : public Vacuumer
-	{
-	public:
-		Ranger(int vacDist, int desiredDistance, float timePer = 0.5f, float speed = 2, int points = 1, int firstWave = 1, int damage = 1,
-			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA subScat = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Vacuumer(vacDist, desiredDistance, timePer, speed, points, firstWave, damage, radius, color,
-				color2, subScat, mass, maxHealth, health, name)
-		{
-			aUpdate = AUPDATE::RANGERAU;
-		}
-
-		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
-		{
-			unique_ptr<Ranger> newEnemy = make_unique<Ranger>(*this);
-			newEnemy->baseClass = baseClass;
-			newEnemy->pos = pos;
-			newEnemy->Start();
-			return std::move(newEnemy);
 		}
 	};
 
@@ -653,6 +631,21 @@ namespace Enemies
 			{
 				float dist = glm::distance(pSnake->front->pos, pSnake->pos);
 				pSnake->TryMove((pSnake->front->pos - pSnake->pos) / dist * (dist - pSnake->radius - pSnake->front->radius), 1);
+			}
+		}
+
+		void VacuumerU(Entity* entity)
+		{
+			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
+			vacuumer->Update(UPDATE::ENEMYU);
+
+			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed);
+
+			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->radius, game->entities->collectibles);
+			for (Entity* collectible : collectibles)
+			{
+				vacuumer->items.push_back(((Collectible*)collectible)->baseItem);
+				collectible->DestroySelf(vacuumer);
 			}
 		}
 
@@ -1056,34 +1049,6 @@ namespace Enemies
 			return false;
 		}
 
-		bool VacuumerAU(Enemy* enemy)
-		{
-			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
-			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, 1);
-			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->radius, game->entities->collectibles);
-			for (Entity* collectible : collectibles)
-			{
-				vacuumer->items.push_back(((Collectible*)collectible)->baseItem);
-				collectible->DestroySelf(vacuumer);
-			}
-			return vacuumer->AUpdate(AUPDATE::DEFAULTAU);
-		}
-
-		bool RangerAU(Enemy* enemy)
-		{
-			enemy->AUpdate(AUPDATE::VACUUMERAU);
-
-			Ranger* ranger = static_cast<Ranger*>(enemy);
-			if (ranger->items.size() > 0)
-			{
-				Item shotItem = ranger->items[0].Clone(1);
-				ranger->items.TryTakeIndex(0);
-				game->entities->push_back(basicShotItem->Clone(shotItem, ranger->pos, Vec2((game->PlayerPos() - ranger->pos) * shotItem.range), ranger));
-			}
-
-			return true;
-		}
-
 		bool BoomcatAU(Enemy* enemy)
 		{
 			BoomCat* bCat = static_cast<BoomCat*>(enemy);
@@ -1117,7 +1082,7 @@ namespace Enemies
 	// Mids - 4
 	Deceiver* deceiver = new Deceiver(0.5f, 4, 4, 4, 1, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
 	Exploder* exploder = new Exploder(2.5f, 1.0f, 3, 4, 4, 1, 0.5f, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
-	Vacuumer* vacuumer = new Vacuumer(12, 12, 0.125f, 8, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
+	Vacuumer* vacuumer = new Vacuumer(12, 8, 12, 0.125f, 8, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
 	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, 0.5f, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 
 	// Mid-lates - 6
@@ -1129,7 +1094,6 @@ namespace Enemies
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 4, 8, 8, 1, 0.5f, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, 2.5f, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 8, 8, 1, 1.5f, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
-	Ranger* ranger = new Ranger(12, 12, 0.125f, 8, 6, 8, 0, 2.5f, RGBA(127, 127, 127), RGBA(), RGBA(50, 50, 50), 5, 12, 12, "Ranger");
 	Snake* bigSnake = new Snake(30, 0.5f, 4, 60, 8, 1, 1.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
 	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 30, 0.5f, 8.0f, 60, 8, 1, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(50, 0, 0), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
 
@@ -1232,7 +1196,7 @@ namespace Enemies
 		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, frog},
 		{parent, spiderParent, snake},
-		{/*hyperSpeedster, megaTanker, gigaExploder, ranger, bigSnake, */pouncerSnake},
+		{hyperSpeedster, megaTanker, gigaExploder, bigSnake, pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

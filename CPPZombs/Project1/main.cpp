@@ -23,7 +23,7 @@ int main()
 		using namespace Updates;
 		using namespace Enemies::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, PouncerSnakeU, SpiderU, CenticrawlerU, PouncerU, CataclysmU, PlayerU };
+		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CataclysmU, PlayerU };
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
@@ -40,7 +40,7 @@ int main()
 		using namespace Enemies::MUpdates;
 		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, CenticrawlerMU, PouncerMU, TankMU };
 		using namespace Enemies::AUpdates;
-		Enemies::aUpdates = { DefaultAU, ExploderAU, VacuumerAU, RangerAU, BoomcatAU, TankAU };
+		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU };
 	#pragma endregion
 		
 		using namespace OnDeaths;
