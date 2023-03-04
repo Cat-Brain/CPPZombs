@@ -89,6 +89,9 @@ private:
 		currentFramebuffer = 1;
 		UseFramebuffer();
 
+		glStencilMask(0x00);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 		return true;
 	}
 
@@ -132,6 +135,7 @@ public:
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
+	Vec2 screenOffset = vZero;
 
 	Renderer() { }
 
@@ -189,7 +193,7 @@ public:
 		radius /= zoom;
 		glUniform2f(glGetUniformLocation(circleShader, "scale"), radius / screenRatio, radius);
 
-		pos -= PlayerPos();
+		pos -= PlayerPos() + screenOffset;
 		pos.x /= screenRatio;
 		pos /= zoom;
 		glUniform2f(glGetUniformLocation(circleShader, "position"), pos.x, pos.y);
@@ -240,11 +244,11 @@ public:
 	void DrawLine(Vec2 a, Vec2 b, RGBA color)
 	{
 		glUseProgram(lineShader);
-		a -= PlayerPos();
+		a -= PlayerPos() + screenOffset;
 		a.x /= screenRatio;
 		a /= zoom;
 
-		b -= PlayerPos();
+		b -= PlayerPos() + screenOffset;
 		b.x /= screenRatio;
 		b /= zoom;
 		glUniform2f(glGetUniformLocation(lineShader, "a"), a.x, a.y);

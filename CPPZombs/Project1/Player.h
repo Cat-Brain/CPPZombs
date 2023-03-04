@@ -5,13 +5,12 @@ class Player : public LightBlock
 public:
 	Entity* currentMenuedEntity = nullptr;
 	Items items;
-	int vacDist;
 	bool placedBlock;
 	Vec2 placingDir = up;
-	float moveSpeed = 8.0f, maxSpeed = 4.0f, vacSpeed = 16.0f, lastClick = 0.0f,
+	float moveSpeed = 8.0f, maxSpeed = 4.0f, vacDist, vacSpeed = 16.0f, lastClick = 0.0f,
 		holdMoveSpeed = moveSpeed;
 
-	Player(iVec2 pos = vZero, float radius = 0.5f, int vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
+	Player(iVec2 pos = vZero, float radius = 0.5f, float vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		LightBlock(lightColor, lightOrDark, range, pos, radius, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
 	{
@@ -32,6 +31,12 @@ public:
 			items.push_back(item->Clone());
 		items.currentIndex = 0; // Copper
 	}
+
+	int DealDamage(int damage, Entity* damageDealer) override
+	{
+		game->screenShake += damage;
+		return LightBlock::DealDamage(damage, damageDealer);
+	}
 };
 
 namespace Updates
@@ -51,7 +56,7 @@ namespace Updates
 		}
 
 		vector<Entity*> hitEntities;
-		if (game->inputs.rightMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
+		if (game->inputs.rightMouse.pressed &&
 			(player->currentMenuedEntity == nullptr || !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f))
 			&& (hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), player->radius)).size())
 		{
@@ -97,8 +102,8 @@ namespace Updates
 				* game->dTime * player->holdMoveSpeed / player->heldEntity->mass, player->mass);
 		}
 
-		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed && game->inputs.mousePosition != Vec2(0) &&
-			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f)).size())
+		if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed &&
+			(hitEntities = game->entities->FindCorpOverlaps(game->inputs.mousePosition + Vec2(player->pos), 0.5f)).size() && hitEntities[0] != player)
 		{
 			player->heldEntity = hitEntities[0];
 			player->heldEntity->holder = player;
@@ -135,6 +140,5 @@ namespace OnDeaths
 			deathCauseName = damageDealer->name;
 		else
 			deathCauseName = "The planet";
-
 	}
 }

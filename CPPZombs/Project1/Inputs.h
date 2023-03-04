@@ -85,7 +85,7 @@ struct Inputs
 		xPos *= zoom * 2;
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= zoom * 2;
-		mousePosition.x = xPos - zoom * screenRatio;
-		mousePosition.y = yPos - zoom;
+		mousePosition.x = static_cast<float>(xPos - zoom * screenRatio);
+		mousePosition.y = static_cast<float>(yPos - zoom);
 	}
 };

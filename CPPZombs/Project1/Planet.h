@@ -6,7 +6,6 @@ public:
 	float dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	Enemies::Instance enemies, bosses;
 	JRGB color1, color2, fog;
-	FastNoiseLite backgroundNoise;
 
 	Planet()
 	{
@@ -40,12 +39,6 @@ public:
 		fog.r = rand() % 8;
 		fog.g = rand() % 8;
 		fog.b = rand() % 8;
-
-		backgroundNoise.SetFrequency(0.06125f);
-		backgroundNoise.SetFractalLacunarity(2.0f);
-		backgroundNoise.SetFractalGain(0.5f);
-		backgroundNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
-		backgroundNoise.SetSeed(static_cast<int>(time(NULL)));
 
 		enemies = Enemies::naturalSpawns.RandomClone();
 		bosses = Enemies::spawnableBosses.RandomClone();

@@ -6,7 +6,7 @@
 #pragma region Psuedo-virtual functions
 enum UPDATE // Update
 {
-	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, VACUUMERU, SPIDERU,
+	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, VACUUMEFORU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, VACUUMERU, SPIDERU,
 	CENTICRAWLERU, POUNCERU, CATACLYSMU, PLAYERU
 };
 
@@ -165,7 +165,7 @@ public:
 
 	Vec2 BottomLeft() // Not always accurate.
 	{
-		return (pos - game->PlayerPos() + Vec2(1, -1) * radius) / game->zoom * Vec2(ScrDim()) * Vec2(1, 1);
+		return (pos - game->PlayerPos() + Vec2(radius, -radius)) * (trueScreenHeight / game->zoom);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, float boarderWidth, string text, RGBA textColor,
@@ -177,6 +177,7 @@ public:
 	}
 
 	virtual void SetPos(Vec2 newPos);
+	virtual void SetRadius(float newRadius);
 
 	virtual bool TryMove(Vec2 direction, float force, Entity* ignore = nullptr, Entity** hitEntity = nullptr); // returns index of hit item.
 
@@ -262,7 +263,7 @@ namespace UIUpdates
 	{
 		Vec2 bottomLeft = entity->BottomLeft();
 		Vec2 topRight = bottomLeft + Vec2(font.TextWidth(entity->name) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) * 0.5f;
-		entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name, entity->color);
+		entity->DrawUIBox(bottomLeft, topRight, static_cast<float>(COMMON_BOARDER_WIDTH), entity->name, entity->color);
 	}
 }
 

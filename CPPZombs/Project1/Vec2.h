@@ -138,10 +138,14 @@ inline Vec2 Ceil(Vec2 a)
 	return Vec2(ceilf(a.x), ceilf(a.y));
 }
 
+inline Vec2 CircPoint(float rotation)
+{
+	return Vec2(cosf(rotation), sinf(rotation));
+}
+
 inline Vec2 RandCircPoint()
 {
-	float rValue = RandFloat() * 2 * PI_F;
-	return Vec2(cos(rValue), sin(rValue));
+	return CircPoint(RandFloat() * 2 * PI_F);
 }
 #pragma endregion
 

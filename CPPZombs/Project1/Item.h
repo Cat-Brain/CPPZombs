@@ -5,6 +5,11 @@ enum ITEMOD // Item on-deaths
 	ITEM, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, EXPLODEONLANDING
 };
 
+enum PROJMOVE // The movements of projectile
+{
+	DEFAULT, HOMING
+};
+
 class Item;
 vector<function<void(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 

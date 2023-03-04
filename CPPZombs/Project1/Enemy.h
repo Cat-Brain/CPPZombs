@@ -188,7 +188,7 @@ namespace Enemies
 				enemies[i]->pos = pos + RandCircPoint();
 				enemies[i]->points = points / length;
 				enemies[i]->Start();
-				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
+				enemies[i]->color = color.CLerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
 			if (length > 1)
@@ -243,7 +243,7 @@ namespace Enemies
 				enemies[i]->pos = pos + RandCircPoint();
 				enemies[i]->points = points / length;
 				enemies[i]->Start();
-				enemies[i]->color = color.Lerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
+				enemies[i]->color = color.CLerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
 
@@ -639,7 +639,7 @@ namespace Enemies
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
 			vacuumer->Update(UPDATE::ENEMYU);
 
-			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed);
+			game->entities->VacuumBoth(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed);
 
 			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->radius, game->entities->collectibles);
 			for (Entity* collectible : collectibles)
@@ -779,7 +779,7 @@ namespace Enemies
 			ColorCycler* colorCycler = static_cast<ColorCycler*>(entity);
 			float currentPlace = (tTime * colorCycler->colorCycleSpeed + colorCycler->colorOffset);
 			int intCurrentPlace = static_cast<int>(currentPlace);
-			colorCycler->color = colorCycler->colorsToCycle[intCurrentPlace % colorCycler->colorsToCycle.size()].Lerp(
+			colorCycler->color = colorCycler->colorsToCycle[intCurrentPlace % colorCycler->colorsToCycle.size()].CLerp(
 				colorCycler->colorsToCycle[(static_cast<size_t>(intCurrentPlace) + 1) % colorCycler->colorsToCycle.size()], currentPlace - floorf(currentPlace));
 
 			colorCycler->DUpdate(DUPDATE::DTOCOLDU);
@@ -811,7 +811,7 @@ namespace Enemies
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
 			if (tTime - cat->lastStartedCircle < cat->circleTime)
-				cat->color = cat->color4.Lerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
+				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CATDU);
 			cat->color = tempColor;
 		}
@@ -824,7 +824,7 @@ namespace Enemies
 			string health = to_string(entity->health);
 			iVec2 bottomLeft = entity->BottomLeft();
 			iVec2 topRight = bottomLeft + iVec2(font.TextWidth(entity->name + " " + health) * COMMON_TEXT_SCALE / font.minimumSize, font.maxVertOffset / 2) / 2;
-			entity->DrawUIBox(bottomLeft, topRight, COMMON_BOARDER_WIDTH, entity->name + " " + health, entity->color);
+			entity->DrawUIBox(bottomLeft, topRight, static_cast<float>(COMMON_BOARDER_WIDTH), entity->name + " " + health, entity->color);
 		}
 	}
 
@@ -1082,17 +1082,18 @@ namespace Enemies
 	// Mids - 4
 	Deceiver* deceiver = new Deceiver(0.5f, 4, 4, 4, 1, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), RGBA(), 1, 3, 3, "Deceiver");
 	Exploder* exploder = new Exploder(2.5f, 1.0f, 3, 4, 4, 1, 0.5f, RGBA(153, 255, 0), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Exploder");
-	Vacuumer* vacuumer = new Vacuumer(12, 8, 12, 0.125f, 8, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
+	Vacuumer* vacuumer = new Vacuumer(4, 1, 8, 0.125f, 8, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Vacuumer");
+	Vacuumer* pusher = new Vacuumer(6, -3, 2, 0.125f, 8, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), RGBA(50, 50, 50), 1, 3, 3, "Pusher");
 	Pouncer* frog = new Pouncer(2.0f, 16.0f, 1.0f, 4.0f, 4, 4, 1, 0.5f, RGBA(107, 212, 91), RGBA(), RGBA(25, 0, 25), 3, 3, 3, "Frog");
 
 	// Mid-lates - 6
 	Parent* parent = new Parent(child, 1.0f, 1.0f, 4, 6, 1, 2.5f, RGBA(127, 0, 127), RGBA(), RGBA(0, 50, 0), 1, 10, 10, "Parent");
 	Parent* spiderParent = new Parent(centicrawler, 1.0f, 1.0f, 4, 6, 1, 2.5f, RGBA(140, 35, 70), RGBA(), RGBA(0, 50, 0), 5, 10, 10, "Spider Parent");
 	Snake* snake = new Snake(30, 0.5f, 4, 30, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
+	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 6, 1, 2.5f, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 	
 	// Lates - 8
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 4, 8, 8, 1, 0.5f, RGBA(), 1, 24, 24, "Hyper Speedster");
-	Enemy* megaTanker = new Enemy(1.0f, 1.0f, 20, 8, 1, 2.5f, RGBA(174, 0, 255), RGBA(), RGBA(0, 25, 25), 10, 48, 48, "Mega Tanker");
 	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 8, 8, 1, 1.5f, RGBA(153, 255), RGBA(), RGBA(25, 0, 25), 1, 3, 3, "Giga Exploder");
 	Snake* bigSnake = new Snake(30, 0.5f, 4, 60, 8, 1, 1.5f, RGBA(0, 255), RGBA(), RGBA(50, 0, 0), RGBA(255, 255), RGBA(0, 127), 2, 9, 9, "Big Snake");
 	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 30, 0.5f, 8.0f, 60, 8, 1, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(50, 0, 0), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
@@ -1104,7 +1105,7 @@ namespace Enemies
 
 	// Bosses - Special
 	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, cat->radius, cat->color, cat->subScat, 1, 1, 1, "Cataclysmic Bullet");
-	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, 0.0625f, 6.5f, 5.0f, 12.0f, 0.5f, 5.0f, 1000, 12, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, 0.0625f, 6.5f, 5.0f, 12.0f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), RGBA(), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 	class Instance;
@@ -1194,9 +1195,9 @@ namespace Enemies
 	Types naturalSpawns
 	{
 		{walker, tanker, spider, tinyTank},
-		{deceiver, exploder, vacuumer, frog},
-		{parent, spiderParent, snake},
-		{hyperSpeedster, megaTanker, gigaExploder, bigSnake, pouncerSnake},
+		{deceiver, exploder, vacuumer, pusher, frog},
+		{parent, spiderParent, snake, megaTanker},
+		{hyperSpeedster, gigaExploder, bigSnake, pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

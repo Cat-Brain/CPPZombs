@@ -30,6 +30,9 @@ public:
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
+	float screenShake = 0.0f;
+	//Vec2 deadPlayerPos = vZero;
+	FastNoiseLite screenShkX, screenShkY;
 
 	Game() : entities(nullptr), player(nullptr) { }
 

@@ -6,7 +6,6 @@ in vec2 pos;
 
 void main()
 {
-	if (length(pos) > 1)
-		discard;
+	if (dot(pos, pos) > 1) discard;
 	FragColor = color;
 } 

@@ -22,7 +22,7 @@ int main()
 	#pragma region Update functions
 		using namespace Updates;
 		using namespace Enemies::Updates;
-		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
+		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
 		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CataclysmU, PlayerU };
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;

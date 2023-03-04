@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
 	player = playerUnique.get();
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -16,6 +16,15 @@ void Game::Start()
 	shouldSpawnBoss = false;
 
 	planet = std::make_unique<Planet>();
+
+	screenShkX.SetFrequency(5.f);
+	screenShkX.SetFractalLacunarity(2.0f);
+	screenShkX.SetFractalGain(0.5f);
+	screenShkX.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+	screenShkX.SetSeed(static_cast<int>(time(NULL)));
+	screenShkY = screenShkX;
+	screenShkY.SetSeed(static_cast<int>(time(NULL) + 1));
+	screenShake = 0.0f;
 }
 
 bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
@@ -143,7 +152,7 @@ void Game::ApplyLighting()
 	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 0);
 
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
-		screenRatio * zoom * 2, zoom * 2);
+		static_cast<int>(screenRatio * zoom * 2), static_cast<int>(zoom * 2));
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 		DrawLight(light->pos, light->range, light->color);
 
@@ -203,6 +212,9 @@ void Game::TUpdate()
 	tTime += dTime;
 	inputs.FindMousePos(window, zoom);
 
+	screenShake *= powf(0.25f, game->dTime);
+	screenOffset = Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake;
+
 	brightness = planet->GetBrightness();
 
 	system_clock::time_point timeStartFrame = system_clock::now();
@@ -229,7 +241,7 @@ void Game::TUpdate()
 	}
 
 	glUseProgram(backgroundShader);
-	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x, PlayerPos().y);
+	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x + screenOffset.x, PlayerPos().y + screenOffset.y);
 	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), screenRatio * zoom, zoom);
 	glUniform3f(glGetUniformLocation(backgroundShader, "col1"), planet->color1.r / 255.0f, planet->color1.g / 255.0f, planet->color1.b / 255.0f);
 	glUniform3f(glGetUniformLocation(backgroundShader, "col2"), planet->color2.r / 255.0f, planet->color2.g / 255.0f, planet->color2.b / 255.0f);

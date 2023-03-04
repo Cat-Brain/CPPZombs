@@ -375,9 +375,29 @@ public:
 	{
 		for (Entity* collectible : collectibles)
 		{
-			int distance = Distance(pos, collectible->pos);
-			if (collectible->active && distance > 0 && distance <= vacDist)
-				collectible->SetPos(collectible->pos + Normalized(Vec2(pos - collectible->pos)) * game->dTime * speed);
+			float distance = Distance(pos, collectible->pos);
+			if (collectible->active && distance > 0 && distance <= vacDist + collectible->radius)
+				collectible->SetPos(collectible->pos + Normalized(Vec2(pos - collectible->pos)) * game->dTime * speed / collectible->mass);
+		}
+	}
+
+	void VacuumNC(Vec2 pos, float vacDist, float speed)
+	{
+		for (Entity* entity : sortedNCEntities)
+		{
+			float distance = Distance(pos, entity->pos);
+			if (entity->active && entity->corporeal && distance > 0 && distance <= vacDist + entity->radius)
+				entity->SetPos(entity->pos + Normalized(Vec2(pos - entity->pos)) * game->dTime * speed / entity->mass);
+		}
+	}
+
+	void VacuumBoth(Vec2 pos, float vacDist, float speed)
+	{
+		for (unique_ptr<Entity>& entity : *this)
+		{
+			float distance = Distance(pos, entity->pos);
+			if (entity->active && (entity->corporeal || entity->isCollectible) && distance > 0 && distance <= vacDist + entity->radius)
+				entity->SetPos(entity->pos + Normalized(Vec2(pos - entity->pos)) * game->dTime * speed / entity->mass);
 		}
 	}
 
@@ -480,6 +500,23 @@ void Entity::SetPos(Vec2 newPos)
 	pos = newPos;
 }
 
+void Entity::SetRadius(float newRadius)
+{
+	std::pair<iVec2, iVec2> minMaxOldRadius = Chunk::MinMaxPos(pos, radius);
+	std::pair<iVec2, iVec2> minMaxNewRadius = Chunk::MinMaxPos(pos, newRadius);
+	if (minMaxOldRadius.first != minMaxNewRadius.first || minMaxOldRadius.second != minMaxNewRadius.second)
+	{
+		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
+		vector<int> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldRadius.first, minMaxOldRadius.second);
+		for (int chunk : oldChunkOverlaps)
+			game->entities->chunks[chunk].erase(find(game->entities->chunks[chunk].begin(), game->entities->chunks[chunk].end(), position));
+		vector<int> newChunkOverlaps = game->entities->FindCreateChunkOverlapsMain(minMaxNewRadius.first, minMaxNewRadius.second);
+		for (int chunk : newChunkOverlaps)
+			game->entities->chunks[chunk].push_back(position);
+	}
+	radius = newRadius;
+}
+
 void Entity::UpdateCollision()
 {
 	vector<Entity*> entities = game->entities->FindCorpOverlaps(pos, radius);
@@ -556,6 +593,24 @@ public:
 	}
 };
 
+class VacuumeFor : public Entity
+{
+public:
+	float startTime, timeTill, vacDist, vacSpeed;
+
+	VacuumeFor(Vec2 pos, float timeTill, float vacDist, float vacSpeed, RGBA color) :
+		Entity(pos, vacDist, color), startTime(tTime), timeTill(timeTill), vacDist(vacDist), vacSpeed(vacSpeed)
+	{
+		update = UPDATE::VACUUMEFORU;
+		corporeal = false;
+	}
+
+	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	{
+		return make_unique<VacuumeFor>(pos, timeTill, vacDist, vacSpeed, color);
+	}
+};
+
 namespace Updates
 {
 	void ExplodeNextFrameU(Entity* entity)
@@ -589,6 +644,19 @@ namespace Updates
 		}
 		if (tTime - puddle->startTime > puddle->totalFadeTime)
 			puddle->DestroySelf(puddle);
+	}
+
+	void VacuumeForU(Entity* entity)
+	{
+		VacuumeFor* vac = static_cast<VacuumeFor*>(entity);
+
+		if (tTime - vac->startTime > vac->timeTill)
+		{
+			vac->DestroySelf(nullptr);
+			return;
+		}
+
+		game->entities->VacuumBoth(vac->pos, vac->vacDist, vac->vacSpeed);
 	}
 }
 
@@ -767,6 +835,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
+	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 10, 4, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
@@ -776,6 +845,7 @@ namespace Resources
 	ExplodeOnLanding* topaz = new ExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), RGBA(0, 0, 10), 3, 1, 15.0f, 0.25f, 1.5f);
 	ExplodeOnLanding* sapphire = new ExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), RGBA(10, 10, 0), 0, 1, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), RGBA(0, 10, 5), 0, 1, 15.0f, true);
+	PlacedOnLanding* vacuumium = new PlacedOnLanding(Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), RGBA(5, 5, 5), 0);
 }
 
 namespace Collectibles
@@ -785,4 +855,5 @@ namespace Collectibles
 	Collectible* topaz = new Collectible(*Resources::topaz);
 	Collectible* sapphire = new Collectible(*Resources::sapphire);
 	Collectible* lead = new Collectible(*Resources::lead);
+	Collectible* vacuumium = new Collectible(*Resources::vacuumium);
 }

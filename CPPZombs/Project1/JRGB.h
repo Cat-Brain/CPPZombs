@@ -120,10 +120,9 @@ public:
 		return true;
 	}
 
-	JRGB Lerp(JRGB other, float lerpValue)
+	JRGB CLerp(JRGB other, float lerpValue)
 	{
-		return *this - JRGB(static_cast<byte>(static_cast<float>(r - other.r) * lerpValue), static_cast<byte>(static_cast<float>(g - other.g) * lerpValue),
-			static_cast<byte>(static_cast<float>(b - other.b) * lerpValue));
+		return JRGB(Lerp(int(r), int(other.r), lerpValue), Lerp(int(g), int(other.g), lerpValue), Lerp(int(b), int(other.b), lerpValue));
 	}
 };
 
@@ -248,10 +247,9 @@ public:
 		return true;
 	}
 
-	inline RGBA Lerp(RGBA other, float lerpValue)
+	inline RGBA CLerp(RGBA other, float lerpValue)
 	{
-		return *this - RGBA(static_cast<byte>(static_cast<float>(r - other.r) * lerpValue), static_cast<byte>(static_cast<float>(g - other.g) * lerpValue),
-			static_cast<byte>(static_cast<float>(b - other.b) * lerpValue), static_cast<byte>(static_cast<float>(a - other.a) * lerpValue));
+		return RGBA(Lerp(int(r), int(other.r), lerpValue), Lerp(int(g), int(other.g), lerpValue), Lerp(int(b), int(other.b), lerpValue), Lerp(int(a), int(other.a), lerpValue));
 	}
 
 	inline JRGB ToJRGB()

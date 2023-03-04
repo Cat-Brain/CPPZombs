@@ -59,6 +59,12 @@ unique_ptr<Game> game;
 #pragma endregion
 
 #pragma region Math
+template <typename T>
+inline T Lerp(T a, T b, float l)
+{
+	return a + T((b - a) * l);
+}
+
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }

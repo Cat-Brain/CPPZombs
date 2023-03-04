@@ -3,8 +3,7 @@
 class Projectile : public Entity
 {
 public:
-    Vec2 direction;
-    Vec2 offset; // Should rarely be outside of the range (0, 0) to (1, 1), whenever it exceeds subtract from it and add to pos.
+    Vec2 direction = vZero;
     float duration;
     int damage;
     float speed, begin;
@@ -27,7 +26,6 @@ public:
     {
         this->creator = creator;
         this->direction = Normalized(Vec2(direction));
-        offset = vZero;
         this->pos = pos;
         begin = tTime;
         Start();
@@ -48,8 +46,12 @@ public:
                 continue;
 
             hitEntity = entity;
+            Vec2 hitPos = hitEntity->pos;
             if (entity->DealDamage(damage, this) == 1)
+            {
+                SetPos(hitPos);
                 hitEntity = nullptr;
+            }
             return true;
         }
         return false;
@@ -107,22 +109,6 @@ public:
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
-        ShotItem(*baseClass)
-    {
-        this->creator = creator;
-        float magnitude = glm::length(direction);
-        this->direction = direction / magnitude;
-        duration = fminf(item.range, magnitude);
-        offset = vZero;
-        this->pos = pos;
-        begin = tTime;
-        damage = item.damage;
-        creatorName = creator->name;
-        health = item.health;
-        Start();
-    }
-
     ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
@@ -130,7 +116,6 @@ public:
         float magnitude = glm::length(direction);
         this->direction = direction / magnitude;
         duration = fminf(item.range, magnitude);
-        offset = vZero;
         this->pos = pos;
         begin = tTime;
         damage = item.damage;
@@ -145,11 +130,6 @@ public:
         if (creator != nullptr)
             creatorName = creator->name;
         Start();
-    }
-
-    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
-    {
-        return make_unique<ShotItem>(this, pos, direction, creator);
     }
 
     unique_ptr<Entity> Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
