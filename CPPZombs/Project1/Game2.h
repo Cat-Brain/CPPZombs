@@ -5,7 +5,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, RGBA(), 20.0f, 1.0f, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.0f, 1.0f, 10, 5, "Player");
 	player = playerUnique.get();
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -134,22 +134,23 @@ void Game::ApplyLighting()
 {
 	JRGB ambientColor = planet->GetAmbient(brightness);
 
-	currentFramebuffer = 2;
+	currentFramebuffer = SHADOWMAP;
 	UseFramebuffer();
-	glClearColor(planet->fog.r / 255.0f, planet->fog.g / 255.0f, planet->fog.b / 255.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
 	glBlendFunc(GL_ONE, GL_ONE);
-	entities->SubScatUpdate();
 
-	currentFramebuffer = 3;
-	UseFramebuffer();
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(sunShader);
+	glUniform3f(glGetUniformLocation(sunShader, "color"), ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, mainScreen->normalBuffer);
+	glUniform1i(glGetUniformLocation(sunShader, "normalMap"), 0);
+	screenSpaceQuad.Draw();
+
 
 	glUseProgram(shadowShader);
-	glClearColor(ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, subScat.textureColorbuffer);
-	glUniform1i(glGetUniformLocation(shadowShader, "subScat"), 0);
+	glUniform1i(glGetUniformLocation(shadowShader, "normalMap"), 0);
 
 	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
 		static_cast<int>(screenRatio * zoom * 2), static_cast<int>(zoom * 2));
@@ -165,16 +166,16 @@ void Game::ApplyLighting()
 	glBlendEquation(GL_FUNC_ADD);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	currentFramebuffer = 1;
+	currentFramebuffer = MAINSCREEN;
 	UseFramebuffer();
 	
 	glUseProgram(shadingShader);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, midRes.textureColorbuffer);
+	glBindTexture(GL_TEXTURE_2D, mainScreen->textureColorbuffer);
 	glUniform1i(glGetUniformLocation(shadingShader, "screenTexture"), 0);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, shadowMap.textureColorbuffer);
+	glBindTexture(GL_TEXTURE_2D, shadowMap->textureColorbuffer);
 	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), 1);
 
 	screenSpaceQuad.Draw();
@@ -240,6 +241,10 @@ void Game::TUpdate()
 		lastWave = tTime;
 	}
 
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	static const float normalUp[] = { 0, 0, 1, 0 };
+	glClearBufferfv(GL_COLOR, 1, normalUp);
 	glUseProgram(backgroundShader);
 	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x + screenOffset.x, PlayerPos().y + screenOffset.y);
 	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), screenRatio * zoom, zoom);

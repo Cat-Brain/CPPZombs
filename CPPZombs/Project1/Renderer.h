@@ -8,10 +8,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	for (Framebuffer* framebuffer : framebuffers)
 		if (framebuffer->shouldScreenRes)
 			framebuffer->ResetWidth();
-	subScat.width = 3 * midRes.width;
-	subScat.ResetDim();
-	shadowMap.width = subScat.width;
-	shadowMap.ResetDim();
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -80,13 +76,14 @@ private:
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 
-		midRes = Framebuffer(trueScreenHeight);
-		subScat = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB, false);
-		shadowMap = Framebuffer(midRes.width * 3, midRes.height * 3, GL_RGB16F, false);
+		mainScreen = make_unique<DeferredFramebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB, true);
+		shadowMap = make_unique<Framebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB16F, true);
+		framebuffers = { mainScreen.get(), shadowMap.get() };
+
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
 		font = Font(static_cast<FT_Byte*>(defaultFont.ptr), static_cast<FT_Long>(defaultFont.size), 128);
 
-		currentFramebuffer = 1;
+		currentFramebuffer = MAINSCREEN;
 		UseFramebuffer();
 
 		glStencilMask(0x00);
@@ -204,7 +201,7 @@ public:
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2.f) / Vec2(midRes.ScrDim()) * Vec2(ScrDim())), scale, color);
+		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2.f) / Vec2(mainScreen->ScrDim()) * Vec2(ScrDim())), scale, color);
 	}
 
 	void DrawTextured(Texture& texture, uint spriteToDraw, iVec2 pos, RGBA color, iVec2 dimensions = vOne)
@@ -271,11 +268,11 @@ public:
 
 		Vec2 scrPos = pos - Vec2(PlayerPos());
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			range / (zoom * 1.5f * screenRatio), range / (zoom * 1.5f));
+			range / (zoom * 0.5f * screenRatio), range / (zoom * 0.5f));
 
 		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - range) / (zoom * 3 * screenRatio),
-			(scrPos.y - range) / (zoom * 3));
+			(scrPos.x - range) / (zoom * screenRatio),
+			(scrPos.y - range) / zoom);
 
 		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
 

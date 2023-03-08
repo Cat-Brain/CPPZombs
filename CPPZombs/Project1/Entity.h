@@ -7,7 +7,7 @@
 enum UPDATE // Update
 {
 	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, VACUUMEFORU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, VACUUMERU, SPIDERU,
-	CENTICRAWLERU, POUNCERU, CATACLYSMU, PLAYERU
+	CENTICRAWLERU, POUNCERU, CATU, CATACLYSMU, PLAYERU
 };
 
 vector<function<void(Entity*)>> updates;
@@ -73,16 +73,16 @@ public:
 	string name;
 	Vec2 pos, dir;
 	float radius;
-	RGBA color, subScat;
+	RGBA color;
 	float mass;
 	int maxHealth, health;
 	bool active = true, dActive = true;
 	int sortLayer = 0;
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
-	Entity(Vec2 pos = Vec2(0), float radius = 0.5f, RGBA color = RGBA(), RGBA subScat = RGBA(),
+	Entity(Vec2 pos = Vec2(0), float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), radius(radius), dir(0), color(color), subScat(subScat),
+		pos(pos), radius(radius), dir(0), color(color),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITYU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU), uiUpdate(UIUPDATE::ENTITYUIU), onDeath(ONDEATH::ENTITYOD), overlapFun(OVERLAPFUN::ENTITYOF)
 	{
@@ -157,11 +157,6 @@ public:
 		onDeaths[tempOnDeath](this, damageDealer);
 	}
 #pragma endregion
-
-	virtual void SubScatUpdate() // Renders the sub-surface scattering of the entity.
-	{
-		//game->Draw(pos, subScat, radius);
-	}
 
 	Vec2 BottomLeft() // Not always accurate.
 	{

@@ -79,7 +79,8 @@ inline float RandFloat()
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
-inline int JMod(int x, int m)
+template <typename T>
+inline T JMod(T x, T m)
 {
 	return ((x % m) + m) % m;
 }

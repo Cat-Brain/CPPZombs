@@ -11,8 +11,8 @@ public:
 		holdMoveSpeed = moveSpeed;
 
 	Player(iVec2 pos = vZero, float radius = 0.5f, float vacDist = 6, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
-		bool lightOrDark = true, RGBA subScat = RGBA(), float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		LightBlock(lightColor, lightOrDark, range, pos, radius, color, color2, subScat, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
+		bool lightOrDark = true, float range = 10, float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		LightBlock(lightColor, lightOrDark, range, pos, radius, color, color2, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
 	{
 		update = UPDATE::PLAYERU;
 		onDeath = ONDEATH::PLAYEROD;

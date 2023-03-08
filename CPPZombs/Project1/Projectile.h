@@ -10,8 +10,8 @@ public:
     int callType = 0;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
-        RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
-        Entity(vZero, radius, color, subScat, mass, maxHealth, health, name),
+        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
+        Entity(vZero, radius, color, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
         update = UPDATE::PROJECTILEU;
@@ -103,7 +103,7 @@ public:
     string creatorName;
 
     ShotItem(Item item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item.range, item.damage, speed, radius, item.color, RGBA(), mass, maxHealth, health), item(item)
+        Projectile(item.range, item.damage, speed, radius, item.color, mass, maxHealth, health), item(item)
     {
         onDeath = ONDEATH::SHOTITEMOD;
         Start();
@@ -121,7 +121,6 @@ public:
         damage = item.damage;
         this->item = item;
         color = item.color;
-        subScat = item.subScat;
         mass = item.mass;
         corporeal = item.corporeal;
         radius = item.radius;
@@ -149,7 +148,7 @@ namespace OnDeaths
 
 namespace Projectiles
 {
-    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), RGBA(), 2, 1, 30.0f);
+    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), 2, 1, 30.0f);
 }
 
 ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);

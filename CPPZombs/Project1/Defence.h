@@ -14,13 +14,12 @@ public:
 	bool nextSpawnSeed = true;
 
 	Tree(Collectible* collectible, int cyclesToGrow, int deadStage, int chanceForSeed,
-		float timePer, iVec2 pos = vZero, float radius = 0.5f, float maxRadius = 0.5f, RGBA color = RGBA(), RGBA adultColor = RGBA(),
-		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
+		float timePer, iVec2 pos = vZero, float radius = 0.5f, float maxRadius = 0.5f, RGBA color = RGBA(), RGBA adultColor = RGBA(), RGBA deadColor = RGBA(),
 		float mass = 1, float maxMass = 2, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(nullptr), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		babyRadius(radius), maxRadius(maxRadius), babyMass(mass), maxMass(maxMass),
-		FunctionalBlock2(timePer, pos, radius, color, subsurfaceResistance, mass, maxHealth, health, name)
+		FunctionalBlock2(timePer, pos, radius, color, mass, maxHealth, health, name)
 	{
 		dUpdate = DUPDATE::TREEDU;
 		uiUpdate = UIUPDATE::TREEUIU;
@@ -76,9 +75,9 @@ public:
 
 	Vine(Collectible* collectible, int cyclesToGrow, int deadStage, int maxGenerations, int chanceForSeed,
 		float timePer, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA adultColor = RGBA(),
-		RGBA deadColor = RGBA(), RGBA subsurfaceResistance = RGBA(),
+		RGBA deadColor = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Tree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, radius, radius, color, adultColor, deadColor, subsurfaceResistance,
+		Tree(collectible, cyclesToGrow, deadStage, chanceForSeed, timePer, pos, radius, radius, color, adultColor, deadColor,
 			mass, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0)
 	{
@@ -232,45 +231,45 @@ namespace Plants
 {
 	namespace Trees
 	{
-		RGBA babyCopperTreeColor = RGBA(207, 137, 81), copperTreeColor = RGBA(163, 78, 8), deadCopperTreeColor = RGBA(94, 52, 17), copperResistence = RGBA(0, 0, 50);
-		Tree* copperTree = new Tree(Collectibles::copper, 5, 25, 25, 4.0f, vZero, 0.1f, 1.5f, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, copperResistence, 0.2f, 3.0f, 1, 1, "Copper tree");
+		RGBA babyCopperTreeColor = RGBA(207, 137, 81), copperTreeColor = RGBA(163, 78, 8), deadCopperTreeColor = RGBA(94, 52, 17);
+		Tree* copperTree = new Tree(Collectibles::copper, 5, 25, 25, 4.0f, vZero, 0.1f, 1.5f, babyCopperTreeColor, copperTreeColor, deadCopperTreeColor, 0.2f, 3.0f, 1, 1, "Copper tree");
 
-		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48), ironResistence = RGBA(50, 50, 0);
-		Tree* ironTree = new Tree(Collectibles::iron, 120, 180, 10, 0.5f, vZero, 0.1f, 1.5f, babyIronTreeColor, ironTreeColor, deadIronTreeColor, ironResistence, 0.2f, 3.0f, 1, 1, "Iron tree");
+		RGBA babyIronTreeColor = RGBA(96, 192, 225), ironTreeColor = RGBA(67, 90, 99), deadIronTreeColor = RGBA(45, 47, 48);
+		Tree* ironTree = new Tree(Collectibles::iron, 120, 180, 10, 0.5f, vZero, 0.1f, 1.5f, babyIronTreeColor, ironTreeColor, deadIronTreeColor, 0.2f, 3.0f, 1, 1, "Iron tree");
 
-		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88), rubyResistence = RGBA(0, 50, 50);
-		Tree* rubyTree = new Tree(Collectibles::ruby, 5, 15, 50, 4.0f, vZero, 0.1f, 1.5f, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, rubyResistence, 0.2f, 3.0f, 1, 1, "Ruby tree");
+		RGBA babyRubyTreeColor = RGBA(207, 120, 156), rubyTreeColor = RGBA(135, 16, 66), deadRubyTreeColor = RGBA(120, 65, 88);
+		Tree* rubyTree = new Tree(Collectibles::ruby, 5, 15, 50, 4.0f, vZero, 0.1f, 1.5f, babyRubyTreeColor, rubyTreeColor, deadRubyTreeColor, 0.2f, 3.0f, 1, 1, "Ruby tree");
 
-		RGBA babyEmeraldTreeColor = RGBA(145, 255, 204), emeraldTreeColor = RGBA(65, 166, 119), deadEmeraldTreeColor = RGBA(61, 97, 80), emeraldResistence = RGBA(50, 0, 50);
-		Tree* emeraldTree = new Tree(Collectibles::emerald, 5, 15, 50, 4.0f, vZero, 0.1f, 1.5f, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, emeraldResistence, 0.2f, 3.0f, 1, 1, "Emerald tree");
+		RGBA babyEmeraldTreeColor = RGBA(145, 255, 204), emeraldTreeColor = RGBA(65, 166, 119), deadEmeraldTreeColor = RGBA(61, 97, 80);
+		Tree* emeraldTree = new Tree(Collectibles::emerald, 5, 15, 50, 4.0f, vZero, 0.1f, 1.5f, babyEmeraldTreeColor, emeraldTreeColor, deadEmeraldTreeColor, 0.2f, 3.0f, 1, 1, "Emerald tree");
 
-		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(130, 130, 130), rockResistence = RGBA(50, 0, 50);
-		Tree* rockTree = new Tree(Collectibles::rock, 5, 8, 75, 4.0f, vZero, 0.1f, 1.5f, babyRockTreeColor, rockTreeColor, deadRockTreeColor, rockResistence, 0.2f, 3.0f, 1, 1, "Rock tree");
+		RGBA babyRockTreeColor = RGBA(212, 212, 212), rockTreeColor = RGBA(201, 196, 165), deadRockTreeColor = RGBA(130, 130, 130);
+		Tree* rockTree = new Tree(Collectibles::rock, 5, 8, 75, 4.0f, vZero, 0.1f, 1.5f, babyRockTreeColor, rockTreeColor, deadRockTreeColor, 0.2f, 3.0f, 1, 1, "Rock tree");
 		
-		RGBA babyShadeTreeColor = RGBA(50, 50), shadeTreeColor = RGBA(25, 25), deadShadeTreeColor = RGBA(), shadeResistence = RGBA();
-		Tree* shadeTree = new Tree(Collectibles::shades, 10, 30, 25, 1.0f, vZero, 0.1f, 1.5f, babyShadeTreeColor, shadeTreeColor, deadShadeTreeColor, shadeResistence, 0.2f, 3.0f, 1, 1, "Shade tree");
+		RGBA babyShadeTreeColor = RGBA(50, 50), shadeTreeColor = RGBA(25, 25), deadShadeTreeColor = RGBA();
+		Tree* shadeTree = new Tree(Collectibles::shades, 10, 30, 25, 1.0f, vZero, 0.1f, 1.5f, babyShadeTreeColor, shadeTreeColor, deadShadeTreeColor, 0.2f, 3.0f, 1, 1, "Shade tree");
 	
-		RGBA babyBowlerTreeColor = RGBA(111, 101, 143), bowlerTreeColor = RGBA(21, 0, 89), deadBowlerTree = RGBA(12, 4, 36), bowlerResistence = RGBA(5, 0, 10);
-		Tree* bowlerTree = new Tree(Collectibles::bowler, 1, 50, 50, 16.0f, vZero, 0.3f, 2.5f, babyBowlerTreeColor, bowlerTreeColor, deadBowlerTree, bowlerResistence, 1, 5, 50, 50, "Bowler tree");
+		RGBA babyBowlerTreeColor = RGBA(111, 101, 143), bowlerTreeColor = RGBA(21, 0, 89), deadBowlerTree = RGBA(12, 4, 36);
+		Tree* bowlerTree = new Tree(Collectibles::bowler, 1, 50, 50, 16.0f, vZero, 0.3f, 2.5f, babyBowlerTreeColor, bowlerTreeColor, deadBowlerTree, 1, 5, 50, 50, "Bowler tree");
 	
-		RGBA babyVacuumiumTreeColor = RGBA(242, 239, 148), vacuumiumTreeColor = RGBA(204, 202, 153), deadVacuumiumTreeColor = RGBA(158, 156, 85), vacuumiumResistence = RGBA();
-		Tree* vacuumiumTree = new Tree(Collectibles::vacuumium, 10, 30, 25, 1.0f, vZero, 4, 0.25f, babyVacuumiumTreeColor, vacuumiumTreeColor, deadVacuumiumTreeColor, vacuumiumResistence, 0.2f, 3.0f, 6, 6, "Vacuumium tree");
+		RGBA babyVacuumiumTreeColor = RGBA(242, 239, 148), vacuumiumTreeColor = RGBA(204, 202, 153), deadVacuumiumTreeColor = RGBA(158, 156, 85);
+		Tree* vacuumiumTree = new Tree(Collectibles::vacuumium, 10, 60, 5, 0.5f, vZero, 4, 0.25f, babyVacuumiumTreeColor, vacuumiumTreeColor, deadVacuumiumTreeColor, 0.2f, 3.0f, 6, 6, "Vacuumium tree");
 	}
 
 
 	namespace Vines
 	{
-		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50), cheeseResistence = RGBA(0, 0, 50);
-		Vine* cheeseVine = new Vine(Collectibles::cheese, 5, 10, 3, 7, 2.0f, vZero, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, cheeseResistence, 1, 1, 1, "Cheese vine");
+		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50);
+		Vine* cheeseVine = new Vine(Collectibles::cheese, 5, 10, 3, 7, 2.0f, vZero, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 1, 1, "Cheese vine");
 
-		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61), leadResistence = RGBA(0, 50, 0);
-		Vine* leadVine = new Vine(Collectibles::lead, 2, 6, 4, 2, 6.0f, vZero, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, leadResistence, 2, 1, 1, "Lead vine");
+		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61);
+		Vine* leadVine = new Vine(Collectibles::lead, 2, 6, 4, 2, 6.0f, vZero, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
 		
-		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0), topazResistence = RGBA(25, 0, 50);
-		Vine* topazVine = new Vine(Collectibles::topaz, 2, 5, 7, 5, 12.0f, vZero, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, topazResistence, 5, 6, 6, "Topaz vine");
+		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
+		Vine* topazVine = new Vine(Collectibles::topaz, 2, 5, 7, 5, 12.0f, vZero, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
 		
-		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92), sapphireResistence = RGBA(50, 50, 0);
-		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 10, 13, 4, 5, 0.0625f, vZero, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, sapphireResistence, 1, 6, 6, "Sapphire vine");
+		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
+		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 10, 13, 4, 5, 0.0625f, vZero, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 6, 6, "Sapphire vine");
 	}
 
 	// Keep a list of all of the plants. Tree is the base of all plants so it's what we'll use for the pointer.
@@ -282,19 +281,19 @@ namespace Plants
 namespace Resources::Seeds
 {
 	// Trees
-	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", 4, Plants::Trees::copperTreeColor, Resources::copper->subScat, 0, 1, 15, false, 0.25f, Plants::Trees::copperTree->radius);
-	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", 4, Plants::Trees::ironTreeColor, Resources::iron->subScat, 0, 1, 15, false, 0.25f, Plants::Trees::ironTree->radius);
-	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", 4, Plants::Trees::rockTreeColor, Resources::rock->subScat, 0, 1, 15, false, 0.25f, Plants::Trees::rockTree->radius);
-	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", 2, Plants::Trees::rubyTreeColor, Resources::ruby->subScat, 1, 1, 15, false, 0.25f, Plants::Trees::rubyTree->radius);
-	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", 2, Plants::Trees::emeraldTreeColor, Resources::emerald->subScat, 1, 1, 15, false, 0.25f, Plants::Trees::emeraldTree->radius);
-	PlacedOnLanding* shadeTreeSeed = new PlacedOnLanding(Plants::Trees::shadeTree, "Shade tree seed", "Seed", 4, Plants::Trees::shadeTreeColor, Resources::shades->subScat, 0, 1, 15, false, 0.25f, Plants::Trees::shadeTree->radius);
-	PlacedOnLanding* bowlerTreeSeed = new PlacedOnLanding(Plants::Trees::bowlerTree, "Bowler tree seed", "Seed", 4, Plants::Trees::bowlerTreeColor, Resources::bowler->subScat, 0, 1, 15, false, 0.5f, Plants::Trees::bowlerTree->radius);
-	PlacedOnLanding* vacuumiumTreeSeed = new PlacedOnLanding(Plants::Trees::vacuumiumTree, "Vacuumium tree seed", "Seed", 4, Plants::Trees::vacuumiumTreeColor, Resources::vacuumium->subScat, 0, 1, 15, false, 0.5f, Plants::Trees::vacuumiumTree->radius);
+	PlacedOnLanding* copperTreeSeed = new PlacedOnLanding(Plants::Trees::copperTree, "Copper tree seed", "Seed", 4, Plants::Trees::copperTreeColor, 0, 1, 15, false, 0.25f, Plants::Trees::copperTree->radius);
+	PlacedOnLanding* ironTreeSeed = new PlacedOnLanding(Plants::Trees::ironTree, "Iron tree seed", "Seed", 4, Plants::Trees::ironTreeColor, 0, 1, 15, false, 0.25f, Plants::Trees::ironTree->radius);
+	PlacedOnLanding* rockTreeSeed = new PlacedOnLanding(Plants::Trees::rockTree, "Rock tree seed", "Seed", 4, Plants::Trees::rockTreeColor, 0, 1, 15, false, 0.25f, Plants::Trees::rockTree->radius);
+	CorruptOnKill* rubyTreeSeed = new CorruptOnKill(Plants::Trees::rubyTree, "Ruby tree seed", "Corruption Seed", 2, Plants::Trees::rubyTreeColor, 1, 1, 15, false, 0.25f, Plants::Trees::rubyTree->radius);
+	CorruptOnKill* emeraldTreeSeed = new CorruptOnKill(Plants::Trees::emeraldTree, "Emerald tree seed", "Corruption Seed", 2, Plants::Trees::emeraldTreeColor, 1, 1, 15, false, 0.25f, Plants::Trees::emeraldTree->radius);
+	PlacedOnLanding* shadeTreeSeed = new PlacedOnLanding(Plants::Trees::shadeTree, "Shade tree seed", "Seed", 4, Plants::Trees::shadeTreeColor, 0, 1, 15, false, 0.25f, Plants::Trees::shadeTree->radius);
+	PlacedOnLanding* bowlerTreeSeed = new PlacedOnLanding(Plants::Trees::bowlerTree, "Bowler tree seed", "Seed", 4, Plants::Trees::bowlerTreeColor, 0, 1, 15, false, 0.5f, Plants::Trees::bowlerTree->radius);
+	PlacedOnLanding* vacuumiumTreeSeed = new PlacedOnLanding(Plants::Trees::vacuumiumTree, "Vacuumium tree seed", "Seed", 4, Plants::Trees::vacuumiumTreeColor, 0, 1, 15, false, 0.5f, Plants::Trees::vacuumiumTree->radius);
 	// Vines
-	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, Resources::cheese->subScat, 0);
-	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, Resources::topaz->subScat, 0, 1, 15.0f, false, 0.25f, 1.5f);
-	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, Resources::sapphire->subScat, 1);
-	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, Resources::lead->subScat, 0);
+	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0);
+	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 1, 15.0f, false, 0.25f, 1.5f);
+	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, 1);
+	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0);
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, bowlerTreeSeed, vacuumiumTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };

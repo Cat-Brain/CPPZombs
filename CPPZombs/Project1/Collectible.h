@@ -6,14 +6,14 @@ public:
 	Item baseItem;
 
 	Collectible(Item baseItem, Vec2 pos = Vec2(0)) :
-		Entity(pos, baseItem.radius, baseItem.color, baseItem.subScat, 1, 1, 1, baseItem.name), baseItem(baseItem)
+		Entity(pos, baseItem.radius, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
 		isCollectible = true;
 	}
 
 	Collectible(Item baseItem, Vec2 pos, RGBA color) :
-		Entity(pos, baseItem.radius, color, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
+		Entity(pos, baseItem.radius, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
 		isCollectible = true;

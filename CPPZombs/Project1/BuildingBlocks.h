@@ -5,9 +5,9 @@ class DToCol : public Entity
 public:
 	RGBA color2;
 
-	DToCol(iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, radius, color, subScat, mass, maxHealth, health, name), color2(color2)
+	DToCol(Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Entity(pos, radius, color, mass, maxHealth, health, name), color2(color2)
 	{
 		dUpdate = DUPDATE::DTOCOLDU;
 	}
@@ -37,9 +37,9 @@ public:
 	LightSource* lightSource;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		RGBA color2 = RGBA(), RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, radius, color, color2, subScat, mass, maxHealth, health, name), lightColor(lightColor),
+	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+		RGBA color2 = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		DToCol(pos, radius, color, color2, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{
 		onDeath = ONDEATH::LIGHTBLOCKOD;
@@ -55,7 +55,7 @@ public:
 			game->entities->darkSources.push_back(std::move(sharedPtr));
 	}
 
-	LightBlock(LightBlock* baseClass, iVec2 pos) :
+	LightBlock(LightBlock* baseClass, Vec2 pos) :
 		LightBlock(*baseClass)
 	{
 		this->pos = pos;
@@ -88,14 +88,14 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), RGBA(), 1, 1, 1, "Cheese");
-	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(), 1, 1, 1, "Shades");
+	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 1, 1, "Cheese");
+	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, Shootables::cheese->subScat, 0);
-	PlacedOnLanding* shades = new PlacedOnLanding(Shootables::shades, "Shades", "Light", 3, Shootables::shades->color, Shootables::shades->subScat, 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, 0);
+	PlacedOnLanding* shades = new PlacedOnLanding(Shootables::shades, "Shades", "Light", 3, Shootables::shades->color, 0);
 }
 
 namespace Collectibles
@@ -118,16 +118,16 @@ public:
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
 	}
 
 	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
 		Start();
@@ -152,16 +152,16 @@ public:
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();
 	}
 
 	FunctionalBlock2(float timePer, float offset, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		RGBA subScat = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, subScat, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
 		Start();

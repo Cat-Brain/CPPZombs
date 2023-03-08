@@ -1,5 +1,7 @@
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 normal;
+
 uniform vec4 color;
 
 in vec2 pos;
@@ -8,4 +10,8 @@ void main()
 {
 	if (dot(pos, pos) > 1) discard;
 	FragColor = color;
+
+	// Normal related stuff:
+	float z = sqrt(1. - pos.x * pos.x - pos.y * pos.y);
+	normal = vec4(sign(pos.x) * sqrt(1. - pos.y * pos.y - z * z), sign(pos.y) * sqrt(1. - pos.x * pos.x - z * z), z, color.a);
 } 
