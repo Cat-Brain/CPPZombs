@@ -748,7 +748,7 @@ public:
 	}
 };
 
-inline void CreateExplosion(iVec2 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
+inline void CreateExplosion(Vec2 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
 	game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
 	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionRadius, color));

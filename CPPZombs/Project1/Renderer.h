@@ -75,6 +75,7 @@ private:
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
+		rightTriangle = Mesh({ -0.5f, 0.0f,  0.0f, 0.5f,  0.5f, 0.0f }, { 0, 1, 2 });
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB, true);
 		shadowMap = make_unique<Framebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB16F, true);
@@ -197,6 +198,23 @@ public:
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		screenSpaceQuad.Draw();
+	}
+
+	inline void DrawRightTri(Vec2 pos, Vec2 scale, float rotation, RGBA color)
+	{
+		glUseProgram(triangleShader);
+		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
+
+		scale /= zoom;
+		glUniform2f(glGetUniformLocation(triangleShader, "scale"), scale.x / screenRatio, scale.y);
+
+		pos -= PlayerPos() + screenOffset;
+		pos.x /= screenRatio;
+		pos /= zoom;
+		glUniform2f(glGetUniformLocation(triangleShader, "position"), pos.x, pos.y);
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(triangleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		rightTriangle.Draw();
 	}
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.

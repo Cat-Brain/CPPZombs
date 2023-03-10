@@ -122,14 +122,7 @@ public:
 	{
 		pos += V2fMin(Normalized(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
 
-		//glEnable(GL_STENCIL_TEST);
-		//glStencilFunc(GL_ALWAYS, 1, 0xff);
-		//glStencilMask(0xff);
 		game->DrawLineThick(pos, parent->pos, color, thickness);
-		//glStencilFunc(GL_NOTEQUAL, 1, 0xff);
-		//glStencilMask(0x00);
-		//game->DrawCircle(pos, color, thickness);
-		//glClear(GL_STENCIL_BUFFER_BIT);
-		//glDisable(GL_STENCIL_TEST);
+		game->DrawCircle(pos, color, thickness);
 	}
 };

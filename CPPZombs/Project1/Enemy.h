@@ -7,7 +7,7 @@ namespace Enemies
 	class Enemy;
 	enum MUPDATE
 	{
-		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, CENTICRAWLER, POUNCERMU, TANKMU
+		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, CENTICRAWLER, POUNCERMU, CATMU, TANKMU
 	};
 	vector<function<bool(Enemy*)>> mUpdates;
 
@@ -218,7 +218,6 @@ namespace Enemies
 	{
 	public:
 		float pounceTime;
-		Vec2 offset, direction;
 
 		PouncerSnake(float pounceTime, float speed, int length, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
@@ -456,7 +455,6 @@ namespace Enemies
 	{
 	public:
 		float pounceTime;
-		Vec2 direction;
 
 		Pouncer(float pounceTime, float moveSpeed = 2, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
@@ -465,8 +463,9 @@ namespace Enemies
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
-			mUpdate = MUPDATE::POUNCERMU;
 			update = UPDATE::POUNCERU;
+			dUpdate = DUPDATE::POUNCERDU;
+			mUpdate = MUPDATE::POUNCERMU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -474,6 +473,7 @@ namespace Enemies
 			unique_ptr<Pouncer> newEnemy = make_unique<Pouncer>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
+			newEnemy->dir = Normalized(Vec2(game->PlayerPos() - newEnemy->pos));
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -493,6 +493,7 @@ namespace Enemies
 		{
 			update = UPDATE::CATU;
 			dUpdate = DUPDATE::CATDU;
+			mUpdate = MUPDATE::CATMU;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -500,6 +501,7 @@ namespace Enemies
 			unique_ptr<Cat> newEnemy = make_unique<Cat>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
+			newEnemy->dir = Normalized(Vec2(game->PlayerPos() - newEnemy->pos));
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -622,7 +624,7 @@ namespace Enemies
 			if (pSnake->front == nullptr)
 			{
 				if (tTime - pSnake->lastMove <= pSnake->pounceTime)
-					pSnake->TryMove(pSnake->direction * game->dTime * pSnake->speed, pSnake->mass * 2);
+					pSnake->TryMove(pSnake->dir * game->dTime * pSnake->speed, pSnake->mass * 2);
 			}
 			else
 			{
@@ -685,22 +687,20 @@ namespace Enemies
 			pouncer->Update(UPDATE::ENEMYU);
 
 			if (tTime - pouncer->lastMove <= pouncer->pounceTime)
-				pouncer->TryMove(pouncer->direction * game->dTime * pouncer->speed, pouncer->mass * 2);
+				pouncer->TryMove(pouncer->dir * game->dTime * pouncer->speed, pouncer->mass * 2);
 		}
 
 		void CatU(Entity* entity)
 		{
 			Cat* cat = static_cast<Cat*>(entity);
 
-			float currentRotation = atan2f(cat->direction.y, cat->direction.x);
+			float currentRotation = atan2f(cat->dir.y, cat->dir.x);
 			Vec2 desiredDir = game->PlayerPos() - cat->pos;
 			float desiredRotation = atan2f(desiredDir.y, desiredDir.x);
 
-			float newRotation = desiredRotation - currentRotation;
-			newRotation = fmodf(newRotation, PI_F);
-			currentRotation += newRotation * cat->homeSpeed * game->dTime;
+			currentRotation -= (roundf(ModF(desiredRotation - currentRotation, PI_F * 2) / (PI_F * 2)) * 2 - 1) * cat->homeSpeed * game->dTime;
 
-			cat->direction = Vec2(cosf(currentRotation), sinf(currentRotation));
+			cat->dir = Vec2(cosf(currentRotation), sinf(currentRotation));
 
 			cat->Update(UPDATE::POUNCERU);
 		}
@@ -799,6 +799,17 @@ namespace Enemies
 			colorCycler->DUpdate(DUPDATE::DTOCOLDU);
 		}
 
+		void PouncerDU(Entity* entity)
+		{
+			Pouncer* pouncer = static_cast<Pouncer*>(entity);
+
+			float ratio = pouncer->radius / SQRTTWO_F;
+			game->DrawRightTri(pouncer->pos + pouncer->dir * ratio, vOne * (ratio * 2),
+				atan2f(pouncer->dir.y, pouncer->dir.x) - PI_F * 0.5f, pouncer->color);
+
+			pouncer->DUpdate(DUPDATE::DTOCOLDU);
+		}
+
 		void CatDU(Entity* entity)
 		{
 			Cat* cat = static_cast<Cat*>(entity);
@@ -817,7 +828,7 @@ namespace Enemies
 
 			cat->color = tempColor;
 			cat->pos = tempPos;
-			cat->DUpdate(DUPDATE::DTOCOLDU);
+			cat->DUpdate(DUPDATE::POUNCERDU);
 		}
 
 		void CataclysmDU(Entity* entity)
@@ -922,10 +933,7 @@ namespace Enemies
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
 			pSnake->OnDeath(ONDEATH::SNAKEOD, damageDealer);
 			if (pSnake->back != nullptr)
-			{
-				((PouncerSnake*)pSnake->back)->offset = pSnake->offset;
-				((PouncerSnake*)pSnake->back)->direction = pSnake->direction;
-			}
+				((PouncerSnake*)pSnake->back)->dir = pSnake->dir;
 		}
 
 		void VacuumerOD(Entity* entity, Entity* damageDealer)
@@ -981,8 +989,7 @@ namespace Enemies
 		bool PouncerSnakeMU(Enemy* enemy)
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(enemy);
-			pSnake->offset = vZero;
-			pSnake->direction = Normalized(Vec2(game->PlayerPos() - pSnake->pos));
+			pSnake->dir = Normalized(Vec2(game->PlayerPos() - pSnake->pos));
 			return true;
 		}
 
@@ -1012,7 +1019,12 @@ namespace Enemies
 		bool PouncerMU(Enemy* enemy)
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
-			pouncer->direction = Normalized(Vec2(game->PlayerPos() - pouncer->pos));
+			pouncer->dir = Normalized(Vec2(game->PlayerPos() - pouncer->pos));
+			return true;
+		}
+
+		bool CatMU(Enemy* enemy)
+		{
 			return true;
 		}
 
@@ -1082,7 +1094,7 @@ namespace Enemies
 
 #pragma region Enemies
 	//Predefinitions - Special
-	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 150), 32.0f, 0.25f);
+	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
 	Projectile* tinyTankProjectile = new Projectile(15.0f, 1, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 1, 1, "Tiny Tank Projectile");
 	Enemy* child = new Enemy(1.0f, 8, 0, 0, 1, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 1, 1, "Child");
 	Centicrawler* centicrawler = new Centicrawler(*spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 4, 0, 0, 1, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 6, 6, "Centicrawler");

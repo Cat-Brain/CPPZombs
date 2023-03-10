@@ -55,6 +55,9 @@
 #define SUN_VERT 121
 #define SUN_FRAG 122
 
+#define TRIANGLE_VERT 123
+#define TRIANGLE_FRAG 124
+
 
 #define PNG_FILE 200
 #define SPRITE_SHEET 201

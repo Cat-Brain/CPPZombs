@@ -27,7 +27,7 @@ int main()
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
-		CatDU, CataclysmDU };
+		PouncerDU, CatDU, CataclysmDU, PlayerDU };
 		using namespace EDUpdates;
 		eDUpdates = { EntityEDU };
 		using namespace UIUpdates;
@@ -38,7 +38,7 @@ int main()
 		tUpdates = { DefaultTU, TreeTU, VineTU };
 
 		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, CenticrawlerMU, PouncerMU, TankMU };
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, TankMU };
 		using namespace Enemies::AUpdates;
 		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU };
 	#pragma endregion

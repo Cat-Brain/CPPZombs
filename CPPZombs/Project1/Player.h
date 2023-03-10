@@ -15,6 +15,7 @@ public:
 		LightBlock(lightColor, lightOrDark, range, pos, radius, color, color2, mass, maxHealth, health, name), vacDist(vacDist), lastClick(tTime)
 	{
 		update = UPDATE::PLAYERU;
+		dUpdate = DUPDATE::PLAYERDU;
 		onDeath = ONDEATH::PLAYEROD;
 		Start();
 	}
@@ -127,6 +128,20 @@ namespace Updates
 		}
 
 		game->inputs.mouseScroll = 0;
+	}
+}
+
+namespace DUpdates
+{
+	void PlayerDU(Entity* entity)
+	{
+		Player* player = static_cast<Player*>(entity);
+		
+		Vec2 dir = Normalized(game->inputs.mousePosition);
+		float ratio = player->radius / SQRTTWO_F;
+		game->DrawRightTri(player->pos + dir * ratio, vOne * (ratio * 2),
+			atan2f(dir.y, dir.x) - PI_F * 0.5f, player->color);
+		player->DUpdate(DUPDATE::DTOCOLDU);
 	}
 }
 

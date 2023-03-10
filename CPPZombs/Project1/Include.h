@@ -42,6 +42,9 @@ typedef uint8_t byte;
 #define PI_F 3.141592f
 #define PI_D 3.14159275
 
+#define SQRTTWO_F 1.41421356f
+#define SQRTTWO_D 1.41421356237
+
 #define CHUNK_WIDTH 16
 
 uint trueScreenWidth, trueScreenHeight;
@@ -83,6 +86,11 @@ template <typename T>
 inline T JMod(T x, T m)
 {
 	return ((x % m) + m) % m;
+}
+
+inline float ModF(float x, float m)
+{
+	return fmodf((fmodf(x, m) + m), m);
 }
 
 inline int Clamp(int value, int minimum, int maximum)
