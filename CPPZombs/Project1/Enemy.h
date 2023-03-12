@@ -559,13 +559,14 @@ namespace Enemies
 			unique_ptr<Cataclysm> newEnemy = make_unique<Cataclysm>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
+			newEnemy->dir = Normalized(Vec2(game->PlayerPos() - newEnemy->pos));
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
 
 		int DealDamage(int damage, Entity* damageDealer) override
 		{
-			if (tTime - lastStartedCircle > circleTime)
+			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->difficulty])
 			{
 				if (damage > 0)
 				{
@@ -694,13 +695,7 @@ namespace Enemies
 		{
 			Cat* cat = static_cast<Cat*>(entity);
 
-			float currentRotation = atan2f(cat->dir.y, cat->dir.x);
-			Vec2 desiredDir = game->PlayerPos() - cat->pos;
-			float desiredRotation = atan2f(desiredDir.y, desiredDir.x);
-
-			currentRotation -= (roundf(ModF(desiredRotation - currentRotation, PI_F * 2) / (PI_F * 2)) * 2 - 1) * cat->homeSpeed * game->dTime;
-
-			cat->dir = Vec2(cosf(currentRotation), sinf(currentRotation));
+			cat->dir = RotateTowards(cat->dir, game->PlayerPos() - cat->pos, cat->homeSpeed * game->dTime);
 
 			cat->Update(UPDATE::POUNCERU);
 		}
@@ -709,11 +704,17 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 
+			if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
+			{
+				game->entities->push_back(cat->projectile->Clone(cat->pos, RotateBy(game->PlayerPos() - cat->pos, PI_F * 0.125f), cat));
+				game->entities->push_back(cat->projectile->Clone(cat->pos, RotateBy(game->PlayerPos() - cat->pos, -PI_F * 0.125f), cat));
+			}
+			
 			if (tTime - cat->lastStartedCircle < cat->circleTime)
 			{
 				float rotation = (tTime - cat->lastStartedCircle) * cat->spinSpeed;
 				cat->TryMove(game->PlayerPos() - cat->pos + Vec2(sinf(rotation) * cat->circleRadius, cosf(rotation) * cat->circleRadius), cat->mass * 2);
-
+			
 				if (tTime - cat->lastShoot > cat->timePerShot)
 				{
 					cat->lastShoot = tTime;
@@ -727,8 +728,9 @@ namespace Enemies
 					}
 
 					game->entities->push_back(cat->projectile->Clone(cat->pos, game->PlayerPos() - cat->pos, cat));
-
 				}
+
+				cat->dir = Normalized(game->PlayerPos() - cat->pos);
 			}
 			else cat->Update(UPDATE::CATU);
 		}
@@ -835,7 +837,7 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
-			if (tTime - cat->lastStartedCircle < cat->circleTime)
+			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
 				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CATDU);
 			cat->color = tempColor;
@@ -1131,7 +1133,7 @@ namespace Enemies
 
 	// Bosses - Special
 	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, cat->radius, cat->color, 1, 1, 1, "Cataclysmic Bullet");
-	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, 0.0625f, 6.5f, 1.5f, 5.0f, 12.0f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 	class Instance;

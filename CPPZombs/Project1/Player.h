@@ -82,7 +82,7 @@ namespace Updates
 			direction.y++;
 #pragma endregion
 
-		player->TryMove(Vec2(direction) * game->dTime * player->moveSpeed, 3);
+		player->TryMove(Normalized(direction) * game->dTime * player->moveSpeed, 3);
 #pragma endregion
 
 		if (player->heldEntity == nullptr && player->items.size() > 0) // You can't mod by 0.

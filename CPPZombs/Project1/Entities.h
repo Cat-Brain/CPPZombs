@@ -824,7 +824,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, 4, RGBA(255, 255, 255, 51));
+	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, -4, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources

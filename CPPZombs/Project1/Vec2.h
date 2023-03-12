@@ -147,6 +147,21 @@ inline Vec2 RandCircPoint()
 {
 	return CircPoint(RandFloat() * 2 * PI_F);
 }
+
+inline Vec2 RotateBy(Vec2 a, float rotation)
+{
+	float sinTheta = sinf(rotation), cosTheta = cosf(rotation);
+	return Vec2(cosTheta * a.x - sinTheta * a.y, sinTheta * a.x + cosTheta * a.y);
+}
+
+Vec2 RotateTowards(Vec2 currentDir, Vec2 desiredDir, float moveAmount)
+{
+	float currentRotation = atan2f(currentDir.y, currentDir.x);
+
+	currentRotation -= (roundf(ModF(atan2f(desiredDir.y, desiredDir.x) - currentRotation, PI_F * 2) / (PI_F * 2)) * 2 - 1) * moveAmount;
+
+	return Vec2(cosf(currentRotation), sinf(currentRotation));
+}
 #pragma endregion
 
 Vec2 up(0, 1), right(1, 0), down(0, -1), left(-1, 0), vZero(0), vOne(1);
