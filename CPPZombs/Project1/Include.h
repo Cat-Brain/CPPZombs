@@ -18,8 +18,6 @@
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include FT_FREETYPE_H  
-using namespace std::this_thread;
-using namespace std::chrono;
 using std::vector;
 using std::string;
 using std::unique_ptr;
@@ -55,7 +53,7 @@ int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
 float tTime = 0.0f;
 string deathCauseName = "NULL DEATH CAUSE";
-uint totalTexturesCreated = 0;
+
 // Very important!
 class Game;
 unique_ptr<Game> game;

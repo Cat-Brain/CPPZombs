@@ -1,11 +1,50 @@
-#include "Planet.h"
+#include "Player.h"
+
+Planet::Planet()
+{
+	friction = RandFloat() * 10 + 5;
+
+	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
+	dayTime = RandFloat() * 60.0f;
+	duskTime = RandFloat() * 60.0f;
+	nightTime = RandFloat() * 60.0f;
+
+	if (rand() % 2 == 0)
+	{
+		ambientDark = RandFloat();
+		ambientLight = 1;
+	}
+	else
+	{
+		ambientDark = 0;
+		ambientLight = RandFloat();
+	}
+	//ambientDark = RandFloat() * 0.5f;
+	//ambientLight = RandFloat() * 0.5f + 0.5f;
+
+
+	color1.r = rand() % 128 + 64;
+	color1.g = rand() % 128 + 64;
+	color1.b = rand() % 128 + 64;
+
+	color2.r = color1.r + rand() % 32 + 32;
+	color2.g = color1.g + rand() % 32 + 32;
+	color2.b = color1.b + rand() % 32 + 32;
+
+	fog.r = rand() % 8;
+	fog.g = rand() % 8;
+	fog.b = rand() % 8;
+
+	enemies = make_unique<Enemies::Instance>(Enemies::naturalSpawns.RandomClone());
+	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
+}
 
 void Game::Start()
 {
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = make_unique<Player>(vZero, 0.5f, 6.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.0f, 1.0f, 10, 5, "Player");
+	unique_ptr<Player> playerUnique = characters[selectedCharacter]->PClone();
 	player = playerUnique.get();
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -61,7 +100,7 @@ void Game::Update()
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
 			Start();
-			uiMode = UIMODE::INGAME;
+			uiMode = UIMODE::CHARSELECT;
 		}
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
@@ -76,6 +115,29 @@ void Game::Update()
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
 			RGBA(255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 			difficulty = DIFFICULTY::HARD;
+	}
+	else if (uiMode == UIMODE::CHARSELECT)
+	{
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		inputs.FindMousePos(window, zoom);
+		
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
+		{
+			Start();
+			uiMode = UIMODE::INGAME;
+		}
+
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back"))
+			uiMode = UIMODE::MAINMENU;
+		else
+			for (int i = 0; i < characters.size(); i++)
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
+					selectedCharacter == i ? characters[i]->color : RGBA(255, 255, 255), selectedCharacter == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
+					selectedCharacter = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
 	}
 	else
 	{
@@ -115,7 +177,7 @@ void Game::Update()
 		}
 		if (uiMode == UIMODE::PAUSED)
 		{
-			currentFramebuffer = 0;
+			currentFramebuffer = TRUESCREEN;
 			UseFramebuffer();
 
 			inputs.FindMousePos(window, zoom);
@@ -216,9 +278,9 @@ void Game::TUpdate()
 	screenShake *= powf(0.25f, game->dTime);
 	screenOffset = Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake;
 
-	brightness = planet->GetBrightness();
+	zoom = ClampF(zoom + float(int(inputs.e.held) - int(inputs.q.held)) * dTime * zoomSpeed, minZoom, maxZoom);
 
-	system_clock::time_point timeStartFrame = system_clock::now();
+	brightness = planet->GetBrightness();
 
 	// Spawn boss:
 	if (inputs.enter.pressed && !shouldSpawnBoss)
@@ -229,7 +291,7 @@ void Game::TUpdate()
 
 	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
 	{
-		planet->bosses.SpawnOneRandom();
+		planet->bosses->SpawnOneRandom();
 		shouldSpawnBoss = false;
 	}
 	waveCount += int(inputs.period.pressed) - int(inputs.comma.pressed);
@@ -237,7 +299,7 @@ void Game::TUpdate()
 	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.slash.pressed)
 	{
 		waveCount++;
-		planet->enemies.SpawnRandomEnemies();
+		planet->enemies->SpawnRandomEnemies();
 		lastWave = tTime;
 	}
 
@@ -255,8 +317,6 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
-	DrawCircle(inputs.mousePosition + Vec2(player->pos), RGBA(0, 0, 0, static_cast<uint8_t>((sinf(tTime * 3.14f * 3.0f) + 1.0f) * 64)), 0.5f); // Draw mouse.
-	// Draw mid-res screen onto true screen.
 	DrawFramebufferOnto(0);
 
 	entities->UIUpdate(); // Draws UI of uiactive entities.
@@ -274,11 +334,12 @@ void Game::TUpdate()
 			font.Render(std::to_string(int(timeTillNextWave)) + "." +
 				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
 				std::to_string(int(timeTillNextBoss)) + "." +
-				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f,
+				planet->enemies->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		}
 		else
 			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
-				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, RGBA(0, 255, 255));
+				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->enemies->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();

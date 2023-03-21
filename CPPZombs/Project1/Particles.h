@@ -120,7 +120,7 @@ public:
 
 	void Update() override
 	{
-		pos += V2fMin(Normalized(desiredPos - pos), desiredPos - pos) * moveSpeed * game->dTime;
+		pos = FromTo(pos, desiredPos, moveSpeed * game->dTime);
 
 		game->DrawLineThick(pos, parent->pos, color, thickness);
 		game->DrawCircle(pos, color, thickness);

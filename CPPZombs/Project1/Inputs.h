@@ -89,3 +89,19 @@ struct Inputs
 		mousePosition.y = static_cast<float>(yPos - zoom);
 	}
 };
+
+class Cursor
+{
+public:
+	GLFWcursor* c;
+
+	Cursor(GLFWimage* image)
+	{
+		c = glfwCreateCursor(image, -image->width / 2, -image->height / 2);
+	}
+
+	~Cursor()
+	{
+		glfwDestroyCursor(c);
+	}
+};

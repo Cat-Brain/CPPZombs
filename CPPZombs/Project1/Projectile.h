@@ -3,7 +3,6 @@
 class Projectile : public Entity
 {
 public:
-    Vec2 direction = vZero;
     float duration;
     int damage;
     float speed, begin;
@@ -21,11 +20,11 @@ public:
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2 direction, Entity* creator) :
+    Projectile(Projectile* baseClass, Vec2 pos, Vec2 dir, Entity* creator) :
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->direction = Normalized(Vec2(direction));
+        this->dir = Normalized(Vec2(dir));
         this->pos = pos;
         begin = tTime;
         Start();
@@ -59,7 +58,7 @@ public:
 
     virtual void MovePos()
     {
-        TryMove(direction * game->dTime * speed, mass + mass, creator);
+        TryMove(dir * game->dTime * speed);
     }
 };
 
@@ -114,7 +113,7 @@ public:
     {
         this->creator = creator;
         float magnitude = glm::length(direction);
-        this->direction = direction / magnitude;
+        this->dir = direction / magnitude;
         duration = fminf(item.range, magnitude);
         this->pos = pos;
         begin = tTime;
@@ -142,7 +141,7 @@ namespace OnDeaths
     void ShotItemOD(Entity* entity, Entity* damageDealer)
     {
         ShotItem* shot = static_cast<ShotItem*>(entity);
-        shot->item.baseClass->OnDeath(shot->pos, shot->creator, shot->creatorName, damageDealer, shot->callType);
+        shot->item.baseClass->OnDeath(shot->pos, shot->dir, shot->creator, shot->creatorName, damageDealer, shot->callType);
     }
 }
 
@@ -152,3 +151,13 @@ namespace Projectiles
 }
 
 ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);
+
+namespace ItemUs
+{
+    void ItemU(Item* stack, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+    {
+        game->entities->push_back(basicShotItem->Clone(*stack,
+            creator->pos, game->inputs.mousePosition, creator));
+        stack->count -= 1;
+    }
+}

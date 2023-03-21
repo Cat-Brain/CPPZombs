@@ -52,6 +52,9 @@ private:
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 		
+		GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+		glfwSetCursor(window, cursor);
+
 
 		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
 		{
@@ -129,7 +132,7 @@ public:
 	GLFWwindow* window = nullptr;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
-	float zoom = 40.0f;
+	float zoom = 30, minZoom = 10, maxZoom = 40, zoomSpeed = 5;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
@@ -284,7 +287,7 @@ public:
 	{
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
 
-		Vec2 scrPos = pos - Vec2(PlayerPos());
+		Vec2 scrPos = pos - PlayerPos() - screenOffset;
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
 			range / (zoom * 0.5f * screenRatio), range / (zoom * 0.5f));
 
@@ -343,6 +346,11 @@ public:
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+	}
+
+	float DistToCorner()
+	{
+		return sqrtf(maxZoom * maxZoom * (screenRatio * screenRatio + 1));
 	}
 };
 

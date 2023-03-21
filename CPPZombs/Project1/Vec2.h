@@ -128,11 +128,6 @@ inline Vec2 V2fMin(Vec2 a, Vec2 b)
 	return glm::length2(a) < glm::length2(b) ? a : b;
 }
 
-inline float Distance(Vec2 a, Vec2 b)
-{
-	return glm::length(a - b);
-}
-
 inline Vec2 Ceil(Vec2 a)
 {
 	return Vec2(ceilf(a.x), ceilf(a.y));
@@ -154,13 +149,46 @@ inline Vec2 RotateBy(Vec2 a, float rotation)
 	return Vec2(cosTheta * a.x - sinTheta * a.y, sinTheta * a.x + cosTheta * a.y);
 }
 
-Vec2 RotateTowards(Vec2 currentDir, Vec2 desiredDir, float moveAmount)
+inline Vec2 RotateTowardsNorm(Vec2 currentDir, Vec2 desiredDir, float moveAmount)
 {
 	float currentRotation = atan2f(currentDir.y, currentDir.x);
 
 	currentRotation -= (roundf(ModF(atan2f(desiredDir.y, desiredDir.x) - currentRotation, PI_F * 2) / (PI_F * 2)) * 2 - 1) * moveAmount;
 
 	return Vec2(cosf(currentRotation), sinf(currentRotation));
+}
+
+inline Vec2 RotateTowards(Vec2 currentDir, Vec2 desiredDir, float moveAmount)
+{
+	return RotateTowardsNorm(currentDir, desiredDir, moveAmount) * glm::length(currentDir);
+}
+
+inline Vec2 FromTo(Vec2 from, Vec2 to, float travelDistance, float desiredDistance = 0) // Doesn't overshoot.
+{
+	float currentDistance = glm::distance(from, to) + 0.0001f; // Add an epsilon to avoid divide by 0 errors.
+	return travelDistance + desiredDistance < currentDistance ? from + (to - from) * (travelDistance / currentDistance) :
+		to + (from - to) * (desiredDistance / currentDistance);
+}
+
+inline Vec2 TryAdd(Vec2 original, Vec2 additional, float maxMagnitude)
+{
+	original += additional;
+	float sqrMagnitude = glm::length2(original);
+	if (sqrMagnitude > maxMagnitude * maxMagnitude)
+		return original / sqrtf(sqrMagnitude) * maxMagnitude;
+	return original;
+}
+
+inline Vec2 TryAdd2(Vec2 original, Vec2 additional, float maxMagnitude)
+{
+	float oSqrMagnitude = glm::length2(original);
+	original += additional;
+	float sqrMagnitude = glm::length2(original);
+	if (sqrMagnitude > maxMagnitude * maxMagnitude)
+	{
+		return original / sqrtf(sqrMagnitude) * max(maxMagnitude, sqrtf(oSqrMagnitude));
+	}
+	return original;
 }
 #pragma endregion
 

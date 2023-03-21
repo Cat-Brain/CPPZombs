@@ -58,20 +58,34 @@ public:
 
 	void push_back(unique_ptr<Entity> entity)
 	{
+		Entity* entityPtr = entity.get();
+
 		addedEntity = true;
-		if (entity->isCollectible)
-			collectibles.push_back(entity.get());
+		if (entityPtr->isCollectible)
+			collectibles.push_back(entityPtr);
 		else
 		{
 			index++;
-			sortedNCEntities.insert(sortedNCEntities.begin(), entity.get());
+			sortedNCEntities.insert(sortedNCEntities.begin(), entityPtr);
 		}
-		int index = static_cast<int>(size());
-		vector<int> chunkOverlaps = FindCreateChunkOverlaps(entity->pos, entity->radius);
+		int index = -1;
+		for (int i = 0; i < size(); i++)
+			if (!(*this)[i])
+			{
+				index = i;
+				(*this)[index] = std::move(entity);
+				break;
+			}
+
+		if (index == -1)
+		{
+			index = static_cast<int>(size());
+			vector<unique_ptr<Entity>>::push_back(std::move(entity));
+		}
+
+		vector<int> chunkOverlaps = FindCreateChunkOverlaps(entityPtr->pos, entityPtr->radius);
 		for (int chunk : chunkOverlaps)
 			chunks[chunk].push_back(index);
-
-		vector<unique_ptr<Entity>>::push_back(std::move(entity));
 	}
 
 #pragma region Overlaps and collisionstuff
@@ -122,29 +136,12 @@ public:
 		return FindCreateChunkOverlapsMain(minMaxPos.first, minMaxPos.second);
 	}
 
-	/*Entity* FindNearestEnemy(iVec2 pos, iVec2 farthestDimensions)
-	{
-		vector<Entity*> nearbyEntities = FindCorpOverlaps(pos, farthestDimensions);
-		float currentBestDist = 9999.0f; // Sqr magnitude not real magnitude.
-		Entity* currentBest = nullptr;
-		for (Entity* entity : nearbyEntities)
-		{
-			float dist;
-			if (entity->isEnemy && (dist = glm::length2(Vec2(pos - entity->pos))) < currentBestDist)
-			{
-				currentBestDist = dist;
-				currentBest = entity;
-			}
-		}
-		return currentBest;
-	}*/
-
 	vector<Entity*> FindCorpOverlaps(vector<int> chunkOverlaps, Vec2 pos, float radius)
 	{
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius) &&
+				if ((*this)[*iter] && (*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius) &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
@@ -159,7 +156,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius)) overlaps.push_back((*this)[*iter].get());
+				if ((*this)[*iter] && (*this)[*iter]->corporeal && (*this)[*iter]->active && (*this)[*iter]->Overlaps(pos, radius)) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
 
@@ -173,7 +170,7 @@ public:
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
+				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
 					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
 		return overlaps;
 	}
@@ -188,7 +185,7 @@ public:
 		vector<Entity*> corporeals{}, incorporeals{};
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
+				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
 					(((*this)[*iter]->corporeal && find(corporeals.begin(), corporeals.end(), (*this)[*iter].get()) == corporeals.end()) ||
 						(!(*this)[*iter]->corporeal && find(incorporeals.begin(), incorporeals.end(), (*this)[*iter].get()) == incorporeals.end())))
 				{
@@ -210,31 +207,40 @@ public:
 
 	void SortEntities()
 	{
-		int length = static_cast<int>(size());
+		int ncCount = static_cast<int>(size()), collectibleCount = ncCount;
 		for (unique_ptr<Entity>& entity : *this)
-			length -= int(entity->isCollectible);
-		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(length);
+		{
+			if (!entity)
+			{
+				ncCount--;
+				collectibleCount--;
+				continue;
+			}
+			ncCount -= int(entity->isCollectible);
+			collectibleCount -= int(!entity->isCollectible);
+		}
+		vector<EntityIndex> unsortedToSorted = vector<EntityIndex>(ncCount);
 		for (int i = 0, j = 0; i < size(); i++)
-			if (!(*this)[i]->isCollectible)
+			if ((*this)[i] && !(*this)[i]->isCollectible)
 			{
 				unsortedToSorted[j] = EntityIndex(i, (*this)[i]->sortLayer);
 				j++;
 			}
 		std::sort(unsortedToSorted.begin(), unsortedToSorted.end());
 
-		sortedNCEntities = vector<Entity*>(length);
+		sortedNCEntities = vector<Entity*>(ncCount);
 		for (int i = 0, j = 0; i < size(); i++)
-			if (!(*this)[i]->isCollectible)
+			if ((*this)[i] && !(*this)[i]->isCollectible)
 			{
 				sortedNCEntities[j] = (*this)[unsortedToSorted[j].index].get();
 				j++;
 			}
 
-		collectibles = vector<Entity*>(size() - length);
-		length = 0;
+		collectibles = vector<Entity*>(collectibleCount);
+		int i = 0;
 		for (unique_ptr<Entity>& entity : *this)
-			if (entity->isCollectible)
-				collectibles[length++] = entity.get();
+			if (entity && entity->isCollectible)
+				collectibles[i++] = entity.get();
 		addedEntity = false;
 	}
 
@@ -258,6 +264,9 @@ public:
 				Entity* entity = sortedNCEntities[index];
 				entity->Update();
 			}
+		for (int i = 0; i < size(); i++)
+			if ((*this)[i] && (*this)[i]->active)
+				(*this)[i]->VUpdate();
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active && sortedNCEntities[index]->corporeal)
 			{
@@ -271,7 +280,7 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), game->zoom * 2 + 1); // Collectibles then NCs.
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), game->DistToCorner()); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -306,13 +315,13 @@ public:
 	void UIUpdate()
 	{
 		for (index = 0; index < collectibles.size(); index++)
-			if (collectibles[index]->dActive && collectibles[index]->shouldUI)
+			if (collectibles[index]->dActive && collectibles[index]->uiActive)
 			{
 				collectibles[index]->UIUpdate();
 			}
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
-			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->shouldUI)
+			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->uiActive)
 			{
 				sortedNCEntities[index]->UIUpdate();
 			}
@@ -322,27 +331,12 @@ public:
 	{
 		// Remove from sortedNCEntities or from collectibles.
 		if (!entityToRemove->isCollectible)
-		{
-			vector<Entity*>::iterator pos = std::find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove);
-			index -= int(index >= distance(sortedNCEntities.begin(), pos)); // If index is past or at the position being removed then don't advance.
-			sortedNCEntities.erase(pos);
-		}
+			sortedNCEntities.erase(std::find(sortedNCEntities.begin(), sortedNCEntities.end(), entityToRemove)); // It's a non-collectible.
 		else
-			collectibles.erase(std::find(collectibles.begin(), collectibles.end(), entityToRemove));
-		// Remove from every chunk that this object overlaps.
-		vector<unique_ptr<Entity>>::iterator mainPos = std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; });;
-		int removalIndex = static_cast<int>(distance(begin(), mainPos));
-		vector<int> chunkOverlaps = ChunkOverlaps(entityToRemove->pos, entityToRemove->radius);
-		for (int chunk : chunkOverlaps)
-			chunks[chunk].erase(find(chunks[chunk].begin(), chunks[chunk].end(), removalIndex));
+			collectibles.erase(std::find(collectibles.begin(), collectibles.end(), entityToRemove)); // It's a collectible.
 
-		for (Chunk& chunk : chunks)
-			for (int i = 0; i < chunk.size(); i++)
-				chunk[i] -= int(chunk[i] > removalIndex);
-
-		// Remove from main list from which the rest derive.
-		erase(mainPos);
-		
+		// Find where it's located in the main vector and replace its value with nullptr (that's what the .reset() does).
+		(*std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; })).reset();
 	}
 
 	void RemoveLight(LightSource* lightSourceToRemove)
@@ -360,33 +354,14 @@ public:
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
-	void Vacuum(Vec2 pos, float vacDist, float speed)
-	{
-		for (Entity* collectible : collectibles)
-		{
-			float distance = Distance(pos, collectible->pos);
-			if (collectible->active && distance > 0 && distance <= vacDist + collectible->radius)
-				collectible->SetPos(collectible->pos + Normalized(Vec2(pos - collectible->pos)) * game->dTime * speed / collectible->mass);
-		}
-	}
-
-	void VacuumNC(Vec2 pos, float vacDist, float speed)
-	{
-		for (Entity* entity : sortedNCEntities)
-		{
-			float distance = Distance(pos, entity->pos);
-			if (entity->active && entity->corporeal && distance > 0 && distance <= vacDist + entity->radius)
-				entity->SetPos(entity->pos + Normalized(Vec2(pos - entity->pos)) * game->dTime * speed / entity->mass);
-		}
-	}
-
-	void VacuumBoth(Vec2 pos, float vacDist, float speed)
+	void Vacuum(Vec2 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
 	{
 		for (unique_ptr<Entity>& entity : *this)
 		{
-			float distance = Distance(pos, entity->pos);
-			if (entity->active && (entity->corporeal || entity->isCollectible) && distance > 0 && distance <= vacDist + entity->radius)
-				entity->SetPos(entity->pos + Normalized(Vec2(pos - entity->pos)) * game->dTime * speed / entity->mass);
+			float distance;
+			if (entity && (vacBoth || entity->isCollectible == vacCollectibles) && (entity->isCollectible || entity->corporeal) && entity->active &&
+				(distance = glm::distance(pos, entity->pos)) > 0 && distance <= vacDist + entity->radius)
+				entity->vel = TryAdd2(entity->vel, Normalized(pos - entity->pos) * (game->dTime * speed / entity->mass), maxSpeed);
 		}
 	}
 
@@ -411,6 +386,7 @@ int Entity::DealDamage(int damage, Entity* damageDealer)
 			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 	
 	health -= damage;
+	health = min(health, maxHealth);
 	if (health <= 0)
 	{
 		DestroySelf(damageDealer);
@@ -421,7 +397,7 @@ int Entity::DealDamage(int damage, Entity* damageDealer)
 
 void Entity::DestroySelf(Entity* damageDealer)
 {
-	if (shouldUI)
+	if (uiActive)
 		game->MenuedEntityDied(this);
 	OnDeath(damageDealer);
 	if (holder != nullptr)
@@ -429,46 +405,9 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
-bool Entity::TryMove(Vec2 direction, float force, Entity* ignore, Entity** hitEntity) // returns index of hit item.
+bool Entity::TryMove(Vec2 direction) // returns index of hit item.
 {
-	Vec2 newPos = pos + direction;
-	/*vector<int> chunkOverlaps;
-	if (!corporeal)
-	{
-		SetPos(newPos);
-		return true;
-	}
-	if (force >= mass && direction != Vec2(0))
-	{
-		chunkOverlaps = game->entities->FindCreateChunkOverlaps(newPos, radius);
-		vector<Entity*> overlaps = game->entities->FindCorpOverlaps(chunkOverlaps, newPos, radius);
-		for (Entity* entity : overlaps)
-			if (entity != ignore && (entity != this) && (creator != entity->creator || creator == nullptr))
-			{
-				if (hitEntity != nullptr)
-					*hitEntity = entity;
-				if (!entity->TryMove(direction, force - mass, ignore) && !entity->Overlaps(pos, radius))
-				{
-					// something in front of them, however if they're stuck, we want to let them move anyways.
-					/*vector<Entity*> overlaps2 = game->entities->FindCorpOverlaps(pos, radius);
-					bool successful = false;
-					for (Entity* entity2 : overlaps2)
-						if (entity2 != ignore && entity2 != this && (creator != entity2->creator || creator == nullptr) &&
-							force - mass > entity2->mass)
-						{
-							successful = true;
-							break;
-						}
-					if (successful)
-						break;/
-					return false; // The entity is not stuck inside another entity and are blocked.
-				}
-			}
-	}
-	else return false;*/
-
-	SetPos(newPos);
-
+	SetPos(pos + direction);
 	return true;
 }
 
@@ -572,7 +511,7 @@ public:
 	float startRange;
 	LightSource* lightSource;
 
-	FadeOutGlow(float range, float totalFadeTime = 1.0f, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
+	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
 		FadeOut(totalFadeTime, pos, radius, color), startRange(range)
 	{
 		dUpdate = DUPDATE::FADEOUTGLOWDU;
@@ -645,7 +584,7 @@ namespace Updates
 			return;
 		}
 
-		game->entities->VacuumBoth(vac->pos, vac->vacDist, vac->vacSpeed);
+		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, true);
 	}
 }
 
@@ -684,39 +623,39 @@ public:
 	string creatorName;
 
 	PlacedOnLanding(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(entityToPlace->name, typeName, intType, entityToPlace->color, damage, count, range, shootSpeed, radius,
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(entityToPlace->name, typeName, intType, entityToPlace->color, damage, count, range, useTime, radius,
 			corporeal, shouldCollide, mass, health), entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
-		itemOD = ITEMOD::PLACEDONLANDING;
+		itemOD = ITEMOD::PLACEDONLANDINGOD;
 	}
 
 	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, float radius = 0.5f,
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.5f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health),
+		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
-		itemOD = ITEMOD::PLACEDONLANDING;
+		itemOD = ITEMOD::PLACEDONLANDINGOD;
 	}
 
 	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
 		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health),
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
-		itemOD = ITEMOD::PLACEDONLANDING;
+		itemOD = ITEMOD::PLACEDONLANDINGOD;
 	}
 
 	Item Clone(int count) override
 	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, shootSpeed, radius, corporeal, shouldCollide, mass, health);
+		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, shootSpeed, radius, corporeal, shouldCollide, mass, health);
+		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 };
 
@@ -724,27 +663,27 @@ class CorruptOnKill : public PlacedOnLanding
 {
 public:
 	CorruptOnKill(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		PlacedOnLanding(entityToPlace, typeName, intType, damage, count, range, sayCreator,
-			shootSpeed, radius, corporeal, shouldCollide, mass, health)
+			useTime, radius, corporeal, shouldCollide, mass, health)
 	{
-		itemOD = ITEMOD::CORRUPTONKILL;
+		itemOD = ITEMOD::CORRUPTONKILLOD;
 	}
 
 	CorruptOnKill(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float shootSpeed = 0.25f, float radius = 0.5f,
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.5f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		PlacedOnLanding(entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, shootSpeed, radius, corporeal, shouldCollide, mass, health)
+		PlacedOnLanding(entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
-		itemOD = ITEMOD::CORRUPTONKILL;
+		itemOD = ITEMOD::CORRUPTONKILLOD;
 	}
 
 	CorruptOnKill(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
 		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		PlacedOnLanding(baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, shootSpeed, radius, corporeal, shouldCollide, mass, health)
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
-		itemOD = ITEMOD::CORRUPTONKILL;
+		itemOD = ITEMOD::CORRUPTONKILLOD;
 	}
 };
 
@@ -761,59 +700,59 @@ public:
 	float explosionRadius;
 
 	ExplodeOnLanding(float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float shootSpeed = 0.25f, float radius = 0.5f,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health),
+		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
 	{
-		itemOD = ITEMOD::EXPLODEONLANDING;
+		itemOD = ITEMOD::EXPLODEONLANDINGOD;
 	}
 
 	ExplodeOnLanding(Item* baseClass, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float shootSpeed = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health),
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		explosionRadius(explosionRadius), explosionDamage(explosionDamage) { }
 
 	Item Clone(int count) override
 	{
-		return ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, shootSpeed, radius, corporeal, shouldCollide, mass, health);
+		return ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, shootSpeed, radius);
+		return new ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
 namespace ItemODs
 {
-	void ItemOD(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ItemOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		game->entities->push_back(make_unique<Collectible>(*item, pos));
 	}
 
-	void PlacedOnLandingOD(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item);
 
 		if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
 		{
-			pOL->OnDeath(ITEMOD::ITEM, pos, creator, creatorName, callReason, callType);
+			pOL->OnDeath(ITEMOD::DITEMOD, pos, dir, creator, creatorName, callReason, callType);
 			return;
 		}
-		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, up, creator);
+		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, dir, creator);
 		if (pOL->sayCreator)
 			placedEntity->name += " from " + creatorName;
 		game->entities->push_back(std::move(placedEntity));
 	}
 
-	void CorruptOnKillOD(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void CorruptOnKillOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::ITEM, pos, creator, creatorName, callReason, callType);
+		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDINGOD : ITEMOD::DITEMOD, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void ExplodeOnLandingOD(Item* item, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ExplodeOnLandingOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item);
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),

@@ -7,7 +7,7 @@ class Planet;
 
 enum UIMODE
 {
-	MAINMENU, INGAME, PAUSED
+	MAINMENU, CHARSELECT, INGAME, PAUSED
 };
 
 enum DIFFICULTY
@@ -17,10 +17,16 @@ enum DIFFICULTY
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
 
+enum CHARS
+{
+	COMMANDER, MESSENGER
+};
+
 class Game : public Renderer
 {
 public:
 	unique_ptr<Entities> entities;
+	CHARS selectedCharacter = CHARS::COMMANDER;
 	Player* player;
 	std::unique_ptr<Planet> planet;
 

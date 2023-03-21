@@ -24,12 +24,15 @@ int main()
 		using namespace Enemies::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
 		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, PlayerU };
+		using namespace VUpdates;
+		vUpdates = { EntityVU, FrictionVU };
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, ColorCyclerDU,
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, SnakeDU, ColorCyclerDU,
 		PouncerDU, CatDU, CataclysmDU, PlayerDU };
 		using namespace EDUpdates;
-		eDUpdates = { EntityEDU };
+		using namespace Enemies::EDUpdates;
+		eDUpdates = { EntityEDU, SnakeEDU };
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
 		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };
@@ -50,6 +53,9 @@ int main()
 
 		using namespace OverlapFuns;
 		overlapFuns = { EntityOF };
+
+		using namespace ItemUs;
+		itemUs = { ItemU, WaveModifierU };
 
 		using namespace ItemODs;
 		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD };

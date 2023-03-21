@@ -10,6 +10,7 @@ public:
 	{
 		corporeal = false;
 		isCollectible = true;
+		vUpdate = VUPDATE::FRICTIONVU;
 	}
 
 	Collectible(Item baseItem, Vec2 pos, RGBA color) :
@@ -17,6 +18,7 @@ public:
 	{
 		corporeal = false;
 		isCollectible = true;
+		vUpdate = VUPDATE::FRICTIONVU;
 	}
 
 	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }

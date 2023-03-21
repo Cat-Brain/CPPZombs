@@ -3,22 +3,19 @@
 class Framebuffer
 {
 public:
-	uint rbo, textureColorbuffer, framebuffer, texturePos, width, height;
+	uint rbo, textureColorbuffer, framebuffer, width, height;
     GLint format;
     bool shouldScreenRes;
 
-	Framebuffer() : rbo(0), textureColorbuffer(0), framebuffer(0), texturePos(0), width(0), height(0), format(GL_RGB), shouldScreenRes(true) { }
+	Framebuffer() : rbo(0), textureColorbuffer(0), framebuffer(0), width(0), height(0), format(GL_RGB), shouldScreenRes(true) { }
 
     Framebuffer(uint width, uint height, GLint format = GL_RGB, bool shouldScreenRes = false):
-        rbo(0), framebuffer(0), textureColorbuffer(0), texturePos(0), width(width), height(height), format(format), shouldScreenRes(shouldScreenRes)
+        rbo(0), framebuffer(0), textureColorbuffer(0), width(width), height(height), format(format), shouldScreenRes(shouldScreenRes)
     {
         glGenFramebuffers(1, &framebuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         // create a color attachment texture
         glGenTextures(1, &textureColorbuffer);
-        glActiveTexture(GL_TEXTURE0 + totalTexturesCreated);
-        texturePos = totalTexturesCreated;
-        totalTexturesCreated++;
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -101,9 +98,6 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         // create a color attachment texture
         glGenTextures(1, &textureColorbuffer);
-        glActiveTexture(GL_TEXTURE0 + totalTexturesCreated);
-        texturePos = totalTexturesCreated;
-        totalTexturesCreated++;
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -111,13 +105,12 @@ public:
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
         // create normal attachment texture
         glGenTextures(1, &normalBuffer);
-        glActiveTexture(GL_TEXTURE0 + totalTexturesCreated);
-        texturePos = totalTexturesCreated;
-        totalTexturesCreated++;
         glBindTexture(GL_TEXTURE_2D, normalBuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalBuffer, 0);
         // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
         uint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };

@@ -9,6 +9,7 @@ public:
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, radius, color, mass, maxHealth, health, name), color2(color2)
 	{
+		vUpdate = VUPDATE::FRICTIONVU;
 		dUpdate = DUPDATE::DTOCOLDU;
 	}
 };
@@ -122,6 +123,7 @@ public:
 		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCKU;
+		vUpdate = VUPDATE::FRICTIONVU;
 		Start();
 	}
 
@@ -156,6 +158,7 @@ public:
 		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2U;
+		vUpdate = VUPDATE::FRICTIONVU;
 		Start();
 	}
 

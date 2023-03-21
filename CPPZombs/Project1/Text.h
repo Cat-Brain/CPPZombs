@@ -1,10 +1,10 @@
 #include "Shader.h"
 
 struct Character {
-    uint textureID = 0;  // ID handle of the glyph texture
-    iVec2 size;          // Size of glyph
-    iVec2 bearing;      // Offset from baseline to left/top of glyph
-    uint advance = 0; // Offset to advance to next glyph
+    uint textureID = 0;            // ID handle of the glyph texture
+    iVec2 size = vZeroI;          // Size of glyph
+    iVec2 bearing = vZeroI;      // Offset from baseline to left/top of glyph
+    uint advance = 0;           // Offset to advance to next glyph
 };
 
 class Font
