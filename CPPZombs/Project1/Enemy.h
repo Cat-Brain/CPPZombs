@@ -741,7 +741,8 @@ namespace Enemies
 					game->entities->push_back(cat->projectile->Clone(cat->pos, game->PlayerPos() - cat->pos, cat));
 				}
 
-				cat->vel = Normalized(game->PlayerPos() - cat->pos) * cat->speed;
+				cat->dir = Normalized(game->PlayerPos() - cat->pos);
+				cat->vel = cat->dir * cat->speed;
 			}
 			else cat->Update(UPDATE::CATU);
 		}
@@ -1142,6 +1143,8 @@ namespace Enemies
 	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
+
+#pragma region Spawning
 	class Instance;
 	class Types : public vector<vector<Enemy*>>
 	{
@@ -1241,4 +1244,5 @@ namespace Enemies
 	{
 		{cataclysm}
 	};
+#pragma endregion
 }
