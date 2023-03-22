@@ -239,7 +239,7 @@ public:
 
 	float Opacity()
 	{
-		return 1.0f - (tTime - startTime) / totalFadeTime;
+		return 0.1f * roundf((1.0f - (tTime - startTime) / totalFadeTime) * 10);
 	}
 };
 
@@ -311,39 +311,20 @@ namespace OverlapRes
 	{
 		float dist = glm::length(b->pos - a->pos);
 
-		Vec2 multiplier = (b->pos - a->pos) * (1.1f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
-		a->SetPos(a->pos + multiplier * b->mass);
-		b->SetPos(b->pos - multiplier * a->mass);
-
 		// Compute unit normal and unit tangent vectors
-		Vec2 v_n = b->pos - a->pos; // v_n = normal vec. - a vector normal to the collision surface
-		Vec2 v_un = Normalized(v_n); // unit normal vector
-		Vec2 v_ut(-v_un.y, v_un.x); // unit tangent vector
+		Vec2 v_un = Normalized(b->pos - a->pos); // unit normal vector
 
 		// Compute scalar projections of velocities onto v_un and v_ut
 		float v1n = glm::dot(v_un, a->vel); // Dot product
-		float v1t = glm::dot(v_ut, a->vel);
 		float v2n = glm::dot(v_un, b->vel);
-		float v2t = glm::dot(v_ut, b->vel);
-
-		// Compute new tangential velocities
-		float v1tPrime = v1t; // Note: in reality, the tangential velocities do not change after the collision
-		float v2tPrime = v2t;
-
-		// Compute new normal velocities using one-dimensional elastic collision equations in the normal direction
-		// Division by zero avoided. See early return above.
-		float v1nPrime = (v1n * (a->mass - b->mass) + 2.f * b->mass * v2n) / (a->mass + b->mass);
-		float v2nPrime = (v2n * (b->mass - a->mass) + 2.f * a->mass * v1n) / (b->mass + a->mass);
-
-		// Compute new normal and tangential velocity vectors
-		Vec2 v_v1nPrime = v1nPrime * v_un; // Multiplication by a scalar
-		Vec2 v_v1tPrime = v1tPrime * v_ut;
-		Vec2 v_v2nPrime = v2nPrime * v_un;
-		Vec2 v_v2tPrime = v2tPrime * v_ut;
 
 		// Set new velocities in x and y coordinates
-		a->vel = Vec2(v_v1nPrime.x, v_v1nPrime.y);
-		b->vel = Vec2(v_v2nPrime.x, v_v2nPrime.y);
+		a->vel = v_un * (v1n * (a->mass - b->mass) + 2.f * b->mass * v2n) / (a->mass + b->mass);
+		b->vel = v_un * (v2n * (b->mass - a->mass) + 2.f * a->mass * v1n) / (b->mass + a->mass);
+
+		Vec2 multiplier = (b->pos - a->pos) * (1.01f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
+		a->SetPos(a->pos + multiplier * b->mass);
+		b->SetPos(b->pos - multiplier * a->mass);
 	}
 }
 

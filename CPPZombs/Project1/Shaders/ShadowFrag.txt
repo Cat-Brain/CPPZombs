@@ -11,10 +11,10 @@ uniform float range;
 void main()
 {
 	vec2 disp = pos - center;
-	float distance = length(disp);
+	float distance = round(length(disp));
 	vec4 normal = texture(normalMap, screenPos * 0.5 + 0.5);
 	vec3 lightDir = -normalize(vec3(disp.x, disp.y, -0.5));
-	float diff = max(dot(normal.xyz, lightDir) * 0.5 + 0.5, float(normal.w == 0));
+	float diff = 0.2 * round((dot(normal.xyz, lightDir) * 0.5 + 0.5) * 5);
 	vec3 finalColor = color * diff * (1 - distance / range);
 	FragColor = vec4(clamp(finalColor.r, 0.0, 1.0), clamp(finalColor.g, 0.0, 1.0), clamp(finalColor.b, 0.0, 1.0), 1.);
 } 

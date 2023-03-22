@@ -102,11 +102,11 @@ public:
 	}
 };
 
-unique_ptr<Player> commander = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 32.f, 16.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
+unique_ptr<Player> commander = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 64.f, 16.f, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
 	"Commander", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
 		Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1) }), vector<int>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE }));
-unique_ptr<Player> messenger = make_unique<Player>(true, true, 0.25f, 32.f, 12.f, 2.f, 4.f, 16.f, 8.f, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 0.5f,
-	3, 2, "Messenger", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
+unique_ptr<Player> messenger = make_unique<Player>(true, true, 0.25f, 32.f, 12.f, 2.f, 4.f, 64.f, 8.f, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 0.5f,
+	3, 2, "Messenger", Items({ Resources::vacuumium->Clone(1000), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
 		Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1)}), vector<int>({SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE}));
 
 vector<Player*> characters = { commander.get(), messenger.get() };

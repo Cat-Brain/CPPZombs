@@ -101,7 +101,7 @@ public:
 		Vine(*baseClass)
 	{
 		this->pos = pos;
-		this->dir = RotateBy(dir, RandFloat() * angleWobble * 2 - angleWobble);
+		this->dir = RotateBy(dir, (RandFloat() * 2 - 1) * angleWobble);
 		this->baseClass = baseClass;
 		Start();
 	}

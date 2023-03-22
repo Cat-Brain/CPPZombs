@@ -354,15 +354,20 @@ public:
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
-	void Vacuum(Vec2 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	void VacuumBurst(Vec2 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
 	{
 		for (unique_ptr<Entity>& entity : *this)
 		{
 			float distance;
 			if (entity && (vacBoth || entity->isCollectible == vacCollectibles) && (entity->isCollectible || entity->corporeal) && entity->active &&
 				(distance = glm::distance(pos, entity->pos)) > 0 && distance <= vacDist + entity->radius)
-				entity->vel = TryAdd2(entity->vel, Normalized(pos - entity->pos) * (game->dTime * speed / entity->mass), maxSpeed);
+				entity->vel = TryAdd2(entity->vel, Normalized(pos - entity->pos) * (speed / entity->mass), maxSpeed);
 		}
+	}
+
+	inline void Vacuum(Vec2 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	{
+		VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
 	}
 
 	void VacuumCone(Vec2 pos, Vec2 dir, int vacDist, float fov)
@@ -521,13 +526,13 @@ public:
 	}
 };
 
-class VacuumeFor : public Entity
+class VacuumeFor : public FadeOut
 {
 public:
-	float startTime, timeTill, vacDist, vacSpeed;
+	float vacDist, vacSpeed, maxVacSpeed;
 
-	VacuumeFor(Vec2 pos, float timeTill, float vacDist, float vacSpeed, RGBA color) :
-		Entity(pos, vacDist, color), startTime(tTime), timeTill(timeTill), vacDist(vacDist), vacSpeed(vacSpeed)
+	VacuumeFor(Vec2 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
+		FadeOut(timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
 		update = UPDATE::VACUUMEFORU;
 		corporeal = false;
@@ -535,7 +540,7 @@ public:
 
 	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
 	{
-		return make_unique<VacuumeFor>(pos, timeTill, vacDist, vacSpeed, color);
+		return make_unique<VacuumeFor>(pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
 	}
 };
 
@@ -578,13 +583,13 @@ namespace Updates
 	{
 		VacuumeFor* vac = static_cast<VacuumeFor*>(entity);
 
-		if (tTime - vac->startTime > vac->timeTill)
+		if (tTime - vac->startTime > vac->totalFadeTime)
 		{
 			vac->DestroySelf(nullptr);
 			return;
 		}
 
-		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, true);
+		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, vac->maxVacSpeed, true);
 	}
 }
 
@@ -763,7 +768,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, -4, RGBA(255, 255, 255, 51));
+	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
