@@ -1,4 +1,4 @@
-#include "LightSource.h"
+#include "Chunk.h"
 struct EntityIndex // For sorting.
 {
 	int index, valueForSorting;
@@ -8,31 +8,6 @@ struct EntityIndex // For sorting.
 	bool operator < (const EntityIndex& other) const
 	{
 		return (valueForSorting < other.valueForSorting);
-	}
-};
-
-class Chunk : public vector<int>
-{
-public:
-	iVec2 pos;
-
-	Chunk(iVec2 pos = vZero) :
-		vector{}, pos(pos) { }
-
-	bool Overlaps(Vec2 pos, Vec2 dimensions)
-	{
-		return pos.x - dimensions.x >= this->pos.x + dimensions.x && pos.x < this->pos.x + CHUNK_WIDTH &&
-			pos.y - dimensions.y >= this->pos.y + dimensions.y && pos.y < this->pos.y + CHUNK_WIDTH;
-	}
-
-	static iVec2 ToSpace(Vec2 pos)
-	{
-		return iVec2(pos.x / CHUNK_WIDTH, pos.y / CHUNK_WIDTH);
-	}
-
-	static std::pair<iVec2, iVec2> MinMaxPos(Vec2 pos, float radius)
-	{
-		return { ToSpace(pos - radius), ToSpace((pos + radius)) };
 	}
 };
 
@@ -476,7 +451,7 @@ public:
 	ExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), iVec2 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
 		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
-		update = UPDATE::EXPLODENEXTFRAMEU;
+		update = UPDATE::EXPLODENEXTFRAME;
 		this->creator = creator;
 		corporeal = false;
 	}
@@ -493,8 +468,8 @@ public:
 		Entity(pos, radius, color, 1, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
 	{
-		update = UPDATE::FADEOUTPUDDLEU;
-		dUpdate = DUPDATE::FADEOUTPUDDLEDU;
+		update = UPDATE::FADEOUTPUDDLE;
+		dUpdate = DUPDATE::FADEOUTPUDDLE;
 		corporeal = false;
 	}
 
@@ -519,8 +494,8 @@ public:
 	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
 		FadeOut(totalFadeTime, pos, radius, color), startRange(range)
 	{
-		dUpdate = DUPDATE::FADEOUTGLOWDU;
-		onDeath = ONDEATH::FADEOUTGLOWOD;
+		dUpdate = DUPDATE::FADEOUTGLOW;
+		onDeath = ONDEATH::FADEOUTGLOW;
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
 	}
@@ -534,7 +509,7 @@ public:
 	VacuumeFor(Vec2 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
 		FadeOut(timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
-		update = UPDATE::VACUUMEFORU;
+		update = UPDATE::VACUUMEFOR;
 		corporeal = false;
 	}
 
@@ -599,14 +574,14 @@ namespace DUpdates
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		puddle->color.a = 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
-		puddle->DUpdate(DUPDATE::ENTITYDU);
+		puddle->DUpdate(DUPDATE::ENTITY);
 	}
 
 	void FadeOutGlowDU(Entity* entity)
 	{
 		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
 		glow->lightSource->range = glow->startRange * glow->Opacity();
-		glow->DUpdate(DUPDATE::FADEOUTDU);
+		glow->DUpdate(DUPDATE::FADEOUT);
 	}
 }
 
@@ -775,7 +750,7 @@ namespace Resources
 {
 	ExplodeOnLanding* ruby = new ExplodeOnLanding(2.5f, 4, "Ruby", "Ammo", 1, RGBA(168, 50, 100), 4);
 	ExplodeOnLanding* emerald = new ExplodeOnLanding(7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 3, 1, 15.0f, 0.25f, 1.5f);
+	ExplodeOnLanding* topaz = new ExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 1, 15.0f, 0.25f, 1.5f);
 	ExplodeOnLanding* sapphire = new ExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 1, 15.0f, true);
 	PlacedOnLanding* vacuumium = new PlacedOnLanding(Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 1, 15, false, 0.0625);

@@ -80,8 +80,8 @@ private:
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
 		rightTriangle = Mesh({ -0.5f, 0.0f,  0.0f, 0.5f,  0.5f, 0.0f }, { 0, 1, 2 });
 
-		mainScreen = make_unique<DeferredFramebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB, true);
-		shadowMap = make_unique<Framebuffer>(trueScreenWidth, trueScreenHeight, GL_RGB16F, true);
+		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
+		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
 		framebuffers = { mainScreen.get(), shadowMap.get() };
 
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
@@ -279,7 +279,7 @@ public:
 
 	inline void DrawLineThick(Vec2 a, Vec2 b, RGBA color, float thickness)
 	{
-		glLineWidth(thickness * trueScreenHeight / zoom);
+		glLineWidth(thickness / zoom * trueScreenHeight);
 		DrawLine(a, b, color);
 	}
 

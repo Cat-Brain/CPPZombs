@@ -107,6 +107,9 @@
     <ClInclude Include="picopng.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Chunk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc">

@@ -58,6 +58,9 @@
 #define TRIANGLE_VERT 123
 #define TRIANGLE_FRAG 124
 
+#define CHUNK_VERT 125
+#define CHUNK_FRAG 126
+
 
 #define PNG_FILE 200
 #define SPRITE_SHEET 201

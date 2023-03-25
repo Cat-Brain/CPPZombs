@@ -9,8 +9,8 @@ public:
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, radius, color, mass, maxHealth, health, name), color2(color2)
 	{
-		vUpdate = VUPDATE::FRICTIONVU;
-		dUpdate = DUPDATE::DTOCOLDU;
+		vUpdate = VUPDATE::FRICTION;
+		dUpdate = DUPDATE::DTOCOL;
 	}
 };
 
@@ -25,7 +25,7 @@ namespace DUpdates
 			int(dToCol->color2.g + t * (dToCol->color.g - dToCol->color2.g)),
 			int(dToCol->color2.b + t * (dToCol->color.b - dToCol->color2.b)),
 			int(dToCol->color2.a + t * (dToCol->color.a - dToCol->color2.a)));
-		dToCol->DUpdate(DUPDATE::ENTITYDU);
+		dToCol->DUpdate(DUPDATE::ENTITY);
 		dToCol->color = tempColor;
 	}
 }
@@ -43,7 +43,7 @@ public:
 		DToCol(pos, radius, color, color2, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{
-		onDeath = ONDEATH::LIGHTBLOCKOD;
+		onDeath = ONDEATH::LIGHTBLOCK;
 	}
 
 	void Start() override
@@ -105,9 +105,9 @@ namespace Collectibles
 	Collectible* shades = new Collectible(*Resources::shades);
 }
 
-enum TUPDATE
+enum class TUPDATE
 {
-	DEFAULTTU, TREETU, VINETU
+	DEFAULT, TREE, VINE
 };
 
 vector<function<bool(Entity*)>> tUpdates;
@@ -120,18 +120,18 @@ public:
 
 	FunctionalBlock(float timePer, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
-		update = UPDATE::FUNCTIONALBLOCKU;
-		vUpdate = VUPDATE::FRICTIONVU;
+		update = UPDATE::FUNCTIONALBLOCK;
+		vUpdate = VUPDATE::FRICTION;
 		Start();
 	}
 
 	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
-		update = UPDATE::FUNCTIONALBLOCKU;
+		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
 	}
 
@@ -139,11 +139,11 @@ public:
 
 	bool TUpdate()
 	{
-		return tUpdates[tUpdate](this);
+		return tUpdates[UnEnum(tUpdate)](this);
 	}
 	bool TUpdate(TUPDATE tempTUpdate)
 	{
-		return tUpdates[tempTUpdate](this);
+		return tUpdates[UnEnum(tempTUpdate)](this);
 	}
 };
 
@@ -155,18 +155,18 @@ public:
 
 	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2U;
-		vUpdate = VUPDATE::FRICTIONVU;
+		update = UPDATE::FUNCTIONALBLOCK2;
+		vUpdate = VUPDATE::FRICTION;
 		Start();
 	}
 
 	FunctionalBlock2(float timePer, float offset, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULTTU)
+		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2U;
+		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
 	}
 
@@ -179,11 +179,11 @@ public:
 
 	bool TUpdate()
 	{
-		return tUpdates[tUpdate](this);
+		return tUpdates[UnEnum(tUpdate)](this);
 	}
 	bool TUpdate(TUPDATE tempTUpdate)
 	{
-		return tUpdates[tempTUpdate](this);
+		return tUpdates[UnEnum(tempTUpdate)](this);
 	}
 };
 

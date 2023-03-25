@@ -2,6 +2,12 @@
 
 Planet::Planet()
 {
+	worldNoise.SetFrequency(5.f);
+	worldNoise.SetFractalLacunarity(2.0f);
+	worldNoise.SetFractalGain(0.5f);
+	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+	worldNoise.SetSeed(static_cast<int>(time(NULL)));
+
 	friction = RandFloat() * 10 + 5;
 
 	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
@@ -19,8 +25,6 @@ Planet::Planet()
 		ambientDark = 0;
 		ambientLight = RandFloat();
 	}
-	//ambientDark = RandFloat() * 0.5f;
-	//ambientLight = RandFloat() * 0.5f + 0.5f;
 
 
 	color1.r = rand() % 128 + 64;
@@ -43,6 +47,8 @@ void Game::Start()
 {
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
+	planet = std::make_unique<Planet>();
+
 	entities = make_unique<Entities>();
 	unique_ptr<Player> playerUnique = characters[selectedCharacter]->PClone();
 	player = playerUnique.get();
@@ -53,8 +59,6 @@ void Game::Start()
 	lastWave = tTime;
 	waveCount = 0;
 	shouldSpawnBoss = false;
-
-	planet = std::make_unique<Planet>();
 
 	screenShkX.SetFrequency(5.f);
 	screenShkX.SetFractalLacunarity(2.0f);
@@ -182,10 +186,7 @@ void Game::Update()
 
 			inputs.FindMousePos(window, zoom);
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-			{
-				player->lastClick = tTime;
 				uiMode = UIMODE::INGAME;
-			}
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
 				uiMode = UIMODE::MAINMENU;
 		}

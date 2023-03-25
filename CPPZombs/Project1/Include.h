@@ -17,7 +17,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include FT_FREETYPE_H  
+#include FT_FREETYPE_H
 using std::vector;
 using std::string;
 using std::unique_ptr;
@@ -129,6 +129,11 @@ std::string ToStringWithPrecision(const T a_value, const int n = 6)
 	out.precision(n);
 	out << std::fixed << a_value;
 	return out.str();
+}
+
+template <typename E>
+constexpr typename std::underlying_type<E>::type UnEnum(E e) noexcept {
+	return static_cast<typename std::underlying_type<E>::type>(e);
 }
 
 int PsuedoRandom()

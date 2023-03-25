@@ -5,15 +5,15 @@ namespace Enemies
 #pragma region Enemy types
 	// The base class of all enemies.
 	class Enemy;
-	enum MUPDATE
+	enum class MUPDATE
 	{
-		DEFAULTMU, SNAKEMU, POUNCERSNAKEMU, VACUUMERMU, CENTICRAWLER, POUNCERMU, CATMU, TANKMU
+		DEFAULT, SNAKE, POUNCERSNAKE, VACUUMER, CENTICRAWLER, POUNCER, CAT, TANK
 	};
 	vector<function<bool(Enemy*)>> mUpdates;
 
-	enum AUPDATE
+	enum class AUPDATE
 	{
-		DEFAULTAU, EXPLODERAU, BOOMCATAU, TANKAU
+		DEFAULT, EXPLODER, BOOMCAT, TANK
 	};
 	vector<function<bool(Enemy*)>> aUpdates;
 
@@ -32,12 +32,12 @@ namespace Enemies
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			DToCol(vZero, radius, color, color2, mass, maxHealth, health, name),
 			timePer(timePer), lastTime(0.0f), speed(speed), maxSpeed(maxSpeed), timePerMove(0.0f), lastMove(0.0f), points(points), firstWave(firstWave),
-			damage(damage), mUpdate(MUPDATE::DEFAULTMU), aUpdate(AUPDATE::DEFAULTAU)
+			damage(damage), mUpdate(MUPDATE::DEFAULT), aUpdate(AUPDATE::DEFAULT)
 		{
-			update = UPDATE::ENEMYU;
-			vUpdate = VUPDATE::ENTITYVU;
-			uiUpdate = UIUPDATE::ENEMYUIU;
-			onDeath = ONDEATH::ENEMYOD;
+			update = UPDATE::ENEMY;
+			vUpdate = VUPDATE::ENTITY;
+			uiUpdate = UIUPDATE::ENEMY;
+			onDeath = ONDEATH::ENEMY;
 			isEnemy = true;
 		}
 
@@ -61,20 +61,20 @@ namespace Enemies
 
 		bool MUpdate()
 		{
-			return mUpdates[mUpdate](this);
+			return mUpdates[UnEnum(mUpdate)](this);
 		}
 		bool MUpdate(MUPDATE tempMUpdate)
 		{
-			return mUpdates[tempMUpdate](this);
+			return mUpdates[UnEnum(tempMUpdate)](this);
 		}
 
 		bool AUpdate()
 		{
-			return aUpdates[aUpdate](this);
+			return aUpdates[UnEnum(aUpdate)](this);
 		}
 		bool AUpdate(AUPDATE tempAUpdate)
 		{
-			return aUpdates[tempAUpdate](this);
+			return aUpdates[UnEnum(tempAUpdate)](this);
 		}
 
 		virtual int Cost()
@@ -96,7 +96,7 @@ namespace Enemies
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
 		{
 			Start();
-			dUpdate = DUPDATE::DECEIVERDU;
+			dUpdate = DUPDATE::DECEIVER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -123,8 +123,8 @@ namespace Enemies
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), child(child)
 		{
 			Start();
-			dUpdate = DUPDATE::PARENTDU;
-			onDeath = ONDEATH::PARENTOD;
+			dUpdate = DUPDATE::PARENT;
+			onDeath = ONDEATH::PARENT;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -147,9 +147,9 @@ namespace Enemies
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), explosionRadius(explosionRadius)
 		{
-			dUpdate = DUPDATE::EXPLODERDU;
-			aUpdate = AUPDATE::EXPLODERAU;
-			onDeath = ONDEATH::EXPLODEROD;
+			dUpdate = DUPDATE::EXPLODER;
+			aUpdate = AUPDATE::EXPLODER;
+			onDeath = ONDEATH::EXPLODER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -177,10 +177,10 @@ namespace Enemies
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), length(length), color3(color3),
 			color4(color4), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
 		{
-			dUpdate = DUPDATE::SNAKEDU;
-			earlyDUpdate = EDUPDATE::SNAKEEDU;
-			onDeath = ONDEATH::SNAKEOD;
-			mUpdate = MUPDATE::SNAKEMU;
+			dUpdate = DUPDATE::SNAKE;
+			earlyDUpdate = EDUPDATE::SNAKE;
+			onDeath = ONDEATH::SNAKE;
+			mUpdate = MUPDATE::SNAKE;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -233,10 +233,10 @@ namespace Enemies
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
-			update = UPDATE::POUNCERSNAKEU;
-			vUpdate = VUPDATE::ENTITYVU;
-			onDeath = ONDEATH::POUNCERSNAKEOD;
-			mUpdate = MUPDATE::POUNCERSNAKEMU;
+			update = UPDATE::POUNCERSNAKE;
+			vUpdate = VUPDATE::ENTITY;
+			onDeath = ONDEATH::POUNCERSNAKE;
+			mUpdate = MUPDATE::POUNCERSNAKE;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -284,7 +284,7 @@ namespace Enemies
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, colorsToCycle[0], color2, mass, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
 		{
-			dUpdate = DUPDATE::COLORCYCLERDU;
+			dUpdate = DUPDATE::COLORCYCLER;
 		}
 
 		void Start() override
@@ -316,10 +316,10 @@ namespace Enemies
 			Enemy(timePer, speed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
 			vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), desiredDistance(desiredDistance), items(0)
 		{
-			update = UPDATE::VACUUMERU;
-			vUpdate = VUPDATE::ENTITYVU;
-			onDeath = ONDEATH::VACUUMEROD;
-			mUpdate = MUPDATE::VACUUMERMU;
+			update = UPDATE::VACUUMER;
+			vUpdate = VUPDATE::ENTITY;
+			onDeath = ONDEATH::VACUUMER;
+			mUpdate = MUPDATE::VACUUMER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -349,8 +349,8 @@ namespace Enemies
 			Enemy(timePer, moveSpeed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
 		{
-			onDeath = ONDEATH::SPIDEROD;
-			update = UPDATE::SPIDERU;
+			onDeath = ONDEATH::SPIDER;
+			update = UPDATE::SPIDER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -445,8 +445,8 @@ namespace Enemies
 			Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed, timePer, moveSpeed, maxSpeed, points, firstWave, damage, radius, color, color2,
 				mass, maxHealth, health, name), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
 		{
-			update = UPDATE::CENTICRAWLERU;
-			onDeath = ONDEATH::CENTICRAWLEROD;
+			update = UPDATE::CENTICRAWLER;
+			onDeath = ONDEATH::CENTICRAWLER;
 			mUpdate = MUPDATE::CENTICRAWLER;
 		}
 
@@ -475,10 +475,10 @@ namespace Enemies
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
-			update = UPDATE::POUNCERU;
-			vUpdate = VUPDATE::ENTITYVU;
-			dUpdate = DUPDATE::POUNCERDU;
-			mUpdate = MUPDATE::POUNCERMU;
+			update = UPDATE::POUNCER;
+			vUpdate = VUPDATE::ENTITY;
+			dUpdate = DUPDATE::POUNCER;
+			mUpdate = MUPDATE::POUNCER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -504,9 +504,9 @@ namespace Enemies
 			Pouncer(pounceTime, moveSpeed, timePer, timePerMove, points, firstWave, damage, radius, color, color2, mass, maxHealth, health,
 				name), homeSpeed(homeSpeed), color3(color3)
 		{
-			update = UPDATE::CATU;
-			dUpdate = DUPDATE::CATDU;
-			mUpdate = MUPDATE::CATMU;
+			update = UPDATE::CAT;
+			dUpdate = DUPDATE::CAT;
+			mUpdate = MUPDATE::CAT;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -535,7 +535,7 @@ namespace Enemies
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Cat(homeSpeed, pounceTime, moveSpeed, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3, mass, maxHealth, health, name), explosionRadius(explosionRadius)
 		{
-			aUpdate = AUPDATE::BOOMCATAU;
+			aUpdate = AUPDATE::BOOMCAT;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -564,8 +564,8 @@ namespace Enemies
 				mass, maxHealth, health, name), circleTime(circleTime), circleRadius(circleRadius), spinSpeed(spinSpeed), projectile(projectile),
 			projectile2(projectile2), timePerShot(timePerShot), color4(color4)
 		{
-			update = UPDATE::CATACLYSMU;
-			dUpdate = DUPDATE::CATACLYSMDU;
+			update = UPDATE::CATACLYSM;
+			dUpdate = DUPDATE::CATACLYSM;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -603,8 +603,8 @@ namespace Enemies
 			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(timePer, moveSpeed, maxSpeed, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), projectile(projectile)
 		{
-			mUpdate = MUPDATE::TANKMU;
-			aUpdate = AUPDATE::TANKAU;
+			mUpdate = MUPDATE::TANK;
+			aUpdate = AUPDATE::TANK;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -634,19 +634,19 @@ namespace Enemies
 		void PouncerSnakeU(Entity* entity)
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
-			pSnake->Update(UPDATE::ENEMYU);
+			pSnake->Update(UPDATE::ENEMY);
 
 			if (pSnake->front != nullptr)
 			{
 			}
 			else if (tTime - pSnake->lastMove > pSnake->pounceTime && tTime - game->dTime - pSnake->lastMove < pSnake->pounceTime)
-				pSnake->vUpdate = VUPDATE::FRICTIONVU;
+				pSnake->vUpdate = VUPDATE::FRICTION;
 		}
 
 		void VacuumerU(Entity* entity)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
-			vacuumer->Update(UPDATE::ENEMYU);
+			vacuumer->Update(UPDATE::ENEMY);
 
 			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, true);
 
@@ -662,7 +662,7 @@ namespace Enemies
 		{
 			Spider* spider = static_cast<Spider*>(entity);
 
-			spider->Update(UPDATE::ENEMYU);
+			spider->Update(UPDATE::ENEMY);
 			spider->UpdateLegs();
 		}
 
@@ -670,7 +670,7 @@ namespace Enemies
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
 
-			centicrawler->Update(UPDATE::SPIDERU);
+			centicrawler->Update(UPDATE::SPIDER);
 			if (centicrawler->front == nullptr)
 			{
 				Centicrawler* farthestBack = centicrawler;
@@ -694,10 +694,10 @@ namespace Enemies
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(entity);
 
-			pouncer->Update(UPDATE::ENEMYU);
+			pouncer->Update(UPDATE::ENEMY);
 
 			if (tTime - pouncer->lastMove > pouncer->pounceTime && tTime - game->dTime - pouncer->lastMove < pouncer->pounceTime)
-				pouncer->vUpdate = VUPDATE::FRICTIONVU;
+				pouncer->vUpdate = VUPDATE::FRICTION;
 		}
 
 		void CatU(Entity* entity)
@@ -707,7 +707,7 @@ namespace Enemies
 			cat->dir = RotateTowardsNorm(cat->vel != vZero && Normalized(cat->vel) != cat->dir ? cat->vel : cat->dir, game->PlayerPos() - cat->pos, cat->homeSpeed * game->dTime);
 			cat->vel = cat->dir * glm::length(cat->vel);
 
-			cat->Update(UPDATE::POUNCERU);
+			cat->Update(UPDATE::POUNCER);
 		}
 
 		void CataclysmU(Entity* entity)
@@ -744,7 +744,7 @@ namespace Enemies
 				cat->dir = Normalized(game->PlayerPos() - cat->pos);
 				cat->vel = cat->dir * cat->speed;
 			}
-			else cat->Update(UPDATE::CATU);
+			else cat->Update(UPDATE::CAT);
 		}
 	}
 
@@ -760,7 +760,7 @@ namespace Enemies
 			deceiver->color.g = static_cast<byte>(g * 255);
 			deceiver->color.b = static_cast<byte>(b * 255);
 
-			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->DUpdate(DUPDATE::DTOCOL);
 
 			float healthRatio = (float)deceiver->health / deceiver->maxHealth;
 			deceiver->color.r = static_cast<byte>(r * deceiver->color3.r);
@@ -770,11 +770,11 @@ namespace Enemies
 			Vec2 tempPos = deceiver->pos;
 
 			deceiver->pos = Vec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
-			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->DUpdate(DUPDATE::DTOCOL);
 			deceiver->pos = Vec2(deceiver->pos.x, game->PlayerPos().y * 2 - deceiver->pos.y);
-			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->DUpdate(DUPDATE::DTOCOL);
 			deceiver->pos = Vec2(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y);
-			deceiver->DUpdate(DUPDATE::DTOCOLDU);
+			deceiver->DUpdate(DUPDATE::DTOCOL);
 
 			deceiver->pos = tempPos;
 		}
@@ -782,7 +782,7 @@ namespace Enemies
 		void ParentDU(Entity* entity)
 		{
 			Parent* parent = static_cast<Parent*>(entity);
-			parent->DUpdate(DUPDATE::DTOCOLDU);
+			parent->DUpdate(DUPDATE::DTOCOL);
 			parent->child->Draw(parent->pos + up);
 			parent->child->Draw(parent->pos + left);
 			parent->child->Draw(parent->pos + down);
@@ -796,17 +796,17 @@ namespace Enemies
 			exploder->radius = exploder->explosionRadius;
 			byte tempAlpha = exploder->color.a;
 			exploder->color.a /= 5;
-			exploder->DUpdate(DUPDATE::DTOCOLDU);
+			exploder->DUpdate(DUPDATE::DTOCOL);
 			exploder->radius = tempRadius;
 			exploder->color.a = tempAlpha;
-			exploder->DUpdate(DUPDATE::DTOCOLDU);
+			exploder->DUpdate(DUPDATE::DTOCOL);
 		}
 
 		void SnakeDU(Entity* entity)
 		{
 			Snake* snake = static_cast<Snake*>(entity);
 
-			snake->DUpdate(DUPDATE::DTOCOLDU);
+			snake->DUpdate(DUPDATE::DTOCOL);
 		}
 
 		void ColorCyclerDU(Entity* entity)
@@ -817,7 +817,7 @@ namespace Enemies
 			colorCycler->color = colorCycler->colorsToCycle[intCurrentPlace % colorCycler->colorsToCycle.size()].CLerp(
 				colorCycler->colorsToCycle[(static_cast<size_t>(intCurrentPlace) + 1) % colorCycler->colorsToCycle.size()], currentPlace - floorf(currentPlace));
 
-			colorCycler->DUpdate(DUPDATE::DTOCOLDU);
+			colorCycler->DUpdate(DUPDATE::DTOCOL);
 		}
 
 		void PouncerDU(Entity* entity)
@@ -828,7 +828,7 @@ namespace Enemies
 			game->DrawRightTri(pouncer->pos + pouncer->dir * ratio, vOne * (ratio * 2),
 				atan2f(pouncer->dir.y, pouncer->dir.x) - PI_F * 0.5f, pouncer->color);
 
-			pouncer->DUpdate(DUPDATE::DTOCOLDU);
+			pouncer->DUpdate(DUPDATE::DTOCOL);
 		}
 
 		void CatDU(Entity* entity)
@@ -844,12 +844,12 @@ namespace Enemies
 			for (int i = 1; i < count; i++)
 			{
 				cat->pos = glm::rotate(cat->pos - Vec2(game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos());
-				cat->DUpdate(DUPDATE::ENTITYDU);
+				cat->DUpdate(DUPDATE::ENTITY);
 			}
 
 			cat->color = tempColor;
 			cat->pos = tempPos;
-			cat->DUpdate(DUPDATE::POUNCERDU);
+			cat->DUpdate(DUPDATE::POUNCER);
 		}
 
 		void CataclysmDU(Entity* entity)
@@ -858,7 +858,7 @@ namespace Enemies
 			RGBA tempColor = cat->color;
 			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
 				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
-			cat->DUpdate(DUPDATE::CATDU);
+			cat->DUpdate(DUPDATE::CAT);
 			cat->color = tempColor;
 		}
 	}
@@ -903,7 +903,7 @@ namespace Enemies
 		void ParentOD(Entity* entity, Entity* damageDealer)
 		{
 			Parent* parent = static_cast<Parent*>(entity);
-			parent->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			parent->OnDeath(ONDEATH::ENEMY, damageDealer);
 
 			game->entities->push_back(parent->child->Clone(parent->pos + up));
 			game->entities->push_back(parent->child->Clone(parent->pos + right));
@@ -914,14 +914,14 @@ namespace Enemies
 		void ExploderOD(Entity* entity, Entity* damageDealer)
 		{
 			Exploder* exploder = static_cast<Exploder*>(entity);
-			exploder->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			exploder->OnDeath(ONDEATH::ENEMY, damageDealer);
 			CreateExplosion(exploder->pos, exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
 		}
 
 		void SnakeOD(Entity* entity, Entity* damageDealer)
 		{
 			Snake* snake = static_cast<Snake*>(entity);
-			snake->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			snake->OnDeath(ONDEATH::ENEMY, damageDealer);
 			if (snake->back != nullptr)
 			{
 				snake->back->front = nullptr;
@@ -934,7 +934,7 @@ namespace Enemies
 		void PouncerSnakeOD(Entity* entity, Entity* damageDealer)
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
-			pSnake->OnDeath(ONDEATH::SNAKEOD, damageDealer);
+			pSnake->OnDeath(ONDEATH::SNAKE, damageDealer);
 			if (pSnake->back != nullptr)
 				((PouncerSnake*)pSnake->back)->dir = pSnake->dir;
 		}
@@ -942,7 +942,7 @@ namespace Enemies
 		void VacuumerOD(Entity* entity, Entity* damageDealer)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
-			vacuumer->OnDeath(ENEMYOD, damageDealer);
+			vacuumer->OnDeath(ONDEATH::ENEMY, damageDealer);
 			for (Item item : vacuumer->items)
 			{
 				game->entities->push_back(make_unique<Collectible>(item, vacuumer->pos));
@@ -952,7 +952,7 @@ namespace Enemies
 		void SpiderOD(Entity* entity, Entity* damageDealer)
 		{
 			Spider* spider = static_cast<Spider*>(entity);
-			spider->OnDeath(ONDEATH::ENEMYOD, damageDealer);
+			spider->OnDeath(ONDEATH::ENEMY, damageDealer);
 			for (int i = 0; i < spider->legCount; i++)
 				delete spider->legs[i];
 		}
@@ -960,7 +960,7 @@ namespace Enemies
 		void CenticrawlerOD(Entity* entity, Entity* damageDealer)
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
-			centicrawler->OnDeath(ONDEATH::SPIDEROD, damageDealer);
+			centicrawler->OnDeath(ONDEATH::SPIDER, damageDealer);
 			if (centicrawler->back != nullptr)
 				centicrawler->back->front = nullptr;
 			if (centicrawler->front != nullptr)
@@ -991,7 +991,7 @@ namespace Enemies
 			if (pSnake->front == nullptr)
 			{
 				pSnake->vel = pSnake->dir * pSnake->speed;
-				pSnake->vUpdate = VUPDATE::ENTITYVU;
+				pSnake->vUpdate = VUPDATE::ENTITY;
 			}
 			return true;
 		}
@@ -1024,7 +1024,7 @@ namespace Enemies
 			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
 			pouncer->dir = Normalized(Vec2(game->PlayerPos() - pouncer->pos));
 			pouncer->vel = pouncer->dir * pouncer->speed;
-			pouncer->vUpdate = VUPDATE::ENTITYVU;
+			pouncer->vUpdate = VUPDATE::ENTITY;
 			return true;
 		}
 
@@ -1032,7 +1032,7 @@ namespace Enemies
 		{
 			Cat* cat = static_cast<Cat*>(enemy);
 			cat->vel = cat->dir * cat->speed;
-			cat->vUpdate = VUPDATE::ENTITYVU;
+			cat->vUpdate = VUPDATE::ENTITY;
 			return true;
 		}
 

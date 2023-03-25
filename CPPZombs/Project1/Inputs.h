@@ -8,7 +8,7 @@ struct Key
 struct Inputs
 {
 	Key w, a, s, d,
-		enter, c, q, e, escape, space,
+		enter, c, q, e, escape, space, shift,
 		up, left, down, right,
 		leftMouse, rightMouse, middleMouse,
 		comma, period, slash; // <- Command keys.
@@ -66,6 +66,7 @@ struct Inputs
 		UpdateKey(window, e, GLFW_KEY_E);
 		UpdateKey(window, escape, GLFW_KEY_ESCAPE);
 		UpdateKey(window, space, GLFW_KEY_SPACE);
+		UpdateKey(window, shift, GLFW_KEY_LEFT_SHIFT);
 
 		UpdateKey(window, comma, GLFW_KEY_COMMA);
 		UpdateKey(window, period, GLFW_KEY_PERIOD);

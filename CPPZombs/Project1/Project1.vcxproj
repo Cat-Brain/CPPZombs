@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClInclude Include="Chunk.h" />
     <ClInclude Include="picopng.h" />
     <ClCompile Include="src\glad.c" />
   </ItemGroup>

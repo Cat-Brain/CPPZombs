@@ -4,46 +4,46 @@
 #define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
 #pragma region Psuedo-virtual functions
-enum UPDATE // Update
+enum class UPDATE // Update
 {
-	ENTITYU, FADEOUTU, EXPLODENEXTFRAMEU, FADEOUTPUDDLEU, VACUUMEFORU, PROJECTILEU, FUNCTIONALBLOCKU, FUNCTIONALBLOCK2U, ENEMYU, POUNCERSNAKEU, VACUUMERU, SPIDERU,
-	CENTICRAWLERU, POUNCERU, CATU, CATACLYSMU, PLAYERU
+	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, VACUUMER, SPIDER,
+	CENTICRAWLER, POUNCER, CAT, CATACLYSM, PLAYER
 };
 
 vector<function<void(Entity*)>> updates;
 
-enum VUPDATE // Update
+enum class VUPDATE // Update
 {
-	ENTITYVU, FRICTIONVU
+	ENTITY, FRICTION
 };
 
 vector<function<void(Entity*)>> vUpdates;
 
-enum DUPDATE // Draw Update
+enum class DUPDATE // Draw Update
 {
-	ENTITYDU, FADEOUTDU, FADEOUTPUDDLEDU, FADEOUTGLOWDU, DTOCOLDU, TREEDU, DECEIVERDU, PARENTDU, EXPLODERDU, SNAKEDU, COLORCYCLERDU, POUNCERDU, CATDU,
-	CATACLYSMDU, PLAYERDU
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, SNAKE, COLORCYCLER, POUNCER, CAT,
+	CATACLYSM, PLAYER
 };
 
 vector<function<void(Entity*)>> dUpdates;
 
-enum EDUPDATE // Early Draw Update
+enum class EDUPDATE // Early Draw Update
 {
-	ENTITYEDU, SNAKEEDU
+	ENTITY, SNAKE
 };
 
 vector<function<void(Entity*)>> eDUpdates;
 
-enum UIUPDATE // User-Interface Update
+enum class UIUPDATE // User-Interface Update
 {
-	ENTITYUIU, TREEUIU, VINEUIU, ENEMYUIU
+	ENTITY, TREE, VINE, ENEMY
 };
 
 vector<function<void(Entity*)>> uiUpdates;
 
-enum OVERLAPFUN
+enum class OVERLAPFUN
 {
-	ENTITYOF
+	ENTITY
 };
 
 vector<function<bool(Entity*, Vec2, float)>> overlapFuns;
@@ -55,10 +55,10 @@ enum OVERLAPRES // Overlap resolutions
 
 vector<function<void(Entity*, Entity*)>> overlapRes; // Overlap resolutions.
 
-enum ONDEATH
+enum class ONDEATH
 {
-	ENTITYOD, FADEOUTGLOWOD, SHOTITEMOD, LIGHTBLOCKOD, VINEOD, ENEMYOD, PARENTOD, EXPLODEROD, SNAKEOD, POUNCERSNAKEOD, VACUUMEROD, SPIDEROD,
-	CENTICRAWLEROD, PLAYEROD
+	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, VINE, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, VACUUMER, SPIDER,
+	CENTICRAWLER, PLAYER
 };
 
 vector<function<void(Entity*, Entity*)>> onDeaths;
@@ -92,8 +92,8 @@ public:
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		pos(pos), vel(0), dir(0), radius(radius), color(color),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
-		update(UPDATE::ENTITYU), vUpdate(VUPDATE::ENTITYVU), dUpdate(DUPDATE::ENTITYDU), earlyDUpdate(EDUPDATE::ENTITYEDU),
-		uiUpdate(UIUPDATE::ENTITYUIU), onDeath(ONDEATH::ENTITYOD), overlapFun(OVERLAPFUN::ENTITYOF)
+		update(UPDATE::ENTITY), vUpdate(VUPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY),
+		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY), overlapFun(OVERLAPFUN::ENTITY)
 	{
 	}
 
@@ -123,56 +123,56 @@ public:
 #pragma region Psuedo-virtual functions
 	void Update() // Normally doesn't draw.
 	{
-		updates[update](this);
+		updates[UnEnum(update)](this);
 	}
 	void Update(UPDATE tempUpdate) // Normally doesn't draw.
 	{
-		updates[tempUpdate](this);
+		updates[UnEnum(tempUpdate)](this);
 	}
 
 	void VUpdate() // Normally just increases position by velocity and modifies velocity.
 	{
-		vUpdates[vUpdate](this);
+		vUpdates[UnEnum(vUpdate)](this);
 	}
 	void VUpdate(VUPDATE tempVUpdate) // Normally just increases position by velocity and modifies velocity.
 	{
-		vUpdates[tempVUpdate](this);
+		vUpdates[UnEnum(tempVUpdate)](this);
 	}
 
 	void DUpdate() // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
-		dUpdates[dUpdate](this);
+		dUpdates[UnEnum(dUpdate)](this);
 	}
 	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
-		dUpdates[tempDUpdate](this);
+		dUpdates[UnEnum(tempDUpdate)](this);
 	}
 
 	void EarlyDUpdate() // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
-		eDUpdates[earlyDUpdate](this);
+		eDUpdates[UnEnum(earlyDUpdate)](this);
 	}
 	void EarlyDUpdate(EDUPDATE tempEDUpdate) // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
-		eDUpdates[tempEDUpdate](this);
+		eDUpdates[UnEnum(tempEDUpdate)](this);
 	}
 
 	void UIUpdate() // Draws when uiActive is true.
 	{
-		uiUpdates[uiUpdate](this);
+		uiUpdates[UnEnum(uiUpdate)](this);
 	}
 	void UIUpdate(UIUPDATE tempUIUpdate) // Draws when uiActive is true.
 	{
-		uiUpdates[tempUIUpdate](this);
+		uiUpdates[UnEnum(tempUIUpdate)](this);
 	}
 
 	void OnDeath(Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
 	{
-		onDeaths[onDeath](this, damageDealer);
+		onDeaths[UnEnum(onDeath)](this, damageDealer);
 	}
 	void OnDeath(ONDEATH tempOnDeath, Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
 	{
-		onDeaths[tempOnDeath](this, damageDealer);
+		onDeaths[UnEnum(tempOnDeath)](this, damageDealer);
 	}
 #pragma endregion
 
@@ -200,7 +200,7 @@ public:
 
 	bool Overlaps(Vec2 pos, float radius)
 	{
-		return overlapFuns[overlapFun](this, pos, radius);
+		return overlapFuns[UnEnum(overlapFun)](this, pos, radius);
 	}
 
 	void UpdateCollision();
@@ -232,8 +232,8 @@ public:
 	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
 		Entity(pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
-		update = UPDATE::FADEOUTU;
-		dUpdate = DUPDATE::FADEOUTDU;
+		update = UPDATE::FADEOUT;
+		dUpdate = DUPDATE::FADEOUT;
 		corporeal = false;
 	}
 
@@ -245,7 +245,7 @@ public:
 
 namespace Updates
 {
-	void EntityU(Entity* entity) { /*printf("Test test");*/ }
+	void EntityU(Entity* entity) { }
 
 	void FadeOutU(Entity* entity)
 	{
@@ -278,7 +278,7 @@ namespace DUpdates
 	void FadeOutDU(Entity* entity)
 	{
 		entity->color.a = static_cast<uint8_t>(((FadeOut*)entity)->Opacity() * 255);
-		entity->DUpdate(DUPDATE::ENTITYDU);
+		entity->DUpdate(DUPDATE::ENTITY);
 	}
 }
 

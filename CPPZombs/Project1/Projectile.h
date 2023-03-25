@@ -13,7 +13,7 @@ public:
         Entity(vZero, radius, color, mass, maxHealth, health, name),
         duration(duration), damage(damage), speed(speed), begin(tTime)
     {
-        update = UPDATE::PROJECTILEU;
+        update = UPDATE::PROJECTILE;
         isProjectile = true;
         sortLayer = 1;
         this->corporeal = corporeal;
@@ -104,7 +104,7 @@ public:
     ShotItem(Item item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
         Projectile(item.range, item.damage, speed, radius, item.color, mass, maxHealth, health), item(item)
     {
-        onDeath = ONDEATH::SHOTITEMOD;
+        onDeath = ONDEATH::SHOTITEM;
         Start();
     }
 

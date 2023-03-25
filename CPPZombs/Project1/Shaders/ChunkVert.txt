@@ -1,0 +1,13 @@
+#version 330 core
+layout (location = 0) in vec2 aPos;
+
+uniform int chunkWidth;
+uniform vec2 scale, position;
+
+out ivec2 pos;
+
+void main()
+{
+	pos = ivec2(aPos * chunkWidth);
+	gl_Position = vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);
+} 

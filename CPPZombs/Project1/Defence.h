@@ -21,9 +21,9 @@ public:
 		babyRadius(radius), maxRadius(maxRadius), babyMass(mass), maxMass(maxMass),
 		FunctionalBlock2(timePer, pos, radius, color, mass, maxHealth, health, name)
 	{
-		dUpdate = DUPDATE::TREEDU;
-		uiUpdate = UIUPDATE::TREEUIU;
-		tUpdate = TUPDATE::TREETU;
+		dUpdate = DUPDATE::TREE;
+		uiUpdate = UIUPDATE::TREE;
+		tUpdate = TUPDATE::TREE;
 	}
 
 	Tree(Tree* baseClass, Vec2 dir, Vec2 pos) :
@@ -63,7 +63,7 @@ namespace DUpdates
 			game->DrawCircle(tree->pos + (tree->radius + collectibleRadius) * CircPoint(tree->nextPlacementRotation), collectible->color, collectibleRadius);
 			tree->color = tree->adultColor;
 		}
-		tree->DUpdate(DUPDATE::ENTITYDU);
+		tree->DUpdate(DUPDATE::ENTITY);
 	}
 }
 
@@ -82,9 +82,9 @@ public:
 			mass, mass, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0), angleWobble(angleWobble), bifurcationChance(bifurcationChance)
 	{
-		uiUpdate = UIUPDATE::VINEUIU;
-		onDeath = ONDEATH::VINEOD;
-		tUpdate = TUPDATE::VINETU;
+		uiUpdate = UIUPDATE::VINE;
+		onDeath = ONDEATH::VINE;
+		tUpdate = TUPDATE::VINE;
 	}
 
 	void Start() override
@@ -234,7 +234,7 @@ namespace UIUpdates
 
 #pragma region Plants
 // Having an enum of all seeds will come in handy:
-enum SEEDINDICES
+enum class SEEDINDICES
 {
 	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, BACUUMIUM, CHEESE, TOPAX, SAPPHIRE, LEAD
 };
@@ -279,7 +279,7 @@ namespace Plants
 		Vine* leadVine = new Vine(Collectibles::lead, 0.8f, 25, 1, 25, 2, 3.0f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 1, 1, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
-		Vine* topazVine = new Vine(Collectibles::topaz, 0.8f, 25, 1, 50, 5, 2.0f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
+		Vine* topazVine = new Vine(Collectibles::topaz->Clone(2), 0.8f, 25, 1, 50, 5, 2.0f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 6, 6, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
 		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 0.8f, 25, 3, 25, 15, 0.125f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 4, 4, "Sapphire vine");
