@@ -146,16 +146,18 @@ public:
 	}
 };
 
-unique_ptr<Player> commander = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 64.f, 16.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 64.f, 16.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::BAYONET, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
-	"Commander", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
-		Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1) }), vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE }));
+	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
+		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1) }),
+	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ }));
 unique_ptr<Player> messenger = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 2.f, 4.f, 64.f, 8.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 0.5f,
 	3, 2, "Messenger", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
-		Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1)}), vector<SEEDINDICES>({SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE}));
+		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1)}),
+	vector<SEEDINDICES>({ SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ }));
 
-vector<Player*> characters = { commander.get(), messenger.get() };
+vector<Player*> characters = { soldier.get(), messenger.get() };
 
 namespace Updates
 {
@@ -334,15 +336,15 @@ namespace Secondaries
 {
 	bool Bayonet(Player* player)
 	{
-		// Temporarily just a shotgun as I've not worked through the code for this yet.
 		Item currentShootingItem = player->items.GetCurrentItem();
-		player->items[player->items.currentIndex].Use(player->pos, game->inputs.mousePosition, player, player->name, nullptr, 0);
-		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
-		player->items[player->items.currentIndex].Use(player->pos, RotateBy(game->inputs.mousePosition,-PI_F * 0.125f), player, player->name, nullptr, 0);
-		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
+		if (currentShootingItem == *dItem || tTime - player->lastPrimary <= currentShootingItem.useTime * player->shootSpeed)
+			return false;
+		player->lastPrimary = tTime + player->primaryTime;
+
+		player->items[player->items.currentIndex].Use(player->pos, RotateBy(game->inputs.mousePosition, -PI_F * 0.125f), player, player->name, nullptr, 0);
+		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return false;
 		player->items[player->items.currentIndex].Use(player->pos, RotateBy(game->inputs.mousePosition, PI_F * 0.125f), player, player->name, nullptr, 0);
-		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
-		return true;
+		player->items.RemoveIfEmpty(player->items.currentIndex);
 	}
 
 	bool TornadoSpinUndo(void* entity, TimedEvent* mEvent)

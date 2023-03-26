@@ -38,7 +38,7 @@ int main()
 	{
 		using namespace EDUpdates;
 		using namespace Enemies::EDUpdates;
-		eDUpdates = { EntityEDU, SnakeEDU };
+		eDUpdates = { EntityEDU, SnakeEDU, SpiderEDU };
 	}
 	{
 		using namespace UIUpdates;
@@ -89,7 +89,7 @@ int main()
 		itemUs = { ItemU, WaveModifierU };
 
 		using namespace ItemODs;
-		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD };
+		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD };
 	
 #pragma endregion
 

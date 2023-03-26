@@ -73,6 +73,11 @@ iVec2 upI(0, 1), rightI(1, 0), downI(0, -1), leftI(-1, 0), vZeroI(0, 0), vOneI(1
 typedef glm::vec2 Vec2;
 
 #pragma region Vec2 functions
+inline iVec2 ToIV2(Vec2 a)
+{
+	return iVec2(floorf(a.x), floorf(a.y));
+}
+
 inline Vec2 RotateLeft(Vec2 a)
 {
 	return Vec2(-a.y, a.x);

@@ -1,12 +1,11 @@
 #version 330 core
 
-in ivec2 pos;
 out vec4 FragColor;
+in vec2 pos;
 
-uniform vec4 colors[2];
-uniform byte data[16][16];
+uniform sampler2D tex;
 
 void main()
 {
-	FragColor = colors[data[pos.x][pos.y]];
+	FragColor = texture(tex, pos);
 } 

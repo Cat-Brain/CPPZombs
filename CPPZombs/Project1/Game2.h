@@ -2,10 +2,10 @@
 
 Planet::Planet()
 {
-	worldNoise.SetFrequency(5.f);
-	worldNoise.SetFractalLacunarity(2.0f);
-	worldNoise.SetFractalGain(0.5f);
-	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+	worldNoise.SetFrequency(0.01f);
+	//worldNoise.SetFractalLacunarity(2.0f);
+	//worldNoise.SetFractalGain(0.5f);
+	//worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
 	worldNoise.SetSeed(static_cast<int>(time(NULL)));
 
 	friction = RandFloat() * 10 + 5;
@@ -270,7 +270,7 @@ float Game::BrightnessAtPos(iVec2 pos)
 void Game::TUpdate()
 {
 	// Prepare current framebuffer to be used in rendering of the frame.
-	currentFramebuffer = 1;
+	currentFramebuffer = MAINSCREEN;
 	UseFramebuffer();
 	// In TUpdate such that time doesn't progress whilst paused.
 	tTime += dTime;
@@ -304,21 +304,15 @@ void Game::TUpdate()
 		lastWave = tTime;
 	}
 
+	entities->Update(); // Updates all entities.
+
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 	static const float normalUp[] = { 0, 0, 1, 0 };
 	glClearBufferfv(GL_COLOR, 1, normalUp);
-	glUseProgram(backgroundShader);
-	glUniform2f(glGetUniformLocation(backgroundShader, "offset"), PlayerPos().x + screenOffset.x, PlayerPos().y + screenOffset.y);
-	glUniform2f(glGetUniformLocation(backgroundShader, "screenDim"), screenRatio * zoom, zoom);
-	glUniform3f(glGetUniformLocation(backgroundShader, "col1"), planet->color1.r / 255.0f, planet->color1.g / 255.0f, planet->color1.b / 255.0f);
-	glUniform3f(glGetUniformLocation(backgroundShader, "col2"), planet->color2.r / 255.0f, planet->color2.g / 255.0f, planet->color2.b / 255.0f);
-	screenSpaceQuad.Draw();
-
-	entities->Update(); // Updates all entities.
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
-	DrawFramebufferOnto(0);
+	DrawFramebufferOnto(TRUESCREEN);
 
 	entities->UIUpdate(); // Draws UI of uiactive entities.
 	

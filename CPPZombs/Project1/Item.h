@@ -11,7 +11,7 @@ vector<function<void(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string cr
 
 enum ITEMOD // Item on-deaths
 {
-	DITEMOD, GONEONLANDITEMOD, PLACEDONLANDINGOD, CORRUPTONKILLOD, EXPLODEONLANDINGOD
+	DITEMOD, GONEONLANDITEMOD, PLACEDONLANDINGOD, CORRUPTONKILLOD, EXPLODEONLANDINGOD, IMPROVESOILONLANDINGOD, SETTILEONLANDINGOD
 };
 
 vector<function<void(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.

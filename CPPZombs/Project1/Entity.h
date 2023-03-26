@@ -29,7 +29,7 @@ vector<function<void(Entity*)>> dUpdates;
 
 enum class EDUPDATE // Early Draw Update
 {
-	ENTITY, SNAKE
+	ENTITY, SNAKE, SPIDER
 };
 
 vector<function<void(Entity*)>> eDUpdates;

@@ -351,6 +351,7 @@ namespace Enemies
 		{
 			onDeath = ONDEATH::SPIDER;
 			update = UPDATE::SPIDER;
+			earlyDUpdate = EDUPDATE::SPIDER;
 		}
 
 		unique_ptr<Entity> Clone(Vec2 pos, Vec2 dir = up, Entity* creator = nullptr) override
@@ -663,7 +664,6 @@ namespace Enemies
 			Spider* spider = static_cast<Spider*>(entity);
 
 			spider->Update(UPDATE::ENEMY);
-			spider->UpdateLegs();
 		}
 
 		void CenticrawlerU(Entity* entity)
@@ -753,9 +753,9 @@ namespace Enemies
 		void DeceiverDU(Entity* entity)
 		{
 			Deceiver* deceiver = static_cast<Deceiver*>(entity);
-			float r = deceiver->noise1.GetNoise(tTime, 0.0f);
-			float g = deceiver->noise2.GetNoise(tTime, 0.0f);
-			float b = deceiver->noise3.GetNoise(tTime, 0.0f);
+			float r = deceiver->noise1.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
+			float g = deceiver->noise2.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
+			float b = deceiver->noise3.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
 			deceiver->color.r = static_cast<byte>(r * 255);
 			deceiver->color.g = static_cast<byte>(g * 255);
 			deceiver->color.b = static_cast<byte>(b * 255);
@@ -879,6 +879,13 @@ namespace Enemies
 					currentBack = currentBack->back;
 				}
 			}
+		}
+
+		void SpiderEDU(Entity* entity)
+		{
+			Spider* spider = static_cast<Spider*>(entity);
+
+			spider->UpdateLegs();
 		}
 	}
 

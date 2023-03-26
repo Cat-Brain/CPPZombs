@@ -29,7 +29,9 @@ public:
 
 	Entities() :
 		vector(0), addedEntity(false), index(0)
-	{ }
+	{
+		Chunk::Init();
+	}
 
 	void push_back(unique_ptr<Entity> entity)
 	{
@@ -70,6 +72,11 @@ public:
 			if (chunks[i].pos == pos)
 				return i;
 		return -1;
+	}
+
+	Chunk* ChunkAtFPos(Vec2 pos)
+	{
+		return &chunks[ChunkAtPos(ToIV2(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH)];
 	}
 
 	vector<int> MainChunkOverlaps(iVec2 minPos, iVec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
@@ -180,6 +187,12 @@ public:
 	// Add more overlap functions.
 #pragma endregion
 
+	byte TileAtPos(Vec2 pos)
+	{
+		int index = ChunkAtPos(ToIV2(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
+		return chunks[index].TileAtPos(ToIV2(pos));
+	}
+
 	void SortEntities()
 	{
 		int ncCount = static_cast<int>(size()), collectibleCount = ncCount;
@@ -255,7 +268,11 @@ public:
 
 	void DUpdate()
 	{
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(game->PlayerPos(), game->DistToCorner()); // Collectibles then NCs.
+		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->DistToCorner());
+		for (int i : chunkOverlaps)
+			chunks[i].Draw();
+
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->DistToCorner()); // Collectibles then NCs.
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -705,6 +722,63 @@ public:
 	}
 };
 
+class ImproveSoilOnLanding : public Item
+{
+public:
+	ImproveSoilOnLanding(string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
+	{
+		itemOD = ITEMOD::IMPROVESOILONLANDINGOD;
+	}
+
+	ImproveSoilOnLanding(Item* baseClass, string name = "NULL",
+		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health) { }
+
+	Item Clone(int count) override
+	{
+		return ImproveSoilOnLanding(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
+	}
+
+	Item* Clone2(int count) override
+	{
+		return new ImproveSoilOnLanding(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius);
+	}
+};
+
+class SetTileOnLanding : public Item
+{
+public:
+	TILE tile;
+
+	SetTileOnLanding(TILE tile, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health), tile(tile)
+	{
+		itemOD = ITEMOD::SETTILEONLANDINGOD;
+	}
+
+	SetTileOnLanding(Item* baseClass, TILE tile, string name = "NULL",
+		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
+		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		tile(tile) { }
+
+	Item Clone(int count) override
+	{
+		return SetTileOnLanding(baseClass, tile, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
+	}
+
+	Item* Clone2(int count) override
+	{
+		return new SetTileOnLanding(baseClass, tile, name, typeName, intType, color, damage, count, range, useTime, radius);
+	}
+};
+
 namespace ItemODs
 {
 	void ItemOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
@@ -738,6 +812,24 @@ namespace ItemODs
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
 	}
+
+	void ImproveSoilOnLandingOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item);
+
+		Chunk* chunk = game->entities->ChunkAtFPos(pos);
+		TILE tile = TILE(chunk->TileAtPos(ToIV2(pos)));
+		chunk->SetTileAtPos(ToIV2(pos), UnEnum(tile == TILE::ROCK ? TILE::SAND : tile == TILE::SAND ? TILE::BAD_SOIL : tile == TILE::BAD_SOIL ?
+		TILE::MID_SOIL : TILE::MAX_SOIL));
+	}
+
+	void SetTileOnLandingOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item);
+
+		Chunk* chunk = game->entities->ChunkAtFPos(pos);
+		chunk->SetTileAtPos(ToIV2(pos), UnEnum(tileItem->tile));
+	}
 }
 
 namespace Hazards
@@ -748,12 +840,13 @@ namespace Hazards
 
 namespace Resources
 {
-	ExplodeOnLanding* ruby = new ExplodeOnLanding(2.5f, 4, "Ruby", "Ammo", 1, RGBA(168, 50, 100), 4);
+	SetTileOnLanding* ruby = new SetTileOnLanding(TILE::RUBY_SOIL, "Ruby", "Tile", 5, RGBA(168, 50, 100), 4);
 	ExplodeOnLanding* emerald = new ExplodeOnLanding(7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
 	ExplodeOnLanding* topaz = new ExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 1, 15.0f, 0.25f, 1.5f);
 	ExplodeOnLanding* sapphire = new ExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 1, 15.0f, true);
 	PlacedOnLanding* vacuumium = new PlacedOnLanding(Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 1, 15, false, 0.0625);
+	ImproveSoilOnLanding* quartz = new ImproveSoilOnLanding("Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 1, 15, 0.0625f);
 }
 
 namespace Collectibles
@@ -764,4 +857,5 @@ namespace Collectibles
 	Collectible* sapphire = new Collectible(*Resources::sapphire);
 	Collectible* lead = new Collectible(*Resources::lead);
 	Collectible* vacuumium = new Collectible(*Resources::vacuumium);
+	Collectible* quartz = new Collectible(*Resources::quartz);
 }

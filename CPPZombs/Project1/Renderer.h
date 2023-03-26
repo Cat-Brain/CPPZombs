@@ -203,6 +203,19 @@ public:
 		screenSpaceQuad.Draw();
 	}
 
+	inline void DrawChunk(Vec2 pos, Vec2 dim)
+	{
+		glUseProgram(chunkShader);
+		dim /= zoom;
+		glUniform2f(glGetUniformLocation(chunkShader, "scale"), dim.x / screenRatio, dim.y);
+
+		pos -= PlayerPos() + screenOffset;
+		pos.x /= screenRatio;
+		pos /= zoom;
+		glUniform2f(glGetUniformLocation(chunkShader, "position"), pos.x, pos.y);
+		quad.Draw();
+	}
+
 	inline void DrawRightTri(Vec2 pos, Vec2 scale, float rotation, RGBA color)
 	{
 		glUseProgram(triangleShader);

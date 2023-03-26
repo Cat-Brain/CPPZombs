@@ -41,7 +41,10 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->difficulty];
+		TILE tile = TILE(game->entities->TileAtPos(pos));
+		return game->dTime * game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->difficulty] *
+			(float(tile == TILE::MAX_SOIL) + 0.5f * float(tile == TILE::MID_SOIL) + 0.25f * float(tile == TILE::BAD_SOIL) +
+				RUBY_SOIL_MULTIPLIER * float(tile == TILE::RUBY_SOIL));
 	}
 };
 
@@ -113,7 +116,9 @@ public:
 
 	float TimeIncrease() override
 	{
-		return game->dTime * (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->difficulty];
+		TILE tile = TILE(game->entities->TileAtPos(pos));
+		return game->dTime * (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->difficulty] *
+			(float(tile == TILE::ROCK) + 0.5f * float(tile == TILE::SAND) + 0.25f * float(tile == TILE::BAD_SOIL));
 	}
 };
 
@@ -236,7 +241,7 @@ namespace UIUpdates
 // Having an enum of all seeds will come in handy:
 enum class SEEDINDICES
 {
-	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, BACUUMIUM, CHEESE, TOPAX, SAPPHIRE, LEAD
+	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, BACUUMIUM, CHEESE, TOPAX, SAPPHIRE, LEAD, QUARTZ
 };
 
 
@@ -283,12 +288,15 @@ namespace Plants
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
 		Vine* sapphireVine = new Vine(Collectibles::sapphire->Clone(5), 0.8f, 25, 3, 25, 15, 0.125f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 4, 4, "Sapphire vine");
+		
+		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
+		Vine* quartzVine = new Vine(Collectibles::quartz->Clone(3), 1.6f, 50, 3, 10, 25, 0.25, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 1, 1, "Quarts vine");
 	}
 
 	// Keep a list of all of the plants. Tree is the base of all plants so it's what we'll use for the pointer.
 	vector<Tree*> plants{ Trees::copperTree, Trees::ironTree,
 		Trees::rubyTree, Trees::emeraldTree, Trees::rockTree, Trees::shadeTree, Trees::bowlerTree, Trees::vacuumiumTree,
-		Vines::cheeseVine, Vines::topazVine, Vines::sapphireVine, Vines::leadVine };
+		Vines::cheeseVine, Vines::topazVine, Vines::sapphireVine, Vines::leadVine, Vines::quartzVine };
 }
 
 namespace Resources::Seeds
@@ -307,9 +315,10 @@ namespace Resources::Seeds
 	PlacedOnLanding* topazTreeSeed = new PlacedOnLanding(Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 1, 15.0f, false, 0.25f, 1.5f);
 	CorruptOnKill* sapphireTreeSeed = new CorruptOnKill(Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, 1);
 	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0);
+	PlacedOnLanding* quartzVineSeed = new PlacedOnLanding(Plants::Vines::quartzVine, "Quartz vine seed", "Seed", 4, Plants::Vines::quartzVineColor, 0);
 
 	// Keep a list of all of the seeds.
-	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, bowlerTreeSeed, vacuumiumTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed };
+	vector<Item*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, bowlerTreeSeed, vacuumiumTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVineSeed, quartzVineSeed };
 	
 }
 
@@ -329,10 +338,11 @@ namespace Collectibles::Seeds
 	Collectible* topazTreeSeed = new Collectible(*Resources::Seeds::topazTreeSeed);
 	Collectible* sapphireTreeSeed = new Collectible(*Resources::Seeds::sapphireTreeSeed);
 	Collectible* leadVindSeed = new Collectible(*Resources::Seeds::leadVineSeed);
+	Collectible* quartzVindSeed = new Collectible(*Resources::Seeds::quartzVineSeed);
 
 	// Keep a list of all of the seeds.
 	vector<Collectible*> plantSeeds{ copperTreeSeed, ironTreeSeed, rubyTreeSeed, emeraldTreeSeed, rockTreeSeed, shadeTreeSeed, bowlerTreeSeed,
-		vacuumiumTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVindSeed };
+		vacuumiumTreeSeed, cheeseVineSeed, topazTreeSeed, sapphireTreeSeed, leadVindSeed, quartzVindSeed };
 }
 
 #pragma endregion

@@ -57,5 +57,5 @@ vector<std::tuple<std::pair<int, int>, uint*, string>> shaders{
 	{{SDF_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader"},
 	{{SUN_VERT, SUN_FRAG}, &sunShader, "Sun Shader"},
 	{{TRIANGLE_VERT, TRIANGLE_FRAG}, &triangleShader, "Triangle Shader"},
-	{{CHUNK_VERT, CHUNK_FRAG}, &chunkShader, "Chunk Shader"}
+	{{CHUNK_VERT, CHUNK_FRAG}, &chunkShader, "Chunk Shader"},
 };

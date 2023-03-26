@@ -49,4 +49,4 @@ public:
 };
 
 Texture spriteSheet;
-vector<std::tuple<Texture&, int, int, uint>> textures{ {spriteSheet, SPRITE_SHEET, PNG_FILE, 5} };
+vector<std::tuple<Texture&, int, int, uint>> textures{ {spriteSheet, SPRITE_SHEET, PNG_FILE, 6} };
