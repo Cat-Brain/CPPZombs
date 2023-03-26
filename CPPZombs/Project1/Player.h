@@ -74,6 +74,8 @@ public:
 	PRIMARY primary;
 	SECONDARY secondary;
 	UTILITY utility;
+	vector<TimedEvent> events{};
+	vector<Particle*> particles{};
 	float iTime = 0, sTime = 0; // Invincibility time, if <= 0 takes damage, else doesn't.
 
 	Player(bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float holdMoveSpeed = 8,
@@ -144,13 +146,13 @@ public:
 	}
 };
 
-unique_ptr<Player> commander = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 64.f, 16.f, 1.f, 0.f, 3.f, 2.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> commander = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 8.f, 6.f, 64.f, 16.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::BAYONET, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
 	"Commander", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
 		Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1) }), vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE }));
-unique_ptr<Player> messenger = make_unique<Player>(true, true, 0.25f, 32.f, 12.f, 2.f, 4.f, 64.f, 8.f, 1.f, 0.f, 5.f, 5.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> messenger = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 2.f, 4.f, 64.f, 8.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 0.5f,
-	3, 2, "Messenger", Items({ Resources::vacuumium->Clone(1000), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
+	3, 2, "Messenger", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
 		Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1)}), vector<SEEDINDICES>({SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE}));
 
 vector<Player*> characters = { commander.get(), messenger.get() };
@@ -165,6 +167,10 @@ namespace Updates
 		player->sTime -= game->dTime;
 		player->iTime = max(0.f, player->iTime);
 		player->sTime = max(0.f, player->sTime);
+
+		for (int i = 0; i < player->events.size(); i++)
+			if (player->events[i].function(player, &player->events[i]))
+				player->events.erase(player->events.begin() + i);
 
 		bool exitedMenu = false;
 		if (player->currentMenuedEntity != nullptr && !player->currentMenuedEntity->Overlaps(game->inputs.mousePosition + player->pos, 0))
@@ -243,6 +249,17 @@ namespace DUpdates
 	{
 		Player* player = static_cast<Player*>(entity);
 		
+		for (int i = 0; i < player->particles.size(); i++)
+		{
+			player->particles[i]->Update();
+			if (player->particles[i]->ShouldEnd())
+			{
+				delete player->particles[i];
+				player->particles.erase(player->particles.begin() + i);
+				i--;
+			}
+		}
+		
 		Vec2 dir = Normalized(game->inputs.mousePosition);
 		float ratio = player->radius / SQRTTWO_F;
 		game->DrawRightTri(player->pos + dir * ratio, vOne * (ratio * 2),
@@ -266,7 +283,7 @@ namespace OnDeaths
 
 namespace ItemUs
 {
-	void WaveModifierU(Item* stack, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void WaveModifierU(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		game->planet->enemies->superWave ^= true;
 		game->entities->push_back(make_unique<FadeOutGlow>(8.f, 3.f, pos, 4.f, stack->color));
@@ -300,9 +317,9 @@ namespace Primaries
 		Item currentShootingItem = player->items.GetCurrentItem();
 		if (currentShootingItem == *dItem || tTime - player->lastPrimary <= currentShootingItem.useTime * player->shootSpeed)
 			return false;
-		player->items[player->items.currentIndex].Use(player->pos, player, player->name, nullptr, 0);
+		player->items[player->items.currentIndex].Use(player->pos, game->inputs.mousePosition, player, player->name, nullptr, 0);
 		player->items.RemoveIfEmpty(player->items.currentIndex);
-		player->lastPrimary = tTime - currentShootingItem.useTime;
+		player->lastPrimary = tTime + player->primaryTime;
 		return false;
 	}
 
@@ -317,13 +334,43 @@ namespace Secondaries
 {
 	bool Bayonet(Player* player)
 	{
-		std::cout << "Bayonet\t";
+		// Temporarily just a shotgun as I've not worked through the code for this yet.
+		Item currentShootingItem = player->items.GetCurrentItem();
+		player->items[player->items.currentIndex].Use(player->pos, game->inputs.mousePosition, player, player->name, nullptr, 0);
+		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
+		player->items[player->items.currentIndex].Use(player->pos, RotateBy(game->inputs.mousePosition,-PI_F * 0.125f), player, player->name, nullptr, 0);
+		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
+		player->items[player->items.currentIndex].Use(player->pos, RotateBy(game->inputs.mousePosition, PI_F * 0.125f), player, player->name, nullptr, 0);
+		if (player->items.RemoveIfEmpty(player->items.currentIndex)) return true;
 		return true;
+	}
+
+	bool TornadoSpinUndo(void* entity, TimedEvent* mEvent)
+	{
+		Player* player = static_cast<Player*>(entity);
+		if (tTime - mEvent->startTime >= 1)
+		{
+			player->vUpdate = VUPDATE::FRICTION;
+			return true;
+		}
+		else if (roundf(tTime * 5) != roundf((tTime - game->dTime) * 5))
+		{
+			vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(player->pos, 3.f);
+			for (Entity* entity : hitEntities)
+				if (entity != player)
+					entity->DealDamage(1, player);
+		}
+		return false;
 	}
 
 	bool TornadoSpin(Player* player)
 	{
-		std::cout << "Tornado spin\t";
+		player->sTime += 0.5f;
+		player->iTime++;
+		player->vUpdate = VUPDATE::ENTITY;
+		player->vel = TryAdd2(player->vel, Normalized(game->inputs.mousePosition), 20.f);
+		player->events.push_back(TimedEvent(TornadoSpinUndo));
+		player->particles.push_back(new TrackCircle(player, 3.f, RGBA(255, 255, 255, 102), 1.f));
 		return true;
 	}
 }
@@ -346,7 +393,7 @@ namespace Utilities
 
 		if (direction == vZeroI)
 			return false;
-		player->vel += Normalized(direction) * TACTICOOL_ROLL_SPEED;
+		player->vel = TryAdd2(player->vel, Normalized(direction) * TACTICOOL_ROLL_SPEED, 20.f);
 		player->iTime++;
 		player->sTime++;
 		return true;
@@ -354,10 +401,11 @@ namespace Utilities
 
 	bool MightyShove(Player* player)
 	{
-#define MIGHTY_SHOVE_DIST 10.f
+#define MIGHTY_SHOVE_DIST 20.f
 #define MIGHTY_SHOVE_SPEED -200.f
 #define MIGHTY_SHOVE_MAX_SPEED 15.f
 		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
+		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 255, 255)));
 		player->iTime++;
 		return true;
 	}

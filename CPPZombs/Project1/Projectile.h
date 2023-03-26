@@ -154,10 +154,10 @@ ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);
 
 namespace ItemUs
 {
-    void ItemU(Item* stack, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+    void ItemU(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(*stack,
-            creator->pos, game->inputs.mousePosition, creator));
+            creator->pos, dir, creator));
         stack->count -= 1;
     }
 }

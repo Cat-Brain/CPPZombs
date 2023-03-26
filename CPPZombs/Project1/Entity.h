@@ -64,6 +64,16 @@ enum class ONDEATH
 vector<function<void(Entity*, Entity*)>> onDeaths;
 #pragma endregion
 
+class TimedEvent
+{
+public:
+	float startTime;
+	std::function<bool(void* entity, TimedEvent* mEvent)> function;
+
+	TimedEvent(std::function<bool(void* entity, TimedEvent* mEvent)> function) :
+		function(function), startTime(tTime) { }
+};
+
 class Entities;
 class Entity
 {

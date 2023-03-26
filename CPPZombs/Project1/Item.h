@@ -7,7 +7,7 @@ enum ITEMU // Item use functions
 	DITEMU, WAVEMODIFIERU
 };
 
-vector<function<void(Item* stack, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
+vector<function<void(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
 
 enum ITEMOD // Item on-deaths
 {
@@ -100,14 +100,14 @@ public:
 		OnDeath(itemOD, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(ITEMU itemU, Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(ITEMU itemU, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemUs[itemU](this, pos, creator, creatorName, callReason, callType);
+		itemUs[itemU](this, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(Vec2 pos, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		Use(baseClass->itemU, pos, creator, creatorName, callReason, callType);
+		Use(baseClass->itemU, pos, dir, creator, creatorName, callReason, callType);
 	}
 };
 Item* dItem = new Item("NULL", "NULL TYPE", 0, RGBA(), 0, 0);

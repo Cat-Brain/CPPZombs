@@ -17,6 +17,36 @@ public:
 	virtual void Update() { }
 };
 
+class Circle : public Particle
+{
+public:
+	float radius;
+	RGBA color;
+
+	Circle(float radius, Vec2 pos, RGBA color, float duration) :
+		Particle(pos, duration), radius(radius), color(color) { }
+
+	void Update() override
+	{
+		game->DrawCircle(pos, color, radius);
+	}
+};
+
+class TrackCircle : public Circle
+{
+public:
+	Entity* entity;
+
+	TrackCircle(Entity* entity, float radius, RGBA color, float duration) :
+		Circle(radius, entity->pos, color, duration), entity(entity) { }
+
+	void Update() override
+	{
+		pos = entity->pos;
+		Circle::Update();
+	}
+};
+
 class VelocityParticle : public Particle
 {
 public:
