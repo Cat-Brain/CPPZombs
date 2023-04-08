@@ -3,6 +3,6 @@ LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; us
   Generating code
   239 of 4982 functions ( 4.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    6 functions had inline decision re-evaluated but remain unchanged
+    21 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

@@ -159,7 +159,7 @@ unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.5f, 32.f, 8.f, 3
 	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
 		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ }));
-unique_ptr<Player> messenger = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 16.f, 8.f, 4.f, 64.f, 8.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> messenger = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 4.f, 64.f, 8.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
 	3, 2, "Messenger", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
 		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
@@ -217,7 +217,7 @@ namespace Updates
 
 			if (player->heldEntity != nullptr)
 				player->heldEntity->vel = TryAdd2(player->heldEntity->vel, Normalized(player->pos + game->inputs.mousePosition3 - player->heldEntity->pos) *
-					game->dTime * player->holdMoveSpeed, player->maxHoldMoveSpeed / player->heldEntity->mass);
+					game->dTime * player->holdMoveSpeed, player->maxHoldMoveSpeed / max(2.f, player->heldEntity->mass));
 
 			if (player->heldEntity == nullptr && game->inputs.middleMouse.pressed &&
 				(hitEntity = game->entities->FirstOverlap(game->inputs.mousePosition3 + player->pos, 0, MaskF::IsCorporeal, player)) != nullptr)
