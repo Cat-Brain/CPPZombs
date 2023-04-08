@@ -5,7 +5,7 @@ class DToCol : public Entity
 public:
 	RGBA color2;
 
-	DToCol(Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
+	DToCol(Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Entity(pos, radius, color, mass, maxHealth, health, name), color2(color2)
 	{
@@ -38,7 +38,7 @@ public:
 	LightSource* lightSource;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		DToCol(pos, radius, color, color2, mass, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
@@ -56,7 +56,7 @@ public:
 			game->entities->darkSources.push_back(std::move(sharedPtr));
 	}
 
-	LightBlock(LightBlock* baseClass, Vec2 pos) :
+	LightBlock(LightBlock* baseClass, Vec3 pos) :
 		LightBlock(*baseClass)
 	{
 		this->pos = pos;
@@ -64,12 +64,12 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = up, Entity* creator = nullptr) override
 	{
 		return make_unique<LightBlock>(this, pos);
 	}
 
-	void SetPos(Vec2 newPos) override
+	void SetPos(Vec3 newPos) override
 	{
 		DToCol::SetPos(newPos);
 		lightSource->pos = pos;
@@ -118,7 +118,7 @@ public:
 	TUPDATE tUpdate;
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
@@ -127,7 +127,7 @@ public:
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock(float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
@@ -153,7 +153,7 @@ public:
 	TUPDATE tUpdate;
 	float timePer, timeSince;
 
-	FunctionalBlock2(float timePer, Vec2 pos = Vec2(0, 0), float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{
@@ -162,7 +162,7 @@ public:
 		Start();
 	}
 
-	FunctionalBlock2(float timePer, float offset, iVec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock2(float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
 	{

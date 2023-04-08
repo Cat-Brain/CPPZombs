@@ -7,11 +7,12 @@ public:
     int damage;
     float speed, begin;
     int callType = 0;
+    bool shouldCollide;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
-        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false) :
+        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true) :
         Entity(vZero, radius, color, mass, maxHealth, health, name),
-        duration(duration), damage(damage), speed(speed), begin(tTime)
+        duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide)
     {
         update = UPDATE::PROJECTILE;
         isProjectile = true;
@@ -20,45 +21,24 @@ public:
         Start();
     }
 
-    Projectile(Projectile* baseClass, Vec2 pos, Vec2 dir, Entity* creator) :
+    Projectile(Projectile* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
         Projectile(*baseClass)
     {
         this->creator = creator;
-        this->dir = Normalized(Vec2(dir));
+        this->dir = Normalized(dir);
         this->pos = pos;
         begin = tTime;
         Start();
     }
 
-    unique_ptr<Entity> Clone(Vec2 pos, Vec2 direction, Entity* creator) override
+    unique_ptr<Entity> Clone(Vec3 pos, Vec3 direction, Entity* creator) override
     {
         return make_unique<Projectile>(this, pos, direction, creator);
     }
 
-    bool CheckPos(Entity*& hitEntity)
-    {
-        vector<Entity*> hitEntities = game->entities->FindCorpOverlaps(pos, radius);
-
-        for (Entity* entity : hitEntities)
-        {
-            if (entity == creator || entity == this)
-                continue;
-
-            hitEntity = entity;
-            Vec2 hitPos = hitEntity->pos;
-            if (entity->DealDamage(damage, this) == 1)
-            {
-                SetPos(hitPos);
-                hitEntity = nullptr;
-            }
-            return true;
-        }
-        return false;
-    }
-
     virtual void MovePos()
     {
-        TryMove(dir * game->dTime * speed);
+        SetPos(pos + dir * game->dTime * speed);
     }
 };
 
@@ -71,26 +51,23 @@ namespace Updates
         if (tTime - projectile->begin >= projectile->duration / projectile->speed)
             return projectile->DestroySelf(projectile);
 
-        // Change to looking at other more custom variable that can be stored in item better.
-        if (projectile->corporeal)
+        if (!projectile->shouldCollide)
             return projectile->MovePos();
 
-        Entity* entity;
+        int result;
 
-        if (projectile->CheckPos(entity))
+        if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsCorporealNotCreator, projectile)) != 0)
         {
-            projectile->callType = 1 + int(entity == nullptr);
-            projectile->DestroySelf(entity);
+            projectile->callType = 1 + int(result == 3);
+            projectile->DestroySelf(nullptr);
             return;
         }
-        Vec2 oldPos = projectile->pos;
+        Vec3 oldPos = projectile->pos;
         projectile->MovePos();
-        if (oldPos != projectile->pos && projectile->CheckPos(entity))
+        if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsCorporealNotCreator, projectile)) != 0)
         {
-            if (entity != nullptr)
-                projectile->SetPos(oldPos);
-            projectile->callType = 1 + int(entity == nullptr);
-            projectile->DestroySelf(entity);
+            projectile->callType = 1 + int(result == 3);
+            projectile->DestroySelf(nullptr);
         }
     }
 }
@@ -108,7 +85,7 @@ public:
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Item item, Vec2 pos, Vec2 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, Item item, Vec3 pos, Vec3 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->creator = creator;
@@ -122,6 +99,7 @@ public:
         color = item.color;
         mass = item.mass;
         corporeal = item.corporeal;
+        shouldCollide = item.shouldCollide;
         radius = item.radius;
         health = item.health;
             name = item.name;
@@ -130,7 +108,7 @@ public:
         Start();
     }
 
-    unique_ptr<Entity> Clone(Item baseItem, Vec2 pos, Vec2 direction, Entity* creator)
+    unique_ptr<Entity> Clone(Item baseItem, Vec3 pos, Vec3 direction, Entity* creator)
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }
@@ -154,7 +132,7 @@ ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);
 
 namespace ItemUs
 {
-    void ItemU(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+    void ItemU(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(*stack,
             creator->pos, dir, creator));

@@ -1,11 +1,27 @@
 #include "Player.h"
 
+Chunk::Chunk(iVec3 pos) :
+	vector{}, pos(pos)
+{
+	memset(tiles, 0, CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
+	for (int x = 0; x < CHUNK_WIDTH; x++)
+		for (int y = 0; y < CHUNK_WIDTH; y++)
+		{
+			float noise = game->planet->worldNoise.GetNoise(float(pos.x + x), float(pos.y + y));
+			tiles[x][y][0] = UnEnum(noise > 0 ? TILE::ROCK : noise > -0.25f ? TILE::SAND : noise > -0.5f ?
+				TILE::BAD_SOIL : noise > -0.75f ? TILE::MID_SOIL : TILE::MAX_SOIL);
+			tiles[x][y][1] = UnEnum(noise < 0.5f ? TILE::AIR : noise < 0.75f ? TILE::HIGH_ROCK : TILE::SNOW);
+			//if (rand() % 1024 == 0)
+			//	game->entities->DelayedPushBack(make_unique<Collectible>(Resources::Eggs::kiwiEgg->Clone(1), Vec2(pos + iVec2(pos.x, pos.y))));
+		}
+}
+
 Planet::Planet()
 {
 	worldNoise.SetFrequency(0.01f);
-	//worldNoise.SetFractalLacunarity(2.0f);
-	//worldNoise.SetFractalGain(0.5f);
-	//worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
+	worldNoise.SetFractalLacunarity(1.0f);
+	worldNoise.SetFractalGain(0.25f);
+	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
 	worldNoise.SetSeed(static_cast<int>(time(NULL)));
 
 	friction = RandFloat() * 10 + 5;
@@ -52,6 +68,13 @@ void Game::Start()
 	entities = make_unique<Entities>();
 	unique_ptr<Player> playerUnique = characters[selectedCharacter]->PClone();
 	player = playerUnique.get();
+	for (int i = 0; i < 10000; i++)
+	{
+		if (!entities->OverlapsTile(player->pos, player->radius))
+			break;
+		else
+			player->pos.x++;
+	}
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -277,7 +300,7 @@ void Game::TUpdate()
 	inputs.FindMousePos(window, zoom);
 
 	screenShake *= powf(0.25f, game->dTime);
-	screenOffset = Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake;
+	screenOffset = Vec3(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f), 0) * screenShake;
 
 	zoom = ClampF(zoom + float(int(inputs.e.held) - int(inputs.q.held)) * dTime * zoomSpeed, minZoom, maxZoom);
 

@@ -7,13 +7,13 @@ struct Key
 
 struct Inputs
 {
-	Key w, a, s, d,
+	Key up, left, down, right, crouch, // <- Movement keys
 		enter, c, q, e, escape, space, shift,
-		up, left, down, right,
-		leftMouse, rightMouse, middleMouse,
-		comma, period, slash; // <- Command keys.
+		leftMouse, rightMouse, middleMouse, // <- Mouse buttons
+		comma, period, slash, phase; // <- Command keys.
 	int mouseScroll = 0;
 	Vec2 mousePosition = vZero, screenMousePosition = vZero;
+	Vec3 mousePosition3 = vZero; // <- Just mousePosition but with a 0 for the z value.
 
 	Inputs() = default;
 
@@ -48,17 +48,18 @@ struct Inputs
 		key.held = held;
 	}
 
+	Vec3 MoveDir()
+	{
+		return Normalized(Vec3(float(right.held) - float(left.held), float(up.held) - float(down.held), 0));
+	}
+
 	void Update(GLFWwindow* window)
 	{
-		UpdateKey(window, w, GLFW_KEY_W);
-		UpdateKey(window, a, GLFW_KEY_A);
-		UpdateKey(window, s, GLFW_KEY_S);
-		UpdateKey(window, d, GLFW_KEY_D);
-
-		UpdateKey(window, up, GLFW_KEY_UP);
-		UpdateKey(window, left, GLFW_KEY_LEFT);
-		UpdateKey(window, down, GLFW_KEY_DOWN);
-		UpdateKey(window, right, GLFW_KEY_RIGHT);
+		UpdateKey(window, up, GLFW_KEY_W);
+		UpdateKey(window, left, GLFW_KEY_A);
+		UpdateKey(window, down, GLFW_KEY_S);
+		UpdateKey(window, right, GLFW_KEY_D);
+		UpdateKey(window, crouch, GLFW_KEY_Z);
 
 		UpdateKey(window, enter, GLFW_KEY_ENTER);
 		UpdateKey(window, c, GLFW_KEY_C);
@@ -88,6 +89,7 @@ struct Inputs
 		yPos *= zoom * 2;
 		mousePosition.x = static_cast<float>(xPos - zoom * screenRatio);
 		mousePosition.y = static_cast<float>(yPos - zoom);
+		mousePosition3 = Vec3(mousePosition, 0);
 	}
 };
 

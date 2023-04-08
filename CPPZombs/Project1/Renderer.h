@@ -136,7 +136,7 @@ public:
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
-	Vec2 screenOffset = vZero;
+	Vec3 screenOffset = Vec3(0);
 
 	Renderer() { }
 
@@ -188,7 +188,7 @@ public:
 		DrawFBL(pos - dimensions / 2.f, color, dimensions);
 	}
 
-	inline void DrawCircle(Vec2 pos, RGBA color, float radius = 1)
+	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
 		glUseProgram(circleShader);
 		radius /= zoom;
@@ -203,7 +203,7 @@ public:
 		screenSpaceQuad.Draw();
 	}
 
-	inline void DrawChunk(Vec2 pos, Vec2 dim)
+	inline void DrawChunk(Vec3 pos, Vec2 dim)
 	{
 		glUseProgram(chunkShader);
 		dim /= zoom;
@@ -216,7 +216,7 @@ public:
 		quad.Draw();
 	}
 
-	inline void DrawRightTri(Vec2 pos, Vec2 scale, float rotation, RGBA color)
+	inline void DrawRightTri(Vec3 pos, Vec2 scale, float rotation, RGBA color)
 	{
 		glUseProgram(triangleShader);
 		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
@@ -235,7 +235,7 @@ public:
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
 	{
-		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - PlayerPos()) * 2.f) / Vec2(mainScreen->ScrDim()) * Vec2(ScrDim())), scale, color);
+		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - Vec2(PlayerPos())) * 2.f) / Vec2(mainScreen->ScrDim()) * Vec2(ScrDim())), scale, color);
 	}
 
 	void DrawTextured(Texture& texture, uint spriteToDraw, iVec2 pos, RGBA color, iVec2 dimensions = vOne)
@@ -272,35 +272,28 @@ public:
 		quad.Draw();
 	}
 
-	void DrawLine(Vec2 a, Vec2 b, RGBA color)
+	inline void DrawLine(Vec3 a, Vec3 b, RGBA color, float thickness)
 	{
+		glLineWidth(thickness / zoom * trueScreenHeight);
 		glUseProgram(lineShader);
 		a -= PlayerPos() + screenOffset;
-		a.x /= screenRatio;
-		a /= zoom;
 
 		b -= PlayerPos() + screenOffset;
-		b.x /= screenRatio;
-		b /= zoom;
 		glUniform2f(glGetUniformLocation(lineShader, "a"), a.x, a.y);
 		glUniform2f(glGetUniformLocation(lineShader, "b"), b.x, b.y);
+		glUniform2f(glGetUniformLocation(lineShader, "screenDim"), zoom * screenRatio, zoom);
+		glUniform1f(glGetUniformLocation(lineShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(lineShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-		line.Draw();
+		quad.Draw();
 	}
 
-	inline void DrawLineThick(Vec2 a, Vec2 b, RGBA color, float thickness)
-	{
-		glLineWidth(thickness / zoom * trueScreenHeight);
-		DrawLine(a, b, color);
-	}
-
-	void DrawLight(Vec2 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
+	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
 
-		Vec2 scrPos = pos - PlayerPos() - screenOffset;
+		Vec3 scrPos = pos - PlayerPos() - screenOffset;
 		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
 			range / (zoom * 0.5f * screenRatio), range / (zoom * 0.5f));
 
@@ -339,9 +332,9 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec2 PlayerPos() // The position of the player in normal coordinates.
+	inline virtual Vec3 PlayerPos() // The position of the player in normal coordinates.
 	{
-		return vZero;
+		return Vec3(0);
 	}
 
 	bool IsFullscreen()

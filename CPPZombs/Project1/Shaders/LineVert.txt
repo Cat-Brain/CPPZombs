@@ -1,9 +1,16 @@
 #version 330 core
 layout (location = 0) in vec2 aPos;
 
-uniform vec2 a, b;
+uniform vec2 a, b, screenDim;
+uniform float thickness;
+out vec2 dir;
+out float dist;
 
 void main()
 {
-	gl_Position = vec4(a * aPos.x + b * aPos.y, 0.0, 1.0);
+	dir = b - a;
+	dir = normalize(vec2(dir.y, -dir.x));
+	vec2 pos = a + aPos.x * (b - a) + (aPos.y * 2 - 1) * dir * thickness;
+	gl_Position = vec4(pos / screenDim, 0.0, 1.0);
+	dist = aPos.y * 2.0 - 1.0;
 } 

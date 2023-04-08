@@ -2,21 +2,21 @@
 
 class Item;
 
-enum ITEMU // Item use functions
+enum class ITEMU // Item use functions
 {
-	DITEMU, WAVEMODIFIERU
+	DEFAULT, WAVEMODIFIER
 };
 
-vector<function<void(Item* stack, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
+vector<function<void(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
 
-enum ITEMOD // Item on-deaths
+enum class ITEMOD // Item on-deaths
 {
-	DITEMOD, GONEONLANDITEMOD, PLACEDONLANDINGOD, CORRUPTONKILLOD, EXPLODEONLANDINGOD, IMPROVESOILONLANDINGOD, SETTILEONLANDINGOD
+	DEFAULT, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, EXPLODEONLANDING, IMPROVESOILONLANDING, SETTILEONLANDING
 };
 
-vector<function<void(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
+vector<function<void(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 
-enum PROJMOVE // The movements of projectile
+enum class PROJMOVE // The movements of projectile
 {
 	DEFAULT, HOMING
 };
@@ -42,12 +42,12 @@ public:
 
 	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
 		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		itemU(ITEMU::DITEMU), itemOD(ITEMOD::DITEMOD), maxStack(99999), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
+		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
 		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
 		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		itemU(ITEMU::DITEMU), itemOD(ITEMOD::DITEMOD), maxStack(99999), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
+		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
 		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	virtual Item Clone(int count)
@@ -90,22 +90,22 @@ public:
 		return typeName[0] < b.typeName[0];
 	}
 
-	void OnDeath(ITEMOD itemOD, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ITEMOD itemOD, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemODs[itemOD](this, pos, dir, creator, creatorName, callReason, callType);
+		itemODs[UnEnum(itemOD)](this, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void OnDeath(Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		OnDeath(itemOD, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(ITEMU itemU, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(ITEMU itemU, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemUs[itemU](this, pos, dir, creator, creatorName, callReason, callType);
+		itemUs[UnEnum(itemU)](this, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		Use(baseClass->itemU, pos, dir, creator, creatorName, callReason, callType);
 	}
@@ -119,14 +119,14 @@ public:
 		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
-		itemOD = ITEMOD::GONEONLANDITEMOD;
+		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	GoneOnLandItem(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
 		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
-		itemOD = ITEMOD::GONEONLANDITEMOD;
+		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	Item Clone(int count) override

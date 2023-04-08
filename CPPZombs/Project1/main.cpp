@@ -17,13 +17,17 @@ int main()
 	for (int i = 0; i < Plants::plants.size(); i++)
 		Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
 
+	for (int i = 0; i < Livestock::livestocks.size(); i++)
+		Livestock::livestocks[i]->birthEntity = Livestock::livestockBirths[i];
+
 #pragma region Virtaul functions
 #pragma region Update functions
 	{
 		using namespace Updates;
 		using namespace Enemies::Updates;
+		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, PlayerU };
+		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU };
 	}
 	{
 		using namespace VUpdates;
@@ -32,18 +36,19 @@ int main()
 	{
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, SnakeDU, ColorCyclerDU,
-		PouncerDU, CatDU, CataclysmDU, PlayerDU };
+		using namespace Livestock::DUpdates;
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, SnakeConnectedDU, ColorCyclerDU,
+		PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU };
 	}
 	{
 		using namespace EDUpdates;
 		using namespace Enemies::EDUpdates;
-		eDUpdates = { EntityEDU, SnakeEDU, SpiderEDU };
+		eDUpdates = { EntityEDU, SnakeEDU, SnakeConnectedEDU, SpiderEDU };
 	}
 	{
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
-		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU };
+		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU };
 	}
 
 	{
@@ -53,7 +58,7 @@ int main()
 
 	{
 		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, TankMU };
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, TankMU };
 	}
 	{
 		using namespace Enemies::AUpdates;
@@ -79,8 +84,9 @@ int main()
 		
 		using namespace OnDeaths;
 		using namespace Enemies::OnDeaths;
-		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD, VacuumerOD,
-		SpiderOD, CenticrawlerOD, PlayerOD };
+		using namespace Livestock::OnDeaths;
+		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
+			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD };
 
 		using namespace OverlapFuns;
 		overlapFuns = { EntityOF };

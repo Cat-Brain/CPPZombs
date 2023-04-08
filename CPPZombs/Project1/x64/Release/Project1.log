@@ -1,12 +1,7 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(75,34): warning C4244: '=': conversion from 'float' to '_Ty', possible loss of data
-          with
-          [
-              _Ty=byte
-          ]
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  226 of 4544 functions ( 5.0%) were compiled, the rest were copied from previous compilation.
+  239 of 4982 functions ( 4.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     6 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

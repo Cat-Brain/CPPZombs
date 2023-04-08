@@ -26,7 +26,7 @@ public:
 		tUpdate = TUPDATE::TREE;
 	}
 
-	Tree(Tree* baseClass, Vec2 dir, Vec2 pos) :
+	Tree(Tree* baseClass, Vec3 dir, Vec3 pos) :
 		Tree(*baseClass)
 	{
 		this->pos = pos;
@@ -34,7 +34,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Tree>(this, dir, pos);
 	}
@@ -63,7 +63,7 @@ namespace DUpdates
 		{
 			Collectible* collectible = tree->nextSpawnSeed ? tree->seed : tree->collectible;
 			float collectibleRadius = collectible->radius * tree->timeSince / tree->timePer;
-			game->DrawCircle(tree->pos + (tree->radius + collectibleRadius) * CircPoint(tree->nextPlacementRotation), collectible->color, collectibleRadius);
+			game->DrawCircle(tree->pos + (tree->radius + collectibleRadius) * CircPoint(tree->nextPlacementRotation, 0.f), collectible->color, collectibleRadius);
 			tree->color = tree->adultColor;
 		}
 		tree->DUpdate(DUPDATE::ENTITY);
@@ -100,7 +100,7 @@ public:
 		timeSince = timePer * RandFloat();
 	}
 
-	Vine(Vine* baseClass, Vec2 dir, Vec2 pos) :
+	Vine(Vine* baseClass, Vec3 dir, Vec3 pos) :
 		Vine(*baseClass)
 	{
 		this->pos = pos;
@@ -109,7 +109,7 @@ public:
 		Start();
 	}
 
-	unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = vZero, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
 	{
 		return make_unique<Vine>(this, dir, pos);
 	}
@@ -143,9 +143,9 @@ namespace TUpdates
 		if (tree->currentLifespan >= tree->cyclesToGrow && tree->currentLifespan < tree->deadStage)
 		{
 			if (tree->nextSpawnSeed)
-				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->radius + tree->seed->radius) * CircPoint(tree->nextPlacementRotation)));
+				game->entities->push_back(tree->seed->Clone(tree->pos + (tree->radius + tree->seed->radius) * CircPoint(tree->nextPlacementRotation, 0.f)));
 			else
-				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->radius + tree->collectible->radius) * CircPoint(tree->nextPlacementRotation)));
+				game->entities->push_back(tree->collectible->Clone(tree->pos + (tree->radius + tree->collectible->radius) * CircPoint(tree->nextPlacementRotation, 0.f)));
 		}
 		tree->currentLifespan++;
 		tree->nextPlacementRotation = RandFloat() * 2 * PI_F;
@@ -156,8 +156,8 @@ namespace TUpdates
 	bool VineTU(Entity* entity)
 	{
 		Vine* vine = static_cast<Vine*>(entity);
-		Vec2 placementPos = vine->pos + vine->radius * 2 * CircPoint(vine->nextPlacementRotation);
-		if (vine->generation >= vine->maxGenerations || game->entities->FindCorpOverlaps(placementPos, vine->radius - 0.01f).size())
+		Vec3 placementPos = vine->pos + vine->radius * 2 * CircPoint(vine->nextPlacementRotation, 0.f);
+		if (vine->generation >= vine->maxGenerations || game->entities->OverlapsAny(placementPos, vine->radius - 0.01f, MaskF::IsCorporeal, vine))
 			vine->currentLifespan = vine->deadStage;
 		if (vine->currentLifespan >= vine->cyclesToGrow && vine->currentLifespan < vine->deadStage)
 		{

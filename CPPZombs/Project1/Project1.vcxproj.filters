@@ -110,6 +110,9 @@
     <ClInclude Include="Chunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Livestock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc">

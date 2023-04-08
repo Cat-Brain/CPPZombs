@@ -48,7 +48,7 @@ public:
 
 	void End() override;
 
-	inline Vec2 PlayerPos() override;
+	inline Vec3 PlayerPos() override;
 
 	void ApplyLighting();
 

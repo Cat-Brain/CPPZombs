@@ -5,7 +5,7 @@ class Collectible : public Entity
 public:
 	Item baseItem;
 
-	Collectible(Item baseItem, Vec2 pos = Vec2(0)) :
+	Collectible(Item baseItem, Vec3 pos = vZero) :
 		Entity(pos, baseItem.radius, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
@@ -13,7 +13,7 @@ public:
 		vUpdate = VUPDATE::FRICTION;
 	}
 
-	Collectible(Item baseItem, Vec2 pos, RGBA color) :
+	Collectible(Item baseItem, Vec3 pos, RGBA color) :
 		Entity(pos, baseItem.radius, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
 		corporeal = false;
@@ -21,9 +21,9 @@ public:
 		vUpdate = VUPDATE::FRICTION;
 	}
 
-	Collectible(Collectible* baseClass, Vec2 pos) : Collectible(*baseClass) { this->pos = pos; }
+	Collectible(Collectible* baseClass, Vec3 pos) : Collectible(*baseClass) { this->pos = pos; }
 
-	unique_ptr<Entity> Clone(Vec2 pos = Vec2(0), Vec2 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = Vec3(0), Vec3 dir = up, Entity* creator = nullptr) override
 	{
 		return make_unique<Collectible>(this, pos);
 	}

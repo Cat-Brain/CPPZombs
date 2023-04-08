@@ -7,7 +7,7 @@
 enum class UPDATE // Update
 {
 	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, VACUUMER, SPIDER,
-	CENTICRAWLER, POUNCER, CAT, CATACLYSM, PLAYER
+	CENTICRAWLER, POUNCER, CAT, CATACLYSM, EGG, KIWI, PLAYER
 };
 
 vector<function<void(Entity*)>> updates;
@@ -21,22 +21,22 @@ vector<function<void(Entity*)>> vUpdates;
 
 enum class DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, SNAKE, COLORCYCLER, POUNCER, CAT,
-	CATACLYSM, PLAYER
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT,
+	CATACLYSM, TANK, KIWI, PLAYER
 };
 
 vector<function<void(Entity*)>> dUpdates;
 
 enum class EDUPDATE // Early Draw Update
 {
-	ENTITY, SNAKE, SPIDER
+	ENTITY, SNAKE, SNAKECONNECTED, SPIDER
 };
 
 vector<function<void(Entity*)>> eDUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
-	ENTITY, TREE, VINE, ENEMY
+	ENTITY, TREE, VINE, ENEMY, SNAKECONNECTED
 };
 
 vector<function<void(Entity*)>> uiUpdates;
@@ -46,7 +46,7 @@ enum class OVERLAPFUN
 	ENTITY
 };
 
-vector<function<bool(Entity*, Vec2, float)>> overlapFuns;
+vector<function<bool(Entity*, Vec3, float)>> overlapFuns;
 
 enum OVERLAPRES // Overlap resolutions
 {
@@ -57,8 +57,8 @@ vector<function<void(Entity*, Entity*)>> overlapRes; // Overlap resolutions.
 
 enum class ONDEATH
 {
-	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, VINE, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, VACUUMER, SPIDER,
-	CENTICRAWLER, PLAYER
+	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, VINE, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
+	CENTICRAWLER, KIWI, PLAYER
 };
 
 vector<function<void(Entity*, Entity*)>> onDeaths;
@@ -87,9 +87,9 @@ public:
 	OVERLAPFUN overlapFun;
 	Entity* baseClass;
 	Entity* creator;
-	Entity* holder = nullptr, *heldEntity = nullptr;
+	vector<Entity*> observers{};
 	string name;
-	Vec2 pos, vel, dir;
+	Vec3 pos, lastPos, vel, dir;
 	float radius;
 	RGBA color;
 	float mass;
@@ -98,16 +98,16 @@ public:
 	int sortLayer = 0;
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
-	Entity(Vec2 pos = Vec2(0), float radius = 0.5f, RGBA color = RGBA(),
+	Entity(Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		pos(pos), vel(0), dir(0), radius(radius), color(color),
+		pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITY), vUpdate(VUPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY),
 		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY), overlapFun(OVERLAPFUN::ENTITY)
 	{
 	}
 
-	Entity(Entity* baseClass, Vec2 pos):
+	Entity(Entity* baseClass, Vec3 pos):
 		Entity(*baseClass)
 	{
 		this->pos = pos;
@@ -115,16 +115,16 @@ public:
 		Start();
 	}
 
-	virtual unique_ptr<Entity> Clone(Vec2 pos = vZero, Vec2 dir = up, Entity* creator = nullptr)
+	virtual unique_ptr<Entity> Clone(Vec3 pos = Vec3(0), Vec3 dir = Vec3(0, 1, 0), Entity* creator = nullptr)
 	{
 		return make_unique<Entity>(this, pos);
 	}
 
 	virtual void Start() { }
 
-	void Draw(Vec2 pos)
+	void Draw(Vec3 pos)
 	{
-		Vec2 tempPos = this->pos;
+		Vec3 tempPos = this->pos;
 		this->pos = pos;
 		DUpdate();
 		this->pos = tempPos;
@@ -188,7 +188,7 @@ public:
 
 	Vec2 BottomLeft() // Not always accurate.
 	{
-		return (pos - game->PlayerPos() + Vec2(radius, -radius)) * (trueScreenHeight / game->zoom);
+		return (pos - game->PlayerPos() + Vec3(radius, -radius, -radius)) * (trueScreenHeight / game->zoom);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, float boarderWidth, string text, RGBA textColor,
@@ -196,24 +196,24 @@ public:
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth);
 		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
-		font.Render(text, bottomLeft + boarderWidth + down * (font.mininumVertOffset / 2.f), static_cast<float>(COMMON_TEXT_SCALE), textColor);
+		font.Render(text, bottomLeft + boarderWidth + down2 * (font.mininumVertOffset / 2.f), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
-	virtual void SetPos(Vec2 newPos);
+	virtual void SetPos(Vec3 newPos);
 	virtual void SetRadius(float newRadius);
-
-	virtual bool TryMove(Vec2 direction); // returns index of hit item.
 
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 
-	bool Overlaps(Vec2 pos, float radius)
+	bool Overlaps(Vec3 pos, float radius)
 	{
 		return overlapFuns[UnEnum(overlapFun)](this, pos, radius);
 	}
 
 	void UpdateCollision();
+
+	virtual void UnAttach(Entity* entity) { }
 };
 
 
@@ -221,7 +221,41 @@ public:
 
 #pragma region Other Entity funcitons
 
-vector<Entity*> EntitiesOverlaps(Vec2 pos, float radius, vector<Entity*> entities)
+namespace MaskF
+{
+	bool IsCorporeal(Entity* from, Entity* to)
+	{
+		return from != to && to->corporeal;
+	}
+
+	bool IsCorporealNotCreator(Entity* from, Entity* to)
+	{
+		return from != to && from->creator != to && to->corporeal;
+	}
+
+	bool IsNonEnemy(Entity* from, Entity* to)
+	{
+		return !to->isEnemy && from != to && to->corporeal;
+	}
+
+	bool IsSameType(Entity* from, Entity* to)
+	{
+		return to->baseClass == from->baseClass && from != to && to->corporeal;
+	}
+}
+
+bool BoxCircleOverlap(Vec3 cPos, float radius, Vec3 bPos, Vec3 bDim)
+{
+	Vec3 difference = cPos - bPos;
+	Vec3 clamped = glm::clamp(difference, -bDim, bDim);
+	// add clamped value to AABB_center and we get the value of box closest to circle
+	Vec3 closest = bPos + clamped;
+	// retrieve vector between center circle and closest point AABB and check if length <= radius
+	difference = closest - cPos;
+	return glm::length2(difference) < radius * radius;
+}
+
+vector<Entity*> EntitiesOverlaps(Vec3 pos, float radius, vector<Entity*> entities)
 {
 	vector<Entity*> foundEntities(0);
 	for (vector<Entity*>::iterator i = entities.begin(); i != entities.end(); i++)
@@ -239,7 +273,7 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec2 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
+	FadeOut(float totalFadeTime = 1.0f, Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA()) :
 		Entity(pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
 		update = UPDATE::FADEOUT;
@@ -268,13 +302,15 @@ namespace VUpdates
 {
 	void EntityVU(Entity* entity)
 	{
-		entity->TryMove(entity->vel * game->dTime);
+		entity->lastPos = entity->pos;
+		entity->SetPos(entity->pos + entity->vel * game->dTime);
 	}
 
 	void FrictionVU(Entity* entity)
 	{
-		entity->TryMove(entity->vel * game->dTime);
-		entity->vel = FromTo(entity->vel, vZero, game->dTime * game->planet->friction);
+		entity->lastPos = entity->pos;
+		entity->SetPos(entity->pos + entity->vel * game->dTime);
+		entity->vel = FromTo(entity->vel, Vec3(0), game->dTime * game->planet->friction);
 	}
 }
 
@@ -308,10 +344,9 @@ namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
 
 namespace OverlapFuns
 {
-	bool EntityOF(Entity* entity, Vec2 pos, float radius)
+	bool EntityOF(Entity* entity, Vec3 pos, float radius)
 	{
 		return glm::length2(entity->pos - pos) < (entity->radius + radius) * (entity->radius + radius);
-		//return labs(entity->pos.x - pos.x) < float(entity->dimensions.x + dimensions.x) / 2 && labs(entity->pos.y - pos.y) < float(entity->dimensions.y + dimensions.y) / 2;
 	}
 }
 
@@ -322,7 +357,7 @@ namespace OverlapRes
 		float dist = glm::length(b->pos - a->pos);
 
 		// Compute unit normal and unit tangent vectors
-		Vec2 v_un = Normalized(b->pos - a->pos); // unit normal vector
+		Vec3 v_un = Normalized(b->pos - a->pos); // unit normal vector
 
 		// Compute scalar projections of velocities onto v_un and v_ut
 		float v1n = glm::dot(v_un, a->vel); // Dot product
@@ -332,14 +367,14 @@ namespace OverlapRes
 		a->vel = v_un * (v1n * (a->mass - b->mass) + 2.f * b->mass * v2n) / (a->mass + b->mass);
 		b->vel = v_un * (v2n * (b->mass - a->mass) + 2.f * a->mass * v1n) / (b->mass + a->mass);
 
-		Vec2 multiplier = (b->pos - a->pos) * (1.01f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
+		Vec3 multiplier = (b->pos - a->pos) * (1.01f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
 		a->SetPos(a->pos + multiplier * b->mass);
 		b->SetPos(b->pos - multiplier * a->mass);
 	}
 }
 
 
-Vec2 Game::PlayerPos()
+Vec3 Game::PlayerPos()
 {
 	return ((Entity*)player)->pos;
 }
