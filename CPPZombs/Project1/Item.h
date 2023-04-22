@@ -11,7 +11,7 @@ vector<function<void(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string cr
 
 enum class ITEMOD // Item on-deaths
 {
-	DEFAULT, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, EXPLODEONLANDING, IMPROVESOILONLANDING, SETTILEONLANDING
+	DEFAULT, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, EXPLODEONLANDING, UPEXPLODEONLANDING, IMPROVESOILONLANDING, SETTILEONLANDING
 };
 
 vector<function<void(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
@@ -41,12 +41,12 @@ public:
 	int health;
 
 	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
 		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
 	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
 		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
 
@@ -116,14 +116,14 @@ class GoneOnLandItem : public Item
 {
 public:
 	GoneOnLandItem(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
 
 	GoneOnLandItem(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
@@ -249,7 +249,7 @@ public:
 			return;
 		int height = ScrHeight();
 		float scale = height / (3.0f * max(8, int(size()))), scale2 = scale / 5.0f;
-		iVec2 offset = vZeroI - ScrDim();
+		iVec2 offset = vZeroI2 - ScrDim();
 		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex].color, Vec2(scale, scale));
 		for (int i = 0; i < size(); i++)
 		{

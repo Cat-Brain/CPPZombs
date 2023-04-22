@@ -1,17 +1,44 @@
 #version 330 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 normal;
+layout (location = 2) out vec4 position;
 
-uniform vec4 color;
+uniform vec4 color, posScale;
 
-in vec2 pos;
+in vec3 tPos;
+
+/*vec2 RaySphere(vec3 sphereCenter, float radius, vec3 rayDir)
+{
+	vec3 rayDir = normalize(sphereCenter);
+	float b = 2 * dot(-sphereCenter, rayDir);
+	float c = dot(sphereCenter, sphereCenter) - sphereRadius * sphereRadius;
+	float d = b * b - 4 * c; // Discriminant from quadratic formula.
+
+	if (d > 0)
+	{
+		float s = sqrt(d);
+		float dstToSphereNear = max(0, (-s - b) * 0.5);
+		float dstToSphereFar = (s - b) * 0.5;
+		if (dstToSpherFar >= 0) // d < b * b
+			return vec2(dstToSphereNear, dstToSphereFar);
+	}
+	return vec2(-999, -999);
+}*/
 
 void main()
 {
-	// Don't draw if you're outside of the bounds of the circle, this is done as the mesh will always overdraw.
-	if (dot(pos, pos) > 1) discard;
-	FragColor = color;
+	vec3 dir = normalize(tPos);
+	float b = 2 * dot(-posScale.xyz, dir);
+	float c = dot(posScale.xyz, posScale.xyz) - posScale.w * posScale.w;
+	float d = b * b - 4 * c; // Discriminant from quadratic formula.
 
-	// Normal calculation is sort of weird and probably not accurate:
-	normal = vec4(pos.x, pos.y, sqrt(1. - pos.x * pos.x - pos.y * pos.y), color.a);
+	if (d <= 0) discard;
+	float s = sqrt(d);
+	float dstToSphereNear = max(0, (-s - b) * 0.5);
+
+
+	position = vec4(dir * dstToSphereNear, color.a);
+	FragColor = color;
+	
+	normal = vec4(normalize(position.xyz - posScale.xyz), color.a);
 } 

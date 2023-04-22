@@ -24,6 +24,7 @@ public:
 	vector<unique_ptr<LightSource>> lightSources;
 	vector<unique_ptr<LightSource>> darkSources;
 	vector<unique_ptr<Particle>> particles;
+	vector<Entity*> toDelEntities;
 	vector<unique_ptr<Entity>> toAddEntities;
 	vector<Chunk> chunks;
 	vector<Chunk*> renderedChunks;
@@ -32,6 +33,11 @@ public:
 		vector(0), addedEntity(false), index(0)
 	{
 		Chunk::Init();
+	}
+
+	void DelayedDestroy(Entity* entity)
+	{
+		toDelEntities.push_back(entity);
 	}
 
 	void DelayedPushBack(unique_ptr<Entity> entity)
@@ -85,30 +91,32 @@ public:
 		return &chunks[ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH)];
 	}
 
-	vector<int> MainChunkOverlaps(iVec2 minPos, iVec2 maxPos) // In chunk coords, do NOT plug in normal space coords.
+	vector<int> MainChunkOverlaps(iVec3 minPos, iVec3 maxPos) // In chunk coords, do NOT plug in normal space coords.
 	{
-		vector<int> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
+		vector<int> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1) * (maxPos.z - minPos.z + 1));
 		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
-				result[i++] = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, 0));
+				for (int z = minPos.z; z <= maxPos.z; z++)
+					result[i++] = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
 		return result;
 	}
 
-	vector<int> FindCreateChunkOverlapsMain(iVec2 minPos, iVec2 maxPos) // A safer version of MainChunksOveraps.
+	vector<int> FindCreateChunkOverlapsMain(iVec3 minPos, iVec3 maxPos) // A safer version of MainChunksOveraps.
 	{
-		vector<int> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1));
+		vector<int> result((maxPos.x - minPos.x + 1) * (maxPos.y - minPos.y + 1) * (maxPos.z - minPos.z + 1));
 		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
-			{
-				int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, 0));
-				if (chunk != -1)
+				for (int z = minPos.z; z <= maxPos.z; z++)
 				{
-					result[i++] = chunk;
-					continue;
+					int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
+					if (chunk != -1)
+					{
+						result[i++] = chunk;
+						continue;
+					}
+					result[i++] = static_cast<int>(chunks.size());
+					chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
 				}
-				result[i++] = static_cast<int>(chunks.size());
-				chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, 0)));
-			}
 		return result;
 	}
 
@@ -129,12 +137,13 @@ public:
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(iVec3(0), ToIV3(pos - radius) - chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - chunks[i].pos);
 			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - chunks[i].pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
-					if (chunks[i].TileAtCPos(Vec3(x, y, 1)) != UnEnum(TILE::AIR) && BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, 0) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
-						return true;
+					for (int z = minPos.z; z <= maxPos.z; z++)
+						if (chunks[i].TileAtCPos(Vec3(x, y, z)) != UnEnum(TILE::AIR) && BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+							return true;
 		}
 		return false;
 	}
@@ -222,16 +231,17 @@ public:
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(iVec3(0), ToIV3(pos - radius) - game->entities->chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
 			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
-					if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, 1)) != UnEnum(TILE::AIR) &&
-						BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, 0) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
-					{
-						Chunk::DamageTile(damage, i, x, y);
-						return 1;
-					}
+					for (int z = minPos.z; z <= maxPos.z; z++)
+						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						{
+							Chunk::DamageTile(damage, i, x, y, z);
+							return 1;
+						}
 		}
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
@@ -246,20 +256,47 @@ public:
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(iVec3(0), ToIV3(pos - radius) - game->entities->chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
 			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
-					if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, 1)) != UnEnum(TILE::AIR) &&
-						BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, 0) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
-					{
-						Chunk::DamageTile(damage, i, x, y);
-						result = 1;
-					}
+					for (int z = minPos.z; z <= maxPos.z; z++)
+						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						{
+							Chunk::DamageTile(damage, i, x, y, z);
+							result = 1;
+						}
 		}
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
+			result = 2 + entity->DealDamage(damage, from);
+		return result;
+	}
+
+	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	{
+		int result = 0;
+		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
+		for (int i : chunkOverlaps)
+		{
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - Vec3(radius, radius, 0)) - game->entities->chunks[i].pos);
+			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+			for (int x = minPos.x; x <= maxPos.x; x++)
+				for (int y = minPos.y; y <= maxPos.y; y++)
+					for (int z = minPos.z; z <= maxPos.z; z++)
+						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						{
+							Chunk::DamageTile(damage, i, x, y, z);
+							result = 1;
+						}
+		}
+
+		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
+		for (Entity* entity : hitEntities)
+			if (entity->pos.z + entity->radius > pos.z)
 			result = 2 + entity->DealDamage(damage, from);
 		return result;
 	}
@@ -269,14 +306,14 @@ public:
 		return OverlapsTile(pos, radius) || DoesOverlap(pos, radius, func, from);
 	}
 
-	// Add more overlap functions.
-#pragma endregion
-
 	byte TileAtPos(Vec3 pos)
 	{
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
 		return chunks[index].TileAtPos(ToIV3(pos));
 	}
+
+	// Add more overlap functions.
+#pragma endregion
 
 	void SortEntities()
 	{
@@ -319,6 +356,9 @@ public:
 
 	void Update()
 	{
+		for (int i = 0; i < toDelEntities.size(); i++)
+			Remove(toDelEntities[i]);
+		toDelEntities.clear();
 		for (int i = 0; i < toAddEntities.size(); i++)
 			push_back(std::move(toAddEntities[i]));
 		toAddEntities.clear();
@@ -344,12 +384,14 @@ public:
 		for (int i = 0; i < size(); i++)
 			if ((*this)[i] && (*this)[i]->active)
 				(*this)[i]->VUpdate();
+
+		for (index = 0; index < collectibles.size(); index++)
+			if (collectibles[index]->active && collectibles[index]->corporeal)
+				collectibles[index]->UpdateChunkCollision();
+
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->active && sortedNCEntities[index]->corporeal)
-			{
-				Entity* entity = sortedNCEntities[index];
-				entity->UpdateCollision();
-			}
+				sortedNCEntities[index]->UpdateCollision();
 
 		if (addedEntity)
 			SortEntities();
@@ -359,9 +401,13 @@ public:
 	{
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->DistToCorner());
 		for (int i : chunkOverlaps)
+			if (chunks[i].pos.x + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
+				chunks[i].pos.y + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom               &&
+				chunks[i].pos.x <= game->PlayerPos().x + game->zoom * screenRatio &&
+				chunks[i].pos.y <= game->PlayerPos().y + game->zoom)
 			chunks[i].Draw();
 
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->DistToCorner(), MaskF::IsCorporeal);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->DistToCorner(), MaskF::IsCorporealNotCollectible);
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -480,9 +526,15 @@ void Entity::DestroySelf(Entity* damageDealer)
 	game->entities->Remove(this);
 }
 
+void Entity::DelayedDestroySelf()
+{
+	for (Entity* entity : observers)
+		entity->UnAttach(this);
+	game->entities->DelayedDestroy(this);
+}
+
 void Entity::SetPos(Vec3 newPos)
 {
-	newPos = Vec3(newPos.x, newPos.y, 0);
 	std::pair<iVec3, iVec3> minMaxOldPos = Chunk::MinMaxPos(pos, radius);
 	std::pair<iVec3, iVec3> minMaxNewPos = Chunk::MinMaxPos(newPos, radius);
 	if (minMaxOldPos.first != minMaxNewPos.first || minMaxOldPos.second != minMaxNewPos.second)
@@ -500,8 +552,8 @@ void Entity::SetPos(Vec3 newPos)
 
 void Entity::SetRadius(float newRadius)
 {
-	std::pair<iVec2, iVec2> minMaxOldRadius = Chunk::MinMaxPos(pos, radius);
-	std::pair<iVec2, iVec2> minMaxNewRadius = Chunk::MinMaxPos(pos, newRadius);
+	std::pair<iVec3, iVec3> minMaxOldRadius = Chunk::MinMaxPos(pos, radius);
+	std::pair<iVec3, iVec3> minMaxNewRadius = Chunk::MinMaxPos(pos, newRadius);
 	if (minMaxOldRadius.first != minMaxNewRadius.first || minMaxOldRadius.second != minMaxNewRadius.second)
 	{
 		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
@@ -515,22 +567,36 @@ void Entity::SetRadius(float newRadius)
 	radius = newRadius;
 }
 
-void Entity::UpdateCollision()
+void Entity::UpdateChunkCollision()
 {
 	vector<Vec3> hitPositions{};
+	bool overlappedAllPossible = true, multipleOverlappedTiles = false;
 	vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 	for (int i : chunkOverlaps)
 	{
-		iVec3 minPos = glm::max(iVec3(0), ToIV3(pos - radius) - game->entities->chunks[i].pos);
+		iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
 		iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+		multipleOverlappedTiles |= minPos.x != maxPos.x && minPos.y != maxPos.y && minPos.z != maxPos.z;
 		for (int x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
-				if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, 1)) != UnEnum(TILE::AIR) &&
-					BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, 0) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
-					hitPositions.push_back(Vec3(iVec3(x, y, 0) + game->entities->chunks[i].pos) + 0.5f);
+				for (int z = minPos.z; z <= maxPos.z; z++)
+				{
+					if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR))
+					{
+						if (BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+							hitPositions.push_back(Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f);
+					}
+					else
+						overlappedAllPossible = false;
+				}
 	}
-	if (hitPositions.size() && !game->inputs.space.held)
+	if (hitPositions.size() && !game->inputs.phase.held)
 	{
+		if (overlappedAllPossible && multipleOverlappedTiles)
+		{
+			pos.z++;
+			return;
+		}
 		Vec3 hitPosition = hitPositions[0];
 		float distance = glm::length2(hitPosition - pos), newDistance;
 		for (int i = 1; i < hitPositions.size(); i++)
@@ -539,22 +605,26 @@ void Entity::UpdateCollision()
 				hitPosition = hitPositions[i];
 				distance = newDistance;
 			}
-		Vec2 p = pos - hitPosition;
-		Vec2 w = glm::abs(p) - 0.5f;
-		Vec2 s = Vec2(p.x < 0.0 ? -1 : 1, p.y < 0.0 ? -1 : 1);
 
-		float g = max(w.x, w.y);
-		Vec2  q = glm::max(w, Vec2(0.0));
+		Vec3 p = pos - hitPosition;
+		Vec3 w = glm::abs(p) - 0.5f;
+
+		float g = max(max(w.x, w.y), w.z);
+		Vec3  q = glm::max(w, vZero);
 		float l = length(q);
 
-		Vec2 normal = Vec2(s * ((g > 0.0) ? q / l : ((w.x > w.y) ? Vec2(1, 0) : Vec2(0, 1))));
-		Vec2 offset = (((g > 0.0) ? l : g) - radius) * normal;
-		SetPos(pos - Vec3(offset, 0));
-		vel = glm::reflect(vel, Vec3(normal, 0));
+		Vec3 normal = Vec3(glm::sign(p) * ((g > 0.0) ? q / l : ((w.x > w.z) ? (w.x > w.y ? Vec3(1, 0, 0) : Vec3(0, 1, 0)) : w.z > w.y ? Vec3(0, 0, 1) : Vec3(0, 1, 0))));
+		Vec3 offset = (((g > 0.0) ? l : g) - radius) * normal;
+		SetPos(pos - offset);
+		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), 0.f/*bounciness*/);
 	}
+}
 
+void Entity::UpdateCollision()
+{
+	UpdateChunkCollision();
 
-	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::IsCorporeal);
+	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::IsCorporealNotCollectible);
 	for (Entity* entity : entities)
 		if (entity->pos != pos && entity->creator != this && creator != entity)
 			OverlapRes::CircleOR(this, entity);
@@ -563,9 +633,10 @@ void Entity::UpdateCollision()
 bool TileData::Damage(int damage)
 {
 	damageDealt += damage;
-	if (damageDealt >= tileHealths[game->entities->chunks[chunkIndex].tiles[x][y][1]])
+	if (damageDealt >= tileHealths[game->entities->chunks[chunkIndex].tiles[x][y][z]])
 	{
-		game->entities->chunks[chunkIndex].tiles[x][y][1] = UnEnum(TILE::AIR);
+		game->entities->chunks[chunkIndex].tiles[x][y][z] = UnEnum(TILE::AIR);
+		game->entities->chunks[chunkIndex].RegenerateMesh();
 		return true;
 	}
 	lastDamage = tTime;
@@ -591,6 +662,22 @@ public:
 		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
 		update = UPDATE::EXPLODENEXTFRAME;
+		this->creator = creator;
+		corporeal = false;
+	}
+};
+
+class UpExplodeNextFrame : public Entity
+{
+public:
+	int damage;
+	float explosionRadius;
+	float startTime;
+
+	UpExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionRadius(explosionRadius), startTime(tTime)
+	{
+		update = UPDATE::UPEXPLODENEXTFRAME;
 		this->creator = creator;
 		corporeal = false;
 	}
@@ -676,13 +763,29 @@ namespace Updates
 		}
 	}
 
+	void UpExplodeNextFrameU(Entity* entity)
+	{
+		UpExplodeNextFrame* explosion = static_cast<UpExplodeNextFrame*>(entity);
+		if (tTime != explosion->startTime)
+		{
+			game->entities->TryDealDamageAllUp(explosion->damage, explosion->pos, explosion->explosionRadius, MaskF::IsCorporealNotCreator, explosion);
+			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
+			{
+				float rotation = RandFloat() * PI_F * 2;
+				game->entities->particles.push_back(make_unique<VelocityCircle>(0.25f, explosion->pos, Vec3(sinf(rotation), cosf(rotation), 0) * EXPLOSION_PARTICLE_SPEED,
+					explosion->color, EXPLOSION_PARTICLE_DURATION));
+			}
+			explosion->DestroySelf(explosion);
+		}
+	}
+
 	void FadeOutPuddleU(Entity* entity)
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		if (tTime - puddle->lastTime > puddle->timePer)
 		{
 			puddle->lastTime = tTime;
-			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsCorporeal, puddle);
+			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsCorporealNotCollectible, puddle);
 		}
 		if (tTime - puddle->startTime > puddle->totalFadeTime)
 			puddle->DestroySelf(puddle);
@@ -737,7 +840,7 @@ public:
 	string creatorName;
 
 	PlacedOnLanding(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(entityToPlace->name, typeName, intType, entityToPlace->color, damage, count, range, useTime, radius,
 			corporeal, shouldCollide, mass, health), entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
@@ -745,7 +848,7 @@ public:
 	}
 
 	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.5f,
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
@@ -755,7 +858,7 @@ public:
 
 	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
 		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
@@ -777,7 +880,7 @@ class CorruptOnKill : public PlacedOnLanding
 {
 public:
 	CorruptOnKill(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		PlacedOnLanding(entityToPlace, typeName, intType, damage, count, range, sayCreator,
 			useTime, radius, corporeal, shouldCollide, mass, health)
 	{
@@ -785,7 +888,7 @@ public:
 	}
 
 	CorruptOnKill(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.5f,
+		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		PlacedOnLanding(entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
@@ -794,7 +897,7 @@ public:
 
 	CorruptOnKill(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
 		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		PlacedOnLanding(baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::CORRUPTONKILL;
@@ -807,6 +910,12 @@ inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string 
 	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionRadius, color));
 }
 
+inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
+{
+	game->entities->push_back(make_unique<UpExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionRadius, color));
+}
+
 class ExplodeOnLanding : public Item
 {
 public:
@@ -814,7 +923,7 @@ public:
 	float explosionRadius;
 
 	ExplodeOnLanding(float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
@@ -824,9 +933,12 @@ public:
 
 	ExplodeOnLanding(Item* baseClass, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		explosionRadius(explosionRadius), explosionDamage(explosionDamage) { }
+		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
+	{
+		itemOD = ITEMOD::EXPLODEONLANDING;
+	}
 
 	Item Clone(int count) override
 	{
@@ -839,12 +951,42 @@ public:
 	}
 };
 
+class UpExplodeOnLanding : public ExplodeOnLanding
+{
+public:
+	UpExplodeOnLanding(float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		ExplodeOnLanding(explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
+	{
+		itemOD = ITEMOD::UPEXPLODEONLANDING;
+	}
+
+	UpExplodeOnLanding(Item* baseClass, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL",
+		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
+	{
+		itemOD = ITEMOD::UPEXPLODEONLANDING;
+	}
+
+	Item Clone(int count) override
+	{
+		return UpExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
+	}
+
+	Item* Clone2(int count) override
+	{
+		return new UpExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius);
+	}
+};
+
 class ImproveSoilOnLanding : public Item
 {
 public:
 	int improveRadius; // Used like a square's radius.
 	ImproveSoilOnLanding(int improveRadius, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		improveRadius(improveRadius)
@@ -854,7 +996,7 @@ public:
 
 	ImproveSoilOnLanding(int improveRadius, Item* baseClass, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
 		improveRadius(improveRadius) { }
 
@@ -872,30 +1014,32 @@ public:
 class SetTileOnLanding : public Item
 {
 public:
+	int zOffset;
 	TILE tile;
 
-	SetTileOnLanding(TILE tile, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.5f,
+	SetTileOnLanding(TILE tile, int zOffset, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health), tile(tile)
+		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		tile(tile), zOffset(zOffset)
 	{
 		itemOD = ITEMOD::SETTILEONLANDING;
 	}
 
-	SetTileOnLanding(Item* baseClass, TILE tile, string name = "NULL",
+	SetTileOnLanding(Item* baseClass, TILE tile, int zOffset, string name = "NULL",
 		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.5f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
 		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		tile(tile) { }
+		tile(tile), zOffset(zOffset) { }
 
 	Item Clone(int count) override
 	{
-		return SetTileOnLanding(baseClass, tile, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
+		return SetTileOnLanding(baseClass, tile, zOffset, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 
 	Item* Clone2(int count) override
 	{
-		return new SetTileOnLanding(baseClass, tile, name, typeName, intType, color, damage, count, range, useTime, radius);
+		return new SetTileOnLanding(baseClass, tile, zOffset, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
@@ -933,27 +1077,37 @@ namespace ItemODs
 			explosion->damage, explosion->explosionDamage, creator);
 	}
 
+	void UpExplodeOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item);
+		CreateUpExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
+			explosion->damage, explosion->explosionDamage, creator);
+	}
+
 	void ImproveSoilOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item);
 
+		int offset = -soilItem->improveRadius / 2;
 		for (int x = 0; x < soilItem->improveRadius; x++)
 			for (int y = 0; y < soilItem->improveRadius; y++)
-			{
-				iVec3 currentPos = ToIV3(pos) + iVec3(x - soilItem->improveRadius / 2, y - soilItem->improveRadius / 2, 0);
-				Chunk* chunk = game->entities->ChunkAtFPos(currentPos);
-				TILE tile = TILE(chunk->TileAtPos(currentPos));
-				chunk->SetTileAtPos(currentPos, UnEnum(tile == TILE::ROCK ? TILE::SAND : tile == TILE::SAND ? TILE::BAD_SOIL : tile == TILE::BAD_SOIL ?
-					TILE::MID_SOIL : TILE::MAX_SOIL));
-			}
+				for (int z = 0; z < soilItem->improveRadius; z++)
+				{
+					iVec3 currentPos = ToIV3(pos) + iVec3(x, y, z) + offset;
+					Chunk* chunk = game->entities->ChunkAtFPos(currentPos);
+					TILE tile = TILE(chunk->TileAtPos(currentPos));
+					chunk->SetTileAtPos(currentPos, UnEnum(tile == TILE::ROCK ? TILE::SAND : tile == TILE::SAND ? TILE::BAD_SOIL : tile == TILE::BAD_SOIL ?
+						TILE::MID_SOIL : tile == TILE::MID_SOIL ? TILE::MAX_SOIL : tile));
+				}
 	}
 
 	void SetTileOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item);
 
+		pos.z += tileItem->zOffset;
 		Chunk* chunk = game->entities->ChunkAtFPos(pos);
-		chunk->SetTileAtPos(ToIV2(pos), UnEnum(tileItem->tile));
+		chunk->SetTileAtPos(ToIV3(pos), UnEnum(tileItem->tile));
 	}
 }
 
@@ -965,13 +1119,13 @@ namespace Hazards
 
 namespace Resources
 {
-	SetTileOnLanding* ruby = new SetTileOnLanding(TILE::RUBY_SOIL, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 1, 15.f, 0.25f, 0.5f, false, false);
-	ExplodeOnLanding* emerald = new ExplodeOnLanding(7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
-	ExplodeOnLanding* topaz = new ExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 1, 15.0f, 0.25f, 1.5f);
-	ExplodeOnLanding* sapphire = new ExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
+	SetTileOnLanding* ruby = new SetTileOnLanding(TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 1, 15.f, 0.25f, 0.5f, false, false);
+	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
+	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 1, 15.0f, 0.25f, 1.5f);
+	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 1, 15.0f, true);
 	PlacedOnLanding* vacuumium = new PlacedOnLanding(Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 1, 15, false, 0.0625);
-	ImproveSoilOnLanding* quartz = new ImproveSoilOnLanding(3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 1, 15, 0.125f, 0.5f, false, false);
+	SetTileOnLanding* quartz = new SetTileOnLanding(TILE::MAX_SOIL, -1, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 1, 15, 0.125f, 0.5f, false, false);
 }
 
 namespace Collectibles

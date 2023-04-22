@@ -8,7 +8,6 @@ public:
 	Collectible(Item baseItem, Vec3 pos = vZero) :
 		Entity(pos, baseItem.radius, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem)
 	{
-		corporeal = false;
 		isCollectible = true;
 		vUpdate = VUPDATE::FRICTION;
 	}

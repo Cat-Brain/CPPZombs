@@ -7,7 +7,7 @@ class Planet;
 
 enum UIMODE
 {
-	MAINMENU, CHARSELECT, INGAME, PAUSED
+	MAINMENU, SETTINGS, CHARSELECT, INGAME, PAUSED
 };
 
 enum DIFFICULTY
@@ -19,7 +19,7 @@ string difficultyStrs[] = { "Easy", "Medium", "Hard" };
 
 enum CHARS
 {
-	COMMANDER, MESSENGER
+	COMMANDER, FLICKER
 };
 
 class Game : public Renderer
@@ -30,14 +30,14 @@ public:
 	Player* player;
 	std::unique_ptr<Planet> planet;
 
-	bool showUI = true;
+	bool showUI = true, colorBand = true;
 	UIMODE uiMode = UIMODE::MAINMENU;
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
 	float screenShake = 0.0f;
-	//Vec2 deadPlayerPos = vZero;
+	Vec3 lastPlayerPos = vZero;
 	FastNoiseLite screenShkX, screenShkY;
 
 	Game() : entities(nullptr), player(nullptr) { }
@@ -48,8 +48,6 @@ public:
 
 	void End() override;
 
-	inline Vec3 PlayerPos() override;
-
 	void ApplyLighting();
 
 	void TUpdate();
@@ -58,3 +56,8 @@ public:
 
 	float BrightnessAtPos(iVec2 pos);
 };
+
+Vec3 Renderer::PlayerPos()
+{
+	return ((Game*)this)->lastPlayerPos;
+}

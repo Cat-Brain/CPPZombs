@@ -1,13 +1,13 @@
 #version 330 core
 layout (location = 0) in vec2 aPos;
 
-uniform vec2 scale, position;
-uniform vec2 bottomLeft, topRight;
-out vec2 pos, screenPos;
+uniform mat4 perspective;
+uniform vec3 position;
+uniform float range;
+out vec2 screenPos;
 
 void main()
 {
-	screenPos = vec2(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y);
-	gl_Position = vec4(screenPos, 0., 1.);
-	pos = bottomLeft * (1 - aPos) + topRight * aPos;
+	gl_Position = perspective * vec4(position + vec3(aPos * range, 0.), 1.);
+	screenPos = gl_Position.xy / gl_Position.w * 0.5 + 0.5;
 } 

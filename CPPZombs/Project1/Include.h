@@ -33,7 +33,8 @@ using std::make_shared;
 using std::function;
 
 typedef unsigned int uint;
-typedef uint8_t byte;
+typedef uint8_t byte; // Unsigned byte
+typedef int8_t sByte; // Signed byte
 #pragma endregion
 
 #pragma region Global variables

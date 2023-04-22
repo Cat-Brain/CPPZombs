@@ -1,8 +1,14 @@
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 normal;
+
 uniform vec4 color;
+
+in vec2 dir, pos;
 
 void main()
 {
 	FragColor = color;
+
+	normal = vec4(normalize(vec3(dir * pos.x + vec2(-dir.y, dir.x), sqrt(pos.y * pos.y - pos.x * pos.x))), color.a);
 } 

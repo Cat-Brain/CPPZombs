@@ -77,7 +77,7 @@ namespace Livestock
 		{
 			this->pos = pos;
 			lastEatPos = pos;
-			this->dir = RandCircPoint();
+			this->dir = Vec3(RandCircPoint2(), 0.f);
 			this->baseClass = baseClass;
 			startTime = tTime;
 			noise.SetSeed(rand());
@@ -111,7 +111,7 @@ namespace Livestock
 		{
 			Egg* egg = static_cast<Egg*>(entity);
 
-			egg->timeTill -= game->dTime * difficultyGrowthModifier[game->difficulty];
+			egg->timeTill -= game->dTime;
 			if (egg->timeTill <= 0)
 			{
 				game->entities->push_back(egg->entityToSpawn->Clone(egg->pos, up, egg));
@@ -173,7 +173,7 @@ namespace Livestock
 					kiwi->dir = RotateTowardsNorm(kiwi->dir, kiwi->lastEatPos - kiwi->pos, game->dTime * kiwi->turnSpeed);
 				else
 					kiwi->dir = Normalized(RotateBy(kiwi->dir, kiwi->turnSpeed * game->dTime * randomness));
-				kiwi->vel = TryAdd2(kiwi->vel, kiwi->dir * (game->planet->friction + kiwi->moveSpeed * game->dTime * (1 - fabsf(randomness))), kiwi->maxSpeed);
+				kiwi->vel = TryAdd2(kiwi->vel, kiwi->dir * (game->planet->friction + kiwi->moveSpeed * game->dTime), kiwi->maxSpeed);
 				vector<Entity*> seenEntities = EntitiesOverlaps(kiwi->pos, kiwi->sightDist, game->entities->collectibles);
 				for (int i = 0; i < seenEntities.size(); i++)
 					if (seenEntities[i]->isCollectible && kiwi->sightAngle <= glm::dot(kiwi->dir, Normalized(seenEntities[i]->pos - kiwi->pos)))
@@ -187,7 +187,8 @@ namespace Livestock
 			}
 			case AI_MODE::HUNTING:
 			{
-				kiwi->dir = RotateTowardsNorm(kiwi->dir, kiwi->observing->pos - kiwi->pos, game->dTime * kiwi->turnSpeed);
+				kiwi->dir = RotateTowardsNorm(kiwi->vel != vZero && glm::normalize(kiwi->vel) != kiwi->dir ? kiwi->vel : kiwi->dir,
+					kiwi->observing->pos - kiwi->pos, game->dTime * kiwi->turnSpeed);
 				if (glm::dot(kiwi->dir, Normalized(kiwi->observing->pos - kiwi->pos)) > 0.75f)
 					kiwi->vel = TryAdd2(kiwi->vel, kiwi->dir * (game->planet->friction + kiwi->moveSpeed * game->dTime), kiwi->maxSpeed);
 				vector<Entity*> collectibles = EntitiesOverlaps(kiwi->pos, kiwi->radius, game->entities->collectibles);
@@ -210,7 +211,7 @@ namespace Livestock
 			Kiwi* kiwi = static_cast<Kiwi*>(entity);
 
 			float ratio = kiwi->radius / SQRTTWO_F;
-			game->DrawRightTri(kiwi->pos + kiwi->dir * ratio, vOne * (ratio * 2),
+			game->DrawRightTri(kiwi->pos + kiwi->dir * ratio, vOne * ratio,
 				atan2f(kiwi->dir.y, kiwi->dir.x) - PI_F * 0.5f, kiwi->color);
 
 			kiwi->DUpdate(DUPDATE::DTOCOL);

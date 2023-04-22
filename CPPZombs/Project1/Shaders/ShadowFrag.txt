@@ -1,20 +1,25 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec2 pos, screenPos;
-uniform vec2 center;
-uniform ivec2 scrDim;
-uniform sampler2D normalMap;
-uniform vec3 color;
+uniform sampler2D normalMap, positionMap;
+
+uniform vec3 position, color;
 uniform float range;
+uniform bool colorBand;
+
+in vec2 screenPos;
+
 
 void main()
 {
-	vec2 disp = pos - center;
-	float distance = round(length(disp));
-	vec3 normal = texture(normalMap, screenPos * 0.5 + 0.5).xyz;
-	vec3 lightDir = -normalize(vec3(disp.x, disp.y, -0.5));
-	float diff = 0.2 * round((dot(normal, lightDir) * 0.5 + 0.5) * 5);
+	vec3 normal = texture(normalMap, screenPos).xyz;
+	vec3 pos =  texture(positionMap, screenPos).xyz;
+	float distance = length(pos - position);
+	if (colorBand) distance = round(distance); // Rounded for color banding.
+	vec3 lightDir = normalize(pos - position);
+	float diff = dot(normal, -lightDir);
+	diff = diff * 0.5 + 0.5; // Uses weird lighting model, doesn't have half sphere dark, instead only the farthest back is dark, good for cartoony things.
+	if (colorBand) diff = 0.2 * round(diff * 5); // Round for even more color banding.
 	vec3 finalColor = color * diff * (1 - distance / range);
 	FragColor = vec4(clamp(finalColor.r, 0.0, 1.0), clamp(finalColor.g, 0.0, 1.0), clamp(finalColor.b, 0.0, 1.0), 1.);
 } 

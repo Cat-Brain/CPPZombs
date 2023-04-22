@@ -82,9 +82,9 @@ public:
 class DeferredFramebuffer : public Framebuffer
 {
 public:
-    uint normalBuffer;
+    uint normalBuffer, positionBuffer;
 
-    DeferredFramebuffer() : Framebuffer(), normalBuffer(0) { }
+    DeferredFramebuffer() : Framebuffer(), normalBuffer(0), positionBuffer(0) { }
 
     DeferredFramebuffer(uint width, uint height, GLint format = GL_RGB, bool shouldScreenRes = false) :
         DeferredFramebuffer()
@@ -106,15 +106,25 @@ public:
         // create normal attachment texture
         glGenTextures(1, &normalBuffer);
         glBindTexture(GL_TEXTURE_2D, normalBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normalBuffer, 0);
+        // create position attachment texture
+        glGenTextures(1, &positionBuffer);
+        glBindTexture(GL_TEXTURE_2D, positionBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, positionBuffer, 0);
         // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-        uint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-        glDrawBuffers(2, attachments);
+#define DEFFERED_CHANNEL_COUNT 3
+        uint attachments[DEFFERED_CHANNEL_COUNT] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers(DEFFERED_CHANNEL_COUNT, attachments);
         // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
         glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -133,7 +143,9 @@ public:
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindTexture(GL_TEXTURE_2D, normalBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glBindTexture(GL_TEXTURE_2D, positionBuffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
     }
@@ -155,7 +167,7 @@ void UseFramebuffer()
         glViewport(0, 0, trueScreenWidth, trueScreenHeight);
         return;
     }
-    Framebuffer* framebuffer = framebuffers[currentFramebuffer - 1];
+    Framebuffer* framebuffer = framebuffers[size_t(currentFramebuffer) - 1];
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->framebuffer);
     glViewport(0, 0, framebuffer->width, framebuffer->height);
 }
@@ -164,14 +176,14 @@ int ScrWidth()
 {
     if (currentFramebuffer == TRUESCREEN)
         return trueScreenWidth;
-    return framebuffers[currentFramebuffer - 1]->width;
+    return framebuffers[size_t(currentFramebuffer) - 1]->width;
 }
 
 int ScrHeight()
 {
     if (currentFramebuffer == TRUESCREEN)
         return trueScreenHeight;
-    return framebuffers[currentFramebuffer - 1]->height;
+    return framebuffers[size_t(currentFramebuffer) - 1]->height;
 }
 
 iVec2 ScrDim()

@@ -49,6 +49,7 @@ private:
 		glfwSetScrollCallback(window, scroll_callback);
 
 		glEnable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 		
@@ -78,7 +79,11 @@ private:
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
 		dot = Mesh({ 0.0f, 0.0f }, { 0 }, GL_POINTS);
-		rightTriangle = Mesh({ -0.5f, 0.0f,  0.0f, 0.5f,  0.5f, 0.0f }, { 0, 1, 2 });
+		rightTriangle = Mesh({ -1.f, 0.0f,  0.0f, 1.f,  1.f, 0.0f }, { 0, 1, 2 });
+
+		cube = Mesh({-1.f, -1.f, -1.f,  -1.f, -1.f, 1.f,  -1.f, 1.f, -1.f,  -1.f, 1.f, 1.f,
+			1.f, -1.f, -1.f,  1.f, -1.f, 1.f,  1.f, 1.f, -1.f,  1.f, 1.f, 1.f}, {1, 3, 7, 1, 7, 5,
+			0, 1, 3, 0, 3, 2,  0, 1, 5, 0, 5, 4,  2, 3, 7, 2, 7, 6,  6, 7, 5, 6, 5, 4}, GL_TRIANGLES, GL_STATIC_DRAW, 3);
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
 		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
@@ -98,7 +103,7 @@ private:
 
 	void TUpdate()
 	{
-		glfwSwapInterval(1);
+		glfwSwapInterval(int(vSync));
 		dTime = static_cast<float>(glfwGetTime() - lastTime);
 		fpsCount++;
 		if (int(lastTime) != int(glfwGetTime()))
@@ -107,6 +112,8 @@ private:
 			fpsCount = 0;
 		}
 		lastTime = static_cast<float>(glfwGetTime());
+
+		perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);
 
 		Update();
 
@@ -132,11 +139,13 @@ public:
 	GLFWwindow* window = nullptr;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
+	bool vSync = true;
 	float zoom = 30, minZoom = 10, maxZoom = 40, zoomSpeed = 5;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
 	Vec3 screenOffset = Vec3(0);
+	glm::mat4 perspective = glm::mat4(1);
 
 	Renderer() { }
 
@@ -191,43 +200,25 @@ public:
 	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
 		glUseProgram(circleShader);
-		radius /= zoom;
-		glUniform2f(glGetUniformLocation(circleShader, "scale"), radius / screenRatio, radius);
-
+		glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 		pos -= PlayerPos() + screenOffset;
-		pos.x /= screenRatio;
-		pos /= zoom;
-		glUniform2f(glGetUniformLocation(circleShader, "position"), pos.x, pos.y);
+		glUniform4f(glGetUniformLocation(circleShader, "posScale"), pos.x, pos.y, pos.z, radius);
+
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-		screenSpaceQuad.Draw();
-	}
-
-	inline void DrawChunk(Vec3 pos, Vec2 dim)
-	{
-		glUseProgram(chunkShader);
-		dim /= zoom;
-		glUniform2f(glGetUniformLocation(chunkShader, "scale"), dim.x / screenRatio, dim.y);
-
-		pos -= PlayerPos() + screenOffset;
-		pos.x /= screenRatio;
-		pos /= zoom;
-		glUniform2f(glGetUniformLocation(chunkShader, "position"), pos.x, pos.y);
-		quad.Draw();
+		cube.Draw();
 	}
 
 	inline void DrawRightTri(Vec3 pos, Vec2 scale, float rotation, RGBA color)
 	{
 		glUseProgram(triangleShader);
-		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
+		glUniformMatrix4fv(glGetUniformLocation(triangleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 
-		scale /= zoom;
-		glUniform2f(glGetUniformLocation(triangleShader, "scale"), scale.x / screenRatio, scale.y);
+		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
+		glUniform2f(glGetUniformLocation(triangleShader, "scale"), scale.x, scale.y);
 
 		pos -= PlayerPos() + screenOffset;
-		pos.x /= screenRatio;
-		pos /= zoom;
-		glUniform2f(glGetUniformLocation(triangleShader, "position"), pos.x, pos.y);
+		glUniform3f(glGetUniformLocation(triangleShader, "position"), pos.x, pos.y, pos.z);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(triangleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		rightTriangle.Draw();
@@ -274,14 +265,13 @@ public:
 
 	inline void DrawLine(Vec3 a, Vec3 b, RGBA color, float thickness)
 	{
-		glLineWidth(thickness / zoom * trueScreenHeight);
 		glUseProgram(lineShader);
-		a -= PlayerPos() + screenOffset;
+		glUniformMatrix4fv(glGetUniformLocation(lineShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 
+		a -= PlayerPos() + screenOffset;
 		b -= PlayerPos() + screenOffset;
-		glUniform2f(glGetUniformLocation(lineShader, "a"), a.x, a.y);
-		glUniform2f(glGetUniformLocation(lineShader, "b"), b.x, b.y);
-		glUniform2f(glGetUniformLocation(lineShader, "screenDim"), zoom * screenRatio, zoom);
+		glUniform3f(glGetUniformLocation(lineShader, "a"), a.x, a.y, a.z);
+		glUniform3f(glGetUniformLocation(lineShader, "b"), b.x, b.y, b.z);
 		glUniform1f(glGetUniformLocation(lineShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
@@ -291,27 +281,14 @@ public:
 
 	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
+		pos -= PlayerPos() + screenOffset;
+
+		glUniform3f(glGetUniformLocation(shadowShader, "position"), pos.x, pos.y, pos.z);
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
-
-		Vec3 scrPos = pos - PlayerPos() - screenOffset;
-		glUniform2f(glGetUniformLocation(shadowShader, "scale"),
-			range / (zoom * 0.5f * screenRatio), range / (zoom * 0.5f));
-
-		glUniform2f(glGetUniformLocation(shadowShader, "position"),
-			(scrPos.x - range) / (zoom * screenRatio),
-			(scrPos.y - range) / zoom);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "center"), scrPos.x, scrPos.y);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "bottomLeft"),
-			scrPos.x - range, scrPos.y - range);
-
-		glUniform2f(glGetUniformLocation(shadowShader, "topRight"),
-			scrPos.x + range, scrPos.y + range);
 
 		glUniform3f(glGetUniformLocation(shadowShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
 
-		quad.Draw();
+		screenSpaceQuad.Draw();
 	}
 
 	void DrawFramebufferOnto(uint newFramebuffer)
@@ -332,10 +309,7 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline virtual Vec3 PlayerPos() // The position of the player in normal coordinates.
-	{
-		return Vec3(0);
-	}
+	inline Vec3 PlayerPos(); // The position of the player in normal coordinates.
 
 	bool IsFullscreen()
 	{

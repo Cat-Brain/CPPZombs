@@ -10,7 +10,7 @@ public:
 
 	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{}, mode(GL_TRIANGLES) { }
 
-	Mesh(vector<float> vertices, vector<uint> indices, GLenum mode = GL_TRIANGLES) :
+	Mesh(vector<float> vertices, vector<uint> indices, GLenum mode = GL_TRIANGLES, GLenum drawMode = GL_STATIC_DRAW, uint dimension = 2) :
 		vertices(vertices), indices(indices), mode(mode)
 	{
 		glGenVertexArrays(1, &vao);
@@ -20,12 +20,12 @@ public:
 		glBindVertexArray(vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], drawMode);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), &indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), &indices[0], drawMode);
 
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, dimension, GL_FLOAT, GL_FALSE, dimension * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 	}
 
@@ -43,6 +43,6 @@ public:
 	}
 };
 
-Mesh quad, screenSpaceQuad, line, dot, rightTriangle, lineThick;
+Mesh quad, screenSpaceQuad, line, dot, rightTriangle, lineThick, cube;
 
 vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line, &dot, &lineThick }; // Destroys them at the end.

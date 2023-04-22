@@ -1,4 +1,4 @@
-#include "Vec2.h"
+#include "Vec.h"
 
 struct Key
 {
@@ -7,13 +7,13 @@ struct Key
 
 struct Inputs
 {
-	Key up, left, down, right, crouch, // <- Movement keys
+	Key up, left, down, right, crouch, // Movement keys
 		enter, c, q, e, escape, space, shift,
-		leftMouse, rightMouse, middleMouse, // <- Mouse buttons
-		comma, period, slash, phase; // <- Command keys.
+		leftMouse, rightMouse, middleMouse, // Mouse buttons
+		comma, period, slash, phase; // Command keys.
 	int mouseScroll = 0;
 	Vec2 mousePosition = vZero, screenMousePosition = vZero;
-	Vec3 mousePosition3 = vZero; // <- Just mousePosition but with a 0 for the z value.
+	Vec3 mousePosition3 = vZero; // Just mousePosition but with a 0 for the z value.
 
 	Inputs() = default;
 
@@ -72,6 +72,7 @@ struct Inputs
 		UpdateKey(window, comma, GLFW_KEY_COMMA);
 		UpdateKey(window, period, GLFW_KEY_PERIOD);
 		UpdateKey(window, slash, GLFW_KEY_SLASH);
+		UpdateKey(window, phase, GLFW_KEY_RIGHT_SHIFT);
 		
 		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
 		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);

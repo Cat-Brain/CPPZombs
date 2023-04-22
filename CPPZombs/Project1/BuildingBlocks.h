@@ -12,6 +12,11 @@ public:
 		vUpdate = VUPDATE::FRICTION;
 		dUpdate = DUPDATE::DTOCOL;
 	}
+
+	inline RGBA Color()
+	{
+		return color2.CLerp(color, (float)health / (float)maxHealth);
+	}
 };
 
 namespace DUpdates
@@ -19,12 +24,8 @@ namespace DUpdates
 	void DToColDU(Entity* entity)
 	{
 		DToCol* dToCol = static_cast<DToCol*>(entity);
-		float t = (float)dToCol->health / (float)dToCol->maxHealth;
 		RGBA tempColor = dToCol->color;
-		dToCol->color = RGBA(int(dToCol->color2.r + t * (dToCol->color.r - dToCol->color2.r)),
-			int(dToCol->color2.g + t * (dToCol->color.g - dToCol->color2.g)),
-			int(dToCol->color2.b + t * (dToCol->color.b - dToCol->color2.b)),
-			int(dToCol->color2.a + t * (dToCol->color.a - dToCol->color2.a)));
+		dToCol->color = dToCol->Color();
 		dToCol->DUpdate(DUPDATE::ENTITY);
 		dToCol->color = tempColor;
 	}

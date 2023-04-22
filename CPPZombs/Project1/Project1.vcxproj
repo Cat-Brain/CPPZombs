@@ -188,7 +188,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />
-    <ClInclude Include="Vec2.h" />
+    <ClInclude Include="Vec.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc" />

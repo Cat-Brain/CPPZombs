@@ -6,8 +6,8 @@
 #pragma region Psuedo-virtual functions
 enum class UPDATE // Update
 {
-	ENTITY, FADEOUT, EXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, VACUUMER, SPIDER,
-	CENTICRAWLER, POUNCER, CAT, CATACLYSM, EGG, KIWI, PLAYER
+	ENTITY, FADEOUT, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, VACUUMER, SPIDER,
+	CENTICRAWLER, POUNCER, CAT, CATACLYSM, EGG, KIWI, PLAYER, GRENADE
 };
 
 vector<function<void(Entity*)>> updates;
@@ -205,12 +205,14 @@ public:
 	virtual int DealDamage(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
+	void DelayedDestroySelf(); // Never calls OnDeath;
 
 	bool Overlaps(Vec3 pos, float radius)
 	{
 		return overlapFuns[UnEnum(overlapFun)](this, pos, radius);
 	}
 
+	void UpdateChunkCollision();
 	void UpdateCollision();
 
 	virtual void UnAttach(Entity* entity) { }
@@ -228,14 +230,19 @@ namespace MaskF
 		return from != to && to->corporeal;
 	}
 
+	bool IsCorporealNotCollectible(Entity* from, Entity* to)
+	{
+		return from != to && to->corporeal && !to->isCollectible;
+	}
+
 	bool IsCorporealNotCreator(Entity* from, Entity* to)
 	{
-		return from != to && from->creator != to && to->corporeal;
+		return from != to && from->creator != to && to->corporeal && !to->isCollectible;
 	}
 
 	bool IsNonEnemy(Entity* from, Entity* to)
 	{
-		return !to->isEnemy && from != to && to->corporeal;
+		return !to->isEnemy && from != to && to->corporeal && !to->isCollectible;
 	}
 
 	bool IsSameType(Entity* from, Entity* to)
@@ -310,7 +317,7 @@ namespace VUpdates
 	{
 		entity->lastPos = entity->pos;
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
-		entity->vel = FromTo(entity->vel, Vec3(0), game->dTime * game->planet->friction);
+		entity->vel = Vec3(FromTo2(entity->vel, vZero, game->dTime * game->planet->friction), (entity->vel.z - game->planet->gravity * game->dTime) * powf(0.5f, game->dTime));
 	}
 }
 
@@ -324,7 +331,9 @@ namespace DUpdates
 	void FadeOutDU(Entity* entity)
 	{
 		entity->color.a = static_cast<uint8_t>(((FadeOut*)entity)->Opacity() * 255);
+		glDepthMask(GL_FALSE);
 		entity->DUpdate(DUPDATE::ENTITY);
+		glDepthMask(GL_TRUE);
 	}
 }
 
@@ -371,10 +380,4 @@ namespace OverlapRes
 		a->SetPos(a->pos + multiplier * b->mass);
 		b->SetPos(b->pos - multiplier * a->mass);
 	}
-}
-
-
-Vec3 Game::PlayerPos()
-{
-	return ((Entity*)player)->pos;
 }

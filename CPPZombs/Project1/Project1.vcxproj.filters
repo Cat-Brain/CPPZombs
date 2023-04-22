@@ -89,7 +89,7 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vec2.h">
+    <ClInclude Include="Vec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Framebuffers.h">

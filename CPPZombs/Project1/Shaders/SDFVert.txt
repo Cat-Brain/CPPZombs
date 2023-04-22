@@ -1,12 +1,13 @@
 #version 330 core
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec3 aPos;
 
-uniform vec2 scale, position;
+uniform vec4 posScale;
+uniform mat4 perspective;
 
-out vec2 pos;
+out vec3 tPos;
 
 void main()
 {
-	pos = aPos;
-	gl_Position = vec4(aPos.x * scale.x + position.x, aPos.y * scale.y + position.y, 0.0, 1.0);
+	tPos = aPos * posScale.w + posScale.xyz;
+	gl_Position = perspective * vec4(tPos, 1.0);
 } 

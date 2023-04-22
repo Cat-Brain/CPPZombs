@@ -7,7 +7,7 @@ namespace Enemies
 class Planet
 {
 public:
-	float friction, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
+	float friction, gravity, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	unique_ptr<Enemies::Instance> enemies, bosses;
 	FastNoiseLite worldNoise;
 	JRGB color1, color2, fog;

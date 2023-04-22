@@ -68,7 +68,7 @@ inline iVec2 Squarmalized(iVec2 a)
 }
 #pragma endregion
 
-iVec2 upI(0, 1), rightI(1, 0), downI(0, -1), leftI(-1, 0), vZeroI(0, 0), vOneI(1, 1);
+iVec2 upI2(0, 1), rightI2(1, 0), downI2(0, -1), leftI2(-1, 0), vZeroI2(0), vOneI2(1);
 
 typedef glm::vec2 Vec2;
 
@@ -199,6 +199,8 @@ typedef glm::vec3 Vec3;
 
 Vec3 up(0, 1, 0), right(1, 0, 0), down(0, -1, 0), left(-1, 0, 0), vZero(0), vOne(1);
 
+iVec3 upI(0, 1, 0), rightI(1, 0, 0), downI(0, -1, 0), leftI(-1, 0, 0), vZeroI(0), vOneI(1);
+
 #pragma region Vec3 functions
 inline iVec3 ToIV3(Vec3 a)
 {
@@ -279,7 +281,7 @@ inline Vec3 RotateBy(Vec3 a, float rotation)
 
 inline Vec3 RotateTowardsNorm(Vec3 currentDir, Vec3 desiredDir, float moveAmount)
 {
-	return Vec3(RotateTowardsNorm2(currentDir, desiredDir, moveAmount), currentDir.z);
+	return Vec3(RotateTowardsNorm2(currentDir, desiredDir, moveAmount), 0.f);
 	/*
 	glm::angleAxis()
 	float currentRotation = atan2f(currentDir.y, currentDir.x);

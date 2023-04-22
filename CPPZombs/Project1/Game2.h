@@ -3,17 +3,17 @@
 Chunk::Chunk(iVec3 pos) :
 	vector{}, pos(pos)
 {
-	memset(tiles, 0, CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
+	memset(tiles, UnEnum(pos.z >= 0 ? TILE::AIR : TILE::ROCK), CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 		for (int y = 0; y < CHUNK_WIDTH; y++)
-		{
-			float noise = game->planet->worldNoise.GetNoise(float(pos.x + x), float(pos.y + y));
-			tiles[x][y][0] = UnEnum(noise > 0 ? TILE::ROCK : noise > -0.25f ? TILE::SAND : noise > -0.5f ?
-				TILE::BAD_SOIL : noise > -0.75f ? TILE::MID_SOIL : TILE::MAX_SOIL);
-			tiles[x][y][1] = UnEnum(noise < 0.5f ? TILE::AIR : noise < 0.75f ? TILE::HIGH_ROCK : TILE::SNOW);
-			//if (rand() % 1024 == 0)
-			//	game->entities->DelayedPushBack(make_unique<Collectible>(Resources::Eggs::kiwiEgg->Clone(1), Vec2(pos + iVec2(pos.x, pos.y))));
-		}
+			for (int z = 0; z < CHUNK_WIDTH; z++)
+			{
+				float noise = game->planet->worldNoise.GetNoise(float(pos.x + x), float(pos.y + y)) * 0.5f + 0.5f;
+				int tZ = z + pos.z;
+				tiles[x][y][z] = UnEnum(noise * 4.f + 0.5f < tZ ? TILE::AIR : tZ > 3 ? TILE::ROCK : tZ > 2 ? TILE::SAND : tZ > 1 ?
+					TILE::BAD_SOIL : tZ > 0 ? TILE::MID_SOIL : TILE::MAX_SOIL);
+			}
+	GenerateMesh();
 }
 
 Planet::Planet()
@@ -25,6 +25,7 @@ Planet::Planet()
 	worldNoise.SetSeed(static_cast<int>(time(NULL)));
 
 	friction = RandFloat() * 10 + 5;
+	gravity = 10;
 
 	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
 	dayTime = RandFloat() * 60.0f;
@@ -68,7 +69,14 @@ void Game::Start()
 	entities = make_unique<Entities>();
 	unique_ptr<Player> playerUnique = characters[selectedCharacter]->PClone();
 	player = playerUnique.get();
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 100; i++)
+	{
+		if (!entities->OverlapsTile(player->pos, player->radius))
+			break;
+		else
+			player->pos.z++;
+	}
+	for (int i = 0; i < 100; i++)
 	{
 		if (!entities->OverlapsTile(player->pos, player->radius))
 			break;
@@ -120,7 +128,7 @@ void Game::Update()
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		inputs.FindMousePos(window, zoom);
 
@@ -142,13 +150,33 @@ void Game::Update()
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
 			RGBA(255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 			difficulty = DIFFICULTY::HARD;
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "Settings"))
+			uiMode = UIMODE::SETTINGS;
+	}
+	else if (uiMode == UIMODE::SETTINGS)
+	{
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		inputs.FindMousePos(window, zoom);
+
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			uiMode = UIMODE::MAINMENU;
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, vSync ? "Yes vSync" : "No vSync", vSync ? RGBA(0, 255) : RGBA(255),
+			vSync ? RGBA(0, 127) : RGBA(127)))
+			vSync = !vSync;
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f,
+			colorBand ? "Yes color band" : "No color band", colorBand ? RGBA(0, 255) : RGBA(255), colorBand ? RGBA(0, 127) : RGBA(127)))
+			colorBand = !colorBand;
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
 	{
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		inputs.FindMousePos(window, zoom);
 		
@@ -183,7 +211,7 @@ void Game::Update()
 					UseFramebuffer();
 				}
 				glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-				glClear(GL_COLOR_BUFFER_BIT);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 				font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 				font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
@@ -223,7 +251,8 @@ void Game::ApplyLighting()
 	currentFramebuffer = SHADOWMAP;
 	UseFramebuffer();
 	glBlendFunc(GL_ONE, GL_ONE);
-
+	
+	glDisable(GL_DEPTH_TEST);
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -232,14 +261,18 @@ void Game::ApplyLighting()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mainScreen->normalBuffer);
 	glUniform1i(glGetUniformLocation(sunShader, "normalMap"), 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, mainScreen->positionBuffer);
+	glUniform1i(glGetUniformLocation(sunShader, "positionMap"), 1);
 	screenSpaceQuad.Draw();
 
 
 	glUseProgram(shadowShader);
+	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUniform1i(glGetUniformLocation(shadowShader, "colorBand"), int(colorBand));
 	glUniform1i(glGetUniformLocation(shadowShader, "normalMap"), 0);
+	glUniform1i(glGetUniformLocation(shadowShader, "positionMap"), 1);
 
-	glUniform2i(glGetUniformLocation(shadowShader, "scrDim"),
-		static_cast<int>(screenRatio * zoom * 2), static_cast<int>(zoom * 2));
 	for (unique_ptr<LightSource>& light : entities->lightSources)
 		DrawLight(light->pos, light->range, light->color);
 
@@ -265,6 +298,8 @@ void Game::ApplyLighting()
 	glUniform1i(glGetUniformLocation(shadingShader, "shadowTexture"), 1);
 
 	screenSpaceQuad.Draw();
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 float Game::BrightnessAtPos(iVec2 pos)
@@ -292,6 +327,10 @@ float Game::BrightnessAtPos(iVec2 pos)
 
 void Game::TUpdate()
 {
+	if (dTime >= 1.f)
+		return; // Don't run frame if there was a GIGANTIC frame drop.
+	// This is normally off.
+	glEnable(GL_DEPTH_TEST);
 	// Prepare current framebuffer to be used in rendering of the frame.
 	currentFramebuffer = MAINSCREEN;
 	UseFramebuffer();
@@ -300,7 +339,7 @@ void Game::TUpdate()
 	inputs.FindMousePos(window, zoom);
 
 	screenShake *= powf(0.25f, game->dTime);
-	screenOffset = Vec3(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f), 0) * screenShake;
+	screenOffset = Vec3(Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake, zoom);
 
 	zoom = ClampF(zoom + float(int(inputs.e.held) - int(inputs.q.held)) * dTime * zoomSpeed, minZoom, maxZoom);
 
@@ -330,11 +369,14 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 
 	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	static const float normalUp[] = { 0, 0, 1, 0 };
 	glClearBufferfv(GL_COLOR, 1, normalUp);
+	static const float noPosition[] = { 0, 0, 0, 0 };
+	glClearBufferfv(GL_COLOR, 2, noPosition);
 	entities->DUpdate(); // Draws all entities.
 	ApplyLighting(); // Apply lighting.
+	glDisable(GL_DEPTH_TEST);
 	DrawFramebufferOnto(TRUESCREEN);
 
 	entities->UIUpdate(); // Draws UI of uiactive entities.
@@ -362,6 +404,8 @@ void Game::TUpdate()
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 		player->items.DUpdate();
 	}
+
+	lastPlayerPos = player->pos;
 
 	frameCount++;
 }

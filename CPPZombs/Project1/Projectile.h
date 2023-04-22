@@ -135,7 +135,7 @@ namespace ItemUs
     void ItemU(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(*stack,
-            creator->pos, dir, creator));
+            creator->pos + Vec3(0, 0, stack->radius - creator->radius), dir, creator));
         stack->count -= 1;
     }
 }
