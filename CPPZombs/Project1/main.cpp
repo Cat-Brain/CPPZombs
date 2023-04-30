@@ -14,9 +14,6 @@ int main()
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	printf("Greetings universe!\n");
 
-	for (int i = 0; i < Plants::plants.size(); i++)
-		Plants::plants[i]->seed = Collectibles::Seeds::plantSeeds[i];
-
 	for (int i = 0; i < Livestock::livestocks.size(); i++)
 		Livestock::livestocks[i]->birthEntity = Livestock::livestockBirths[i];
 
@@ -27,7 +24,7 @@ int main()
 		using namespace Enemies::Updates;
 		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, GrenadeU };
+		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
 	}
 	{
 		using namespace VUpdates;
@@ -38,7 +35,7 @@ int main()
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, SnakeConnectedDU, ColorCyclerDU,
-		PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU };
+		PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
 	{
 		using namespace EDUpdates;
@@ -48,7 +45,7 @@ int main()
 	{
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
-		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU };
+		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
 	}
 
 	{
@@ -66,19 +63,19 @@ int main()
 	}
 	{
 		using namespace PMovements;
-		pMovements = { Default };
+		pMovements = { Default, Jetpack };
 	}
 	{
 		using namespace Primaries;
-		primaries = { Slingshot, CircleGun };
+		primaries = { Slingshot, EngShoot, CircleGun };
 	}
 	{
 		using namespace Secondaries;
-		secondaries = { GrenadeThrow, TornadoSpin };
+		secondaries = { GrenadeThrow, TornadoSpin, EngModeUse };
 	}
 	{
 		using namespace Utilities;
-		utilities = { TacticoolRoll, MightyShove };
+		utilities = { TacticoolRoll, MightyShove, EngModeSwap };
 	}
 	#pragma endregion
 		
@@ -96,7 +93,6 @@ int main()
 
 		using namespace ItemODs;
 		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD, UpExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD };
-	
 #pragma endregion
 
 	game = make_unique<Game>();

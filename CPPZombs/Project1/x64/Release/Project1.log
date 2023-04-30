@@ -1,9 +1,25 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(261,1): warning C4267: '=': conversion from 'size_t' to 'uint', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,85): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,78): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,71): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+          with
+          [
+              T=int
+          ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,13): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  2 of 5083 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    7 functions had inline decision re-evaluated but remain unchanged
+  397 of 5332 functions ( 7.4%) were compiled, the rest were copied from previous compilation.
+    47 functions were new in current compilation
+    539 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

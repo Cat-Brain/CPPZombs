@@ -15,6 +15,65 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 #define START_SCR_WIDTH 990
 #define START_SCR_HEIGHT 990
 
+enum DIFFICULTY
+{
+	EASY, MEDIUM, HARD
+};
+
+enum class CHARS
+{
+	SOLDIER, FLICKER, ENGINEER, ORCHID, COUNT
+};
+
+string settingsLocation = "Settings.txt";
+class Settings
+{
+public:
+	bool colorBand = true, vSync = true;
+	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
+	CHARS character = CHARS::SOLDIER;
+
+	void TryOpen()
+	{
+		std::ifstream file;
+		file.open(settingsLocation, std::ios::in);
+		if (file.is_open())
+		{
+			while (file)
+			{
+				string contents;
+				std::getline(file, contents);
+				std::cout << contents << '\n';
+				if (contents == "color band = false")
+					colorBand = false;
+				else if (contents == "vSync = false")
+					vSync = false;
+				else if (contents == "difficulty = easy")
+					difficulty = DIFFICULTY::EASY;
+				else if (contents == "difficulty = hard")
+					difficulty = DIFFICULTY::HARD;
+				else
+					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
+						if (contents == "character = " + to_string(i))
+							character = CHARS(i);
+			}
+			file.close();
+		}
+		else Write();
+	}
+
+	void Write()
+	{
+		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
+			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
+			"\ncharacter = " + to_string(UnEnum(character));
+		std::ofstream file;
+		file.open(settingsLocation, std::ios::out | std::ios::trunc);
+		file << contents;
+		file.close();
+	}
+};
+
 class Renderer
 {
 private:
@@ -23,8 +82,8 @@ private:
 	{
 #pragma region Very eary stuff
 		glfwInit();
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		trueScreenWidth = START_SCR_WIDTH;
 		trueScreenHeight = START_SCR_HEIGHT;
@@ -53,6 +112,8 @@ private:
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 		
+		settings.TryOpen();
+
 		GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 		glfwSetCursor(window, cursor);
 
@@ -103,7 +164,7 @@ private:
 
 	void TUpdate()
 	{
-		glfwSwapInterval(int(vSync));
+		glfwSwapInterval(int(settings.vSync));
 		dTime = static_cast<float>(glfwGetTime() - lastTime);
 		fpsCount++;
 		if (int(lastTime) != int(glfwGetTime()))
@@ -139,7 +200,7 @@ public:
 	GLFWwindow* window = nullptr;
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
-	bool vSync = true;
+	Settings settings;
 	float zoom = 30, minZoom = 10, maxZoom = 40, zoomSpeed = 5;
 	uint fpsCount = 0;
 	string name = "Martionatany";
@@ -326,6 +387,11 @@ public:
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+	}
+
+	float CurrentDistToCorner()
+	{
+		return sqrtf(zoom * zoom * (screenRatio * screenRatio + 1));
 	}
 
 	float DistToCorner()

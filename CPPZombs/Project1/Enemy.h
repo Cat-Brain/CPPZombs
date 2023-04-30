@@ -83,18 +83,27 @@ namespace Enemies
 
 		virtual Vec3 BitePos()
 		{
-			return pos + dir * radius;
+			return pos + dir * radius * 0.2f;
 		}
 
 		virtual float BiteRad()
 		{
-			return 0.1f;
+			return radius * 0.9f;
 		}
 
 		virtual void ShouldTryJump()
 		{
 			if (tTime - lastJump > jumpTime && game->entities->OverlapsTile(BitePos(), BiteRad()))
-				vel = TryAdd2(vel, Vec3(0, 0, 5), maxSpeed);
+			{
+				vel += Vec3(0, 0, 6);
+				lastJump = tTime;
+			}
+		}
+
+		void MoveDir()
+		{
+			vel = Vec3(TryAdd2V2(vel, dir * game->dTime * (speed + game->planet->friction),
+				maxSpeed), vel.z);
 		}
 	};
 
@@ -342,13 +351,13 @@ namespace Enemies
 			if (entity == front)
 			{
 				DelayedDestroySelf();
-				health = -1;
+				health = -1; // Set to -1 but may be further decreased before frame ends.
 			}
 		}
 
 		int DealDamage(int damage, Entity* damageDealer) override
 		{
-			if (health == -1) return 1;
+			if (health < 0) return 1;
 			if (next == nullptr)
 				return Enemy::DealDamage(damage, damageDealer);
 			return front->Enemy::DealDamage(damage, damageDealer);
@@ -664,7 +673,7 @@ namespace Enemies
 
 		int DealDamage(int damage, Entity* damageDealer) override
 		{
-			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->difficulty])
+			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->settings.difficulty])
 			{
 				if (damage > 0)
 				{
@@ -784,8 +793,8 @@ namespace Enemies
 		{
 			Cat* cat = static_cast<Cat*>(entity);
 
-			cat->dir = RotateTowardsNorm(cat->vel != vZero && glm::normalize(cat->vel) != cat->dir ? cat->vel : cat->dir, game->PlayerPos() - cat->pos, cat->homeSpeed * game->dTime);
-			cat->vel = cat->dir * glm::length(cat->vel);
+			cat->dir = RotateTowardsNorm(cat->dir, game->PlayerPos() - cat->pos, game->dTime * cat->homeSpeed);
+			cat->MoveDir();
 
 			cat->Update(UPDATE::POUNCER);
 		}
@@ -794,17 +803,20 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 
-			if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
+			if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
 			{
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, RotateBy(game->PlayerPos() - cat->pos, PI_F * 0.125f), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, RotateBy(game->PlayerPos() - cat->pos, 0), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, RotateBy(game->PlayerPos() - cat->pos, PI_F * -0.125f), cat));
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(game->PlayerPos() - cat->pos +
+					Vec3(0, 0, cat->projectile2->radius), PI_F * 0.125f), cat));
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, game->PlayerPos() - cat->pos +
+					Vec3(0, 0, cat->projectile2->radius), cat));
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(game->PlayerPos() - cat->pos +
+					Vec3(0, 0, cat->projectile2->radius), PI_F * -0.125f), cat));
 			}
 			
-			cat->corporeal = true;
+			//cat->corporeal = true;
 			if (tTime - cat->lastStartedCircle < cat->circleTime)
 			{
-				cat->corporeal = false;
+				//cat->corporeal = false;
 				float rotation = (tTime - cat->lastStartedCircle) * cat->spinSpeed;
 				cat->SetPos(game->PlayerPos() + Vec3(sinf(rotation) * cat->circleRadius, cosf(rotation) * cat->circleRadius, 0));
 			
@@ -816,8 +828,9 @@ namespace Enemies
 
 					for (int i = 1; i < count; i++)
 					{
-						pos = Vec3(glm::rotate(Vec2(pos - game->PlayerPos()), PI_F * 2 / count), pos.z) + game->PlayerPos();
-						game->entities->push_back(cat->projectile->Clone(pos, game->PlayerPos() - pos, cat));
+						pos = Vec3(glm::rotate(Vec2(pos - game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos()), pos.z);
+						game->entities->push_back(cat->projectile->Clone(pos, game->PlayerPos() - pos +
+							Vec3(0, 0, cat->projectile->radius), cat));
 					}
 
 					game->entities->push_back(cat->projectile->Clone(cat->pos, game->PlayerPos() - cat->pos, cat));
@@ -864,11 +877,12 @@ namespace Enemies
 		void ParentDU(Entity* entity)
 		{
 			Parent* parent = static_cast<Parent*>(entity);
-			parent->DUpdate(DUPDATE::DTOCOL);
-			parent->child->Draw(parent->pos + up);
-			parent->child->Draw(parent->pos + left);
-			parent->child->Draw(parent->pos + down);
-			parent->child->Draw(parent->pos + right);
+			parent->DUpdate(DUPDATE::DTOCOL); // Modify to actually draw now that rendering's been changed.
+			float drawHeight = parent->radius * sqrtf(1.f - 0.5f * 0.5f), drawDist = parent->radius * 0.5f;
+			parent->child->Draw(parent->pos + Vec3(0, drawDist, drawHeight));
+			parent->child->Draw(parent->pos + Vec3(-drawDist, 0, drawHeight));
+			parent->child->Draw(parent->pos + Vec3(0, -drawDist, drawHeight));
+			parent->child->Draw(parent->pos + Vec3(drawDist, 0, drawHeight));
 		}
 
 		void ExploderDU(Entity* entity)
@@ -927,7 +941,7 @@ namespace Enemies
 
 			for (int i = 1; i < count; i++)
 			{
-				cat->pos = Vec3(glm::rotate(Vec2(cat->pos) - Vec2(game->PlayerPos()), PI_F * 2 / count), cat->pos.z) + game->PlayerPos();
+				cat->pos = Vec3(glm::rotate(Vec2(cat->pos) - Vec2(game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos()), cat->pos.z);
 				cat->DUpdate(DUPDATE::ENTITY);
 			}
 
@@ -940,7 +954,7 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
-			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
+			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
 				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CAT);
 			cat->color = tempColor;
@@ -1082,7 +1096,7 @@ namespace Enemies
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
 			vacuumer->OnDeath(ONDEATH::ENEMY, damageDealer);
-			for (Item item : vacuumer->items)
+			for (ItemInstance item : vacuumer->items)
 			{
 				game->entities->push_back(make_unique<Collectible>(item, vacuumer->pos));
 			}
@@ -1112,7 +1126,7 @@ namespace Enemies
 		bool DefaultMU(Enemy* enemy)
 		{
 			enemy->dir = Normalized(game->PlayerPos() - enemy->pos);
-			enemy->vel = TryAdd2(enemy->vel, enemy->dir * game->dTime * (enemy->speed + game->planet->friction), enemy->maxSpeed);
+			enemy->MoveDir();
 			enemy->ShouldTryJump();
 			return false;
 		}
@@ -1123,8 +1137,7 @@ namespace Enemies
 			snake->dir = Normalized(game->PlayerPos() - snake->pos);
 			if (snake->front == nullptr)
 			{
-				snake->vel = TryAdd2(snake->vel, Normalized(game->PlayerPos() - snake->pos) * game->dTime *
-					(snake->speed + game->planet->friction), snake->maxSpeed);
+				enemy->MoveDir();
 				snake->ShouldTryJump();
 			}
 			return false;
@@ -1149,8 +1162,7 @@ namespace Enemies
 			snake->dir = Normalized(game->PlayerPos() - snake->pos);
 			if (snake->next == nullptr)
 			{
-				snake->vel = TryAdd2(snake->vel, Normalized(game->PlayerPos() - snake->pos) * game->dTime *
-					(snake->speed + game->planet->friction), snake->maxSpeed);
+				enemy->MoveDir();
 				enemy->ShouldTryJump();
 			}
 			return false;
@@ -1160,10 +1172,9 @@ namespace Enemies
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
 			float distance = glm::distance(game->PlayerPos(), vacuumer->pos);
-			vacuumer->dir = Normalized(game->PlayerPos() - vacuumer->pos);
-			vacuumer->vel = TryAdd2(vacuumer->vel, (game->PlayerPos() - vacuumer->pos) * (game->dTime * (vacuumer->speed + game->planet->friction) *
-				(float(distance > vacuumer->desiredDistance) * 2 - 1) / distance), vacuumer->maxSpeed);
-			enemy->ShouldTryJump();
+			vacuumer->dir = Normalized(game->PlayerPos() - vacuumer->pos) * (distance > vacuumer->desiredDistance ? 1.f : -1.f);
+			vacuumer->MoveDir();
+			vacuumer->ShouldTryJump();
 			return false;
 		}
 
@@ -1201,9 +1212,9 @@ namespace Enemies
 		{
 			Tank* tank = static_cast<Tank*>(enemy);
 
-			tank->dir = Vec3(RotateTowardsNorm2(tank->vel != vZero && glm::normalize(tank->vel) != tank->dir ? tank->vel : tank->dir,
-				game->PlayerPos() - tank->pos, tank->turnSpeed * game->dTime), 0);
-			tank->vel = TryAdd2(tank->vel, tank->dir * game->dTime * (tank->speed + game->planet->friction), tank->maxSpeed);
+			tank->dir = Vec3(RotateTowardsNorm2(tank->dir, game->PlayerPos() - tank->pos, tank->turnSpeed * game->dTime), 0);
+			if (glm::dot(Vec2(tank->dir), Normalized2(game->PlayerPos() - tank->pos)) > 0.75f)
+				tank->MoveDir();
 			tank->ShouldTryJump();
 			return false;
 		}
@@ -1265,13 +1276,13 @@ namespace Enemies
 	// Mid-lates - 6
 	Parent* parent = new Parent(child, 1, 1, 1, 0.5f, 4, 6, 1, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 10, 10, "Parent");
 	Parent* spiderParent = new Parent(centicrawler, 1, 1, 1, 0.5f, 4, 6, 1, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 10, 10, "Spider Parent");
-	Snake* snake = new Snake(30, 0.1f, 1, 0.5f, 4, 4, 0.5f, 30, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 3, 3, "Snake");
+	SnakeConnected* snake = new SnakeConnected(15, 0.1f, 1, 0.5f, 4, 4, 0.5f, 8, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 30, 30, "Snake");
 	Enemy* megaTanker = new Enemy(1, 1, 1, 0.5f, 20, 6, 1, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 48, 48, "Mega Tanker");
 	
 	// Lates - 8
 	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 3, 6, 0.5f, 8, 8, 1, 0.5f, RGBA(), 1, 24, 24, "Hyper Speedster");
 	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 4, 0.5f, 8, 8, 1, 1.5f, RGBA(153, 255), RGBA(), 1, 3, 3, "Giga Exploder");
-	SnakeConnected* bigSnake = new SnakeConnected(30, 0.3f, 1, 0.5f, 4, 4, 0.5f, 30, 8, 1, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 45, 45, "Big Snake");
+	SnakeConnected* bigSnake = new SnakeConnected(30, 0.3f, 1, 0.5f, 4, 4, 0.5f, 30, 8, 1, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 90, 90, "Big Snake");
 	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, 0.5f, 8.0f, 60, 8, 1, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
 
 	// Very lates - 12
@@ -1280,8 +1291,8 @@ namespace Enemies
 	Spoobderb* spoobderb = new Spoobderb(centicrawler, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 2, 2, 0.5f, 50, 12, 1, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 100, 100, "Spoobderb - The 30 footed beast");
 
 	// Bosses - Special
-	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, cat->radius, cat->color, 1, 1, 1, "Cataclysmic Bullet");
-	Projectile* catProjectile2 = new Projectile(25.0f, 1, cat->speed * 2, cat->radius, cat->color, 1, 1, 1, "Cataclysmic Bullet");
+	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile* catProjectile2 = new Projectile(25.0f, 1, cat->speed * 2, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
 	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
@@ -1295,9 +1306,9 @@ namespace Enemies
 
 		static int GetRoundPoints()
 		{
-			if (game->difficulty == DIFFICULTY::EASY)
+			if (game->settings.difficulty == DIFFICULTY::EASY)
 				return static_cast<int>(pow(1.25, waveCount)) + waveCount * 2 - 1;
-			else if (game->difficulty == DIFFICULTY::MEDIUM)
+			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
 				return static_cast<int>(pow(1.37, waveCount)) + waveCount * 3 - 1;
 			else // difficulty == hard
 				return static_cast<int>(pow(1.45, waveCount)) + waveCount * 5 + 3;
@@ -1323,7 +1334,7 @@ namespace Enemies
 		void SpawnRandomEnemies()
 		{
 			if (superWave)
-				waveCount += superWaveModifiers[game->difficulty];
+				waveCount += superWaveModifiers[game->settings.difficulty];
 
 			SpawnRandomEnemies(Types::GetRoundPoints());
 
@@ -1331,8 +1342,8 @@ namespace Enemies
 
 			if (superWave)
 			{
-				waveCount -= superWaveModifiers[game->difficulty];
-				for (int i = 0; i < difficultySeedSuperWaveCount[game->difficulty]; i++)
+				waveCount -= superWaveModifiers[game->settings.difficulty];
+				for (int i = 0; i < difficultySeedSuperWaveCount[game->settings.difficulty]; i++)
 					game->entities->push_back(Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(game->PlayerPos()));
 				((Entity*)game->player)->DealDamage(-1, nullptr);
 				superWave = false;
@@ -1378,7 +1389,7 @@ namespace Enemies
 		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, pusher, frog},
 		{parent, spiderParent, snake, megaTanker},
-		{/*hyperSpeedster, gigaExploder, */bigSnake/*, pouncerSnake*/},
+		{hyperSpeedster, gigaExploder, bigSnake, pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

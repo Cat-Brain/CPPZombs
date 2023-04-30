@@ -187,15 +187,14 @@ namespace Livestock
 			}
 			case AI_MODE::HUNTING:
 			{
-				kiwi->dir = RotateTowardsNorm(kiwi->vel != vZero && glm::normalize(kiwi->vel) != kiwi->dir ? kiwi->vel : kiwi->dir,
-					kiwi->observing->pos - kiwi->pos, game->dTime * kiwi->turnSpeed);
+				kiwi->dir = RotateTowardsNorm(kiwi->dir, kiwi->observing->pos - kiwi->pos, game->dTime * kiwi->turnSpeed);
 				if (glm::dot(kiwi->dir, Normalized(kiwi->observing->pos - kiwi->pos)) > 0.75f)
 					kiwi->vel = TryAdd2(kiwi->vel, kiwi->dir * (game->planet->friction + kiwi->moveSpeed * game->dTime), kiwi->maxSpeed);
 				vector<Entity*> collectibles = EntitiesOverlaps(kiwi->pos, kiwi->radius, game->entities->collectibles);
 				for (Entity* collectible : collectibles)
 				{
 					kiwi->lastEatPos = kiwi->pos;
-					kiwi->fullness += ((Collectible*)collectible)->baseItem.mass;
+					kiwi->fullness += ((Collectible*)collectible)->baseItem->mass;
 					collectible->DestroySelf(kiwi);
 				}
 				break;
@@ -238,5 +237,5 @@ namespace Livestock
 
 namespace Resources::Eggs
 {
-	unique_ptr<PlacedOnLanding> kiwiEgg = make_unique<PlacedOnLanding>(Livestock::kiwiEgg.get(), "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg->color, 0, 1, 15.f, false, 0.25f, Livestock::kiwiEgg->radius);
+	PlacedOnLanding* kiwiEgg = new PlacedOnLanding(ITEMTYPE::KIWI_EGG, Livestock::kiwiEgg.get(), "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg->color, 0, 15.f, false, 0.25f, Livestock::kiwiEgg->radius);
 }

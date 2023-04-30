@@ -17,7 +17,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <fstream>
 #include FT_FREETYPE_H
+
 using std::vector;
 using std::string;
 using std::unique_ptr;

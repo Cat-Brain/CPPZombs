@@ -9,7 +9,7 @@ class Planet
 public:
 	float friction, gravity, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	unique_ptr<Enemies::Instance> enemies, bosses;
-	FastNoiseLite worldNoise;
+	FastNoiseLite worldNoise, caveNoise;
 	JRGB color1, color2, fog;
 
 	Planet();

@@ -75,40 +75,41 @@ namespace Updates
 class ShotItem : public Projectile
 {
 public:
-    Item item;
+    ItemInstance item;
     string creatorName;
 
-    ShotItem(Item item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item.range, item.damage, speed, radius, item.color, mass, maxHealth, health), item(item)
+    ShotItem(ItemInstance item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
+        Projectile(item->range, item->damage, speed, radius, item->color, mass, maxHealth, health), item(item)
     {
         onDeath = ONDEATH::SHOTITEM;
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Item item, Vec3 pos, Vec3 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, ItemInstance item, Vec3 pos, Vec3 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
         this->creator = creator;
         float magnitude = glm::length(direction);
         this->dir = direction / magnitude;
-        duration = fminf(item.range, magnitude);
+        duration = fminf(item->range, magnitude);
         this->pos = pos;
         begin = tTime;
-        damage = item.damage;
+        damage = item->damage;
         this->item = item;
-        color = item.color;
-        mass = item.mass;
-        corporeal = item.corporeal;
-        shouldCollide = item.shouldCollide;
-        radius = item.radius;
-        health = item.health;
-            name = item.name;
+        color = item->color;
+        mass = item->mass;
+        speed = item->speed;
+        corporeal = item->corporeal;
+        shouldCollide = item->shouldCollide;
+        radius = item->radius;
+        health = item->health;
+            name = item->name;
         if (creator != nullptr)
             creatorName = creator->name;
         Start();
     }
 
-    unique_ptr<Entity> Clone(Item baseItem, Vec3 pos, Vec3 direction, Entity* creator)
+    unique_ptr<Entity> Clone(ItemInstance baseItem, Vec3 pos, Vec3 direction, Entity* creator)
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }
@@ -119,23 +120,18 @@ namespace OnDeaths
     void ShotItemOD(Entity* entity, Entity* damageDealer)
     {
         ShotItem* shot = static_cast<ShotItem*>(entity);
-        shot->item.baseClass->OnDeath(shot->pos, shot->dir, shot->creator, shot->creatorName, damageDealer, shot->callType);
+        shot->item->OnDeath(shot->item, shot->pos, shot->dir, shot->creator, shot->creatorName, damageDealer, shot->callType);
     }
 }
 
-namespace Projectiles
-{
-    Item* basicBullet = new Item("Basic bullet", "Ammo", 1, RGBA(55, 55, 55), 2, 1, 30.0f);
-}
-
-ShotItem* basicShotItem = new ShotItem(*Resources::copper, 12, 0.5f, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(Resources::copper->Clone(), 12, 0.5f, 1, 1, 1);
 
 namespace ItemUs
 {
-    void ItemU(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+    void ItemU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
-        game->entities->push_back(basicShotItem->Clone(*stack,
-            creator->pos + Vec3(0, 0, stack->radius - creator->radius), dir, creator));
-        stack->count -= 1;
+        game->entities->push_back(basicShotItem->Clone(item.Clone(1),
+            pos + Vec3(0, 0, item->radius - creator->radius), dir, creator));
+        item.count--;
     }
 }

@@ -91,19 +91,19 @@ namespace OnDeaths {
 namespace Shootables
 {
 	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 1, 1, "Cheese");
-	LightBlock* shades = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 1, 1, "Shades");
+	LightBlock* shade = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, 0);
-	PlacedOnLanding* shades = new PlacedOnLanding(Shootables::shades, "Shades", "Light", 3, Shootables::shades->color, 0);
+	PlacedOnLanding* cheese = new PlacedOnLanding(ITEMTYPE::CHEESE, Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, 0);
+	PlacedOnLanding* shade = new PlacedOnLanding(ITEMTYPE::SHADE, Shootables::shade, "Shade", "Light", 3, Shootables::shade->color, 0);
 }
 
 namespace Collectibles
 {
-	Collectible* cheese = new Collectible(*Resources::cheese);
-	Collectible* shades = new Collectible(*Resources::shades);
+	Collectible* cheese = new Collectible(Resources::cheese->Clone());
+	Collectible* shade = new Collectible(Resources::shade->Clone());
 }
 
 enum class TUPDATE

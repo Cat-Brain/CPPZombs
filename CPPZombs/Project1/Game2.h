@@ -6,19 +6,29 @@ Chunk::Chunk(iVec3 pos) :
 	memset(tiles, UnEnum(pos.z >= 0 ? TILE::AIR : TILE::ROCK), CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 		for (int y = 0; y < CHUNK_WIDTH; y++)
+		{
+			float tX = pos.x + x, tY = pos.y + y;
+			float noise = game->planet->worldNoise.GetNoise(tX, tY) * 0.5f + 0.5f;
+			noise = noise * 4.f + 0.5f; // 0.5-4.5
+			if (noise > 3)
+				noise = (noise - 3) * 5 + 3; // 3-10.5
 			for (int z = 0; z < CHUNK_WIDTH; z++)
 			{
-				float noise = game->planet->worldNoise.GetNoise(float(pos.x + x), float(pos.y + y)) * 0.5f + 0.5f;
+				float noise2 = 0.f;// game->planet->caveNoise.GetNoise(float(pos.x + x), float(pos.y + y), float(pos.z + z));
 				int tZ = z + pos.z;
-				tiles[x][y][z] = UnEnum(noise * 4.f + 0.5f < tZ ? TILE::AIR : tZ > 3 ? TILE::ROCK : tZ > 2 ? TILE::SAND : tZ > 1 ?
+				tiles[x][y][z] = UnEnum(noise < tZ || noise2 > 0.75f ? TILE::AIR : tZ > 7 ? TILE::SNOW : tZ > 3 ? TILE::ROCK : tZ > 2 ? TILE::SAND : tZ > 1 ?
 					TILE::BAD_SOIL : tZ > 0 ? TILE::MID_SOIL : TILE::MAX_SOIL);
 			}
+		}
 	GenerateMesh();
 }
 
 Planet::Planet()
 {
-	worldNoise.SetFrequency(0.01f);
+	worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+	worldNoise.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction_EuclideanSq);
+	worldNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
+	worldNoise.SetFrequency(0.01f * (RandFloat() * 0.5f + 0.5f));
 	worldNoise.SetFractalLacunarity(1.0f);
 	worldNoise.SetFractalGain(0.25f);
 	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
@@ -67,7 +77,7 @@ void Game::Start()
 	planet = std::make_unique<Planet>();
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = characters[selectedCharacter]->PClone();
+	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone();
 	player = playerUnique.get();
 	for (int i = 0; i < 100; i++)
 	{
@@ -75,13 +85,6 @@ void Game::Start()
 			break;
 		else
 			player->pos.z++;
-	}
-	for (int i = 0; i < 100; i++)
-	{
-		if (!entities->OverlapsTile(player->pos, player->radius))
-			break;
-		else
-			player->pos.x++;
 	}
 	entities->push_back(std::move(playerUnique));
 	playerAlive = true;
@@ -122,15 +125,14 @@ bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(
 	
 void Game::Update()
 {
-	inputs.Update(window);
+	inputs.UpdateMouse(window, zoom);
+
 	if (uiMode == UIMODE::MAINMENU)
 	{
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		inputs.FindMousePos(window, zoom);
 
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
@@ -141,15 +143,24 @@ void Game::Update()
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
-		else if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], difficulty == DIFFICULTY::EASY ?
-			RGBA(0, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
-			difficulty = DIFFICULTY::EASY;
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], difficulty == DIFFICULTY::MEDIUM ?
-			RGBA(255, 255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
-			difficulty = DIFFICULTY::MEDIUM;
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], difficulty == DIFFICULTY::HARD ?
-			RGBA(255) : RGBA(255, 255, 255), difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
-			difficulty = DIFFICULTY::HARD;
+		else if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
+			RGBA(0, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
+		{
+			settings.difficulty = DIFFICULTY::EASY;
+			settings.Write();
+		}
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
+			RGBA(255, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
+		{
+			settings.difficulty = DIFFICULTY::MEDIUM;
+			settings.Write();
+		}
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
+			RGBA(255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
+		{
+			settings.difficulty = DIFFICULTY::HARD;
+			settings.Write();
+		}
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "Settings"))
 			uiMode = UIMODE::SETTINGS;
 	}
@@ -160,16 +171,20 @@ void Game::Update()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		inputs.FindMousePos(window, zoom);
-
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 			uiMode = UIMODE::MAINMENU;
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, vSync ? "Yes vSync" : "No vSync", vSync ? RGBA(0, 255) : RGBA(255),
-			vSync ? RGBA(0, 127) : RGBA(127)))
-			vSync = !vSync;
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, settings.vSync ? "Yes vSync" : "No vSync", settings.vSync ? RGBA(0, 255) : RGBA(255),
+			settings.vSync ? RGBA(0, 127) : RGBA(127)))
+		{
+			settings.vSync ^= true;
+			settings.Write();
+		}
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f,
-			colorBand ? "Yes color band" : "No color band", colorBand ? RGBA(0, 255) : RGBA(255), colorBand ? RGBA(0, 127) : RGBA(127)))
-			colorBand = !colorBand;
+			settings.colorBand ? "Yes color band" : "No color band", settings.colorBand ? RGBA(0, 255) : RGBA(255), settings.colorBand ? RGBA(0, 127) : RGBA(127)))
+		{
+			settings.colorBand ^= true;
+			settings.Write();
+		}
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
 	{
@@ -178,68 +193,65 @@ void Game::Update()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		inputs.FindMousePos(window, zoom);
-		
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 		{
 			Start();
 			uiMode = UIMODE::INGAME;
 		}
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.escape.held)
 			uiMode = UIMODE::MAINMENU;
 		else
 			for (int i = 0; i < characters.size(); i++)
 				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
-					selectedCharacter == i ? characters[i]->color : RGBA(255, 255, 255), selectedCharacter == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
-					selectedCharacter = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+					UnEnum(settings.character) == i ? characters[i]->color : RGBA(255, 255, 255), UnEnum(settings.character) == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
+				{
+					settings.character = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+					settings.Write();
+				}
 	}
-	else
+	else // In game or paused
 	{
 		if (playerAlive && inputs.escape.pressed)
 			uiMode = uiMode == UIMODE::INGAME ? UIMODE::PAUSED : UIMODE::INGAME;
 
-		if (uiMode == UIMODE::INGAME)
+		if (playerAlive)
 		{
-			if (playerAlive)
-				TUpdate();
-			else
+			TUpdate();
+			if (uiMode == UIMODE::PAUSED)
 			{
-				if (currentFramebuffer != 0)
-				{
-					currentFramebuffer = 0;
-					UseFramebuffer();
-				}
-				glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-				font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-				font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-
-				inputs.FindMousePos(window, zoom);
-
-				if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
-				{
-					Start();
+				currentFramebuffer = TRUESCREEN;
+				UseFramebuffer();
+				inputs.UpdateKey(window, inputs.escape, GLFW_KEY_ESCAPE);
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 					uiMode = UIMODE::INGAME;
-				}
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
 					uiMode = UIMODE::MAINMENU;
-
-				font.Render(difficultyStrs[difficulty], {-ScrWidth(), int(ScrHeight() * -0.5f)}, ScrHeight() / 5.0f,
-					{difficulty == DIFFICULTY::EASY ? 0u : 255u, difficulty == DIFFICULTY::HARD ? 0u : 255u});
 			}
 		}
-		if (uiMode == UIMODE::PAUSED)
+		else
 		{
-			currentFramebuffer = TRUESCREEN;
-			UseFramebuffer();
+			if (currentFramebuffer != 0)
+			{
+				currentFramebuffer = 0;
+				UseFramebuffer();
+			}
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 
-			inputs.FindMousePos(window, zoom);
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
+			{
+				Start();
 				uiMode = UIMODE::INGAME;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
+			}
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
 				uiMode = UIMODE::MAINMENU;
+
+			font.Render(difficultyStrs[settings.difficulty], { -ScrWidth(), int(ScrHeight() * -0.5f) }, ScrHeight() / 5.0f,
+				{ settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
 		}
 	}
 }
@@ -269,7 +281,7 @@ void Game::ApplyLighting()
 
 	glUseProgram(shadowShader);
 	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-	glUniform1i(glGetUniformLocation(shadowShader, "colorBand"), int(colorBand));
+	glUniform1i(glGetUniformLocation(shadowShader, "colorBand"), int(settings.colorBand));
 	glUniform1i(glGetUniformLocation(shadowShader, "normalMap"), 0);
 	glUniform1i(glGetUniformLocation(shadowShader, "positionMap"), 1);
 
@@ -335,8 +347,14 @@ void Game::TUpdate()
 	currentFramebuffer = MAINSCREEN;
 	UseFramebuffer();
 	// In TUpdate such that time doesn't progress whilst paused.
-	tTime += dTime;
-	inputs.FindMousePos(window, zoom);
+	if (game->uiMode == UIMODE::INGAME)
+	{
+		tTime += dTime;
+		game->inputs.Update(window);
+	}
+	else
+		dTime = 0;
+
 
 	screenShake *= powf(0.25f, game->dTime);
 	screenOffset = Vec3(Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake, zoom);
@@ -402,7 +420,6 @@ void Game::TUpdate()
 				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->enemies->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
-		player->items.DUpdate();
 	}
 
 	lastPlayerPos = player->pos;

@@ -7,7 +7,7 @@
 enum class UPDATE // Update
 {
 	ENTITY, FADEOUT, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2, ENEMY, POUNCERSNAKE, VACUUMER, SPIDER,
-	CENTICRAWLER, POUNCER, CAT, CATACLYSM, EGG, KIWI, PLAYER, GRENADE
+	CENTICRAWLER, POUNCER, CAT, CATACLYSM, EGG, KIWI, PLAYER, TURRET, ROVER, ENGINEER, GRENADE
 };
 
 vector<function<void(Entity*)>> updates;
@@ -22,7 +22,7 @@ vector<function<void(Entity*)>> vUpdates;
 enum class DUPDATE // Draw Update
 {
 	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT,
-	CATACLYSM, TANK, KIWI, PLAYER
+	CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
 };
 
 vector<function<void(Entity*)>> dUpdates;
@@ -36,7 +36,7 @@ vector<function<void(Entity*)>> eDUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
-	ENTITY, TREE, VINE, ENEMY, SNAKECONNECTED
+	ENTITY, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
 };
 
 vector<function<void(Entity*)>> uiUpdates;
@@ -238,6 +238,11 @@ namespace MaskF
 	bool IsCorporealNotCreator(Entity* from, Entity* to)
 	{
 		return from != to && from->creator != to && to->corporeal && !to->isCollectible;
+	}
+
+	bool IsEnemy(Entity* from, Entity* to)
+	{
+		return  to->isEnemy && from != to && to->corporeal && !to->isCollectible && to != from->creator;
 	}
 
 	bool IsNonEnemy(Entity* from, Entity* to)

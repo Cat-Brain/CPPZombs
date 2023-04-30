@@ -3,17 +3,17 @@
 class Collectible : public Entity
 {
 public:
-	Item baseItem;
+	ItemInstance baseItem;
 
-	Collectible(Item baseItem, Vec3 pos = vZero) :
-		Entity(pos, baseItem.radius, baseItem.color, 1, 1, 1, baseItem.name), baseItem(baseItem)
+	Collectible(ItemInstance baseItem, Vec3 pos = vZero) :
+		Entity(pos, baseItem->radius, baseItem->color, 1, 1, 1, baseItem->name), baseItem(baseItem)
 	{
 		isCollectible = true;
 		vUpdate = VUPDATE::FRICTION;
 	}
 
-	Collectible(Item baseItem, Vec3 pos, RGBA color) :
-		Entity(pos, baseItem.radius, color, 1, 1, 1, baseItem.name), baseItem(baseItem)
+	Collectible(ItemInstance baseItem, Vec3 pos, RGBA color) :
+		Entity(pos, baseItem->radius, color, 1, 1, 1, baseItem->name), baseItem(baseItem)
 	{
 		corporeal = false;
 		isCollectible = true;
@@ -36,8 +36,9 @@ public:
 
 namespace Collectibles
 {
-	Collectible* copper = new Collectible(*Resources::copper, vZero);
-	Collectible* iron = new Collectible(*Resources::iron, vZero);
-	Collectible* rock = new Collectible(*Resources::rock, vZero);
-	Collectible* bowler = new Collectible(*Resources::bowler, vZero);
+	Collectible* copper = new Collectible(Resources::copper->Clone());
+	Collectible* iron = new Collectible(Resources::iron->Clone());
+	Collectible* rock = new Collectible(Resources::rock->Clone());
+	Collectible* bowler = new Collectible(Resources::bowler->Clone());
+	Collectible* silver = new Collectible(Resources::silver->Clone());
 }

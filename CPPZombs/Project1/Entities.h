@@ -399,15 +399,21 @@ public:
 
 	void DUpdate()
 	{
-		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->DistToCorner());
+		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->CurrentDistToCorner()), chunkOverlaps2 = {};
+		glUseProgram(chunkShader);
+		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
 		for (int i : chunkOverlaps)
 			if (chunks[i].pos.x + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
-				chunks[i].pos.y + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom               &&
+				chunks[i].pos.y + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom &&
 				chunks[i].pos.x <= game->PlayerPos().x + game->zoom * screenRatio &&
-				chunks[i].pos.y <= game->PlayerPos().y + game->zoom)
-			chunks[i].Draw();
+				chunks[i].pos.y <= game->PlayerPos().y + game->zoom &&
+				chunks[i].pos.z <= game->PlayerPos().z + game->screenOffset.z)
+			{
+				chunks[i].Draw();
+				chunkOverlaps2.push_back(i);
+			}
 
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->DistToCorner(), MaskF::IsCorporealNotCollectible);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps2, game->PlayerPos(), game->CurrentDistToCorner(), MaskF::IsCorporealNotCollectible);
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -570,13 +576,12 @@ void Entity::SetRadius(float newRadius)
 void Entity::UpdateChunkCollision()
 {
 	vector<Vec3> hitPositions{};
-	bool overlappedAllPossible = true, multipleOverlappedTiles = false;
+	bool overlappedAllPossible = true;
 	vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 	for (int i : chunkOverlaps)
 	{
 		iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
 		iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
-		multipleOverlappedTiles |= minPos.x != maxPos.x && minPos.y != maxPos.y && minPos.z != maxPos.z;
 		for (int x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
 				for (int z = minPos.z; z <= maxPos.z; z++)
@@ -592,11 +597,9 @@ void Entity::UpdateChunkCollision()
 	}
 	if (hitPositions.size() && !game->inputs.phase.held)
 	{
-		if (overlappedAllPossible && multipleOverlappedTiles)
-		{
-			pos.z++;
-			return;
-		}
+		if (overlappedAllPossible)
+			return SetPos(pos + Vec3(0, 0, 1));
+
 		Vec3 hitPosition = hitPositions[0];
 		float distance = glm::length2(hitPosition - pos), newDistance;
 		for (int i = 1; i < hitPositions.size(); i++)
@@ -699,15 +702,16 @@ public:
 		corporeal = false;
 	}
 
-	FadeOutPuddle(FadeOutPuddle* baseClass, Vec3 pos) :
+	FadeOutPuddle(FadeOutPuddle* baseClass, Vec3 pos, Entity* creator) :
 		FadeOutPuddle(*baseClass) {
 		this->pos = pos;
 		startTime = tTime;
+		this->creator = creator;
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = up, Entity* creator = nullptr) override
 	{
-		return make_unique<FadeOutPuddle>(this, pos);
+		return make_unique<FadeOutPuddle>(this, pos, creator);
 	}
 };
 
@@ -785,7 +789,7 @@ namespace Updates
 		if (tTime - puddle->lastTime > puddle->timePer)
 		{
 			puddle->lastTime = tTime;
-			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsCorporealNotCollectible, puddle);
+			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsCorporealNotCreator, puddle);
 		}
 		if (tTime - puddle->startTime > puddle->totalFadeTime)
 			puddle->DestroySelf(puddle);
@@ -811,7 +815,9 @@ namespace DUpdates
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		puddle->color.a = 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
+		glDepthMask(GL_FALSE);
 		puddle->DUpdate(DUPDATE::ENTITY);
+		glDepthMask(GL_TRUE);
 	}
 
 	void FadeOutGlowDU(Entity* entity)
@@ -839,66 +845,39 @@ public:
 	Entity* entityToPlace;
 	string creatorName;
 
-	PlacedOnLanding(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(entityToPlace->name, typeName, intType, entityToPlace->color, damage, count, range, useTime, radius,
+	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(type, entityToPlace->name, typeName, intType, entityToPlace->color, damage, range, useTime, speed, radius,
 			corporeal, shouldCollide, mass, health), entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
 		itemOD = ITEMOD::PLACEDONLANDING;
 	}
 
-	PlacedOnLanding(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.4f,
+	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
+		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
 		itemOD = ITEMOD::PLACEDONLANDING;
-	}
-
-	PlacedOnLanding(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		entityToPlace(entityToPlace), sayCreator(sayCreator)
-	{
-		itemOD = ITEMOD::PLACEDONLANDING;
-	}
-
-	Item Clone(int count) override
-	{
-		return PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new PlacedOnLanding((PlacedOnLanding*)baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 };
 
 class CorruptOnKill : public PlacedOnLanding
 {
 public:
-	CorruptOnKill(Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		PlacedOnLanding(entityToPlace, typeName, intType, damage, count, range, sayCreator,
-			useTime, radius, corporeal, shouldCollide, mass, health)
+	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(type, entityToPlace, typeName, intType, damage, range, sayCreator,
+			useTime, speed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::CORRUPTONKILL;
 	}
 
-	CorruptOnKill(Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float radius = 0.4f,
+	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
+		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		PlacedOnLanding(entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
-	{
-		itemOD = ITEMOD::CORRUPTONKILL;
-	}
-
-	CorruptOnKill(PlacedOnLanding* baseClass, Entity* entityToPlace, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, bool sayCreator = false,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		PlacedOnLanding(baseClass, entityToPlace, name, typeName, intType, color, damage, count, range, sayCreator, useTime, radius, corporeal, shouldCollide, mass, health)
+		PlacedOnLanding(type, entityToPlace, name, typeName, intType, color, damage, range, sayCreator, useTime, speed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::CORRUPTONKILL;
 	}
@@ -922,62 +901,25 @@ public:
 	int explosionDamage;
 	float explosionRadius;
 
-	ExplodeOnLanding(float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
+	ExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health),
 		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
 	{
 		itemOD = ITEMOD::EXPLODEONLANDING;
-	}
-
-	ExplodeOnLanding(Item* baseClass, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL",
-		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
-	{
-		itemOD = ITEMOD::EXPLODEONLANDING;
-	}
-
-	Item Clone(int count) override
-	{
-		return ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
 class UpExplodeOnLanding : public ExplodeOnLanding
 {
 public:
-	UpExplodeOnLanding(float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
+	UpExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		ExplodeOnLanding(explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
+		ExplodeOnLanding(type, explosionRadius, explosionDamage, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::UPEXPLODEONLANDING;
-	}
-
-	UpExplodeOnLanding(Item* baseClass, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL",
-		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		ExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
-	{
-		itemOD = ITEMOD::UPEXPLODEONLANDING;
-	}
-
-	Item Clone(int count) override
-	{
-		return UpExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new UpExplodeOnLanding(baseClass, explosionRadius, explosionDamage, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
@@ -985,29 +927,13 @@ class ImproveSoilOnLanding : public Item
 {
 public:
 	int improveRadius; // Used like a square's radius.
-	ImproveSoilOnLanding(int improveRadius, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
+	ImproveSoilOnLanding(ITEMTYPE type, int improveRadius, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health),
 		improveRadius(improveRadius)
 	{
 		itemOD = ITEMOD::IMPROVESOILONLANDING;
-	}
-
-	ImproveSoilOnLanding(int improveRadius, Item* baseClass, string name = "NULL",
-		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		improveRadius(improveRadius) { }
-
-	Item Clone(int count) override
-	{
-		return ImproveSoilOnLanding(improveRadius, baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new ImproveSoilOnLanding(improveRadius, baseClass, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
@@ -1017,46 +943,30 @@ public:
 	int zOffset;
 	TILE tile;
 
-	SetTileOnLanding(TILE tile, int zOffset, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
-		RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f,
+	SetTileOnLanding(ITEMTYPE type, TILE tile, int zOffset, string name = "NULL", string typeName = "NULL TYPE", int intType = 0,
+		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health),
 		tile(tile), zOffset(zOffset)
 	{
 		itemOD = ITEMOD::SETTILEONLANDING;
-	}
-
-	SetTileOnLanding(Item* baseClass, TILE tile, int zOffset, string name = "NULL",
-		string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1, int count = 1, float range = 15.0f,
-		float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health),
-		tile(tile), zOffset(zOffset) { }
-
-	Item Clone(int count) override
-	{
-		return SetTileOnLanding(baseClass, tile, zOffset, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new SetTileOnLanding(baseClass, tile, zOffset, name, typeName, intType, color, damage, count, range, useTime, radius);
 	}
 };
 
 namespace ItemODs
 {
-	void ItemOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		game->entities->push_back(make_unique<Collectible>(*item, pos));
+		game->entities->push_back(make_unique<Collectible>(item.Clone(), pos));
 	}
 
-	void PlacedOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item);
+		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item.Type());
 
 		if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
 		{
-			pOL->OnDeath(ITEMOD::DEFAULT, pos, dir, creator, creatorName, callReason, callType);
+			pOL->OnDeath(ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
 			return;
 		}
 		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, dir, creator);
@@ -1065,28 +975,28 @@ namespace ItemODs
 		game->entities->push_back(std::move(placedEntity));
 	}
 
-	void CorruptOnKillOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, pos, dir, creator, creatorName, callReason, callType);
+		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void ExplodeOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item);
+		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
 	}
 
-	void UpExplodeOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item);
+		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
 		CreateUpExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
 	}
 
-	void ImproveSoilOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item);
+		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item.Type());
 
 		int offset = -soilItem->improveRadius / 2;
 		for (int x = 0; x < soilItem->improveRadius; x++)
@@ -1101,9 +1011,9 @@ namespace ItemODs
 				}
 	}
 
-	void SetTileOnLandingOD(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item);
+		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item.Type());
 
 		pos.z += tileItem->zOffset;
 		Chunk* chunk = game->entities->ChunkAtFPos(pos);
@@ -1119,22 +1029,22 @@ namespace Hazards
 
 namespace Resources
 {
-	SetTileOnLanding* ruby = new SetTileOnLanding(TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 1, 15.f, 0.25f, 0.5f, false, false);
-	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
-	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 1, 15.0f, 0.25f, 1.5f);
-	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 1, 15.0f, 0.0625f);
-	PlacedOnLanding* lead = new PlacedOnLanding(Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 1, 15.0f, true);
-	PlacedOnLanding* vacuumium = new PlacedOnLanding(Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 1, 15, false, 0.0625);
-	SetTileOnLanding* quartz = new SetTileOnLanding(TILE::MAX_SOIL, -1, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 1, 15, 0.125f, 0.5f, false, false);
+	SetTileOnLanding* ruby = new SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, false);
+	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
+	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
+	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.0625f);
+	PlacedOnLanding* lead = new PlacedOnLanding(ITEMTYPE::LEAD, Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
+	PlacedOnLanding* vacuumium = new PlacedOnLanding(ITEMTYPE::VACUUMIUM, Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f);
+	ImproveSoilOnLanding* quartz = new ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, false);
 }
 
 namespace Collectibles
 {
-	Collectible* ruby = new Collectible(*Resources::ruby);
-	Collectible* emerald = new Collectible(*Resources::emerald);
-	Collectible* topaz = new Collectible(*Resources::topaz);
-	Collectible* sapphire = new Collectible(*Resources::sapphire);
-	Collectible* lead = new Collectible(*Resources::lead);
-	Collectible* vacuumium = new Collectible(*Resources::vacuumium);
-	Collectible* quartz = new Collectible(*Resources::quartz);
+	Collectible* ruby = new Collectible(Resources::ruby->Clone());
+	Collectible* emerald = new Collectible(Resources::emerald->Clone());
+	Collectible* topaz = new Collectible(Resources::topaz->Clone());
+	Collectible* sapphire = new Collectible(Resources::sapphire->Clone());
+	Collectible* lead = new Collectible(Resources::lead->Clone());
+	Collectible* vacuumium = new Collectible(Resources::vacuumium->Clone());
+	Collectible* quartz = new Collectible(Resources::quartz->Clone());
 }

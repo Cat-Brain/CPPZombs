@@ -1,78 +1,122 @@
-#include "Planet.h"
+#include "StatusEffect.h"
 
+enum class ITEMTYPE
+{
+	// Ammo
+	DITEM, COPPER, IRON, ROCK, BOWLER, SILVER, RUBY, EMERALD, TOPAZ, SAPPHIRE, LEAD, VACUUMIUM, QUARTZ, CHEESE, SHADE,
+	// Tree seeds:
+	COPPER_TREE_SEED, IRON_TREE_SEED, ROCK_TREE_SEED, RUBY_TREE_SEED, EMERALD_TREE_SEED,
+	SHADE_TREE_SEED, BOWLER_TREE_SEED, VACUUMIUM_TREE_SEED, SILVER_TREE_SEED, QUARTZ_TREE_SEED,
+	// Vine seeds:
+	CHEESE_VINE_SEED, TOPAZ_VINE_SEED, SAPPHIRE_VINE_SEED, LEAD_VINE_SEED, QUARTZ_VINE_SEED,
+	// Other:
+	KIWI_EGG, WAVE_MODIFIER, COUNT
+};
 class Item;
+vector<Item*> items = vector<Item*>(UnEnum(ITEMTYPE::COUNT), nullptr);
+
+class ItemInstance
+{
+public:
+	ITEMTYPE type;
+	int count;
+
+	ItemInstance(ITEMTYPE type = ITEMTYPE::DITEM, int count = 1) : type(type), count(count) { }
+
+
+	inline Item* Type()
+	{
+		return items[UnEnum(type)];
+	}
+
+	inline Item* operator->()
+	{
+		return Type();
+	}
+
+	inline ItemInstance Clone(uint count)
+	{
+		return ItemInstance(type, count);
+	}
+
+	inline ItemInstance Clone()
+	{
+		return Clone(count);
+	}
+
+	inline ItemInstance operator * (int multiplier)
+	{
+		return Clone(count * multiplier);
+	}
+
+	inline bool operator == (ItemInstance b)
+	{
+		return Type() == b.Type();
+	}
+
+	inline bool operator != (ItemInstance b)
+	{
+		return Type() != b.Type();
+	}
+	
+	inline bool operator < (ItemInstance b)
+	{
+		return Type() < b.Type();
+	}
+};
 
 enum class ITEMU // Item use functions
 {
 	DEFAULT, WAVEMODIFIER
 };
 
-vector<function<void(Item* stack, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
+vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemUs; // Returns if should be consumed
 
 enum class ITEMOD // Item on-deaths
 {
 	DEFAULT, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, EXPLODEONLANDING, UPEXPLODEONLANDING, IMPROVESOILONLANDING, SETTILEONLANDING
 };
 
-vector<function<void(Item* item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
+vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 
 enum class PROJMOVE // The movements of projectile
 {
 	DEFAULT, HOMING
 };
+
+
+
 class Item
 {
 public:
+	ITEMTYPE type;
 	ITEMU itemU;
 	ITEMOD itemOD;
+
 	int maxStack;
-	Item* baseClass;
 	string name;
 	string typeName;
-	int intType;
+	int intType; // Looked up for sprite.
 	RGBA color;
 	int damage;
-	int count;
-	float range, useTime;
+	float range, useTime, speed;
 	float radius;
 	bool corporeal; // Is this corporeal when shot? Ignored by collectible which is never corporeal.
 	bool shouldCollide; // Should this as a projectile be destroyed upon contact?
 	float mass;
 	int health;
 
-	Item(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(this), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
-		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
-
-	Item(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), baseClass(baseClass), name(name), typeName(typeName), intType(intType), color(color), damage(damage), count(count),
-		range(range), useTime(useTime), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health) { }
-
-	virtual Item Clone(int count)
+	Item(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		type(type), itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), name(name), typeName(typeName), intType(intType), color(color), damage(damage),
+		range(range), useTime(useTime), speed(speed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health)
 	{
-		return Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
+		items[UnEnum(type)] = this;
 	}
 
-	Item Clone()
+	ItemInstance Clone(int count = 1)
 	{
-		return Clone(count);
-	}
-
-	virtual Item* Clone2(int count)
-	{
-		return new Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2()
-	{
-		return Clone2(count);
-	}
-
-	Item operator * (int multiplier)
-	{
-		return Clone(count * multiplier);
+		return ItemInstance(type, count);
 	}
 
 	bool operator == (Item b)
@@ -90,65 +134,48 @@ public:
 		return typeName[0] < b.typeName[0];
 	}
 
-	void OnDeath(ITEMOD itemOD, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ITEMOD itemOD, ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemODs[UnEnum(itemOD)](this, pos, dir, creator, creatorName, callReason, callType);
+		itemODs[UnEnum(itemOD)](item, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void OnDeath(Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		OnDeath(itemOD, pos, dir, creator, creatorName, callReason, callType);
+		OnDeath(itemOD, item, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(ITEMU itemU, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(ITEMU itemU, ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemUs[UnEnum(itemU)](this, pos, dir, creator, creatorName, callReason, callType);
+		itemUs[UnEnum(itemU)](item, pos, dir, creator, creatorName, callReason, callType);
 	}
 
-	void Use(Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void Use(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		Use(baseClass->itemU, pos, dir, creator, creatorName, callReason, callType);
+		Use(itemU, item, pos, dir, creator, creatorName, callReason, callType);
 	}
 };
-Item* dItem = new Item("NULL", "NULL TYPE", 0, RGBA(), 0, 0);
+Item* dItem = new Item(ITEMTYPE::DITEM, "NULL", "NULL TYPE", 0, RGBA(), 0);
 
 class GoneOnLandItem : public Item
 {
 public:
-	GoneOnLandItem(string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
+	GoneOnLandItem(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
-	}
-
-	GoneOnLandItem(Item* baseClass, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(),
-		int damage = 1, int count = 1, float range = 15.0f, float useTime = 0.25f, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health)
-	{
-		itemOD = ITEMOD::GONEONLANDITEM;
-	}
-
-	Item Clone(int count) override
-	{
-		return GoneOnLandItem(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
-	}
-
-	Item* Clone2(int count) override
-	{
-		return new GoneOnLandItem(baseClass, name, typeName, intType, color, damage, count, range, useTime, radius, corporeal, shouldCollide, mass, health);
 	}
 };
 
 namespace ItemODs
 {
-	void GoneOnLandItemOD(Item* item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType) { }
+	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType) { }
 }
 
-class Items : public vector<Item>
+class Items : public vector<ItemInstance>
 {
 public:
-	using vector<Item>::vector;
+	using vector<ItemInstance>::vector;
 
 	int currentIndex = 0;
 
@@ -163,39 +190,43 @@ public:
 		return true;
 	}
 
-	void push_back(Item item)
+	void push_back(ItemInstance item)
 	{
 		for (int i = 0; i < size(); i++)
-			if ((*this)[i].name == item.name)
+			if ((*this)[i] == item)
 			{
 				(*this)[i].count += item.count;
-				(*this)[i].count = min((*this)[i].count, (*this)[i].maxStack);
+				(*this)[i].count = min((*this)[i].count, (*this)[i]->maxStack);
 				return;
 			}
-		vector<Item>::push_back(item.Clone());
+		vector<ItemInstance>::push_back(item.Clone());
 		std::sort(begin(), end());
 	}
 
-	bool TryTake(Item item)// Count should be positive.
+	enum TRYTAKE : byte
+	{
+		DECREMENTED, DELETED, TO_FEW, UNFOUND
+	};
+	TRYTAKE TryTake(ItemInstance item) // Returns true if could remove.
 	{
 		for (int i = 0; i < size(); i++)
 		{
-			if ((*this)[i].name == item.name)
+			if ((*this)[i] == item)
 			{
-				if ((*this)[i].count - item.count < 0)
-					return false;
-				if ((*this)[i].count == item.count)
+				if ((*this)[i].count < item.count)
+					return TRYTAKE::TO_FEW;
+				if ((*this)[i].count != item.count)
 				{
-					erase(begin() + i);
-					if (i >= currentIndex)
-						currentIndex = max(0, currentIndex - 1);
-				}
-				else
 					(*this)[i].count -= item.count;
-				return true;
+					return TRYTAKE::DECREMENTED;
+				}
+				erase(begin() + i);
+				if (i >= currentIndex)
+					currentIndex = max(0, currentIndex - 1);
+				return TRYTAKE::DELETED;
 			}
 		}
-		return false;
+		return TRYTAKE::UNFOUND;
 	}
 
 	bool TryTakeIndex(int index)
@@ -213,7 +244,7 @@ public:
 		return true;
 	}
 
-	bool TryTakeIndex(int index, Item& result)
+	bool TryTakeIndex(int index, ItemInstance& result)
 	{
 		if (index >= size() || index < 0)
 			return false;
@@ -230,10 +261,10 @@ public:
 		return true;
 	}
 
-	bool TryMake(vector<Item> cost)
+	bool TryMake(vector<ItemInstance> cost)
 	{
 		Items clone = *this;
-		for (Item item : cost)
+		for (ItemInstance item : cost)
 		{
 			bool successful = clone.TryTake(item);
 			if (!successful)
@@ -250,28 +281,29 @@ public:
 		int height = ScrHeight();
 		float scale = height / (3.0f * max(8, int(size()))), scale2 = scale / 5.0f;
 		iVec2 offset = vZeroI2 - ScrDim();
-		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex].color, Vec2(scale, scale));
+		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex]->color, Vec2(scale, scale));
 		for (int i = 0; i < size(); i++)
 		{
-			game->DrawTextured(spriteSheet, (*this)[i].intType, offset + iVec2(0, static_cast<int>(scale * i * 2)),
-				i == currentIndex ? RGBA() : (*this)[i].color, Vec2(scale, scale));
-			font.Render(" " + (*this)[i].name + "  " + to_string((*this)[i].count) + "  " + (*this)[i].typeName,
-				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i].color);
+			game->DrawTextured(spriteSheet, (*this)[i]->intType, offset + iVec2(0, static_cast<int>(scale * i * 2)),
+				i == currentIndex ? RGBA() : (*this)[i]->color, Vec2(scale, scale));
+			font.Render(" " + (*this)[i]->name + "  " + to_string((*this)[i].count) + "  " + (*this)[i]->typeName,
+				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i]->color);
 		}
 	}
 
-	Item GetCurrentItem()
+	ItemInstance GetCurrentItem()
 	{
 		if (size() > 0)
 			return (*this)[currentIndex].Clone(1);
-		return dItem;
+		return ItemInstance(ITEMTYPE::DITEM, 0);
 	}
 };
 
 namespace Resources
 {
-	Item* copper = new Item("Copper", "Ammo", 1, RGBA(232, 107, 5), 1);
-	GoneOnLandItem* iron = new GoneOnLandItem("Iron", "Ammo", 1, RGBA(111, 123, 128), 12, 1, 15, 0.125f);
-	Item* rock = new Item("Rock", "Ammo", 1, RGBA(145, 141, 118), 6, 1, 5);
-	Item* bowler = new Item("Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 1, 15, 0.5f, 2.5f, true, false, 25, 5);
+	Item* copper = new Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 1);
+	GoneOnLandItem* iron = new GoneOnLandItem(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 12, 15, 0.125f);
+	Item* rock = new Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 6, 5);
+	Item* bowler = new Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, 25, 5);
+	Item* silver = new Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 3, 15.f, 0.25f, 24.f, 0.2f, false, true, 1.f, 1);
 }

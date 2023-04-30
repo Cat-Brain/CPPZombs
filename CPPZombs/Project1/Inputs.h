@@ -73,13 +73,9 @@ struct Inputs
 		UpdateKey(window, period, GLFW_KEY_PERIOD);
 		UpdateKey(window, slash, GLFW_KEY_SLASH);
 		UpdateKey(window, phase, GLFW_KEY_RIGHT_SHIFT);
-		
-		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
-		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);
-		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
 	}
 
-	void FindMousePos(GLFWwindow* window, float zoom)
+	void UpdateMouse(GLFWwindow* window, float zoom)
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
@@ -91,6 +87,10 @@ struct Inputs
 		mousePosition.x = static_cast<float>(xPos - zoom * screenRatio);
 		mousePosition.y = static_cast<float>(yPos - zoom);
 		mousePosition3 = Vec3(mousePosition, 0);
+		
+		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
+		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);
+		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
 	}
 };
 

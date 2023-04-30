@@ -9,6 +9,8 @@ public:
 	Particle(Vec3 pos, float duration) :
 		pos(pos), duration(duration), startTime(tTime) { }
 
+	~Particle() = default;
+
 	virtual bool ShouldEnd()
 	{
 		return tTime - startTime > duration;
@@ -28,7 +30,11 @@ public:
 
 	void Update() override
 	{
+		if (color.a == 255)
+			return game->DrawCircle(pos, color, radius);
+		glDepthMask(GL_FALSE);
 		game->DrawCircle(pos, color, radius);
+		glDepthMask(GL_TRUE);
 	}
 };
 

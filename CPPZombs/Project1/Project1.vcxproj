@@ -186,6 +186,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Resources.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="StatusEffect.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vec.h" />
