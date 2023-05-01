@@ -127,7 +127,7 @@ public:
 	{
 		TILE tile = TILE(game->entities->TileAtPos(pos - Vec3(0, 0, radius + 0.1f)));
 		return (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->settings.difficulty] *
-			(float(tile == TILE::ROCK) + 0.75f * float(tile == TILE::SAND) + 0.5f * float(tile == TILE::BAD_SOIL));
+			(float(tile == TILE::ROCK) + 0.75f * float(tile == TILE::SAND) + 0.5f * float(tile == TILE::BAD_SOIL) + 0.25f * float(tile == TILE::MID_SOIL));
 	}
 };
 

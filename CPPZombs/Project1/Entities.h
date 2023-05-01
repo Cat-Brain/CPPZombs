@@ -148,6 +148,20 @@ public:
 		return false;
 	}
 
+	bool CubeDoesOverlap(vector<int> chunkOverlaps, Vec3 pos, Vec3 dim, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	{
+		for (int chunk : chunkOverlaps)
+			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
+				if ((*this)[*iter] && BoxCircleOverlap((*this)[*iter]->pos, (*this)[*iter]->radius, pos, dim) && (*this)[*iter]->active && func(from, (*this)[*iter].get())) return true;
+		return false;
+	}
+
+	inline bool CubeDoesOverlap(iVec3 minPos, iVec3 maxPos, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	{
+		return CubeDoesOverlap(FindCreateChunkOverlapsMain(Chunk::ToSpace(minPos), Chunk::ToSpace(maxPos)),
+			Vec3(maxPos + minPos + 1) * 0.5f, Vec3(maxPos - minPos + 1) * 0.5f, func, from);
+	}
+
 	bool DoesOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
 	{
 		for (int chunk : chunkOverlaps)

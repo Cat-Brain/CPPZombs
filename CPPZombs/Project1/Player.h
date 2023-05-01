@@ -144,17 +144,17 @@ public:
 
 enum class ENGMODE
 {
-	TURRET, DRONE, ROVER, COUNT
+	TURRET, DRONE, ROVER, REMOVE_DRONE, PLACE, COUNT
 };
 
-string engModeStr[] = {"Turret", "Drone", "Rover"};
+string engModeStr[] = {"Turret", "Drone", "Rover", "Remove Drone", "Place"};
 
 class Drone;
 class Engineer : public Player
 {
 public:
 	ENGMODE engMode = ENGMODE::TURRET;
-	vector<Circle*> drones;
+	vector<FadeCircle*> drones;
 
 	Engineer(bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
@@ -342,6 +342,7 @@ namespace Updates
 		Player* player = static_cast<Player*>(entity);
 
 		player->shouldVacuum ^= game->inputs.crouch.pressed;
+		printf("%i=%c ", player->shouldVacuum, player->shouldVacuum ? 't' : 'f');
 
 		player->iTime = max(0.f, player->iTime - game->dTime);
 		player->sTime = max(0.f, player->sTime - game->dTime);
@@ -426,7 +427,7 @@ namespace Updates
 		turret->timeTill -= game->dTime;
 		ItemInstance item = turret->items->GetCurrentItem();
 		Entity* hitEntity = nullptr;
-		if (!game->inputs.shift.held && item.count > 0 && turret->timeTill <= 0 && (hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsEnemy, turret)) != nullptr)
+		if (turret->leader->shouldVacuum && item.count > 0 && turret->timeTill <= 0 && (hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsEnemy, turret)) != nullptr)
 		{
 			turret->dir = hitEntity->pos - turret->pos;
 			item->Use((*turret->items)[turret->items->currentIndex], turret->pos, turret->dir * item->range, turret, turret->name, hitEntity, 0);
@@ -473,7 +474,6 @@ namespace Updates
 		}
 		engineer->shouldScroll = !game->inputs.shift.held;
 		engineer->shouldPickup = false;
-		engineer->shouldVacuum = false;
 		engineer->Update(UPDATE::PLAYER);
 	}
 
@@ -588,8 +588,8 @@ namespace Primaries
 			return false;
 		player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], player->pos, game->inputs.mousePosition3, player, player->name, nullptr, 0);
 		player->lastPrimary = tTime + player->primaryTime;
-		if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED || game->inputs.shift.held) return false;
 		Engineer* engineer = static_cast<Engineer*>(player);
+		if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
 		for (Circle* circle : engineer->drones)
 			if (!game->entities->OverlapsTile(circle->pos, currentShootingItem->radius))
 			{
@@ -650,7 +650,7 @@ namespace Secondaries
 		}
 		case ENGMODE::DRONE:
 		{
-			unique_ptr<Circle> newDrone = make_unique<Circle>(0.1f, engineer->pos, RGBA(0, 255), 1.f);
+			unique_ptr<FadeCircle> newDrone = make_unique<FadeCircle>(0.1f, engineer->pos, RGBA(0, 255), 1.f);
 			engineer->drones.push_back(newDrone.get());
 			game->entities->particles.push_back(std::move(newDrone));
 			break;
@@ -659,6 +659,18 @@ namespace Secondaries
 		{
 			game->entities->push_back(rover->Clone(engineer->pos, game->inputs.mousePosition3, engineer));
 			break;
+		}
+		case ENGMODE::REMOVE_DRONE:
+		{
+			engineer->drones.pop_back();
+			break;
+		}
+		case ENGMODE::PLACE:
+		{
+			Vec3 pos = engineer->pos + game->inputs.mousePosition3;
+			if (!game->entities->CubeDoesOverlap(ToIV3(pos - engineer->radius), ToIV3(pos + engineer->radius), MaskF::IsCorporealNotCollectible))
+				game->entities->ChunkAtFPos(pos)->SetTileAtPos(ToIV3(pos), UnEnum(TILE::ROCK));
+			return false;
 		}
 		}
 		return true;
