@@ -113,7 +113,7 @@ float snoise(vec3 v)
 
 void main()
 {
-	FragColor = vec4(col * (0.785 + 0.125 * snoise(gPos * 0.5)), 1.);
+	FragColor = vec4(col * (0.785 + 0.125 * round(snoise(gPos * 0.5))), 1.);
 	normal = vec4(norm, 1.);
 	position = vec4(pos, 1.);
 } 

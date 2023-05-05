@@ -140,6 +140,11 @@ public:
 	{
 		heldEntity = nullptr;
 	}
+
+	virtual bool Grounded()
+	{
+		return game->entities->OverlapsTile(pos + Vec3(0, 0, -radius), radius - 0.01f);
+	}
 };
 
 enum class ENGMODE
@@ -155,8 +160,9 @@ class Engineer : public Player
 public:
 	ENGMODE engMode = ENGMODE::TURRET;
 	vector<FadeCircle*> drones;
+	float currentJetpackFuel = 0, jetpackFuel, jetpackForce;
 
-	Engineer(bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
+	Engineer(float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
 		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
@@ -165,7 +171,8 @@ public:
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
 		Player(vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, secondaryTime, utilityTime, movement, primary, secondary, utility, color, color2,
-			lightColor, lightOrDark, range, mass, maxHealth, health, name, startItems, blacklistedSeeds)
+			lightColor, lightOrDark, range, mass, maxHealth, health, name, startItems, blacklistedSeeds),
+		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
 	{
 		update = UPDATE::ENGINEER;
 		uiUpdate = UIUPDATE::ENGINEER;
@@ -259,7 +266,7 @@ public:
 unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 5, 5, "Turret");
 unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 0, "Drone");
 
-unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 64.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::JETPACK,
+unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 64.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
 	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
 		Resources::Seeds::rubyTreeSeed->Clone(2), Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
@@ -267,11 +274,11 @@ unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 3
 
 unique_ptr<Player> flicker = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 64.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	3, 2, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
+	10, 5, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
 		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
-unique_ptr<Engineer> engineer = make_unique<Engineer>(false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::DEFAULT,
+unique_ptr<Engineer> engineer = make_unique<Engineer>(2.f, 3.f, false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
 	10, 5, "Engineer", Items({ Resources::silver->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(2), Resources::Seeds::cheeseVineSeed->Clone(2),
 		Resources::Seeds::quartzTreeSeed->Clone(2), Resources::Seeds::silverTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
@@ -283,11 +290,11 @@ class Grenade : public LightBlock
 {
 public:
 	int damage;
-	float explosionRadius, startTime, timeTill, baseRange;
+	float pushForce, explosionRadius, startTime, timeTill, baseRange;
 
-	Grenade(int damage, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, int health, string name) :
+	Grenade(int damage, float pushForce, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, int health, string name) :
 		LightBlock(lightColor, true, range, vZero, radius, color, RGBA(), mass, health, health, name),
-		damage(damage), explosionRadius(explosionRadius), startTime(0), timeTill(timeTill), baseRange(range)
+		damage(damage), explosionRadius(explosionRadius), startTime(0), timeTill(timeTill), baseRange(range), pushForce(pushForce)
 	{
 		update = UPDATE::GRENADE;
 	}
@@ -310,7 +317,7 @@ public:
 	}
 };
 
-unique_ptr<Grenade> grenade = make_unique<Grenade>(6, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
+unique_ptr<Grenade> grenade = make_unique<Grenade>(6, 20.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
 
 namespace OnDeaths
 {
@@ -342,7 +349,6 @@ namespace Updates
 		Player* player = static_cast<Player*>(entity);
 
 		player->shouldVacuum ^= game->inputs.crouch.pressed;
-		printf("%i=%c ", player->shouldVacuum, player->shouldVacuum ? 't' : 'f');
 
 		player->iTime = max(0.f, player->iTime - game->dTime);
 		player->sTime = max(0.f, player->sTime - game->dTime);
@@ -484,7 +490,7 @@ namespace Updates
 		{
 			CreateUpExplosion(grenade->pos, grenade->explosionRadius, grenade->color, grenade->name, 0, grenade->damage, grenade->creator);
 			if (grenade->creator != nullptr && grenade->creator->Overlaps(grenade->pos, grenade->explosionRadius))
-				grenade->creator->vel += 10.f * Normalized(grenade->creator->pos - grenade->pos);
+				grenade->creator->vel += grenade->pushForce * Normalized(grenade->creator->pos - grenade->pos);
 			grenade->DestroySelf(nullptr);
 			return;
 		}
@@ -526,12 +532,14 @@ namespace UIUpdates
 	void PlayerUIU(Entity* entity)
 	{
 		Player* player = static_cast<Player*>(entity);
-		player->items.DUpdate();
+		if (game->showUI)
+			player->items.DUpdate();
 	}
 
 	void EngineerUIU(Entity* entity)
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
+		if (!game->showUI) return;
 		if (!game->inputs.shift.held)
 		{
 			engineer->items.DUpdate();
@@ -553,7 +561,7 @@ namespace PMovements
 	{
 		player->vel = TryAdd2(player->vel, game->inputs.MoveDir() * game->dTime * player->moveSpeed, player->maxSpeed);
 		if (game->inputs.space.pressed && tTime - player->lastJump > 0.25f &&
-			game->entities->OverlapsTile(player->pos + Vec3(0, 0, -player->radius), player->radius - 0.01f))
+			player->Grounded())
 		{
 			player->vel.z += 7;
 			player->lastJump = tTime;
@@ -563,8 +571,16 @@ namespace PMovements
 	void Jetpack(Player* player)
 	{
 		pMovements[UnEnum(PMOVEMENT::DEFAULT)](player);
-		if (game->inputs.space.held)
-			player->vel.z += game->planet->gravity * game->dTime;
+		Engineer* engineer = static_cast<Engineer*>(player);
+		if (game->entities->OverlapsTile(player->pos + Vec3(0, 0, -player->radius), player->radius - 0.01f))
+		{
+			engineer->currentJetpackFuel = engineer->jetpackFuel;
+		}
+		if (game->inputs.space.held && engineer->currentJetpackFuel > 0)
+		{
+			player->vel.z += (game->planet->gravity + engineer->jetpackForce) * game->dTime;
+			engineer->currentJetpackFuel -= game->dTime;
+		}
 	}
 }
 
@@ -700,6 +716,7 @@ namespace Utilities
 		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
 		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 255, 255)));
 		player->iTime++;
+		player->vel.z += 10;
 		return true;
 	}
 

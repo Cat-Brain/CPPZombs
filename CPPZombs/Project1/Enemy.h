@@ -731,7 +731,7 @@ namespace Enemies
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
 			pSnake->Update(UPDATE::ENEMY);
-			if (pSnake->front == nullptr && tTime - pSnake->lastMove > pSnake->pounceTime && tTime - game->dTime - pSnake->lastMove < pSnake->pounceTime)
+			if (pSnake->front == nullptr && tTime - pSnake->lastMove > pSnake->pounceTime)
 				pSnake->vUpdate = VUPDATE::FRICTION;
 		}
 

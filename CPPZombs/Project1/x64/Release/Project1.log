@@ -1,26 +1,7 @@
-﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Particles.h(52,65): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,85): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,78): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,71): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,13): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+﻿LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  265 of 5339 functions ( 5.0%) were compiled, the rest were copied from previous compilation.
+  0 of 5340 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    8 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
