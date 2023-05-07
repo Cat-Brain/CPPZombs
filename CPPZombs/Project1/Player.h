@@ -125,13 +125,13 @@ public:
 		return make_unique<Player>(this, pos);
 	}
 
-	int DealDamage(int damage, Entity* damageDealer) override
+	int ApplyHit(int damage, Entity* damageDealer) override
 	{
 		if (iTime <= 0)
 		{
-			game->screenShake += damage;
-			iTime += damage;
-			return LightBlock::DealDamage(damage, damageDealer);
+			game->screenShake += damage * 0.1f;
+			if (damage > 0) iTime++;
+			return LightBlock::ApplyHit(damage, damageDealer);
 		}
 		return -1;
 	}
@@ -263,26 +263,26 @@ public:
 	}
 };
 
-unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 5, 5, "Turret");
-unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 0, "Drone");
+unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 50, 50, "Turret");
+unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 20, 20, "Rover");
 
 unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 64.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 10, 5,
-	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
-		Resources::Seeds::rubyTreeSeed->Clone(2), Resources::Seeds::copperTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
+	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 100, 50,
+	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
+		Resources::Seeds::rubyShrubSeed->Clone(2), Resources::Seeds::copperShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
 
 unique_ptr<Player> flicker = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 64.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	10, 5, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
-		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
+	100, 50, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
+		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
 unique_ptr<Engineer> engineer = make_unique<Engineer>(2.f, 3.f, false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
-	10, 5, "Engineer", Items({ Resources::silver->Clone(10), Resources::Seeds::shadeTreeSeed->Clone(2), Resources::Seeds::cheeseVineSeed->Clone(2),
-		Resources::Seeds::quartzTreeSeed->Clone(2), Resources::Seeds::silverTreeSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
-	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_T }));
+	100, 50, "Engineer", Items({ Resources::silver->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(2), Resources::Seeds::cheeseVineSeed->Clone(2),
+		Resources::Seeds::quartzShrubSeed->Clone(2), Resources::Seeds::silverShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
+	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 vector<Player*> characters = { soldier.get(), flicker.get(), engineer.get() };
 
@@ -317,7 +317,7 @@ public:
 	}
 };
 
-unique_ptr<Grenade> grenade = make_unique<Grenade>(6, 20.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
+unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 20.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
 
 namespace OnDeaths
 {

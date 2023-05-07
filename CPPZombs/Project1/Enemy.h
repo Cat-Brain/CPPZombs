@@ -355,12 +355,12 @@ namespace Enemies
 			}
 		}
 
-		int DealDamage(int damage, Entity* damageDealer) override
+		int ApplyHit(int damage, Entity* damageDealer) override
 		{
 			if (health < 0) return 1;
 			if (next == nullptr)
-				return Enemy::DealDamage(damage, damageDealer);
-			return front->Enemy::DealDamage(damage, damageDealer);
+				return Enemy::ApplyHit(damage, damageDealer);
+			return front->Enemy::ApplyHit(damage, damageDealer);
 		}
 	};
 
@@ -516,11 +516,12 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int DealDamage(int damage, Entity* damageDealer) override
+		int ApplyHit(int damage, Entity* damageDealer) override
 		{
 			for (int i = 0; i < damage; i++)
-				game->entities->push_back(baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), up, this));
-			return Spider::DealDamage(damage, damageDealer);
+				if ((health - i) % 10 == 0)
+					game->entities->push_back(baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), up, this));
+			return Spider::ApplyHit(damage, damageDealer);
 		}
 	};
 
@@ -611,9 +612,9 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int DealDamage(int damage, Entity* damageDealer) override
+		int ApplyHit(int damage, Entity* damageDealer) override
 		{
-			return Enemy::DealDamage(Clamp(damage, -1, 1), damageDealer);
+			return Enemy::ApplyHit(Clamp(damage, -1, 1), damageDealer);
 		}
 	};
 
@@ -671,7 +672,7 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int DealDamage(int damage, Entity* damageDealer) override
+		int ApplyHit(int damage, Entity* damageDealer) override
 		{
 			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->settings.difficulty])
 			{
@@ -679,7 +680,7 @@ namespace Enemies
 				{
 					lastStartedCircle = tTime;
 				}
-				return Cat::DealDamage(damage, damageDealer);
+				return Cat::ApplyHit(damage, damageDealer);
 			}
 			return 0;
 		}
@@ -1230,7 +1231,7 @@ namespace Enemies
 		bool ExploderAU(Enemy* enemy)
 		{
 			Exploder* exploder = static_cast<Exploder*>(enemy);
-			if (!game->entities->OverlapsAny(exploder->pos, exploder->explosionRadius, MaskF::IsNonEnemy, exploder))
+			if (!game->entities->DoesOverlap(exploder->pos, exploder->explosionRadius, MaskF::IsNonEnemy, exploder))
 				return false;
 			CreateUpExplosion(exploder->pos, exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
 			return true;
@@ -1256,44 +1257,44 @@ namespace Enemies
 #pragma region Enemies
 	//Predefinitions - Special
 	LegParticle* spiderLeg = new LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
-	Projectile* tinyTankProjectile = new Projectile(15.0f, 1, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 1, 1, "Tiny Tank Projectile");
-	Enemy* child = new Enemy(1.0f, 12, 12, 0.5f, 0, 0, 1, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 1, 1, "Child");
-	Centicrawler* centicrawler = new Centicrawler(0.1f, 1, *spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 4, 4, 0.5f, 0, 0, 1, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 6, 6, "Centicrawler");
+	Projectile* tinyTankProjectile = new Projectile(15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 1, 1, "Tiny Tank Projectile");
+	Enemy* child = new Enemy(1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 5, 5, "Child");
+	Centicrawler* centicrawler = new Centicrawler(0.1f, 1, *spiderLeg, 3, 3.0f, 0.25f, 1.0f, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 60, 60, "Centicrawler");
 
 	// Earlies - 1
-	Enemy* walker = new Enemy(0.75f, 2, 2, 0.5f, 1, 1, 1, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 3, 3, "Walker");
-	Enemy* tanker = new Enemy(1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 1, 1.5f, RGBA(255), RGBA(), 5, 12, 12, "Tanker");
-	Spider* spider = new Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 4, 4, 0.5f, 2, 1, 1, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 2, 2, "Spider");
-	Tank* tinyTank = new Tank(tinyTankProjectile, 0.78f, 1.0f, 4, 4, 0.5f, 3, 1, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 3, 3, "Tiny Tank");
+	Enemy* walker = new Enemy(0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 30, 30, "Walker");
+	Enemy* tanker = new Enemy(1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 120, 120, "Tanker");
+	Spider* spider = new Spider(*spiderLeg, 6, 3.0f, 0.25f, 1.0f, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 20, 20, "Spider");
+	Tank* tinyTank = new Tank(tinyTankProjectile, 0.78f, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 30, 30, "Tiny Tank");
 
 	// Mids - 4
-	Deceiver* deceiver = new Deceiver(0.5f, 4, 4, 0.5f, 4, 4, 1, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), 1, 3, 3, "Deceiver");
-	Exploder* exploder = new Exploder(2.5f, 1.0f, 3, 3, 0.5f, 4, 4, 1, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 3, 3, "Exploder");
-	Vacuumer* vacuumer = new Vacuumer(4, 16, 2, 8, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 3, 3, "Vacuumer");
-	Vacuumer* pusher = new Vacuumer(6, -32, 2, 2, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 3, 3, "Pusher");
-	Pouncer* frog = new Pouncer(2, 16, 0.5f, 1, 4, 4, 4, 1, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 3, 3, "Frog");
+	Deceiver* deceiver = new Deceiver(0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), 1, 30, 30, "Deceiver");
+	Exploder* exploder = new Exploder(2.5f, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 30, 30, "Exploder");
+	Vacuumer* vacuumer = new Vacuumer(4, 16, 2, 8, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 30, 30, "Vacuumer");
+	Vacuumer* pusher = new Vacuumer(6, -32, 2, 2, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 30, 30, "Pusher");
+	Pouncer* frog = new Pouncer(2, 16, 0.5f, 1, 4, 4, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 30, 30, "Frog");
 
 	// Mid-lates - 6
-	Parent* parent = new Parent(child, 1, 1, 1, 0.5f, 4, 6, 1, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 10, 10, "Parent");
-	Parent* spiderParent = new Parent(centicrawler, 1, 1, 1, 0.5f, 4, 6, 1, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 10, 10, "Spider Parent");
-	SnakeConnected* snake = new SnakeConnected(15, 0.1f, 1, 0.5f, 4, 4, 0.5f, 8, 6, 1, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 30, 30, "Snake");
-	Enemy* megaTanker = new Enemy(1, 1, 1, 0.5f, 20, 6, 1, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 48, 48, "Mega Tanker");
+	Parent* parent = new Parent(child, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 100, 100, "Parent");
+	Parent* spiderParent = new Parent(centicrawler, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 100, 100, "Spider Parent");
+	SnakeConnected* snake = new SnakeConnected(15, 0.1f, 1, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 300, 300, "Snake");
+	Enemy* megaTanker = new Enemy(1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 480, 480, "Mega Tanker");
 	
 	// Lates - 8
-	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 3, 6, 0.5f, 8, 8, 1, 0.5f, RGBA(), 1, 24, 24, "Hyper Speedster");
-	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 4, 0.5f, 8, 8, 1, 1.5f, RGBA(153, 255), RGBA(), 1, 3, 3, "Giga Exploder");
-	SnakeConnected* bigSnake = new SnakeConnected(30, 0.3f, 1, 0.5f, 4, 4, 0.5f, 30, 8, 1, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 90, 90, "Big Snake");
-	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, 0.5f, 8.0f, 60, 8, 1, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 3, 3, "Pouncer Snake");
+	ColorCycler* hyperSpeedster = new ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 240, 240, "Hyper Speedster");
+	Exploder* gigaExploder = new Exploder(7.5f, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 30, 30, "Giga Exploder");
+	SnakeConnected* bigSnake = new SnakeConnected(30, 0.3f, 1, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 900, 900, "Big Snake");
+	PouncerSnake* pouncerSnake = new PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 30, 30, "Pouncer Snake");
 
 	// Very lates - 12
-	Cat* cat = new Cat(1.5f, 2.0f, 16.0f, 0.5f, 0.25f, 3.0f, 45, 12, 1, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 9, 9, "Cat");
-	BoomCat* boomCat = new BoomCat(4.5f, 1.5f, 2.0f, 12.0f, 0.5f, 1.0f, 4.0f, 45, 12, 1, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 9, 9, "Boom Cat");
-	Spoobderb* spoobderb = new Spoobderb(centicrawler, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 2, 2, 0.5f, 50, 12, 1, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 100, 100, "Spoobderb - The 30 footed beast");
+	Cat* cat = new Cat(1.5f, 2.0f, 16.0f, 0.5f, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 18, 18, "Cat");
+	BoomCat* boomCat = new BoomCat(4.5f, 1.5f, 2.0f, 12.0f, 0.5f, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 18, 18, "Boom Cat");
+	Spoobderb* spoobderb = new Spoobderb(centicrawler, *spiderLeg, 30, 25.0f, 3.0f, 2.5f, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 1000, 1000, "Spoobderb - The 30 footed beast");
 
 	// Bosses - Special
-	Projectile* catProjectile = new Projectile(25.0f, 1, cat->speed, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile* catProjectile2 = new Projectile(25.0f, 1, cat->speed * 2, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
-	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, 0.5f, 5.0f, 1000, 0, 1, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Projectile* catProjectile = new Projectile(25.0f, 10, cat->speed, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile* catProjectile2 = new Projectile(25.0f, 10, cat->speed * 2, 0.4f, cat->color, 1, 1, 1, "Cataclysmic Bullet", false, true);
+	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 
@@ -1317,7 +1318,7 @@ namespace Enemies
 		Instance RandomClone();
 	};
 
-	int superWaveModifiers[] = { 3, 4, 5 }, difficultySeedSuperWaveCount[] = { 5, 3, 2 };
+	int superWaveModifiers[] = { 3, 4, 5 }, difficultySeedSuperWaveCount[] = { 5, 4, 3 };
 
 	class Instance : public vector<Enemy*>
 	{
@@ -1333,6 +1334,7 @@ namespace Enemies
 
 		void SpawnRandomEnemies()
 		{
+			((Entity*)game->player)->ApplyHit(-3, nullptr);
 			if (superWave)
 				waveCount += superWaveModifiers[game->settings.difficulty];
 
@@ -1345,7 +1347,6 @@ namespace Enemies
 				waveCount -= superWaveModifiers[game->settings.difficulty];
 				for (int i = 0; i < difficultySeedSuperWaveCount[game->settings.difficulty]; i++)
 					game->entities->push_back(Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(game->PlayerPos()));
-				((Entity*)game->player)->DealDamage(-1, nullptr);
 				superWave = false;
 			}
 		}

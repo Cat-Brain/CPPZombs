@@ -21,7 +21,7 @@ vector<function<void(Entity*)>> vUpdates;
 
 enum class DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT,
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, SHRUB, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT,
 	CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
 };
 
@@ -36,7 +36,7 @@ vector<function<void(Entity*)>> eDUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
-	ENTITY, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
+	ENTITY, SHRUB, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
 };
 
 vector<function<void(Entity*)>> uiUpdates;
@@ -96,6 +96,7 @@ public:
 	int maxHealth, health;
 	bool active = true, dActive = true, uiActive = false;
 	int sortLayer = 0;
+	float foodValue = 0; // If 0 then is not food.
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
 
 	Entity(Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA(),
@@ -202,7 +203,7 @@ public:
 	virtual void SetPos(Vec3 newPos);
 	virtual void SetRadius(float newRadius);
 
-	virtual int DealDamage(int damage, Entity* damageDealer);
+	virtual int ApplyHit(int damage, Entity* damageDealer);
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 	void DelayedDestroySelf(); // Never calls OnDeath;

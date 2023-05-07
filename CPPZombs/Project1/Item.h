@@ -5,8 +5,8 @@ enum class ITEMTYPE
 	// Ammo
 	DITEM, COPPER, IRON, ROCK, BOWLER, SILVER, RUBY, EMERALD, TOPAZ, SAPPHIRE, LEAD, VACUUMIUM, QUARTZ, CHEESE, SHADE,
 	// Tree seeds:
-	COPPER_TREE_SEED, IRON_TREE_SEED, ROCK_TREE_SEED, RUBY_TREE_SEED, EMERALD_TREE_SEED,
-	SHADE_TREE_SEED, BOWLER_TREE_SEED, VACUUMIUM_TREE_SEED, SILVER_TREE_SEED, QUARTZ_TREE_SEED,
+	COPPER_SHRUB_SEED, IRON_SHRUB_SEED, ROCK_SHRUB_SEED, RUBY_SHRUB_SEED, EMERALD_SHRUB_SEED,
+	SHADE_SHRUB_SEED, BOWLER_SHRUB_SEED, VACUUMIUM_SHRUB_SEED, SILVER_SHRUB_SEED, QUARTZ_SHRUB_SEED,
 	// Vine seeds:
 	CHEESE_VINE_SEED, TOPAZ_VINE_SEED, SAPPHIRE_VINE_SEED, LEAD_VINE_SEED, QUARTZ_VINE_SEED,
 	// Other:
@@ -301,9 +301,9 @@ public:
 
 namespace Resources
 {
-	Item* copper = new Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 1);
-	GoneOnLandItem* iron = new GoneOnLandItem(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 12, 15, 0.125f);
-	Item* rock = new Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 6, 5);
+	Item* copper = new Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 10);
+	GoneOnLandItem* iron = new GoneOnLandItem(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 120, 15, 0.125f);
+	Item* rock = new Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 60, 5);
 	Item* bowler = new Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, 25, 5);
-	Item* silver = new Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 3, 15.f, 0.25f, 24.f, 0.2f, false, true, 1.f, 1);
+	Item* silver = new Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, 1.f, 1);
 }

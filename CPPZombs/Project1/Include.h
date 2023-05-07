@@ -78,7 +78,7 @@ inline int CeilToInt(float f)
 	return static_cast<int>(ceilf(f));
 }
 
-inline float RandFloat()
+inline float RandFloat() // Float from 0-1
 {
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }

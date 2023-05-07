@@ -108,7 +108,7 @@ namespace Collectibles
 
 enum class TUPDATE
 {
-	DEFAULT, TREE, VINE
+	DEFAULT, SHRUB, VINE
 };
 
 vector<function<bool(Entity*)>> tUpdates;

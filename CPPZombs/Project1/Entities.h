@@ -260,7 +260,7 @@ public:
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			return 2 + entity->DealDamage(damage, from);
+			return 2 + entity->ApplyHit(damage, from);
 		return 0;
 	}
 
@@ -285,7 +285,7 @@ public:
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			result = 2 + entity->DealDamage(damage, from);
+			result = 2 + entity->ApplyHit(damage, from);
 		return result;
 	}
 
@@ -311,7 +311,7 @@ public:
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
 			if (entity->pos.z + entity->radius > pos.z)
-			result = 2 + entity->DealDamage(damage, from);
+			result = 2 + entity->ApplyHit(damage, from);
 		return result;
 	}
 
@@ -323,6 +323,7 @@ public:
 	byte TileAtPos(Vec3 pos)
 	{
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
+		if (index == -1) return TILE::AIR;
 		return chunks[index].TileAtPos(ToIV3(pos));
 	}
 
@@ -520,10 +521,11 @@ public:
 
 #pragma region Post Entities functions
 
-int Entity::DealDamage(int damage, Entity* damageDealer)
+int Entity::ApplyHit(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
-		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) + Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - up, static_cast<float>(damage), to_string(damage),
+		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
+			Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - up, RandFloat() * 2 - 1, to_string(damage),
 			RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
 			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 
@@ -906,7 +908,7 @@ inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string 
 inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
 	game->entities->push_back(make_unique<UpExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionRadius, color));
+	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
 }
 
 class ExplodeOnLanding : public Item
@@ -1037,16 +1039,16 @@ namespace ItemODs
 
 namespace Hazards
 {
-	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 1, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
+	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
 	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
 {
 	SetTileOnLanding* ruby = new SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, false);
-	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 2, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 2);
-	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 3, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
-	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 1, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.0625f);
+	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 20, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 20);
+	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
+	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.0625f);
 	PlacedOnLanding* lead = new PlacedOnLanding(ITEMTYPE::LEAD, Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
 	PlacedOnLanding* vacuumium = new PlacedOnLanding(ITEMTYPE::VACUUMIUM, Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f);
 	ImproveSoilOnLanding* quartz = new ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, false);

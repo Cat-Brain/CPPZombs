@@ -47,23 +47,23 @@ namespace Livestock
 	public:
 		AI_MODE ai = AI_MODE::PASSIVE;
 		Entity* observing = nullptr;
-		int points; float lifetime, startTime = 0, // You get points whenever they reach max lifetime.
+		int points, eggsLaid; // You get points whenever they reach max lifetime.
+		float lifetime, startTime = 0,
 			moveSpeed, maxSpeed, turnSpeed, sightDist, sightAngle, // Locomotion
-			fullness, awakeFullness, maxFullness, foodPerSecond, foodPerSleepSecond, // Food
-			eggLayFullness, timeTillEggLay, timePerEggLay; // Egg laying stats.
+			fullness, awakeFullness, maxFullness, foodPerSecond, foodPerSleepSecond; // Food
 		Vec3 lastEatPos = vZero;
 		FastNoiseLite noise;
 
 		Kiwi(int points, float lifetime, float moveSpeed, float maxSpeed, float turnSpeed, float sightDist, float sightAngle,
 			float startFullness, float awakeFullness, float maxFullness, float foodPerSecond, float foodPerSleepSecond,
-			float eggLayFullness, float timePerEggLay,
+			int eggsLaid,
 			float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
 			Livestock(vZero, radius, color, color2, mass, maxHealth, health, name),
 			points(points), lifetime(lifetime),
 			moveSpeed(moveSpeed), maxSpeed(maxSpeed), turnSpeed(turnSpeed), sightDist(sightDist), sightAngle(sightAngle),
 			fullness(startFullness), awakeFullness(awakeFullness), maxFullness(maxFullness),
 			foodPerSecond(foodPerSecond), foodPerSleepSecond(foodPerSleepSecond),
-			eggLayFullness(eggLayFullness), timeTillEggLay(timePerEggLay), timePerEggLay(timePerEggLay)
+			eggsLaid(eggsLaid)
 		{
 			update = UPDATE::KIWI;
 			dUpdate = DUPDATE::KIWI;
@@ -80,6 +80,9 @@ namespace Livestock
 			this->dir = Vec3(RandCircPoint2(), 0.f);
 			this->baseClass = baseClass;
 			startTime = tTime;
+
+			radius *= RandFloat() + 0.5f;
+			eggsLaid = 1 + rand() % eggsLaid;
 			noise.SetSeed(rand());
 			Start();
 		}
@@ -96,12 +99,6 @@ namespace Livestock
 				ai = AI_MODE::PASSIVE;
 				observing = nullptr;
 			}
-		}
-
-		void LayEgg()
-		{
-			game->entities->push_back(birthEntity->Clone(pos, up, this));
-			fullness -= eggLayFullness;
 		}
 	};
 
@@ -125,30 +122,22 @@ namespace Livestock
 			if (tTime - kiwi->startTime > kiwi->lifetime)
 			{
 				totalGamePoints += kiwi->points;
-				for (int i = 0; i < 4; i++)
+				for (int i = 0; i < kiwi->eggsLaid; i++)
 				{
-					unique_ptr<Entity> newSeed = Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(kiwi->pos, up, kiwi);
-					newSeed->vel = kiwi->dir * 5.f;
-					game->entities->push_back(std::move(newSeed));
-					kiwi->dir = RotateRight(kiwi->dir);
+					unique_ptr<Entity> newEgg = kiwi->birthEntity->Clone(kiwi->pos, up, kiwi);
+					newEgg->vel = RotateBy(kiwi->dir, 2 * PI_F * i / kiwi->eggsLaid) * 5.f;
+					game->entities->push_back(std::move(newEgg));
 				}
 				return kiwi->DestroySelf(kiwi);
 			}
-			if (kiwi->fullness >= kiwi->eggLayFullness)
-				kiwi->timeTillEggLay -= game->dTime;
-			if (kiwi->timeTillEggLay <= 0)
-			{
-				kiwi->LayEgg();
-				kiwi->timeTillEggLay += kiwi->timePerEggLay;
-			}
 			if (kiwi->fullness > kiwi->maxFullness)
 			{
-				int random = rand();
 				if (kiwi->ai != AI_MODE::SLEEPY)
 				{
 					unique_ptr<Entity> newSeed = Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(kiwi->pos, up, kiwi);
 					newSeed->vel = kiwi->dir * -5.f;
 					game->entities->push_back(std::move(newSeed));
+					kiwi->ApplyHit(-5, kiwi);
 				}
 				kiwi->ai = AI_MODE::SLEEPY;
 			}
@@ -161,7 +150,7 @@ namespace Livestock
 			else
 			{
 				kiwi->fullness -= game->dTime * kiwi->foodPerSecond;
-				if (kiwi->fullness < 0 && int(tTime) != int(tTime - game->dTime) && kiwi->DealDamage(1, kiwi) == 1)
+				if (kiwi->fullness < 0 && int(tTime) != int(tTime - game->dTime) && kiwi->ApplyHit(1, kiwi) == 1)
 					return;
 			}
 			switch (kiwi->ai)
@@ -178,6 +167,9 @@ namespace Livestock
 				for (int i = 0; i < seenEntities.size(); i++)
 					if (seenEntities[i]->isCollectible && kiwi->sightAngle <= glm::dot(kiwi->dir, Normalized(seenEntities[i]->pos - kiwi->pos)))
 					{
+						if (kiwi->observing != nullptr) // CHANGE THIS
+							kiwi->observing->observers.erase(find(kiwi->observing->observers.begin(), kiwi->observing->observers.end(), kiwi));
+
 						kiwi->observing = seenEntities[i];
 						kiwi->observing->observers.push_back(kiwi);
 						kiwi->ai = AI_MODE::HUNTING;
@@ -228,8 +220,8 @@ namespace Livestock
 		}
 	}
 
-	unique_ptr<Kiwi> kiwi = make_unique<Kiwi>(50, 180.f, 1.f, 5.f, PI_F, 15.f, 0.f, 5.f, 10.f, 15.f, 0.1f, 0.2f, 10.f, 60.f, 0.5f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.375f, 5, 5, "Kiwi");
-	unique_ptr<Egg> kiwiEgg = make_unique<Egg>(kiwi.get(), 30.f, 0.4f, RGBA(217, 200, 158), RGBA(), 0.25f, 5, 5, "Kiwi Egg");
+	unique_ptr<Kiwi> kiwi = make_unique<Kiwi>(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 30, 30, "Kiwi");
+	unique_ptr<Egg> kiwiEgg = make_unique<Egg>(kiwi.get(), 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 50, 50, "Kiwi Egg");
 
 	vector<Livestock*> livestocks{ kiwi.get() };
 	vector<Entity*> livestockBirths{ kiwiEgg.get()};
@@ -237,5 +229,5 @@ namespace Livestock
 
 namespace Resources::Eggs
 {
-	PlacedOnLanding* kiwiEgg = new PlacedOnLanding(ITEMTYPE::KIWI_EGG, Livestock::kiwiEgg.get(), "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg->color, 0, 15.f, false, 0.25f, Livestock::kiwiEgg->radius);
+	PlacedOnLanding* kiwiEgg = new PlacedOnLanding(ITEMTYPE::KIWI_EGG, Livestock::kiwiEgg.get(), "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg->color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg->radius);
 }

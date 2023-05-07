@@ -34,7 +34,7 @@ int main()
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, TreeDU, DeceiverDU, ParentDU, ExploderDU, SnakeConnectedDU, ColorCyclerDU,
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, ShrubDU, DeceiverDU, ParentDU, ExploderDU, SnakeConnectedDU, ColorCyclerDU,
 		PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
 	{
@@ -45,12 +45,12 @@ int main()
 	{
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
-		uiUpdates = { EntityUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
+		uiUpdates = { EntityUIU, ShrubUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
 	}
 
 	{
 		using namespace TUpdates;
-		tUpdates = { DefaultTU, TreeTU, VineTU };
+		tUpdates = { DefaultTU, ShrubTU, VineTU };
 	}
 
 	{

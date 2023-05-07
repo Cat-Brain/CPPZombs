@@ -197,6 +197,7 @@ Vec2 up2(0, 1), right2(1, 0), down2(0, -1), left2(-1, 0), vZero2(0), vOne2(1);
 typedef glm::ivec3 iVec3;
 typedef glm::vec3 Vec3;
 
+// Rename to north, west, south, and east:
 Vec3 up(0, 1, 0), right(1, 0, 0), down(0, -1, 0), left(-1, 0, 0), vZero(0), vOne(1);
 
 iVec3 upI(0, 1, 0), rightI(1, 0, 0), downI(0, -1, 0), leftI(-1, 0, 0), vZeroI(0), vOneI(1);

@@ -9,7 +9,7 @@ enum class TILE : byte // The " : byte" forces this enum to be a single byte in 
 RGBA tileColors[] = { RGBA(0, 0, 0, 0), RGBA(61, 79, 72), RGBA(212, 199, 89), RGBA(143, 111, 79), RGBA(102, 64, 27), RGBA(98, 102, 27),
 RGBA(166, 45, 87), RGBA(127, 140, 94), RGBA(219, 211, 237) };
 
-int tileHealths[] = { 0, 6, 4, 4, 4, 4, 12, 4, 1 };
+int tileHealths[] = { 0, 60, 40, 40, 40, 40, 120, 40, 10 };
 
 uint chunkTexture = 0;
 unique_ptr<byte[]> chunkColorData;
