@@ -323,7 +323,7 @@ public:
 	byte TileAtPos(Vec3 pos)
 	{
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
-		if (index == -1) return TILE::AIR;
+		if (index == -1) return UnEnum(TILE::AIR);
 		return chunks[index].TileAtPos(ToIV3(pos));
 	}
 
