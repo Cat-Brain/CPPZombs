@@ -30,8 +30,8 @@ public:
 	float timeTillTick;
 	float timeTillRemove;
 
-	StatusEffect(STATUS status, float length) :
-		status(status), timeTillTick(inflictions[UnEnum(status)].secPerTick), timeTillRemove(length) {}
+	StatusEffect(Entity* entity, STATUS status, float length) :
+		entity(entity), status(status), timeTillTick(inflictions[UnEnum(status)].secPerTick), timeTillRemove(length) {}
 
 	void Call()
 	{

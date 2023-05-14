@@ -123,7 +123,7 @@ namespace Enemies
 			dUpdate = DUPDATE::DECEIVER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Deceiver> newEnemy = make_unique<Deceiver>(*this);
 			newEnemy->baseClass = baseClass;
@@ -151,7 +151,7 @@ namespace Enemies
 			onDeath = ONDEATH::PARENT;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Parent> newEnemy = make_unique<Parent>(*this);
 			newEnemy->baseClass = baseClass;
@@ -176,13 +176,18 @@ namespace Enemies
 			onDeath = ONDEATH::EXPLODER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Exploder> newEnemy = make_unique<Exploder>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->Start();
 			return newEnemy;
+		}
+
+		Vec3 ExplosionPos()
+		{
+			return pos + down * radius;
 		}
 	};
 
@@ -206,17 +211,23 @@ namespace Enemies
 			mUpdate = MUPDATE::SNAKE;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Snake>* enemies = new unique_ptr<Snake>[length];
-			for (int i = 0; i < length; i++)
+			enemies[0] = make_unique<Snake>(*this);
+			enemies[0]->baseClass = baseClass;
+			enemies[0]->pos = pos;
+			enemies[0]->Start();
+			enemies[0]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(0) * segmentWobbleFrequency);
+			enemies[0]->color = color.CLerp(color4, sinf(static_cast<float>(0)) * 0.5f + 0.5f);
+			enemies[0]->lastTime = tTime;
+			for (int i = 1; i < length; i++)
 			{
 				enemies[i] = make_unique<Snake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos + RandCircPoint();
-				enemies[i]->points = points / length;
-				enemies[i]->Start();
 				enemies[i]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(i) * segmentWobbleFrequency);
+				enemies[i]->pos = enemies[i - 1]->pos + up * (enemies[i - 1]->radius + enemies[i]->radius);
+				enemies[i]->Start();
 				enemies[i]->color = color.CLerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
@@ -262,17 +273,23 @@ namespace Enemies
 			mUpdate = MUPDATE::POUNCERSNAKE;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<PouncerSnake>* enemies = new unique_ptr<PouncerSnake>[length];
-			for (int i = 0; i < length; i++)
+			enemies[0] = make_unique<PouncerSnake>(*this);
+			enemies[0]->baseClass = baseClass;
+			enemies[0]->pos = pos;
+			enemies[0]->Start();
+			enemies[0]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(0) * segmentWobbleFrequency);
+			enemies[0]->color = color.CLerp(color4, sinf(static_cast<float>(0)) * 0.5f + 0.5f);
+			enemies[0]->lastTime = tTime;
+			for (int i = 1; i < length; i++)
 			{
 				enemies[i] = make_unique<PouncerSnake>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos + RandCircPoint();
-				enemies[i]->points = points / length;
-				enemies[i]->Start();
 				enemies[i]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(i) * segmentWobbleFrequency);
+				enemies[i]->pos = enemies[i - 1]->pos + up * (enemies[i - 1]->radius + enemies[i]->radius);
+				enemies[i]->Start();
 				enemies[i]->color = color.CLerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
@@ -299,7 +316,7 @@ namespace Enemies
 	{
 	public:
 		RGBA color3, color4;
-		SnakeConnected* front = nullptr, *next = nullptr;
+		SnakeConnected* back = nullptr, *front = nullptr, *next = nullptr;
 		int length;
 		float segmentWobbleForce, segmentWobbleFrequency;
 
@@ -317,33 +334,47 @@ namespace Enemies
 			mUpdate = MUPDATE::SNAKECONNECTED;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<SnakeConnected>* enemies = new unique_ptr<SnakeConnected>[length];
-			for (int i = 0; i < length; i++)
+			enemies[0] = make_unique<SnakeConnected>(*this);
+			enemies[0]->baseClass = baseClass;
+			enemies[0]->pos = pos;
+			enemies[0]->Start();
+			enemies[0]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(0) * segmentWobbleFrequency);
+			enemies[0]->color = color.CLerp(color4, sinf(static_cast<float>(0)) * 0.5f + 0.5f);
+			enemies[0]->lastTime = tTime;
+			for (int i = 1; i < length; i++)
 			{
 				enemies[i] = make_unique<SnakeConnected>(*this);
 				enemies[i]->baseClass = baseClass;
-				enemies[i]->pos = pos + RandCircPoint();
-				enemies[i]->Start();
 				enemies[i]->radius = radius + segmentWobbleForce * sinf(static_cast<float>(i) * segmentWobbleFrequency);
+				enemies[i]->pos = enemies[i - 1]->pos + up * (enemies[i - 1]->radius + enemies[i]->radius);
+				enemies[i]->Start();
 				enemies[i]->color = color.CLerp(color4, sinf(static_cast<float>(i)) * 0.5f + 0.5f);
 				enemies[i]->lastTime = tTime;
 			}
+			// Front:
 			enemies[length - 1]->color = color3;
 			enemies[length - 1]->front = enemies[length - 1].get();
 			enemies[length - 1]->next = nullptr;
+			enemies[length - 1]->back = enemies[length - 2].get();
 			enemies[length - 1]->observers.resize(size_t(length) - 1);
-			for (int i = 0; i < length - 1; i++)
+			// Last:
+			enemies[0]->front = enemies[length - 1].get();
+			enemies[length - 1]->observers[0] = enemies[0].get();
+			enemies[0]->next = enemies[1].get();
+			for (int i = 1; i < length - 1; i++) // From second to last to second to front.
 			{
 				enemies[i]->front = enemies[length - 1].get();
 				enemies[length - 1]->observers[i] = enemies[i].get();
+				enemies[i]->back = enemies[i - 1].get();
 				enemies[i]->next = enemies[i + 1].get();
 			}
 
-			for (int i = length - 1; i > 0; i--) // Back to front for loop. Does not do 0.
+			for (int i = 0; i < length - 1; i++) // Back to front for loop. Does not do 0.
 				game->entities->push_back(std::move(enemies[i]));
-			return std::move(enemies[0]); // Do 0 here.
+			return std::move(enemies[length - 1]); // Do 0 here.
 		}
 
 		void UnAttach(Entity* entity) override
@@ -351,16 +382,17 @@ namespace Enemies
 			if (entity == front)
 			{
 				DelayedDestroySelf();
-				health = -1; // Set to -1 but may be further decreased before frame ends.
+				health = 0; // Set to 0 but may be further decreased before frame ends.
 			}
 		}
 
 		int ApplyHit(int damage, Entity* damageDealer) override
 		{
-			if (health < 0) return 1;
-			if (next == nullptr)
-				return Enemy::ApplyHit(damage, damageDealer);
-			return front->Enemy::ApplyHit(damage, damageDealer);
+			if (health <= 0) return 1;
+			if (next != nullptr)
+				return front->Enemy::ApplyHit(damage, damageDealer);
+			health = max(health, damage);
+			return Enemy::ApplyHit(damage, damageDealer);
 		}
 	};
 
@@ -385,7 +417,7 @@ namespace Enemies
 			colorOffset = RandFloat() * colorCycleSpeed;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<ColorCycler> newEnemy = make_unique<ColorCycler>(*this);
 			newEnemy->baseClass = baseClass;
@@ -413,7 +445,7 @@ namespace Enemies
 			mUpdate = MUPDATE::VACUUMER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Vacuumer> newEnemy = make_unique<Vacuumer>(*this);
 			newEnemy->baseClass = baseClass;
@@ -445,7 +477,7 @@ namespace Enemies
 			earlyDUpdate = EDUPDATE::SPIDER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Spider> newEnemy = make_unique<Spider>(*this);
 			newEnemy->baseClass = baseClass;
@@ -507,7 +539,7 @@ namespace Enemies
 			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
 				timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name) { }
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Spoobderb> newEnemy = make_unique<Spoobderb>(*this);
 			newEnemy->baseClass = baseClass;
@@ -520,7 +552,7 @@ namespace Enemies
 		{
 			for (int i = 0; i < damage; i++)
 				if ((health - i) % 10 == 0)
-					game->entities->push_back(baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), up, this));
+					game->entities->push_back(baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), north, this));
 			return Spider::ApplyHit(damage, damageDealer);
 		}
 	};
@@ -543,7 +575,7 @@ namespace Enemies
 			mUpdate = MUPDATE::CENTICRAWLER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Centicrawler> newEnemy = make_unique<Centicrawler>(*this);
 			newEnemy->baseClass = baseClass;
@@ -574,7 +606,7 @@ namespace Enemies
 			mUpdate = MUPDATE::POUNCER;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Pouncer> newEnemy = make_unique<Pouncer>(*this);
 			newEnemy->baseClass = baseClass;
@@ -602,7 +634,7 @@ namespace Enemies
 			mUpdate = MUPDATE::CAT;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Cat> newEnemy = make_unique<Cat>(*this);
 			newEnemy->baseClass = baseClass;
@@ -631,7 +663,7 @@ namespace Enemies
 			aUpdate = AUPDATE::BOOMCAT;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<BoomCat> newEnemy = make_unique<BoomCat>(*this);
 			newEnemy->baseClass = baseClass;
@@ -662,7 +694,7 @@ namespace Enemies
 			dUpdate = DUPDATE::CATACLYSM;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Cataclysm> newEnemy = make_unique<Cataclysm>(*this);
 			newEnemy->baseClass = baseClass;
@@ -703,7 +735,7 @@ namespace Enemies
 			aUpdate = AUPDATE::TANK;
 		}
 
-		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = up, Entity* creator = nullptr) override
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Tank> newEnemy = make_unique<Tank>(*this);
 			newEnemy->baseClass = baseClass;
@@ -890,10 +922,15 @@ namespace Enemies
 		{
 			Exploder* exploder = static_cast<Exploder*>(entity);
 			float tempRadius = exploder->radius;
+			Vec3 tempPos = exploder->pos;
+			exploder->pos = exploder->ExplosionPos();
 			exploder->radius = exploder->explosionRadius;
 			byte tempAlpha = exploder->color.a;
 			exploder->color.a /= 5;
+			glDepthMask(GL_FALSE);
 			exploder->DUpdate(DUPDATE::DTOCOL);
+			glDepthMask(GL_TRUE);
+			exploder->pos = tempPos;
 			exploder->radius = tempRadius;
 			exploder->color.a = tempAlpha;
 			exploder->DUpdate(DUPDATE::DTOCOL);
@@ -995,8 +1032,11 @@ namespace Enemies
 				Snake* currentBack = snake->back;
 				while (currentBack)
 				{
-					float dist = glm::distance(currentBack->front->pos, currentBack->pos);
-					currentBack->SetPos(currentBack->pos + (currentBack->front->pos - currentBack->pos) / dist * (dist - currentBack->radius - currentBack->front->radius));
+					Entity* front = currentBack->front;
+					float dist = glm::distance(front->pos, currentBack->pos);
+					Vec3 multiplier = (front->pos - currentBack->pos) * (1.01f * (dist - currentBack->radius - front->radius) / (dist * (currentBack->mass + front->mass)));
+					currentBack->SetPos(currentBack->pos + multiplier * front->mass);
+					front->SetPos(front->pos - multiplier * currentBack->mass);
 					currentBack = currentBack->back;
 				}
 			}
@@ -1006,10 +1046,22 @@ namespace Enemies
 		{
 			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
 
-			if (snake->next != nullptr)
+			if (snake->next == nullptr)
 			{
-				float dist = glm::distance(snake->next->pos, snake->pos);
-				snake->SetPos(snake->pos + (snake->next->pos - snake->pos) / dist * (dist - snake->radius - snake->next->radius));
+				for (int i = 0; i < 5; i++)
+				{
+					SnakeConnected* currentFarthest = snake->back;
+					while (currentFarthest)
+					{
+						Entity* front = currentFarthest->next;
+						float dist = glm::distance(front->pos, currentFarthest->pos);
+						Vec3 multiplier = (front->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - front->radius) / (dist * (currentFarthest->mass + front->mass)));
+						currentFarthest->SetPos(currentFarthest->pos + multiplier * front->mass);
+						front->SetPos(front->pos - multiplier * currentFarthest->mass);
+
+						currentFarthest = currentFarthest->back;
+					}
+				}
 			}
 		}
 
@@ -1051,10 +1103,10 @@ namespace Enemies
 			Parent* parent = static_cast<Parent*>(entity);
 			parent->OnDeath(ONDEATH::ENEMY, damageDealer);
 
-			game->entities->push_back(parent->child->Clone(parent->pos + up));
-			game->entities->push_back(parent->child->Clone(parent->pos + right));
-			game->entities->push_back(parent->child->Clone(parent->pos + down));
-			game->entities->push_back(parent->child->Clone(parent->pos + left));
+			game->entities->push_back(parent->child->Clone(parent->pos + north));
+			game->entities->push_back(parent->child->Clone(parent->pos + west));
+			game->entities->push_back(parent->child->Clone(parent->pos + south));
+			game->entities->push_back(parent->child->Clone(parent->pos + east));
 		}
 
 		void ExploderOD(Entity* entity, Entity* damageDealer)
@@ -1135,12 +1187,14 @@ namespace Enemies
 		bool SnakeMU(Enemy* enemy)
 		{
 			Snake* snake = static_cast<Snake*>(enemy);
-			snake->dir = Normalized(game->PlayerPos() - snake->pos);
 			if (snake->front == nullptr)
 			{
-				enemy->MoveDir();
+				snake->dir = Normalized(game->PlayerPos() - snake->pos);
 				snake->ShouldTryJump();
 			}
+			else
+				snake->dir = Normalized(snake->front->pos - snake->pos);
+			snake->MoveDir();
 			return false;
 		}
 
@@ -1160,12 +1214,14 @@ namespace Enemies
 		bool SnakeConnectedMU(Enemy* enemy)
 		{
 			SnakeConnected* snake = static_cast<SnakeConnected*>(enemy);
-			snake->dir = Normalized(game->PlayerPos() - snake->pos);
 			if (snake->next == nullptr)
 			{
-				enemy->MoveDir();
-				enemy->ShouldTryJump();
+				snake->dir = Normalized(game->PlayerPos() - snake->pos);
+				snake->ShouldTryJump();
 			}
+			else
+				snake->dir = Normalized(snake->next->pos - snake->pos);
+			snake->MoveDir();
 			return false;
 		}
 
@@ -1231,9 +1287,9 @@ namespace Enemies
 		bool ExploderAU(Enemy* enemy)
 		{
 			Exploder* exploder = static_cast<Exploder*>(enemy);
-			if (!game->entities->DoesOverlap(exploder->pos, exploder->explosionRadius, MaskF::IsNonEnemy, exploder))
+			if (!game->entities->DoesOverlap(exploder->ExplosionPos(), exploder->explosionRadius, MaskF::IsNonEnemy, exploder))
 				return false;
-			CreateUpExplosion(exploder->pos, exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
+			CreateUpExplosion(exploder->ExplosionPos(), exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
 			return true;
 		}
 
@@ -1389,7 +1445,7 @@ namespace Enemies
 	{
 		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, pusher, frog},
-		{parent, spiderParent, snake, megaTanker},
+		{/*parent, spiderParent, */snake/*, megaTanker*/},
 		{hyperSpeedster, gigaExploder, bigSnake, pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};

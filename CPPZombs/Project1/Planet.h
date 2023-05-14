@@ -10,6 +10,7 @@ public:
 	float friction, gravity, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
 	unique_ptr<Enemies::Instance> enemies, bosses;
 	FastNoiseLite worldNoise, caveNoise;
+	Vec3 sunDir;
 	JRGB color1, color2, fog;
 
 	Planet();

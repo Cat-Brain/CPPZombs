@@ -7,8 +7,9 @@ struct Key
 
 struct Inputs
 {
-	Key up, left, down, right, crouch, // Movement keys
-		enter, c, q, e, escape, space, shift,
+	Key up, left, down, right, // Movement keys
+		crouch, inventory, // Player interaction buttons
+		enter, c, q, e, escape, space, shift, // Technical buttons and dev buttons
 		leftMouse, rightMouse, middleMouse, // Mouse buttons
 		comma, period, slash, phase; // Command keys.
 	int mouseScroll = 0;
@@ -59,7 +60,9 @@ struct Inputs
 		UpdateKey(window, left, GLFW_KEY_A);
 		UpdateKey(window, down, GLFW_KEY_S);
 		UpdateKey(window, right, GLFW_KEY_D);
+
 		UpdateKey(window, crouch, GLFW_KEY_Z);
+		UpdateKey(window, inventory, GLFW_KEY_TAB);
 
 		UpdateKey(window, enter, GLFW_KEY_ENTER);
 		UpdateKey(window, c, GLFW_KEY_C);

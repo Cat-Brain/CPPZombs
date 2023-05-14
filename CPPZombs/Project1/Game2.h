@@ -41,6 +41,7 @@ Planet::Planet()
 	dayTime = RandFloat() * 60.0f;
 	duskTime = RandFloat() * 60.0f;
 	nightTime = RandFloat() * 60.0f;
+	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
 
 	if (rand() % 2 == 0)
 	{
@@ -102,25 +103,6 @@ void Game::Start()
 	screenShkY = screenShkX;
 	screenShkY.SetSeed(static_cast<int>(time(NULL) + 1));
 	screenShake = 0.0f;
-}
-
-bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
-{
-	return game->inputs.screenMousePosition.x > minPos.x && game->inputs.screenMousePosition.x < minPos.x + font.TextWidth(text)* scale / font.minimumSize &&
-		game->inputs.screenMousePosition.y > minPos.y + scale * font.mininumVertOffset / font.minimumSize &&
-		game->inputs.screenMousePosition.y < minPos.y + scale * font.maxVertOffset / font.minimumSize;
-}
-
-bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(255, 255, 255), RGBA color2 = RGBA(127, 127, 127)) // Renders and returns if this was clicked on(not hovered over).
-{
-		if (CheckInputSquareHover(minPos, scale, text))
-		{
-			font.Render(text, minPos * 2.f - Vec2(ScrDim()), scale * 2, color2);
-			return game->inputs.leftMouse.pressed;
-		}
-		else
-			font.Render(text, { minPos * 2.f - Vec2(ScrDim())}, scale * 2, color1);
-		return false;
 }
 	
 void Game::Update()
@@ -270,6 +252,8 @@ void Game::ApplyLighting()
 
 	glUseProgram(sunShader);
 	glUniform3f(glGetUniformLocation(sunShader, "color"), ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f);
+	glUniform3f(glGetUniformLocation(sunShader, "direction"), planet->sunDir.x, planet->sunDir.y, planet->sunDir.z);
+	glUniform1i(glGetUniformLocation(sunShader, "colorBand"), int(settings.colorBand));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mainScreen->normalBuffer);
 	glUniform1i(glGetUniformLocation(sunShader, "normalMap"), 0);

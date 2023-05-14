@@ -111,7 +111,7 @@ namespace Livestock
 			egg->timeTill -= game->dTime;
 			if (egg->timeTill <= 0)
 			{
-				game->entities->push_back(egg->entityToSpawn->Clone(egg->pos, up, egg));
+				game->entities->push_back(egg->entityToSpawn->Clone(egg->pos, north, egg));
 				egg->DestroySelf(egg);
 			}
 		}
@@ -124,7 +124,7 @@ namespace Livestock
 				totalGamePoints += kiwi->points;
 				for (int i = 0; i < kiwi->eggsLaid; i++)
 				{
-					unique_ptr<Entity> newEgg = kiwi->birthEntity->Clone(kiwi->pos, up, kiwi);
+					unique_ptr<Entity> newEgg = kiwi->birthEntity->Clone(kiwi->pos, north, kiwi);
 					newEgg->vel = RotateBy(kiwi->dir, 2 * PI_F * i / kiwi->eggsLaid) * 5.f;
 					game->entities->push_back(std::move(newEgg));
 				}
@@ -134,7 +134,7 @@ namespace Livestock
 			{
 				if (kiwi->ai != AI_MODE::SLEEPY)
 				{
-					unique_ptr<Entity> newSeed = Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(kiwi->pos, up, kiwi);
+					unique_ptr<Entity> newSeed = Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(kiwi->pos, north, kiwi);
 					newSeed->vel = kiwi->dir * -5.f;
 					game->entities->push_back(std::move(newSeed));
 					kiwi->ApplyHit(-5, kiwi);

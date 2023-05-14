@@ -1,6 +1,6 @@
 #include "StatusEffect.h"
 
-enum class ITEMTYPE
+enum class ITEMTYPE : byte
 {
 	// Ammo
 	DITEM, COPPER, IRON, ROCK, BOWLER, SILVER, RUBY, EMERALD, TOPAZ, SAPPHIRE, LEAD, VACUUMIUM, QUARTZ, CHEESE, SHADE,
@@ -58,7 +58,17 @@ public:
 	{
 		return Type() != b.Type();
 	}
-	
+
+	inline bool operator == (ITEMTYPE type)
+	{
+		return type == type;
+	}
+
+	inline bool operator != (ITEMTYPE type)
+	{
+		return type != type;
+	}
+
 	inline bool operator < (ItemInstance b)
 	{
 		return Type() < b.Type();
@@ -172,7 +182,7 @@ namespace ItemODs
 	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType) { }
 }
 
-class Items : public vector<ItemInstance>
+class Items : public vector<ItemInstance> // Vector of ItemsInstance with helper functions
 {
 public:
 	using vector<ItemInstance>::vector;
@@ -272,23 +282,6 @@ public:
 		}
 		*this = clone;
 		return true;
-	}
-
-	void DUpdate()
-	{
-		if (size() == 0)
-			return;
-		int height = ScrHeight();
-		float scale = height / (3.0f * max(8, int(size()))), scale2 = scale / 5.0f;
-		iVec2 offset = vZeroI2 - ScrDim();
-		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex]->color, Vec2(scale, scale));
-		for (int i = 0; i < size(); i++)
-		{
-			game->DrawTextured(spriteSheet, (*this)[i]->intType, offset + iVec2(0, static_cast<int>(scale * i * 2)),
-				i == currentIndex ? RGBA() : (*this)[i]->color, Vec2(scale, scale));
-			font.Render(" " + (*this)[i]->name + "  " + to_string((*this)[i].count) + "  " + (*this)[i]->typeName,
-				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i]->color);
-		}
 	}
 
 	ItemInstance GetCurrentItem()

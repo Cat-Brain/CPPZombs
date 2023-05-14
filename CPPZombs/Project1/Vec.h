@@ -68,7 +68,7 @@ inline iVec2 Squarmalized(iVec2 a)
 }
 #pragma endregion
 
-iVec2 upI2(0, 1), rightI2(1, 0), downI2(0, -1), leftI2(-1, 0), vZeroI2(0), vOneI2(1);
+iVec2 norhtI2(0, 1), westI2(1, 0), southI2(0, -1), eastI2(-1, 0), vZeroI2(0), vOneI2(1);
 
 typedef glm::vec2 Vec2;
 
@@ -192,15 +192,15 @@ inline Vec2 TryAdd2V2(Vec2 original, Vec2 additional, float maxMagnitude)
 }
 #pragma endregion
 
-Vec2 up2(0, 1), right2(1, 0), down2(0, -1), left2(-1, 0), vZero2(0), vOne2(1);
+Vec2 north2(0, 1), west2(1, 0), south2(0, -1), east2(-1, 0), vZero2(0), vOne2(1);
 
 typedef glm::ivec3 iVec3;
 typedef glm::vec3 Vec3;
 
-// Rename to north, west, south, and east:
-Vec3 up(0, 1, 0), right(1, 0, 0), down(0, -1, 0), left(-1, 0, 0), vZero(0), vOne(1);
+// Flipflop east and west:
+Vec3 north(0, 1, 0), west(1, 0, 0), south(0, -1, 0), east(-1, 0, 0), up(0, 0, 1), down(0, 0, -1), vZero(0), vOne(1);
 
-iVec3 upI(0, 1, 0), rightI(1, 0, 0), downI(0, -1, 0), leftI(-1, 0, 0), vZeroI(0), vOneI(1);
+iVec3 norhtI(0, 1, 0), westI(1, 0, 0), southI(0, -1, 0), eastI(-1, 0, 0), upI(0, 0, 1), downI(0, 0, -1), vZeroI(0), vOneI(1);
 
 #pragma region Vec3 functions
 inline iVec3 ToIV3(Vec3 a)

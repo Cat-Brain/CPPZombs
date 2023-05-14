@@ -34,8 +34,8 @@ int main()
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, ShrubDU, DeceiverDU, ParentDU, ExploderDU, SnakeConnectedDU, ColorCyclerDU,
-		PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, ShrubDU, TreeDU, DeceiverDU, ParentDU, ExploderDU,
+			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
 	{
 		using namespace EDUpdates;
@@ -45,12 +45,12 @@ int main()
 	{
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
-		uiUpdates = { EntityUIU, ShrubUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
+		uiUpdates = { EntityUIU, ShrubUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
 	}
 
 	{
 		using namespace TUpdates;
-		tUpdates = { DefaultTU, ShrubTU, VineTU };
+		tUpdates = { DefaultTU, ShrubTU, TreeTU, VineTU };
 	}
 
 	{
@@ -84,9 +84,6 @@ int main()
 		using namespace Livestock::OnDeaths;
 		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
 			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD };
-
-		using namespace OverlapFuns;
-		overlapFuns = { EntityOF };
 
 		using namespace ItemUs;
 		itemUs = { ItemU, WaveModifierU };

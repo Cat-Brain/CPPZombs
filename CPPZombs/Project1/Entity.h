@@ -21,8 +21,8 @@ vector<function<void(Entity*)>> vUpdates;
 
 enum class DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, SHRUB, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT,
-	CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, SHRUB, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER,
+	POUNCER, CAT, CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
 };
 
 vector<function<void(Entity*)>> dUpdates;
@@ -36,24 +36,10 @@ vector<function<void(Entity*)>> eDUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
-	ENTITY, SHRUB, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
+	ENTITY, SHRUB, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
 };
 
 vector<function<void(Entity*)>> uiUpdates;
-
-enum class OVERLAPFUN
-{
-	ENTITY
-};
-
-vector<function<bool(Entity*, Vec3, float)>> overlapFuns;
-
-enum OVERLAPRES // Overlap resolutions
-{
-	CIRCLE
-};
-
-vector<function<void(Entity*, Entity*)>> overlapRes; // Overlap resolutions.
 
 enum class ONDEATH
 {
@@ -84,7 +70,6 @@ public:
 	EDUPDATE earlyDUpdate;
 	UIUPDATE uiUpdate;
 	ONDEATH onDeath;
-	OVERLAPFUN overlapFun;
 	Entity* baseClass;
 	Entity* creator;
 	vector<Entity*> observers{};
@@ -104,7 +89,7 @@ public:
 		pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITY), vUpdate(VUPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY),
-		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY), overlapFun(OVERLAPFUN::ENTITY)
+		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY)
 	{
 	}
 
@@ -197,7 +182,7 @@ public:
 	{
 		game->DrawFBL(bottomLeft, borderColor, topRight - bottomLeft + boarderWidth);
 		game->DrawFBL(bottomLeft + boarderWidth, fillColor, topRight - bottomLeft); // Draw the middle box, +1.
-		font.Render(text, bottomLeft + boarderWidth + down2 * (font.mininumVertOffset / 2.f), static_cast<float>(COMMON_TEXT_SCALE), textColor);
+		font.Render(text, bottomLeft + boarderWidth + south2 * (font.mininumVertOffset / 2.f), static_cast<float>(COMMON_TEXT_SCALE), textColor);
 	}
 
 	virtual void SetPos(Vec3 newPos);
@@ -208,9 +193,9 @@ public:
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 	void DelayedDestroySelf(); // Never calls OnDeath;
 
-	bool Overlaps(Vec3 pos, float radius)
+	virtual bool Overlaps(Vec3 pos, float radius)
 	{
-		return overlapFuns[UnEnum(overlapFun)](this, pos, radius);
+		return glm::length2(this->pos - pos) < (this->radius + radius) * (this->radius + radius);
 	}
 
 	void UpdateChunkCollision();
@@ -356,14 +341,6 @@ namespace UIUpdates
 }
 
 namespace OnDeaths { void EntityOD(Entity* entity, Entity* damageDealer) { } }
-
-namespace OverlapFuns
-{
-	bool EntityOF(Entity* entity, Vec3 pos, float radius)
-	{
-		return glm::length2(entity->pos - pos) < (entity->radius + radius) * (entity->radius + radius);
-	}
-}
 
 namespace OverlapRes
 {

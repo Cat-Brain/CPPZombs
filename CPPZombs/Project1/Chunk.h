@@ -127,6 +127,7 @@ public:
 	void DestroyMesh()
 	{
 		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &ebo);
 		glDeleteVertexArrays(1, &vao);
 	}
 

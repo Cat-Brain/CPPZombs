@@ -35,6 +35,12 @@ public:
 		Chunk::Init();
 	}
 
+	~Entities()
+	{
+		for (Chunk chunk : chunks)
+			chunk.DestroyMesh();
+	}
+
 	void DelayedDestroy(Entity* entity)
 	{
 		toDelEntities.push_back(entity);
@@ -525,7 +531,7 @@ int Entity::ApplyHit(int damage, Entity* damageDealer)
 {
 	if (damage > 0)
 		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
-			Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - up, RandFloat() * 2 - 1, to_string(damage),
+			Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - north, RandFloat() * 2 - 1, to_string(damage),
 			RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
 			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 
@@ -614,7 +620,7 @@ void Entity::UpdateChunkCollision()
 	if (hitPositions.size() && !game->inputs.phase.held)
 	{
 		if (overlappedAllPossible)
-			return SetPos(pos + Vec3(0, 0, 1));
+			return SetPos(pos + up);
 
 		Vec3 hitPosition = hitPositions[0];
 		float distance = glm::length2(hitPosition - pos), newDistance;
@@ -632,7 +638,7 @@ void Entity::UpdateChunkCollision()
 		Vec3  q = glm::max(w, vZero);
 		float l = length(q);
 
-		Vec3 normal = Vec3(glm::sign(p) * ((g > 0.0) ? q / l : ((w.x > w.z) ? (w.x > w.y ? Vec3(1, 0, 0) : Vec3(0, 1, 0)) : w.z > w.y ? Vec3(0, 0, 1) : Vec3(0, 1, 0))));
+		Vec3 normal = Vec3(glm::sign(p) * ((g > 0.0) ? q / l : ((w.x > w.z) ? (w.x > w.y ? west : north) : w.z > w.y ? up : north)));
 		Vec3 offset = (((g > 0.0) ? l : g) - radius) * normal;
 		SetPos(pos - offset);
 		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), 0.f/*bounciness*/);
@@ -725,7 +731,7 @@ public:
 		this->creator = creator;
 	}
 
-	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
 		return make_unique<FadeOutPuddle>(this, pos, creator);
 	}
@@ -759,7 +765,7 @@ public:
 		corporeal = false;
 	}
 
-	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
 		return make_unique<VacuumeFor>(pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
 	}

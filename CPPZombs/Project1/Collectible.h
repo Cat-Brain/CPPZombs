@@ -22,7 +22,7 @@ public:
 
 	Collectible(Collectible* baseClass, Vec3 pos) : Collectible(*baseClass) { this->pos = pos; }
 
-	unique_ptr<Entity> Clone(Vec3 pos = Vec3(0), Vec3 dir = up, Entity* creator = nullptr) override
+	unique_ptr<Entity> Clone(Vec3 pos = Vec3(0), Vec3 dir = north, Entity* creator = nullptr) override
 	{
 		return make_unique<Collectible>(this, pos);
 	}
