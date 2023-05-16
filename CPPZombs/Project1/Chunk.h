@@ -37,6 +37,7 @@ public:
 	byte tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
 	Mesh mesh;
 	uint vbo = 0, ebo = 0, vao = 0, indCount = 0; // For mesh rendering.
+	int xPlus, xMin, yPlus, yMin, zPlus, zMin;
 
 	static void Init()
 	{
@@ -58,6 +59,7 @@ public:
 	}
 
 	Chunk(iVec3 pos = vZero);
+	void Finalize();
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
@@ -76,7 +78,7 @@ public:
 					return true;
 				}
 				return false;
-		}
+			}
 
 		TileData data = TileData(index, x, y, z);
 		if (!data.Damage(damage))
@@ -141,125 +143,76 @@ public:
 		data[posStart + 6] = nX; data[posStart + 7] = nY; data[posStart + 8] = nZ;
 	}
 
-	void GenerateMesh()
+	// Add genDir[1] stuff!
+	void GenTile(vector<float>& data, byte x, byte y, byte z, bool genZ, bool genNZ, bool genY, bool genNY, bool genX, bool genNX)
 	{
-		bool allEmpty = true;
-		for (byte x = 0; x < CHUNK_WIDTH; x++)
-			for (byte y = 0; y < CHUNK_WIDTH; y++)
-				for (byte z = 0; z < CHUNK_WIDTH; z++)
-					allEmpty &= tiles[x][y][z] == 0;
-		if (allEmpty)
-		{
-			indCount = 0;
+		if (tiles[x][y][z] == 0)
 			return;
+		byte sideCount = int(genZ) + int(genY) + int(genNY) + int(genX) + int(genNX);
+		data.resize(data.size() + size_t(sideCount) * 36);
+		int r = tileColors[tiles[x][y][z]].r, g = tileColors[tiles[x][y][z]].g, b = tileColors[tiles[x][y][z]].b;
+		if (genZ)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x, y, z + 1, 0, 0, 1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z + 1, 0, 0, 1, JRGB(r, g, b));
+			sideCount--;
 		}
-		vector<float> data{}; // Goes pos.x, pos.y, pos.z, color.r, color.g, color.b, normal.x, normal.y, normal.z
-		for (byte x = 0; x < CHUNK_WIDTH; x++)
-			for (byte y = 0; y < CHUNK_WIDTH; y++)
-				for (byte z = 0; z < CHUNK_WIDTH; z++)
-				{
-					if (tiles[x][y][z] == 0)
-						continue;
-					bool genFor = z >= CHUNK_WIDTH - 1 || tiles[x][y][z + 1] == 0,
-						genUp = y >= CHUNK_WIDTH - 1 || tiles[x][y + 1][z] == 0,
-						genDown = y == 0 || tiles[x][y - 1][z] == 0,
-						genRight = x >= CHUNK_WIDTH - 1 || tiles[x + 1][y][z] == 0, 
-						genLeft = x == 0 || tiles[x - 1][y][z] == 0;
-					byte sideCount = int(genFor) + int(genUp) + int(genDown) + int(genRight) + int(genLeft);
-					data.resize(data.size() + size_t(sideCount) * 36);
-					int r = tileColors[tiles[x][y][z]].r, g = tileColors[tiles[x][y][z]].g, b = tileColors[tiles[x][y][z]].b;
-					if (genFor)
-					{
-						int posStart = int(data.size()) - sideCount * 36;
-						GenerateVert(data, posStart, x, y, z + 1, 0, 0, 1, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y, z + 1, 0, 0, 1, JRGB(r, g, b));
-						sideCount--;
-					}
-					if (genUp)
-					{
-						int posStart = int(data.size()) - sideCount * 36;
-						GenerateVert(data, posStart, x, y + 1, z, 0, 1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, JRGB(r, g, b));
-						sideCount--;
-					}
-					if (genDown)
-					{
-						int posStart = int(data.size()) - sideCount * 36;
-						GenerateVert(data, posStart, x, y, z, 0, -1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y, z + 1, 0, -1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y, z + 1, 0, -1, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y, z, 0, -1, 0, JRGB(r, g, b));
-						sideCount--;
-					}
-					if (genRight)
-					{
-						int posStart = int(data.size()) - sideCount * 36;
-						GenerateVert(data, posStart, x + 1, y + 1, z, 1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y, z + 1, 1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, JRGB(r, g, b));
-						sideCount--;
-					}
-					if (genLeft)
-					{
-						int posStart = int(data.size()) - sideCount * 36;
-						GenerateVert(data, posStart, x, y + 1, z, -1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y + 1, z + 1, -1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y, z + 1, -1, 0, 0, JRGB(r, g, b));
-						posStart += 9;
-						GenerateVert(data, posStart, x, y, z, -1, 0, 0, JRGB(r, g, b));
-					}
-				}
-
-		vector<uint> indices = vector<uint>(data.size() / 4 * 6);
-		for (uint i = 0; i < indices.size(); i++)
-			indices[i] = quadInd[i % 6] + i / 6 * 4;
-
-
-		glGenVertexArrays(1, &vao);
-		glGenBuffers(1, &vbo);
-		glGenBuffers(1, &ebo);
-
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), static_cast<void*>(data.data()), GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), static_cast<void*>(indices.data()), GL_DYNAMIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-
-		glEnableVertexAttribArray(1);
-
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-
-		glEnableVertexAttribArray(2);
-
-		indCount = static_cast<uint>(indices.size());
+		if (genY)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x, y + 1, z, 0, 1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, JRGB(r, g, b));
+			sideCount--;
+		}
+		if (genNY)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x, y, z, 0, -1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y, z + 1, 0, -1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z + 1, 0, -1, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z, 0, -1, 0, JRGB(r, g, b));
+			sideCount--;
+		}
+		if (genX)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x + 1, y + 1, z, 1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z + 1, 1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, JRGB(r, g, b));
+			sideCount--;
+		}
+		if (genNX)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x, y + 1, z, -1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y + 1, z + 1, -1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y, z + 1, -1, 0, 0, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y, z, -1, 0, 0, JRGB(r, g, b));
+		}
 	}
+
+	void GenerateMesh();
 
 	void RegenerateMesh()
 	{

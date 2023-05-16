@@ -122,6 +122,7 @@ public:
 					}
 					result[i++] = static_cast<int>(chunks.size());
 					chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+					chunks[chunks.size() - 1].Finalize();
 				}
 		return result;
 	}
@@ -430,7 +431,7 @@ public:
 				chunks[i].pos.y <= game->PlayerPos().y + game->zoom &&
 				chunks[i].pos.z <= game->PlayerPos().z + game->screenOffset.z)
 			{
-				chunks[i].Draw();
+				if (game->showUI) chunks[i].Draw();
 				chunkOverlaps2.push_back(i);
 			}
 

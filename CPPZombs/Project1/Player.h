@@ -98,13 +98,14 @@ public:
 		if (isOpen)
 		{
 			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale * height, scale * width));
+			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
 			if (isHovering)
 			{
 				iVec2 rPos = game->inputs.screenMousePosition / scale;
 				game->DrawFBL(Vec2(rPos) * scale * 2.f - Vec2(ScrDim()), RGBA(), Vec2(scale));
 				int currentHovered = rPos.x * width + rPos.y;
 				if ((*this)[currentHovered].count != 0)
-					font.Render(" " + (*this)[currentHovered]->name + "  " + to_string((*this)[currentHovered].count) + "  " + (*this)[currentHovered]->typeName,
+					font.Render((*this)[currentHovered]->name + "  " + to_string((*this)[currentHovered].count) + "  " + (*this)[currentHovered]->typeName,
 						iVec2(game->inputs.screenMousePosition * 2.f) - ScrDim(), scale * 2, (*this)[currentHovered]->color);
 			}
 			if (currentSelected != -1)
@@ -354,13 +355,13 @@ public:
 unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 50, 50, "Turret");
 unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 20, 20, "Rover");
 
-unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 64.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 100, 50,
 	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
 		Resources::Seeds::rubyShrubSeed->Clone(2), Resources::Seeds::copperShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
 
-unique_ptr<Player> flicker = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 64.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
+unique_ptr<Player> flicker = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
 	100, 50, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
 		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),

@@ -1,9 +1,9 @@
 #include "Player.h"
 
 Chunk::Chunk(iVec3 pos) :
-	vector{}, pos(pos)
+	vector{}, pos(pos), zPlus(-1), zMin(-1), yPlus(-1), yMin(-1), xPlus(-1), xMin(-1)
 {
-	memset(tiles, UnEnum(pos.z >= 0 ? TILE::AIR : TILE::ROCK), CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
+	memset(tiles, UnEnum(TILE::AIR), CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_WIDTH);
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 		for (int y = 0; y < CHUNK_WIDTH; y++)
 		{
@@ -20,7 +20,219 @@ Chunk::Chunk(iVec3 pos) :
 					TILE::BAD_SOIL : tZ > 0 ? TILE::MID_SOIL : TILE::MAX_SOIL);
 			}
 		}
+}
+
+void Chunk::Finalize()
+{
+	int index, thisIndex = game->entities->chunks.size() - 1;
+	// zPlus
+	if ((index = game->entities->ChunkAtPos(pos + upI * CHUNK_WIDTH)) != -1)
+	{
+		zPlus = index;
+		game->entities->chunks[index].zMin = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
+	// zMin
+	if ((index = game->entities->ChunkAtPos(pos + downI * CHUNK_WIDTH)) != -1)
+	{
+		zMin = index;
+		game->entities->chunks[index].zPlus = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
+	// yPlus
+	if ((index = game->entities->ChunkAtPos(pos + northI * CHUNK_WIDTH)) != -1)
+	{
+		yPlus = index;
+		game->entities->chunks[index].yMin = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
+	// yMin
+	if ((index = game->entities->ChunkAtPos(pos + southI * CHUNK_WIDTH)) != -1)
+	{
+		yMin = index;
+		game->entities->chunks[index].yPlus = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
+	// xPlus
+	if ((index = game->entities->ChunkAtPos(pos + westI * CHUNK_WIDTH)) != -1)
+	{
+		xPlus = index;
+		game->entities->chunks[index].xMin = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
+	// xMin
+	if ((index = game->entities->ChunkAtPos(pos + eastI * CHUNK_WIDTH)) != -1)
+	{
+		xMin = index;
+		game->entities->chunks[index].xPlus = thisIndex;
+		game->entities->chunks[index].RegenerateMesh();
+	}
 	GenerateMesh();
+}
+
+void Chunk::GenerateMesh()
+{
+	bool allEmpty = true;
+	for (byte x = 0; x < CHUNK_WIDTH; x++)
+		for (byte y = 0; y < CHUNK_WIDTH; y++)
+			for (byte z = 0; z < CHUNK_WIDTH; z++)
+				allEmpty &= tiles[x][y][z] == 0;
+	if (allEmpty)
+	{
+		indCount = 0;
+		return;
+	}
+	vector<float> data{}; // Goes pos.x, pos.y, pos.z, color.r, color.g, color.b, normal.x, normal.y, normal.z
+	for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
+		for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
+			for (byte z = 1; z < CHUNK_WIDTH - 1; z++)
+				GenTile(data, x, y, z,
+					tiles[x][y][z + 1] == 0,
+					tiles[x][y][z - 1] == 0,
+					tiles[x][y + 1][z] == 0,
+					tiles[x][y - 1][z] == 0,
+					tiles[x + 1][y][z] == 0,
+					tiles[x - 1][y][z] == 0);
+
+#pragma region face cases
+#pragma region z
+	if (zPlus != -1)
+		for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
+			for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
+				GenTile(data, x, y, CHUNK_WIDTH - 1,
+					game->entities->chunks[zPlus].tiles[x][y][0] == 0,
+					tiles[x][y][CHUNK_WIDTH - 2] == 0,
+					tiles[x][y + 1][CHUNK_WIDTH - 1] == 0,
+					tiles[x][y - 1][CHUNK_WIDTH - 1] == 0,
+					tiles[x + 1][y][CHUNK_WIDTH - 1] == 0,
+					tiles[x - 1][y][CHUNK_WIDTH - 1] == 0);
+	if (zMin != -1)
+		for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
+			for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
+				GenTile(data, x, y, 0,
+					tiles[x][y][1] == 0,
+					game->entities->chunks[zMin].tiles[x][y][CHUNK_WIDTH - 1] == 0,
+					tiles[x][y + 1][0] == 0,
+					tiles[x][y - 1][0] == 0,
+					tiles[x + 1][y][0] == 0,
+					tiles[x - 1][y][0] == 0);
+#pragma endregion
+#pragma region y
+	if (yPlus != -1)
+		for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
+			for (byte z = 1; z < CHUNK_WIDTH - 1; z++)
+				GenTile(data, x, CHUNK_WIDTH - 1, z,
+					tiles[x][CHUNK_WIDTH - 1][z + 1] == 0,
+					tiles[x][CHUNK_WIDTH - 1][z - 1] == 0,
+					game->entities->chunks[yPlus].tiles[x][0][z] == 0,
+					tiles[x][CHUNK_WIDTH - 2][z] == 0,
+					tiles[x + 1][CHUNK_WIDTH - 1][z] == 0,
+					tiles[x - 1][CHUNK_WIDTH - 1][z] == 0);
+	if (yMin != -1)
+		for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
+			for (byte z = 1; z < CHUNK_WIDTH - 1; z++)
+				GenTile(data, x, 0, z,
+					tiles[x][0][z + 1] == 0,
+					tiles[x][0][z - 1] == 0,
+					tiles[x][1][z] == 0,
+					game->entities->chunks[yMin].tiles[x][CHUNK_WIDTH - 1][z] == 0,
+					tiles[x + 1][0][z] == 0,
+					tiles[x - 1][0][z] == 0);
+#pragma endregion
+#pragma region x
+	if (xPlus != -1)
+		for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
+			for (byte z = 1; z < CHUNK_WIDTH - 1; z++)
+				GenTile(data, CHUNK_WIDTH - 1, y, z,
+					tiles[CHUNK_WIDTH - 1][y][z + 1] == 0,
+					tiles[CHUNK_WIDTH - 1][y][z - 1] == 0,
+					tiles[CHUNK_WIDTH - 1][y + 1][z] == 0,
+					tiles[CHUNK_WIDTH - 1][y - 1][z] == 0,
+					game->entities->chunks[xPlus].tiles[0][y][z] == 0,
+					tiles[CHUNK_WIDTH - 2][y][z] == 0);
+	if (xMin != -1)
+		for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
+			for (byte z = 1; z < CHUNK_WIDTH - 1; z++)
+				GenTile(data, 0, y, z,
+					tiles[0][y][z + 1] == 0,
+					tiles[0][y][z - 1] == 0,
+					tiles[0][y + 1][z] == 0,
+					tiles[0][y - 1][z] == 0,
+					tiles[1][y][z] == 0,
+					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][y][z] == 0);
+#pragma endregion
+#pragma region xy
+	if (xMin != -1 && yMin != -1 && xPlus != -1 && yPlus != -1)
+	{
+		for (int z = 1; z < CHUNK_WIDTH - 1; z++)
+		{
+			// (min, min)
+			GenTile(data, 0, 0, z,
+				tiles[0][0][z + 1] == 0,
+				tiles[0][0][z - 1] == 0,
+				tiles[0][1][z] == 0,
+				game->entities->chunks[yMin].tiles[0][CHUNK_WIDTH - 1][z] == 0,
+				tiles[1][0][z] == 0,
+				game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][0][z] == 0);
+			// (min, plus)
+			GenTile(data, 0, CHUNK_WIDTH - 1, z,
+				tiles[0][CHUNK_WIDTH - 1][z + 1] == 0,
+				tiles[0][CHUNK_WIDTH - 1][z - 1] == 0,
+				game->entities->chunks[yPlus].tiles[0][0][z] == 0,
+				tiles[0][CHUNK_WIDTH - 2][z] == 0,
+				tiles[1][CHUNK_WIDTH - 1][z] == 0,
+				game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0);
+			// (plus, min)
+			GenTile(data, CHUNK_WIDTH - 1, 0, z,
+				tiles[CHUNK_WIDTH - 1][0][z + 1] == 0,
+				tiles[CHUNK_WIDTH - 1][0][z - 1] == 0,
+				tiles[CHUNK_WIDTH - 1][1][z] == 0,
+				game->entities->chunks[yMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0,
+				game->entities->chunks[xPlus].tiles[0][0][z] == 0,
+				tiles[CHUNK_WIDTH - 2][0][z] == 0);
+			// (plus, plus)
+			GenTile(data, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1, z,
+				tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z + 1] == 0,
+				tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z - 1] == 0,
+				game->entities->chunks[yPlus].tiles[0][0][z] == 0,
+				tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 2][z] == 0,
+				game->entities->chunks[xPlus].tiles[0][0][z] == 0,
+				tiles[CHUNK_WIDTH - 2][CHUNK_WIDTH - 1][z] == 0);
+		}
+	}
+#pragma endregion
+#pragma endregion
+
+	vector<uint> indices = vector<uint>(data.size() / 4 * 6);
+	for (uint i = 0; i < indices.size(); i++)
+		indices[i] = quadInd[i % 6] + i / 6 * 4;
+
+
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ebo);
+
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), static_cast<void*>(data.data()), GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint), static_cast<void*>(indices.data()), GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+
+	glEnableVertexAttribArray(2);
+
+	indCount = static_cast<uint>(indices.size());
 }
 
 Planet::Planet()

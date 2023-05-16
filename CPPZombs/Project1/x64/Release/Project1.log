@@ -1,29 +1,30 @@
 ﻿  main.cpp
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\StatusEffect.h(51,4): warning C4390: ';': empty controlled statement found; is this the intent?
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,85): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(107,85): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,78): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(107,78): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,71): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(107,71): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(112,29): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(113,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(123,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(113,29): warning C4018: '<': signed/unsigned mismatch
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(114,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(124,21): warning C4018: '<': signed/unsigned mismatch
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,13): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(27,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  1 of 5342 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    12 functions had inline decision re-evaluated but remain unchanged
+  63 of 5343 functions ( 1.2%) were compiled, the rest were copied from previous compilation.
+    2 functions were new in current compilation
+    180 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

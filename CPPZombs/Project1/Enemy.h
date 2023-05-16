@@ -102,7 +102,7 @@ namespace Enemies
 
 		void MoveDir()
 		{
-			vel = Vec3(TryAdd2V2(vel, dir * game->dTime * (speed + game->planet->friction),
+			vel = Vec3(TryAdd2V2(vel, Vec2(dir) * game->dTime * (speed + game->planet->friction),
 				maxSpeed), vel.z);
 		}
 	};
@@ -267,8 +267,6 @@ namespace Enemies
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
-			update = UPDATE::POUNCERSNAKE;
-			vUpdate = VUPDATE::ENTITY;
 			onDeath = ONDEATH::POUNCERSNAKE;
 			mUpdate = MUPDATE::POUNCERSNAKE;
 		}
@@ -760,14 +758,6 @@ namespace Enemies
 					enemy->lastTime = tTime;
 		}
 
-		void PouncerSnakeU(Entity* entity)
-		{
-			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
-			pSnake->Update(UPDATE::ENEMY);
-			if (pSnake->front == nullptr && tTime - pSnake->lastMove > pSnake->pounceTime)
-				pSnake->vUpdate = VUPDATE::FRICTION;
-		}
-
 		void VacuumerU(Entity* entity)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
@@ -1027,17 +1017,22 @@ namespace Enemies
 		{
 			Snake* snake = static_cast<Snake*>(entity);
 
-			if (snake->front == nullptr)
+			if (snake->front == nullptr && snake->back)
 			{
-				Snake* currentBack = snake->back;
-				while (currentBack)
+				Snake* currentBack;
+				for (int i = 0; i < 5; i++)
 				{
-					Entity* front = currentBack->front;
-					float dist = glm::distance(front->pos, currentBack->pos);
-					Vec3 multiplier = (front->pos - currentBack->pos) * (1.01f * (dist - currentBack->radius - front->radius) / (dist * (currentBack->mass + front->mass)));
-					currentBack->SetPos(currentBack->pos + multiplier * front->mass);
-					front->SetPos(front->pos - multiplier * currentBack->mass);
-					currentBack = currentBack->back;
+					snake->back->SetPos(snake->pos + Normalized(snake->back->pos - snake->pos) * (snake->radius + snake->back->radius));
+					currentBack = snake->back->back;
+					while (currentBack)
+					{
+						Entity* front = currentBack->front;
+						float dist = glm::distance(front->pos, currentBack->pos);
+						Vec3 multiplier = (front->pos - currentBack->pos) * (1.01f * (dist - currentBack->radius - front->radius) / (dist * (currentBack->mass + front->mass)));
+						currentBack->SetPos(currentBack->pos + multiplier * front->mass);
+						front->SetPos(front->pos - multiplier * currentBack->mass);
+						currentBack = currentBack->back;
+					}
 				}
 			}
 		}
@@ -1203,11 +1198,7 @@ namespace Enemies
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(enemy);
 			pSnake->dir = Normalized(game->PlayerPos() - pSnake->pos);
 			if (pSnake->front == nullptr)
-			{
-				pSnake->vel = pSnake->dir * pSnake->speed;
-				pSnake->vUpdate = VUPDATE::ENTITY;
-				enemy->ShouldTryJump();
-			}
+				pSnake->vel = pSnake->dir * pSnake->speed + up * 12.f;
 			return true;
 		}
 
@@ -1445,8 +1436,8 @@ namespace Enemies
 	{
 		{walker, tanker, spider, tinyTank},
 		{deceiver, exploder, vacuumer, pusher, frog},
-		{/*parent, spiderParent, */snake/*, megaTanker*/},
-		{hyperSpeedster, gigaExploder, bigSnake, pouncerSnake},
+		{parent, spiderParent, snake, megaTanker},
+		{/*hyperSpeedster, gigaExploder, bigSnake, */pouncerSnake},
 		{cat, boomCat, spoobderb}
 	};
 

@@ -24,7 +24,7 @@ int main()
 		using namespace Enemies::Updates;
 		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, PouncerSnakeU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
+		EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
 	}
 	{
 		using namespace VUpdates;
