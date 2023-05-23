@@ -6,7 +6,7 @@
 #pragma region Psuedo-virtual functions
 enum class UPDATE // Update
 {
-	ENTITY, FADEOUT, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
+	ENTITY, FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
 	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
 	EGG, KIWI, PLAYER, TURRET, ROVER, ENGINEER, GRENADE
 };
@@ -61,6 +61,47 @@ public:
 		function(function), startTime(tTime) { }
 };
 
+enum ALLEGIANCES : byte
+{
+	BARBARIAN_A = 0, PLAYER_A = 1, PLANTS_A = 2, ENEMY1_A = 4, ENEMY2_A = 8
+};
+struct Allegiance
+{
+	bool a : 1; // 1 - player
+	bool b : 1; // 2 - plants
+	bool c : 1; // 4 - enemy?
+	bool d : 1; // 8
+	bool e : 1; // 16
+	bool f : 1; // 32
+	bool g : 1; // 64
+	bool h : 1; // 128
+
+	Allegiance(byte value = 0)
+	{
+		*this = value; // Uses custom = operator;
+	}
+
+	void operator = (byte value)
+	{
+		*(byte*)this = value;
+	}
+
+	inline byte OverlapByte(Allegiance other)
+	{
+		return *((byte*)this) & *((byte*)&other);
+	}
+
+	inline Allegiance Overlap(Allegiance other)
+	{
+		return Allegiance(OverlapByte(other));
+	}
+
+	inline bool Ally(Allegiance other)
+	{
+		return OverlapByte(other) != 0;
+	}
+};
+
 class Entities;
 class Entity
 {
@@ -74,23 +115,25 @@ public:
 	Entity* baseClass;
 	Entity* creator;
 	vector<Entity*> observers{};
+	vector<StatusEffect> statuses{};
 	string name;
 	Vec3 pos, lastPos, vel, dir;
 	float radius;
 	RGBA color;
-	float mass;
+	float mass, frictionMultiplier = 1;
 	int maxHealth, health;
 	bool active = true, dActive = true, uiActive = false;
 	int sortLayer = 0;
 	float foodValue = 0; // If 0 then is not food.
 	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
+	Allegiance allegiance;
 
 	Entity(Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = BARBARIAN_A) :
 		pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color),
 		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
 		update(UPDATE::ENTITY), vUpdate(VUPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY),
-		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY)
+		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY), allegiance(allegiance)
 	{
 	}
 
@@ -203,7 +246,19 @@ public:
 	void UpdateCollision();
 
 	virtual void UnAttach(Entity* entity) { }
+	virtual void MoveAttachment(Entity* from, Entity* to) { }
 };
+
+
+/*class Being : public Entity
+{
+public:
+
+	Being()
+	{
+
+	}
+};*/
 
 
 
@@ -212,6 +267,11 @@ public:
 
 namespace MaskF
 {
+	bool IsCollectible(Entity* from, Entity* to)
+	{
+		return from != to && to->isCollectible;
+	}
+
 	bool IsCorporeal(Entity* from, Entity* to)
 	{
 		return from != to && to->corporeal;
@@ -225,6 +285,16 @@ namespace MaskF
 	bool IsCorporealNotCreator(Entity* from, Entity* to)
 	{
 		return from != to && from->creator != to && to->corporeal && !to->isCollectible;
+	}
+
+	bool IsNonAlly(Entity* from, Entity* to)
+	{
+		return from != to && to->corporeal && !to->isCollectible && !from->allegiance.Ally(to->allegiance);
+	}
+
+	bool IsAlly(Entity* from, Entity* to)
+	{
+		return from != to && to->corporeal && !to->isCollectible && from->allegiance.Ally(to->allegiance);
 	}
 
 	bool IsEnemy(Entity* from, Entity* to)
@@ -309,7 +379,8 @@ namespace VUpdates
 	{
 		entity->lastPos = entity->pos;
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
-		entity->vel = Vec3(FromTo2(entity->vel, vZero, game->dTime * game->planet->friction), (entity->vel.z - game->planet->gravity * game->dTime) * powf(0.5f, game->dTime));
+		entity->vel = Vec3(FromTo2(entity->vel, vZero, game->dTime * game->planet->friction * entity->frictionMultiplier),
+			(entity->vel.z - game->planet->gravity * game->dTime) * powf(0.5f, game->dTime));
 	}
 }
 
@@ -323,9 +394,7 @@ namespace DUpdates
 	void FadeOutDU(Entity* entity)
 	{
 		entity->color.a = static_cast<uint8_t>(((FadeOut*)entity)->Opacity() * 255);
-		glDepthMask(GL_FALSE);
 		entity->DUpdate(DUPDATE::ENTITY);
-		glDepthMask(GL_TRUE);
 	}
 }
 

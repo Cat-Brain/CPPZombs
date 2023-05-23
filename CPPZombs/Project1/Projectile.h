@@ -10,8 +10,8 @@ public:
     bool shouldCollide;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
-        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true) :
-        Entity(vZero, radius, color, mass, maxHealth, health, name),
+        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, Allegiance allegiance = 0) :
+        Entity(vZero, radius, color, mass, maxHealth, health, name, allegiance),
         duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide)
     {
         update = UPDATE::PROJECTILE;
@@ -24,7 +24,11 @@ public:
     Projectile(Projectile* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
         Projectile(*baseClass)
     {
-        this->creator = creator;
+        if (creator != nullptr)
+        {
+            this->creator = creator;
+            allegiance = creator->allegiance;
+        }
         this->dir = Normalized(dir);
         this->pos = pos;
         begin = tTime;
@@ -56,7 +60,7 @@ namespace Updates
 
         int result;
 
-        if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsCorporealNotCreator, projectile)) != 0)
+        if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
         {
             projectile->callType = 1 + int(result == 3);
             projectile->DestroySelf(nullptr);
@@ -64,7 +68,7 @@ namespace Updates
         }
         Vec3 oldPos = projectile->pos;
         projectile->MovePos();
-        if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsCorporealNotCreator, projectile)) != 0)
+        if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
         {
             projectile->callType = 1 + int(result == 3);
             projectile->DestroySelf(nullptr);
@@ -103,9 +107,12 @@ public:
         shouldCollide = item->shouldCollide;
         radius = item->radius;
         health = item->health;
-            name = item->name;
+        name = item->name;
         if (creator != nullptr)
+        {
+            allegiance = creator->allegiance;
             creatorName = creator->name;
+        }
         Start();
     }
 
@@ -124,14 +131,14 @@ namespace OnDeaths
     }
 }
 
-ShotItem* basicShotItem = new ShotItem(Resources::copper->Clone(), 12, 0.5f, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(Resources::copper.Clone(), 12, 0.5f, 1, 1, 1);
 
 namespace ItemUs
 {
     void ItemU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(item.Clone(1),
-            pos + Vec3(0, 0, item->radius - creator->radius), dir, creator));
+            pos + Vec3(0, 0, 0.1f + item->radius - creator->radius), dir, creator));
         item.count--;
     }
 }

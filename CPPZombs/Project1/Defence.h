@@ -224,7 +224,6 @@ public:
 
 	float AreaQuality() override
 	{
-		printf("!");
 		TILE tile = TILE(game->entities->TileAtPos(pos - Vec3(0, 0, radius + 0.1f)));
 		return (1.0f - game->BrightnessAtPos(pos)) * difficultyGrowthModifier[game->settings.difficulty] *
 			(float(tile == TILE::ROCK) + 0.75f * float(tile == TILE::SAND) + 0.5f * float(tile == TILE::BAD_SOIL) + 0.25f * float(tile == TILE::MID_SOIL));
@@ -397,7 +396,7 @@ namespace UIUpdates
 // Having an enum of all seeds will come in handy:
 enum class SEEDINDICES
 {
-	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ_S, CHEESE, TOPAX, SAPPHIRE, LEAD, QUARTZ_V
+	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ_S, COAL, CHEESE, TOPAZ, SAPPHIRE, LEAD, QUARTZ_V
 };
 
 
@@ -406,110 +405,119 @@ namespace Plants
 	namespace Shrubs
 	{
 		RGBA babyCopperShrubColor = RGBA(207, 137, 81), copperShrubColor = RGBA(163, 78, 8), deadCopperShrubColor = RGBA(94, 52, 17);
-		Shrub* copperShrub = new Shrub(Resources::copper->Clone(), ItemInstance(ITEMTYPE::COPPER_SHRUB_SEED), 5, 25, 25, 4.0f, 0.25f, 1.5f, babyCopperShrubColor, copperShrubColor, deadCopperShrubColor, 0.2f, 3.0f, 10, 10, "Copper shrub");
+		Shrub copperShrub = Shrub(Resources::copper.Clone(), ItemInstance(ITEMTYPE::COPPER_SHRUB_SEED), 5, 25, 25, 4.0f, 0.25f, 1.5f, babyCopperShrubColor, copperShrubColor, deadCopperShrubColor, 0.2f, 3.0f, 10, 10, "Copper shrub");
 
 		RGBA babyIronShrubColor = RGBA(96, 192, 225), ironShrubColor = RGBA(67, 90, 99), deadIronShrubColor = RGBA(45, 47, 48);
-		Shrub* ironShrub = new Shrub(Resources::iron->Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 180, 10, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 10, 10, "Iron shrub");
+		Shrub ironShrub = Shrub(Resources::iron.Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 180, 10, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 10, 10, "Iron shrub");
 
 		RGBA babyRubyShrubColor = RGBA(207, 120, 156), rubyShrubColor = RGBA(135, 16, 66), deadRubyShrubColor = RGBA(120, 65, 88);
-		Shrub* rubyShrub = new Shrub(Resources::ruby->Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 10, 10, "Ruby shrub");
+		Shrub rubyShrub = Shrub(Resources::ruby.Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 10, 10, "Ruby shrub");
 
 		RGBA babyEmeraldShrubColor = RGBA(145, 255, 204), emeraldShrubColor = RGBA(65, 166, 119), deadEmeraldShrubColor = RGBA(61, 97, 80);
-		Shrub* emeraldShrub = new Shrub(Resources::emerald->Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 10, 10, "Emerald shrub");
+		Shrub emeraldShrub = Shrub(Resources::emerald.Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 10, 10, "Emerald shrub");
 
 		RGBA babyRockShrubColor = RGBA(212, 212, 212), rockShrubColor = RGBA(201, 196, 165), deadRockShrubColor = RGBA(130, 130, 130);
-		Shrub* rockShrub = new Shrub(Resources::rock->Clone(), ItemInstance(ITEMTYPE::ROCK_SHRUB_SEED), 5, 14, 25, 3.0f, 0.25f, 1.5f, babyRockShrubColor, rockShrubColor, deadRockShrubColor, 0.2f, 3.0f, 10, 10, "Rock shrub");
+		Shrub rockShrub = Shrub(Resources::rock.Clone(), ItemInstance(ITEMTYPE::ROCK_SHRUB_SEED), 5, 14, 25, 3.0f, 0.25f, 1.5f, babyRockShrubColor, rockShrubColor, deadRockShrubColor, 0.2f, 3.0f, 10, 10, "Rock shrub");
 		
 		RGBA babyShadeShrubColor = RGBA(50, 50), shadeShrubColor = RGBA(25, 25), deadShadeShrubColor = RGBA();
-		Shrub* shadeShrub = new Shrub(Resources::shade->Clone(), ItemInstance(ITEMTYPE::SHADE_SHRUB_SEED), 10, 30, 25, 1.0f, 0.25f, 1.5f, babyShadeShrubColor, shadeShrubColor, deadShadeShrubColor, 0.2f, 3.0f, 10, 10, "Shade shrub");
+		Shrub shadeShrub = Shrub(Resources::shade.Clone(), ItemInstance(ITEMTYPE::SHADE_SHRUB_SEED), 10, 30, 25, 1.0f, 0.25f, 1.5f, babyShadeShrubColor, shadeShrubColor, deadShadeShrubColor, 0.2f, 3.0f, 10, 10, "Shade shrub");
 	
 		RGBA babyBowlerShrubColor = RGBA(111, 101, 143), bowlerShrubColor = RGBA(21, 0, 89), deadBowlerShrub = RGBA(12, 4, 36);
-		Shrub* bowlerShrub = new Shrub(Resources::bowler->Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 50, 50, "Bowler shrub");
+		Shrub bowlerShrub = Shrub(Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 50, 50, "Bowler shrub");
 	
 		RGBA babyVacuumiumShrubColor = RGBA(242, 239, 148), vacuumiumShrubColor = RGBA(204, 202, 153), deadVacuumiumShrubColor = RGBA(158, 156, 85);
-		Shrub* vacuumiumShrub = new Shrub(Resources::vacuumium->Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 60, 5, 0.5f, 2.f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 60, 60, "Vacuumium shrub");
+		Shrub vacuumiumShrub = Shrub(Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 60, 5, 0.5f, 2.f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 60, 60, "Vacuumium shrub");
 	
 		RGBA babySilverShrubColor = RGBA(209, 157, 157), silverShrubColor = RGBA(171, 171, 171), deadSilverShrubColor = RGBA(87, 99, 74);
-		Shrub* silverShrub = new Shrub(Resources::silver->Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 30, 30, "Silver tree");
+		Shrub silverShrub = Shrub(Resources::silver.Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 30, 30, "Silver shrub");
 		
-		RGBA babyQuartzShrubColor = RGBA(202, 188, 224), quartzShrubColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
-		Shrub* quartzShrub = new Shrub(Resources::quartz->Clone(), ItemInstance(ITEMTYPE::QUARTZ_SHRUB_SEED), 3, 12, 25, 3.f, 0.25f, 0.5f, babyQuartzShrubColor, quartzShrubColor, deadQuartzColor, 0.25f, 0.5f, 10, 10, "Quartz tree");
+		RGBA babyQuartzShrubColor = RGBA(202, 188, 224), quartzShrubColor = RGBA(161, 153, 173), deadQuartzShrubColor = RGBA(127, 70, 212);
+		Shrub quartzShrub = Shrub(Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_SHRUB_SEED), 3, 12, 25, 3.f, 0.25f, 0.5f, babyQuartzShrubColor, quartzShrubColor, deadQuartzShrubColor, 0.25f, 0.5f, 10, 10, "Quartz shrub");
+	
+		RGBA babyCoalShrubColor = RGBA(99, 66, 20), coalShrubColor = RGBA(59, 44, 23), deadCoalShrubColor = RGBA(74, 65, 52);
+		Shrub coalShrub = Shrub(dItem->Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 50, 50, "Coal shrub");
 	}
 
 
 	namespace Vines
 	{
 		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50);
-		Vine* cheeseVine = new Vine(Resources::cheese->Clone(), ItemInstance(ITEMTYPE::CHEESE_VINE_SEED), 0.0f, 25, 1, 25, 25, 2.0f, 0.25f, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 10, 10, "Cheese vine");
+		Vine cheeseVine = Vine(Resources::cheese.Clone(), ItemInstance(ITEMTYPE::CHEESE_VINE_SEED), 0.0f, 25, 1, 25, 25, 2.0f, 0.25f, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 10, 10, "Cheese vine");
 
 		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61);
-		Vine* leadVine = new Vine(Resources::lead->Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 0.8f, 25, 1, 25, 2, 3.0f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 10, 10, "Lead vine");
+		Vine leadVine = Vine(Resources::lead.Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 0.8f, 25, 1, 25, 2, 3.0f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 10, 10, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
-		Vine* topazVine = new Vine(Resources::topaz->Clone(2), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 25, 1, 50, 5, 2.0f, 0.5f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 60, 60, "Topaz vine");
+		Vine topazVine = Vine(Resources::topaz.Clone(2), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 25, 1, 50, 5, 2.0f, 0.5f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 60, 60, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
-		Vine* sapphireVine = new Vine(Resources::sapphire->Clone(5), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 25, 3, 25, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 40, 40, "Sapphire vine");
+		Vine sapphireVine = Vine(Resources::sapphire.Clone(5), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 25, 3, 25, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 40, 40, "Sapphire vine");
 		
 		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
-		Vine* quartzVine = new Vine(Resources::quartz->Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 50, 3, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 10, 10, "Quarts vine");
+		Vine quartzVine = Vine(Resources::quartz.Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 50, 3, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 10, 10, "Quarts vine");
 	}
 
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.
-	vector<Shrub*> plants{ Shrubs::copperShrub, Shrubs::ironShrub, Shrubs::rubyShrub, Shrubs::emeraldShrub, Shrubs::rockShrub, Shrubs::shadeShrub,
-		Shrubs::bowlerShrub, Shrubs::vacuumiumShrub, Shrubs::silverShrub, Shrubs::quartzShrub,
-		Vines::cheeseVine, Vines::topazVine, Vines::sapphireVine, Vines::leadVine, Vines::quartzVine };
+	vector<Shrub*> plants{ &Shrubs::copperShrub, &Shrubs::ironShrub, &Shrubs::rubyShrub, &Shrubs::emeraldShrub, &Shrubs::rockShrub,
+		&Shrubs::shadeShrub, &Shrubs::bowlerShrub, &Shrubs::vacuumiumShrub, &Shrubs::silverShrub, &Shrubs::quartzShrub, &Shrubs::coalShrub,
+		&Vines::cheeseVine, &Vines::topazVine, &Vines::sapphireVine, &Vines::leadVine, &Vines::quartzVine };
 }
 
 namespace Resources::Seeds
 {
 	// Shrubs
-	PlacedOnLanding* copperShrubSeed = new PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub->babyRadius);
-	PlacedOnLanding* ironShrubSeed = new PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub->babyRadius);
-	PlacedOnLanding* rockShrubSeed = new PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub->babyRadius);
-	CorruptOnKill* rubyShrubSeed = new CorruptOnKill(ITEMTYPE::RUBY_SHRUB_SEED, Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Corruption Seed", 2, Plants::Shrubs::rubyShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub->babyRadius);
-	CorruptOnKill* emeraldShrubSeed = new CorruptOnKill(ITEMTYPE::EMERALD_SHRUB_SEED, Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Corruption Seed", 2, Plants::Shrubs::emeraldShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub->babyRadius);
-	PlacedOnLanding* shadeShrubSeed = new PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub->babyRadius);
-	PlacedOnLanding* bowlerShrubSeed = new PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::bowlerShrub->babyRadius);
-	PlacedOnLanding* vacuumiumShrubSeed = new PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::vacuumiumShrub->babyRadius);
-	PlacedOnLanding* silverShrubSeed = new PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub->babyRadius);
-	PlacedOnLanding* quartzShrubSeed = new PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub->babyRadius);
+	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius);
+	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius);
+	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius);
+	CorruptOnKill rubyShrubSeed = CorruptOnKill(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Corruption Seed", 2, Plants::Shrubs::rubyShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius);
+	CorruptOnKill emeraldShrubSeed = CorruptOnKill(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Corruption Seed", 2, Plants::Shrubs::emeraldShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius);
+	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius);
+	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius);
+	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius);
+	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius);
+	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius);
+	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius);
+
 	// Vines
-	PlacedOnLanding* cheeseVineSeed = new PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine->babyRadius);
-	PlacedOnLanding* topazVineSeed = new PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine->babyRadius);
-	CorruptOnKill* sapphireVineSeed = new CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine->babyRadius);
-	PlacedOnLanding* leadVineSeed = new PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine->babyRadius);
-	PlacedOnLanding* quartzVineSeed = new PlacedOnLanding(ITEMTYPE::QUARTZ_VINE_SEED, Plants::Vines::quartzVine, "Quartz vine seed", "Seed", 4, Plants::Vines::quartzVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::quartzVine->babyRadius);
+	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius);
+	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius);
+	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
+	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius);
+	PlacedOnLanding quartzVineSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_VINE_SEED, &Plants::Vines::quartzVine, "Quartz vine seed", "Seed", 4, Plants::Vines::quartzVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::quartzVine.babyRadius);
 
 	// Keep a list of all of the seeds.
-	vector<Item*> plantSeeds{ copperShrubSeed, ironShrubSeed, rubyShrubSeed, emeraldShrubSeed, rockShrubSeed, shadeShrubSeed, bowlerShrubSeed,
-		vacuumiumShrubSeed, silverShrubSeed, quartzShrubSeed, cheeseVineSeed, topazVineSeed, sapphireVineSeed, leadVineSeed, quartzVineSeed };
+	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &cheeseVineSeed, &topazVineSeed,
+		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
 	
 }
 
 namespace Collectibles::Seeds
 {
 	// Vines
-	Collectible* copperShrubSeed = new Collectible(Resources::Seeds::copperShrubSeed->Clone());
-	Collectible* ironShrubSeed = new Collectible(Resources::Seeds::ironShrubSeed->Clone());
-	Collectible* rubyShrubSeed = new Collectible(Resources::Seeds::rubyShrubSeed->Clone());
-	Collectible* emeraldShrubSeed = new Collectible(Resources::Seeds::emeraldShrubSeed->Clone());
-	Collectible* rockShrubSeed = new Collectible(Resources::Seeds::rockShrubSeed->Clone());
-	Collectible* shadeShrubSeed = new Collectible(Resources::Seeds::shadeShrubSeed->Clone());
-	Collectible* bowlerShrubSeed = new Collectible(Resources::Seeds::bowlerShrubSeed->Clone());
-	Collectible* vacuumiumShrubSeed = new Collectible(Resources::Seeds::vacuumiumShrubSeed->Clone());
-	Collectible* silverShrubSeed = new Collectible(Resources::Seeds::silverShrubSeed->Clone());
-	Collectible* quartzShrubSeed = new Collectible(Resources::Seeds::quartzShrubSeed->Clone());
+	Collectible copperShrubSeed = Collectible(Resources::Seeds::copperShrubSeed.Clone());
+	Collectible ironShrubSeed = Collectible(Resources::Seeds::ironShrubSeed.Clone());
+	Collectible rubyShrubSeed = Collectible(Resources::Seeds::rubyShrubSeed.Clone());
+	Collectible emeraldShrubSeed = Collectible(Resources::Seeds::emeraldShrubSeed.Clone());
+	Collectible rockShrubSeed = Collectible(Resources::Seeds::rockShrubSeed.Clone());
+	Collectible shadeShrubSeed = Collectible(Resources::Seeds::shadeShrubSeed.Clone());
+	Collectible bowlerShrubSeed = Collectible(Resources::Seeds::bowlerShrubSeed.Clone());
+	Collectible vacuumiumShrubSeed = Collectible(Resources::Seeds::vacuumiumShrubSeed.Clone());
+	Collectible silverShrubSeed = Collectible(Resources::Seeds::silverShrubSeed.Clone());
+	Collectible quartzShrubSeed = Collectible(Resources::Seeds::quartzShrubSeed.Clone());
+	Collectible coal = Collectible(Resources::Seeds::coal.Clone());
+
 	// Vines
-	Collectible* cheeseVineSeed = new Collectible(Resources::Seeds::cheeseVineSeed->Clone());
-	Collectible* topazVineSeed = new Collectible(Resources::Seeds::topazVineSeed->Clone());
-	Collectible* sapphireVineSeed = new Collectible(Resources::Seeds::sapphireVineSeed->Clone());
-	Collectible* leadVineSeed = new Collectible(Resources::Seeds::leadVineSeed->Clone());
-	Collectible* quartzVineSeed = new Collectible(Resources::Seeds::quartzVineSeed->Clone());
+	Collectible cheeseVineSeed = Collectible(Resources::Seeds::cheeseVineSeed.Clone());
+	Collectible topazVineSeed = Collectible(Resources::Seeds::topazVineSeed.Clone());
+	Collectible sapphireVineSeed = Collectible(Resources::Seeds::sapphireVineSeed.Clone());
+	Collectible leadVineSeed = Collectible(Resources::Seeds::leadVineSeed.Clone());
+	Collectible quartzVineSeed = Collectible(Resources::Seeds::quartzVineSeed.Clone());
 
 	// Keep a list of all of the seeds.
-	vector<Collectible*> plantSeeds{ copperShrubSeed, ironShrubSeed, rubyShrubSeed, emeraldShrubSeed, rockShrubSeed, shadeShrubSeed, bowlerShrubSeed,
-		vacuumiumShrubSeed, silverShrubSeed, quartzShrubSeed, cheeseVineSeed, topazVineSeed, sapphireVineSeed, leadVineSeed, quartzVineSeed };
+	vector<Collectible*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &cheeseVineSeed, &topazVineSeed,
+		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
 }
 
 #pragma endregion

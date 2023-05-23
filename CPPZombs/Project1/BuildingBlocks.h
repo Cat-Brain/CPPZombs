@@ -6,8 +6,8 @@ public:
 	RGBA color2;
 
 	DToCol(Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Entity(pos, radius, color, mass, maxHealth, health, name), color2(color2)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
+		Entity(pos, radius, color, mass, maxHealth, health, name, allegiance), color2(color2)
 	{
 		vUpdate = VUPDATE::FRICTION;
 		dUpdate = DUPDATE::DTOCOL;
@@ -40,8 +40,8 @@ public:
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
 	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		RGBA color2 = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		DToCol(pos, radius, color, color2, mass, maxHealth, health, name), lightColor(lightColor),
+		RGBA color2 = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
+		DToCol(pos, radius, color, color2, mass, maxHealth, health, name, allegiance), lightColor(lightColor),
 		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
 	{
 		onDeath = ONDEATH::LIGHTBLOCK;
@@ -90,20 +90,20 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	LightBlock* cheese = new LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 1, 1, "Cheese");
-	LightBlock* shade = new LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 1, 1, "Shades");
+	LightBlock cheese = LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 1, 1, "Cheese");
+	LightBlock shade = LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 1, 1, "Shades");
 }
 
 namespace Resources
 {
-	PlacedOnLanding* cheese = new PlacedOnLanding(ITEMTYPE::CHEESE, Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese->color, 0);
-	PlacedOnLanding* shade = new PlacedOnLanding(ITEMTYPE::SHADE, Shootables::shade, "Shade", "Light", 3, Shootables::shade->color, 0);
+	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese.color, 0);
+	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Light", 3, Shootables::shade.color, 0);
 }
 
 namespace Collectibles
 {
-	Collectible* cheese = new Collectible(Resources::cheese->Clone());
-	Collectible* shade = new Collectible(Resources::shade->Clone());
+	Collectible* cheese = new Collectible(Resources::cheese.Clone());
+	Collectible* shade = new Collectible(Resources::shade.Clone());
 }
 
 enum class TUPDATE
@@ -120,8 +120,8 @@ public:
 	float timePer, lastTime;
 
 	FunctionalBlock(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
+		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, maxHealth, health, name, allegiance), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK;
 		vUpdate = VUPDATE::FRICTION;
@@ -155,8 +155,8 @@ public:
 	float timePer, timeSince;
 
 	FunctionalBlock2(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
+		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, maxHealth, health, name, allegiance), tUpdate(TUPDATE::DEFAULT)
 	{
 		update = UPDATE::FUNCTIONALBLOCK2;
 		vUpdate = VUPDATE::FRICTION;

@@ -12,7 +12,7 @@ public:
 
 namespace Resources
 {
-	UseableItem* waveModifier = new UseableItem(ITEMTYPE::WAVE_MODIFIER, ITEMU::WAVEMODIFIER, "Wave Modifier", "Special Item", 0, RGBA(194, 99, 21), 1.f);
+	UseableItem waveModifier = UseableItem(ITEMTYPE::WAVE_MODIFIER, ITEMU::WAVEMODIFIER, "Wave Modifier", "Special Item", 0, RGBA(194, 99, 21), 1.f);
 }
 
 #define NUM_START_ITEMS 3
@@ -143,7 +143,8 @@ public:
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, shootSpeed,
 		lastPrimary = 0, primaryTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
-	bool vacBoth, vacCollectibles, shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false;
+	bool vacBoth, vacCollectibles, shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false,
+		shouldRenderInventory = true;
 	PMOVEMENT movement;
 	PRIMARY primary;
 	SECONDARY secondary;
@@ -159,7 +160,7 @@ public:
 		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		LightBlock(lightColor, lightOrDark, range, vZero, radius, color, color2, mass, maxHealth, health, name), vacDist(vacDist),
+		LightBlock(lightColor, lightOrDark, range, vZero, radius, color, color2, mass, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
 		moveSpeed(moveSpeed), holdMoveSpeed(holdMoveSpeed), startItems(startItems), blacklistedSeeds(blacklistedSeeds), vacBoth(vacBoth),
 		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
 		primaryTime(primaryTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), secondary(secondary),
@@ -179,9 +180,9 @@ public:
 		iTime = 0;
 		sTime = 0;
 
-		lastPrimary = tTime;
-		lastSecondary = tTime;
-		lastUtility = tTime;
+		lastPrimary = tTime - primaryTime;
+		lastSecondary = tTime - secondaryTime;
+		lastUtility = tTime - utilityTime;
 		shouldVacuum = true;
 
 		items = PlayerInventory(10, 4, startItems);
@@ -216,9 +217,11 @@ public:
 
 	int ApplyHit(int damage, Entity* damageDealer) override
 	{
+		if (damageDealer == this)
+			return LightBlock::ApplyHit(damage, damageDealer);
 		if (iTime <= 0)
 		{
-			game->screenShake += damage * 0.1f;
+			game->screenShake += damage * 0.05f;
 			if (damage > 0) iTime++;
 			return LightBlock::ApplyHit(damage, damageDealer);
 		}
@@ -227,27 +230,35 @@ public:
 
 	void UnAttach(Entity* entity) override
 	{
-		heldEntity = nullptr;
+		if (heldEntity == entity)
+			heldEntity = nullptr;
+	}
+
+	void MoveAttachment(Entity* from, Entity* to) override
+	{
+		if (heldEntity == from)
+			heldEntity = to;
 	}
 
 	virtual bool Grounded()
 	{
-		return game->entities->OverlapsTile(pos + Vec3(0, 0, -radius), radius - 0.01f);
+		return game->entities->OverlapsAny(pos + Vec3(0, 0, -radius), radius - 0.01f, MaskF::IsCorporeal, this);
+		//return game->entities->OverlapsTile(pos + Vec3(0, 0, -radius), radius - 0.01f);
 	}
 };
 
 enum class ENGMODE
 {
-	TURRET, DRONE, ROVER, REMOVE_DRONE, COUNT
+	ROVER, DRONE, REMOVE_DRONE, TURRET, COUNT
 };
 
-string engModeStr[] = {"Turret", "Drone", "Rover", "Remove Drone"};
+string engModeStr[] = {"Rover", "Drone", "Remove Drone", "Turret"};
 
 class Drone;
 class Engineer : public Player
 {
 public:
-	ENGMODE engMode = ENGMODE::TURRET;
+	ENGMODE engMode = ENGMODE::ROVER;
 	vector<FadeCircle*> drones;
 	float currentJetpackFuel = 0, jetpackFuel, jetpackForce;
 
@@ -288,12 +299,12 @@ class Turret : public LightBlock
 {
 public:
 	float timeTill, timePer;
-	Items* items = nullptr;
+	PlayerInventory* items = nullptr;
 	Engineer* leader = nullptr;
 	
 	Turret(float timePer,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, maxHealth, health, name),
+		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, maxHealth, health, name, PLAYER_A),
 		timePer(timePer), timeTill(timePer)
 	{
 		update = UPDATE::TURRET;
@@ -355,25 +366,28 @@ public:
 unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 50, 50, "Turret");
 unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 20, 20, "Rover");
 
-unique_ptr<Player> soldier = make_unique<Player>(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
+Player soldier = Player(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 100, 50,
-	"Soldier", Items({ Resources::copper->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(3), Resources::Seeds::cheeseVineSeed->Clone(1),
-		Resources::Seeds::rubyShrubSeed->Clone(2), Resources::Seeds::copperShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2)}),
+	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
+		Resources::Seeds::rubyShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
+		Resources::Eggs::kiwiEgg.Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
 
-unique_ptr<Player> flicker = make_unique<Player>(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
+Player flicker = Player(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	100, 50, "Flicker", Items({ Resources::rock->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(1), Resources::Seeds::cheeseVineSeed->Clone(3),
-		Resources::Seeds::quartzVineSeed->Clone(2), Resources::Seeds::rockShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
-	vector<SEEDINDICES>({ SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
+	100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
+		Resources::Seeds::cheeseVineSeed.Clone(3), Resources::Seeds::quartzVineSeed.Clone(2), Resources::Seeds::rockShrubSeed.Clone(3),
+		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
+	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
-unique_ptr<Engineer> engineer = make_unique<Engineer>(2.f, 3.f, false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
+Engineer engineer = Engineer(2.f, 3.f, false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
-	100, 50, "Engineer", Items({ Resources::silver->Clone(10), Resources::Seeds::shadeShrubSeed->Clone(2), Resources::Seeds::cheeseVineSeed->Clone(2),
-		Resources::Seeds::quartzShrubSeed->Clone(2), Resources::Seeds::silverShrubSeed->Clone(3), Resources::waveModifier->Clone(1), Resources::Eggs::kiwiEgg->Clone(2) }),
+	100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
+		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
+		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
-vector<Player*> characters = { soldier.get(), flicker.get(), engineer.get() };
+vector<Player*> characters = { &soldier, &flicker, &engineer };
 
 class Grenade : public LightBlock
 {
@@ -406,7 +420,7 @@ public:
 	}
 };
 
-unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 20.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
+unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 100.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
 
 namespace OnDeaths
 {
@@ -562,7 +576,8 @@ namespace Updates
 		turret->timeTill -= game->dTime;
 		ItemInstance item = turret->items->GetCurrentItem();
 		Entity* hitEntity = nullptr;
-		if (turret->leader->shouldVacuum && item.count > 0 && turret->timeTill <= 0 && (hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsEnemy, turret)) != nullptr)
+		if (turret->leader->shouldVacuum && item.type != ITEMTYPE::DITEM && item.count > 0 && turret->timeTill <= 0 &&
+			(hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsEnemy, turret)) != nullptr)
 		{
 			turret->dir = hitEntity->pos - turret->pos;
 			item->Use((*turret->items)[turret->items->currentIndex], turret->pos, turret->dir * item->range, turret, turret->name, hitEntity, 0);
@@ -602,10 +617,13 @@ namespace Updates
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
 		float offset = tTime * PI_F * 2 / 5;
+		float lerpValue = powf(0.1f, game->dTime);
 		for (int i = 0; i < engineer->drones.size(); i++)
 		{
 			engineer->drones[i]->startTime = tTime;
-			engineer->drones[i]->pos = engineer->pos + Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f);
+			engineer->drones[i]->pos = Lerp(
+				engineer->pos + Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f),
+				engineer->drones[i]->pos, lerpValue);
 		}
 		engineer->shouldScroll = !engineer->inputs.shift.held;
 		engineer->shouldPickup = false;
@@ -618,8 +636,7 @@ namespace Updates
 		if (tTime - grenade->startTime > grenade->timeTill)
 		{
 			CreateUpExplosion(grenade->pos, grenade->explosionRadius, grenade->color, grenade->name, 0, grenade->damage, grenade->creator);
-			if (grenade->creator != nullptr && grenade->creator->Overlaps(grenade->pos, grenade->explosionRadius))
-				grenade->creator->vel += grenade->pushForce * Normalized(grenade->creator->pos - grenade->pos);
+			game->entities->VacuumBurst(grenade->pos, grenade->explosionRadius, -grenade->pushForce, 50.f, true, false);
 			grenade->DestroySelf(nullptr);
 			return;
 		}
@@ -661,25 +678,41 @@ namespace UIUpdates
 	void PlayerUIU(Entity* entity)
 	{
 		Player* player = static_cast<Player*>(entity);
-		if (game->showUI)
+		if (!game->showUI) return;
+		// Item UI:
+		if (player->shouldRenderInventory)
 			player->items.DUpdate();
+		// Ability UI:
+
+		int scrHeight = ScrHeight();
+		float scale = scrHeight / 30.f;
+		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
+		offset.x -= scale * 2;
+		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
+		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
+		offset.x -= scale * 2;
+		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
+		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
+		offset.x -= scale * 2;
+		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
+		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / player->primaryTime)));
 	}
 
 	void EngineerUIU(Entity* entity)
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
 		if (!game->showUI) return;
-		if (!engineer->inputs.shift.held)
+		engineer->shouldRenderInventory = !engineer->inputs.shift.held;
+		engineer->UIUpdate(UIUPDATE::PLAYER);
+		if (engineer->inputs.shift.held)
 		{
-			engineer->items.DUpdate();
-			return;
-		}
-		float scale = ScrHeight() / (3.0f * max(8, int(UnEnum(ENGMODE::COUNT)))), scale2 = scale / 5.0f;
-		for (int i = 0; i < UnEnum(ENGMODE::COUNT); i++)
-		{
-			font.Render(engModeStr[i],
-				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2,
-				i == UnEnum(engineer->engMode) ? RGBA(127, 127, 127) : RGBA(255, 255, 255));
+			float scale = ScrHeight() / (3.0f * max(8, int(UnEnum(ENGMODE::COUNT)))), scale2 = scale / 5.0f;
+			for (int i = 0; i < UnEnum(ENGMODE::COUNT); i++)
+			{
+				font.Render(engModeStr[i],
+					iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2,
+					i == UnEnum(engineer->engMode) ? RGBA(127, 127, 127) : RGBA(255, 255, 255));
+			}
 		}
 	}
 }
@@ -746,7 +779,6 @@ namespace Primaries
 
 	bool CircleGun(Player* player)
 	{
-		std::cout << "Circle gun\t";
 		return true;
 	}
 }
@@ -768,7 +800,11 @@ namespace Secondaries
 			return true;
 		}
 		else if (roundf(tTime * 5) != roundf((tTime - game->dTime) * 5))
-			game->entities->TryDealDamageAllUp(5, player->pos, 3.f, MaskF::IsCorporealNotCollectible, player);
+		{
+			vector<Entity*> entities = game->entities->FindOverlaps(player->pos, 3.f, MaskF::IsNonAlly, player);
+			for (Entity* e : entities)
+				e->statuses.push_back(StatusEffect(e, STATUS::FIRE, 1));
+		}
 		return false;
 	}
 
@@ -779,7 +815,7 @@ namespace Secondaries
 		player->vUpdate = VUPDATE::ENTITY;
 		player->vel = TryAdd2(player->vel, Normalized(player->inputs.mousePosition3) * 5.f, 20.f);
 		player->events.push_back(TimedEvent(TornadoSpinUndo));
-		game->entities->particles.push_back(make_unique<TrackCircle>(player, 3.f, RGBA(255, 255, 255, 102), 1.f));
+		game->entities->particles.push_back(make_unique<TrackCircle>(player, 3.f, RGBA(255, 127, 0, 127), 1.f));
 		return true;
 	}
 
@@ -788,9 +824,9 @@ namespace Secondaries
 		Engineer* engineer = static_cast<Engineer*>(player);
 		switch (engineer->engMode)
 		{
-		case ENGMODE::TURRET:
+		case ENGMODE::ROVER:
 		{
-			game->entities->push_back(turret->Clone(engineer->pos, player->inputs.mousePosition3, engineer));
+			game->entities->push_back(rover->Clone(engineer->pos, game->inputs.mousePosition3, engineer));
 			break;
 		}
 		case ENGMODE::DRONE:
@@ -800,14 +836,14 @@ namespace Secondaries
 			game->entities->particles.push_back(std::move(newDrone));
 			break;
 		}
-		case ENGMODE::ROVER:
-		{
-			game->entities->push_back(rover->Clone(engineer->pos, game->inputs.mousePosition3, engineer));
-			break;
-		}
 		case ENGMODE::REMOVE_DRONE:
 		{
 			engineer->drones.pop_back();
+			break;
+		}
+		case ENGMODE::TURRET:
+		{
+			game->entities->push_back(turret->Clone(engineer->pos, player->inputs.mousePosition3, engineer));
 			break;
 		}
 		}
@@ -836,9 +872,13 @@ namespace Utilities
 #define MIGHTY_SHOVE_SPEED -200.f
 #define MIGHTY_SHOVE_MAX_SPEED 15.f
 		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
-		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 255, 255)));
+		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0)));
 		player->iTime++;
 		player->vel.z += 10;
+		// Find all nearby entities to light them ablaze, including the player (that's why nullptr instead of player):
+		vector<Entity*> entities = game->entities->FindOverlaps(player->pos, MIGHTY_SHOVE_DIST, MaskF::IsNonAlly, player);
+		for (Entity* entity : entities)
+			entity->statuses.push_back(StatusEffect(entity, STATUS::FIRE, 1));
 		return true;
 	}
 
@@ -849,4 +889,42 @@ namespace Utilities
 		game->inputs.mouseScroll = 0;
 		return false;
 	}
+}
+
+namespace StatusFuncs
+{
+#pragma region Starts
+	void NoStr(StatusEffect& status) { }
+
+	void WetStr(StatusEffect& status)
+	{
+		status.entity->frictionMultiplier *= 0.1f;
+	}
+#pragma endregion
+#pragma region Updates
+	void NoUpd(StatusEffect& status) { }
+
+	void FireUpd(StatusEffect& status)
+	{
+		status.entity->ApplyHit(2, status.entity);
+	}
+
+	void BleedUpd(StatusEffect& status)
+	{
+		status.entity->ApplyHit(4, status.entity);
+	}
+
+	void WetUpd(StatusEffect& status)
+	{
+		status.entity->ApplyHit(1, status.entity);
+	}
+#pragma endregion
+#pragma region Endings
+	void NoEnd(StatusEffect& status) { }
+
+	void WetEnd(StatusEffect& status)
+	{
+		status.entity->frictionMultiplier *= 10.f;
+	}
+#pragma endregion
 }

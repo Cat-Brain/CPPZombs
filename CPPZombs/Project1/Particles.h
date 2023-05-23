@@ -32,9 +32,7 @@ public:
 	{
 		if (color.a == 255)
 			return game->DrawCircle(pos, color, radius);
-		glDepthMask(GL_FALSE);
 		game->DrawCircle(pos, color, radius);
-		glDepthMask(GL_TRUE);
 	}
 };
 
@@ -48,9 +46,7 @@ public:
 	{
 		if (color.a == 255 && tTime == startTime)
 			return game->DrawCircle(pos, color, radius);
-		glDepthMask(GL_FALSE);
 		game->DrawCircle(pos, RGBA(color.r, color.g, color.b, static_cast<byte>(color.a * (1.f - (tTime - startTime) / duration))), radius);
-		glDepthMask(GL_TRUE);
 	}
 };
 

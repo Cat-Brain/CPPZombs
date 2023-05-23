@@ -3,16 +3,15 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aCol;
 layout (location = 2) in vec3 aNorm;
 
-uniform vec3 position, globalPosition;
+uniform vec3 position;
 uniform mat4 perspective;
 
-out vec3 pos, gPos, norm, col;
+out vec3 pos, norm, col;
 
 void main()
 {
 	norm = aNorm;
 	col = aCol;
 	pos = aPos + position;
-	gPos = aPos + globalPosition;
 	gl_Position = perspective * vec4(pos, 1.0);
 } 

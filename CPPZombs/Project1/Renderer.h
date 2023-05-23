@@ -12,6 +12,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+void window_maximize_callback(GLFWwindow* window, int maximized);
+
 #define START_SCR_WIDTH 990
 #define START_SCR_HEIGHT 990
 
@@ -32,6 +34,7 @@ public:
 	bool colorBand = true, vSync = true;
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	CHARS character = CHARS::SOLDIER;
+	bool maximized = true;
 
 	void TryOpen()
 	{
@@ -52,6 +55,8 @@ public:
 					difficulty = DIFFICULTY::EASY;
 				else if (contents == "difficulty = hard")
 					difficulty = DIFFICULTY::HARD;
+				else if (contents == "maximized = false")
+					maximized = false;
 				else
 					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
 						if (contents == "character = " + to_string(i))
@@ -66,6 +71,7 @@ public:
 	{
 		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
 			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
+			"\nmaximized = " + string(maximized ? "true" : "false") +
 			"\ncharacter = " + to_string(UnEnum(character));
 		std::ofstream file;
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
@@ -80,6 +86,8 @@ private:
 	// In the following T stands for true, these are the under-the-hood calls, mainly for rendering.
 	bool TStart()
 	{
+		settings.TryOpen(); // Used in window creation stuff.
+		
 #pragma region Very eary stuff
 		glfwInit();
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -106,13 +114,15 @@ private:
 		glViewport(0, 0, trueScreenWidth, trueScreenHeight);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetScrollCallback(window, scroll_callback);
+		glfwSetWindowMaximizeCallback(window, window_maximize_callback);
+
+		if (settings.maximized)
+			glfwMaximizeWindow(window);
 
 		glEnable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
-		
-		settings.TryOpen();
 
 		GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 		glfwSetCursor(window, cursor);
@@ -174,8 +184,6 @@ private:
 		}
 		lastTime = static_cast<float>(glfwGetTime());
 
-		perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);
-
 		Update();
 
 		glfwSwapBuffers(window);
@@ -201,7 +209,7 @@ public:
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
 	Settings settings;
-	float zoom = 30, minZoom = 10, maxZoom = 40, zoomSpeed = 5;
+	float zoom = 30, minZoom = 10, maxZoom = 30, zoomSpeed = 5;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
@@ -262,7 +270,7 @@ public:
 	{
 		glUseProgram(circleShader);
 		glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-		pos -= PlayerPos() + screenOffset;
+		
 		glUniform4f(glGetUniformLocation(circleShader, "posScale"), pos.x, pos.y, pos.z, radius);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
@@ -278,7 +286,7 @@ public:
 		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
 		glUniform2f(glGetUniformLocation(triangleShader, "scale"), scale.x, scale.y);
 
-		pos -= PlayerPos() + screenOffset;
+		
 		glUniform3f(glGetUniformLocation(triangleShader, "position"), pos.x, pos.y, pos.z);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(triangleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
@@ -342,7 +350,7 @@ public:
 
 	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
-		pos -= PlayerPos() + screenOffset;
+		
 
 		glUniform3f(glGetUniformLocation(shadowShader, "position"), pos.x, pos.y, pos.z);
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
@@ -403,4 +411,11 @@ public:
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	((Renderer*)game.get())->inputs.mouseScroll += static_cast<int>(yoffset);
+}
+
+void window_maximize_callback(GLFWwindow* window, int maximized)
+{
+	((Renderer*)game.get())->settings.maximized = maximized;
+	((Renderer*)game.get())->settings.Write();
+
 }

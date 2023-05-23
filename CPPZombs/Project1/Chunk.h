@@ -102,9 +102,7 @@ public:
 	void Draw()
 	{
 		if (indCount == 0) return;
-		Vec3 drawPos = Vec3(pos) - game->PlayerPos() - game->screenOffset;
-		glUniform3f(glGetUniformLocation(chunkShader, "position"), drawPos.x, drawPos.y, drawPos.z);
-		glUniform3f(glGetUniformLocation(chunkShader, "globalPosition"), pos.x, pos.y, pos.z);
+		glUniform3f(glGetUniformLocation(chunkShader, "position"), pos.x, pos.y, pos.z);
 		glBindVertexArray(vao);
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indCount), GL_UNSIGNED_INT, 0);
 	}
@@ -143,7 +141,6 @@ public:
 		data[posStart + 6] = nX; data[posStart + 7] = nY; data[posStart + 8] = nZ;
 	}
 
-	// Add genDir[1] stuff!
 	void GenTile(vector<float>& data, byte x, byte y, byte z, bool genZ, bool genNZ, bool genY, bool genNY, bool genX, bool genNX)
 	{
 		if (tiles[x][y][z] == 0)
@@ -161,6 +158,18 @@ public:
 			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
 			posStart += 9;
 			GenerateVert(data, posStart, x + 1, y, z + 1, 0, 0, 1, JRGB(r, g, b));
+			sideCount--;
+		}
+		if (genNZ)
+		{
+			int posStart = int(data.size()) - sideCount * 36;
+			GenerateVert(data, posStart, x, y, z, 0, 0, -1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x, y + 1, z, 0, 0, -1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 0, -1, JRGB(r, g, b));
+			posStart += 9;
+			GenerateVert(data, posStart, x + 1, y, z, 0, 0, -1, JRGB(r, g, b));
 			sideCount--;
 		}
 		if (genY)

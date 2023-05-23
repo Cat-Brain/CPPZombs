@@ -249,6 +249,33 @@ public:
 
 	int TryDealDamage(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
 	{
+		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
+		for (Entity* entity : hitEntities)
+			return 2 + entity->ApplyHit(damage, from);
+		return 0;
+	}
+
+	int TryDealDamageAll(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	{
+		int result = 0;
+		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
+		for (Entity* entity : hitEntities)
+			result = 2 + entity->ApplyHit(damage, from);
+		return result;
+	}
+
+	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	{
+		int result = 0;
+		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
+		for (Entity* entity : hitEntities)
+			if (entity->pos.z + entity->radius > pos.z)
+			result = 2 + entity->ApplyHit(damage, from);
+		return result;
+	}
+
+	int TryDealDamageTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	{
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
@@ -271,7 +298,7 @@ public:
 		return 0;
 	}
 
-	int TryDealDamageAll(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -296,7 +323,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -318,7 +345,7 @@ public:
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
 			if (entity->pos.z + entity->radius > pos.z)
-			result = 2 + entity->ApplyHit(damage, from);
+				result = 2 + entity->ApplyHit(damage, from);
 		return result;
 	}
 
@@ -415,6 +442,22 @@ public:
 			if (sortedNCEntities[index]->active && sortedNCEntities[index]->corporeal)
 				sortedNCEntities[index]->UpdateCollision();
 
+		for (int i = 0; i < size(); i++)
+			if ((*this)[i] && (*this)[i]->active)
+				for (int j = 0; (*this)[i] && j < (*this)[i]->statuses.size(); j++)
+				{
+					StatusEffect temp = (*this)[i]->statuses[j];
+					if (!temp.Update() || !(*this)[i])
+					{
+						if ((*this)[i])
+							(*this)[i]->statuses[j] = temp;
+						continue;
+					}
+					(*this)[i]->statuses.erase((*this)[i]->statuses.begin() + j);
+					j--;
+
+				}
+
 		if (addedEntity)
 			SortEntities();
 	}
@@ -422,18 +465,13 @@ public:
 	void DUpdate()
 	{
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->CurrentDistToCorner()), chunkOverlaps2 = {};
-		glUseProgram(chunkShader);
-		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
 		for (int i : chunkOverlaps)
 			if (chunks[i].pos.x + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
 				chunks[i].pos.y + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom &&
 				chunks[i].pos.x <= game->PlayerPos().x + game->zoom * screenRatio &&
 				chunks[i].pos.y <= game->PlayerPos().y + game->zoom &&
 				chunks[i].pos.z <= game->PlayerPos().z + game->screenOffset.z)
-			{
-				if (game->showUI) chunks[i].Draw();
 				chunkOverlaps2.push_back(i);
-			}
 
 		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps2, game->PlayerPos(), game->CurrentDistToCorner(), MaskF::IsCorporealNotCollectible);
 		// Collectibles
@@ -465,6 +503,10 @@ public:
 				i--;
 			}
 		}
+		glUseProgram(chunkShader);
+		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
+		for (int i : chunkOverlaps2)
+			chunks[i].Draw();
 	}
 
 	void UIUpdate()
@@ -685,7 +727,8 @@ public:
 	float startTime;
 
 	ExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
-		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionRadius(explosionRadius), startTime(tTime)
+		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
+		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
 		update = UPDATE::EXPLODENEXTFRAME;
 		this->creator = creator;
@@ -701,7 +744,8 @@ public:
 	float startTime;
 
 	UpExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
-		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name), damage(damage), explosionRadius(explosionRadius), startTime(tTime)
+		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
+		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
 		update = UPDATE::UPEXPLODENEXTFRAME;
 		this->creator = creator;
@@ -774,12 +818,40 @@ public:
 
 namespace Updates
 {
+	void CollectibleU(Entity* entity)
+	{
+		Collectible* collectible = static_cast<Collectible*>(entity);
+		vector<Entity*> overlaps = game->entities->FindOverlaps(collectible->pos, collectible->radius, MaskF::IsCollectible, collectible);
+		for (Entity* rawHit : overlaps)
+		{
+			Collectible* hit = static_cast<Collectible*>(rawHit);
+			// Skip if they are different types:
+			if (hit->baseItem.type != collectible->baseItem.type) continue;
+			// Weightedly average the positions:
+			collectible->SetPos((collectible->pos * float(collectible->baseItem.count) +
+				hit->pos * float(hit->baseItem.count)) * (1.f / (collectible->baseItem.count + hit->baseItem.count)));
+			// Prepare all observers in hit for transfer to the other collectible:
+			for (Entity* observer : hit->observers)
+				observer->MoveAttachment(hit, collectible);
+			// Prep for concatenation:
+			collectible->observers.reserve(collectible->observers.size() + hit->observers.size());
+			// Concatenate the hit collectible's observers list onto the original collectible's observers list:
+			collectible->observers.insert(collectible->observers.end(), hit->observers.begin(), hit->observers.end());
+			// Increase the count of the original collectible:
+			collectible->baseItem.count += hit->baseItem.count;
+			// Destroy the hit collectible:
+			hit->DestroySelf(collectible);
+			// Modify the radius of the original collectible:
+			collectible->SetRadius(collectible->FindRadius());
+		}
+	}
+
 	void ExplodeNextFrameU(Entity* entity)
 	{
 		ExplodeNextFrame* explosion = static_cast<ExplodeNextFrame*>(entity);
 		if (tTime != explosion->startTime)
 		{
-			game->entities->TryDealDamageAll(explosion->damage, explosion->pos, explosion->explosionRadius, MaskF::IsCorporealNotCreator, explosion);
+			game->entities->TryDealDamageAll(explosion->damage, explosion->pos, explosion->explosionRadius, MaskF::IsNonAlly, explosion);
 			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
 			{
 				float rotation = RandFloat() * PI_F * 2;
@@ -795,7 +867,7 @@ namespace Updates
 		UpExplodeNextFrame* explosion = static_cast<UpExplodeNextFrame*>(entity);
 		if (tTime != explosion->startTime)
 		{
-			game->entities->TryDealDamageAllUp(explosion->damage, explosion->pos, explosion->explosionRadius, MaskF::IsCorporealNotCreator, explosion);
+			game->entities->TryDealDamageAllUp(explosion->damage, explosion->pos, explosion->explosionRadius, MaskF::IsNonAlly, explosion);
 			for (int i = 0; i < EXPLOSION_PARTICLE_COUNT; i++)
 			{
 				float rotation = RandFloat() * PI_F * 2;
@@ -838,9 +910,7 @@ namespace DUpdates
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		puddle->color.a = 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
-		glDepthMask(GL_FALSE);
 		puddle->DUpdate(DUPDATE::ENTITY);
-		glDepthMask(GL_TRUE);
 	}
 
 	void FadeOutGlowDU(Entity* entity)
@@ -906,10 +976,34 @@ public:
 	}
 };
 
+class PlacedOnLandingBoom : public PlacedOnLanding
+{
+public:
+	float explosionRadius;
+	int explosionDamage;
+
+	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string typeName, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(type, entityToPlace, typeName, intType, damage, range, sayCreator,
+			useTime, speed, radius, corporeal, shouldCollide, mass, health), explosionRadius(explosionRadius), explosionDamage(explosionDamage)
+	{
+		itemOD = ITEMOD::PLACEDONLANDINGBOOM;
+	}
+
+	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string name, string typeName, int intType = 0, RGBA color = RGBA(),
+		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
+		bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		PlacedOnLanding(type, entityToPlace, name, typeName, intType, color, damage, range, sayCreator, useTime, speed, radius,
+			corporeal, shouldCollide, mass, health), explosionRadius(explosionRadius), explosionDamage(explosionDamage)
+	{
+		itemOD = ITEMOD::PLACEDONLANDINGBOOM;
+	}
+};
+
 inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
 	game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, static_cast<float>(explosionDamage + damage), pos, explosionRadius, color));
+	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
 }
 
 inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
@@ -1003,6 +1097,14 @@ namespace ItemODs
 		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
 	}
 
+	void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		PlacedOnLandingBoom* explosion = static_cast<PlacedOnLandingBoom*>(item.Type());
+		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
+			explosion->damage, explosion->explosionDamage, creator);
+		explosion->OnDeath(ITEMOD::PLACEDONLANDING, item, pos, dir, creator, creatorName, callReason, callType);
+	}
+
 	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
@@ -1046,28 +1148,28 @@ namespace ItemODs
 
 namespace Hazards
 {
-	FadeOutPuddle* leadPuddle = new FadeOutPuddle(3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumeFor* vacuumPuddle = new VacuumeFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
+	FadeOutPuddle leadPuddle = FadeOutPuddle(3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
+	VacuumeFor vacuumPuddle = VacuumeFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
 {
-	SetTileOnLanding* ruby = new SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, false);
-	UpExplodeOnLanding* emerald = new UpExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 20, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 20);
-	UpExplodeOnLanding* topaz = new UpExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
-	UpExplodeOnLanding* sapphire = new UpExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.0625f);
-	PlacedOnLanding* lead = new PlacedOnLanding(ITEMTYPE::LEAD, Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
-	PlacedOnLanding* vacuumium = new PlacedOnLanding(ITEMTYPE::VACUUMIUM, Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f);
-	ImproveSoilOnLanding* quartz = new ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, false);
+	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, false);
+	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 0);
+	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
+	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.0625f);
+	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
+	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f);
+	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, false);
 }
 
 namespace Collectibles
 {
-	Collectible* ruby = new Collectible(Resources::ruby->Clone());
-	Collectible* emerald = new Collectible(Resources::emerald->Clone());
-	Collectible* topaz = new Collectible(Resources::topaz->Clone());
-	Collectible* sapphire = new Collectible(Resources::sapphire->Clone());
-	Collectible* lead = new Collectible(Resources::lead->Clone());
-	Collectible* vacuumium = new Collectible(Resources::vacuumium->Clone());
-	Collectible* quartz = new Collectible(Resources::quartz->Clone());
+	Collectible* ruby = new Collectible(Resources::ruby.Clone());
+	Collectible* emerald = new Collectible(Resources::emerald.Clone());
+	Collectible* topaz = new Collectible(Resources::topaz.Clone());
+	Collectible* sapphire = new Collectible(Resources::sapphire.Clone());
+	Collectible* lead = new Collectible(Resources::lead.Clone());
+	Collectible* vacuumium = new Collectible(Resources::vacuumium.Clone());
+	Collectible* quartz = new Collectible(Resources::quartz.Clone());
 }

@@ -23,7 +23,7 @@ int main()
 		using namespace Updates;
 		using namespace Enemies::Updates;
 		using namespace Livestock::Updates;
-		updates = { EntityU, FadeOutU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
+		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
 		EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
 	}
 	{
@@ -89,7 +89,8 @@ int main()
 		itemUs = { ItemU, WaveModifierU };
 
 		using namespace ItemODs;
-		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, ExplodeOnLandingOD, UpExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD };
+		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, PlacedOnLandingBoomOD, ExplodeOnLandingOD,
+			UpExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD };
 #pragma endregion
 
 	game = make_unique<Game>();

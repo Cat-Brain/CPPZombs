@@ -1,4 +1,5 @@
 color band = true
 vSync = false
-difficulty = easy
+difficulty = hard
+maximized = true
 character = 1

@@ -10,6 +10,7 @@ public:
 	{
 		isCollectible = true;
 		vUpdate = VUPDATE::FRICTION;
+		update = UPDATE::COLLECTIBLE;
 	}
 
 	Collectible(ItemInstance baseItem, Vec3 pos, RGBA color) :
@@ -18,6 +19,13 @@ public:
 		corporeal = false;
 		isCollectible = true;
 		vUpdate = VUPDATE::FRICTION;
+		radius = FindRadius();
+		update = UPDATE::COLLECTIBLE;
+	}
+
+	float FindRadius()
+	{
+		return cbrtf(baseItem->radius * baseItem->radius * baseItem->radius * baseItem.count);
 	}
 
 	Collectible(Collectible* baseClass, Vec3 pos) : Collectible(*baseClass) { this->pos = pos; }
@@ -36,9 +44,9 @@ public:
 
 namespace Collectibles
 {
-	Collectible* copper = new Collectible(Resources::copper->Clone());
-	Collectible* iron = new Collectible(Resources::iron->Clone());
-	Collectible* rock = new Collectible(Resources::rock->Clone());
-	Collectible* bowler = new Collectible(Resources::bowler->Clone());
-	Collectible* silver = new Collectible(Resources::silver->Clone());
+	Collectible* copper = new Collectible(Resources::copper.Clone());
+	Collectible* iron = new Collectible(Resources::iron.Clone());
+	Collectible* rock = new Collectible(Resources::rock.Clone());
+	Collectible* bowler = new Collectible(Resources::bowler.Clone());
+	Collectible* silver = new Collectible(Resources::silver.Clone());
 }

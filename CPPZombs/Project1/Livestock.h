@@ -220,14 +220,14 @@ namespace Livestock
 		}
 	}
 
-	unique_ptr<Kiwi> kiwi = make_unique<Kiwi>(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 30, 30, "Kiwi");
-	unique_ptr<Egg> kiwiEgg = make_unique<Egg>(kiwi.get(), 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 50, 50, "Kiwi Egg");
+	Kiwi kiwi = Kiwi(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 30, 30, "Kiwi");
+	Egg kiwiEgg = Egg(&kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 50, 50, "Kiwi Egg");
 
-	vector<Livestock*> livestocks{ kiwi.get() };
-	vector<Entity*> livestockBirths{ kiwiEgg.get()};
+	vector<Livestock*> livestocks{ &kiwi };
+	vector<Entity*> livestockBirths{ &kiwiEgg };
 }
 
 namespace Resources::Eggs
 {
-	PlacedOnLanding* kiwiEgg = new PlacedOnLanding(ITEMTYPE::KIWI_EGG, Livestock::kiwiEgg.get(), "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg->color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg->radius);
+	PlacedOnLanding kiwiEgg = PlacedOnLanding(ITEMTYPE::KIWI_EGG, &Livestock::kiwiEgg, "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg.color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg.radius);
 }

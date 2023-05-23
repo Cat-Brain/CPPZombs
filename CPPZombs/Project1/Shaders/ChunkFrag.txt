@@ -4,7 +4,7 @@ layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 normal;
 layout (location = 2) out vec4 position;
 
-in vec3 pos, gPos, norm, col;
+in vec3 pos, norm, col;
 
 // Noise stuff:
 //
@@ -113,7 +113,7 @@ float snoise(vec3 v)
 
 void main()
 {
-	FragColor = vec4(col * (0.785 + 0.125 * round(snoise(gPos * 0.5))), 1.);
+	FragColor = vec4(col * (0.785 + 0.125 * round(snoise(pos * 0.5))), 1.);
 	normal = vec4(norm, 1.);
 	position = vec4(pos, 1.);
 } 
