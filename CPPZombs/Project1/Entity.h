@@ -15,7 +15,7 @@ vector<function<void(Entity*)>> updates;
 
 enum class VUPDATE // Update
 {
-	ENTITY, FRICTION
+	ENTITY, FRICTION, SPRING
 };
 
 vector<function<void(Entity*)>> vUpdates;
@@ -250,15 +250,16 @@ public:
 };
 
 
-/*class Being : public Entity
+class EntityImpl
 {
 public:
+	Entity* entity = nullptr;
 
-	Being()
+	EntityImpl()
 	{
 
 	}
-};*/
+};
 
 
 

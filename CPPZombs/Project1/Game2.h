@@ -1,5 +1,56 @@
 #include "Player.h"
 
+Planet::Planet()
+{
+	worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+	worldNoise.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction_EuclideanSq);
+	worldNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
+	worldNoise.SetFrequency(0.01f * (RandFloat() * 0.5f + 0.5f));
+	worldNoise.SetFractalLacunarity(1.0f);
+	worldNoise.SetFractalGain(0.25f);
+	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
+	worldNoise.SetSeed(static_cast<int>(time(NULL)));
+
+	friction = RandFloat() * 10 + 5;
+	gravity = 10;
+
+	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
+	dayTime = RandFloat() * 60.0f;
+	duskTime = RandFloat() * 60.0f;
+	nightTime = RandFloat() * 60.0f;
+	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
+
+	if (rand() % 2 == 0)
+	{
+		ambientDark = RandFloat();
+		ambientLight = 1;
+	}
+	else
+	{
+		ambientDark = 0;
+		ambientLight = RandFloat();
+	}
+
+
+	color1.r = rand() % 128 + 64;
+	color1.g = rand() % 128 + 64;
+	color1.b = rand() % 128 + 64;
+
+	color2.r = color1.r + rand() % 32 + 32;
+	color2.g = color1.g + rand() % 32 + 32;
+	color2.b = color1.b + rand() % 32 + 32;
+
+	fog.r = rand() % 8;
+	fog.g = rand() % 8;
+	fog.b = rand() % 8;
+
+	faction1Spawns = make_unique<Enemies::Instance>(Enemies::faction1Spawns.RandomClone());
+	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
+
+	wildSpawns = make_unique<Enemies::OvertimeInstance>(Enemies::wildSpawns.RandomClone());
+	wildSpawns->FindNewIndex();
+}
+
 Chunk::Chunk(iVec3 pos) :
 	vector{}, pos(pos), zPlus(-1), zMin(-1), yPlus(-1), yMin(-1), xPlus(-1), xMin(-1)
 {
@@ -7,7 +58,7 @@ Chunk::Chunk(iVec3 pos) :
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 		for (int y = 0; y < CHUNK_WIDTH; y++)
 		{
-			float tX = pos.x + x, tY = pos.y + y;
+			float tX = float(pos.x + x), tY = float(pos.y + y);
 			float noise = game->planet->worldNoise.GetNoise(tX, tY) * 0.5f + 0.5f;
 			noise = noise * 4.f + 0.5f; // 0.5-4.5
 			if (noise > 3)
@@ -24,7 +75,7 @@ Chunk::Chunk(iVec3 pos) :
 
 void Chunk::Finalize()
 {
-	int index, thisIndex = game->entities->chunks.size() - 1;
+	int index, thisIndex = static_cast<int>(game->entities->chunks.size() - 1);
 	// zPlus
 	if ((index = game->entities->ChunkAtPos(pos + upI * CHUNK_WIDTH)) != -1)
 	{
@@ -395,54 +446,6 @@ void Chunk::GenerateMesh()
 	indCount = static_cast<uint>(indices.size());
 }
 
-Planet::Planet()
-{
-	worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
-	worldNoise.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction_EuclideanSq);
-	worldNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
-	worldNoise.SetFrequency(0.01f * (RandFloat() * 0.5f + 0.5f));
-	worldNoise.SetFractalLacunarity(1.0f);
-	worldNoise.SetFractalGain(0.25f);
-	worldNoise.SetFractalType(FastNoiseLite::FractalType::FractalType_Ridged);
-	worldNoise.SetSeed(static_cast<int>(time(NULL)));
-
-	friction = RandFloat() * 10 + 5;
-	gravity = 10;
-
-	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
-	dayTime = RandFloat() * 60.0f;
-	duskTime = RandFloat() * 60.0f;
-	nightTime = RandFloat() * 60.0f;
-	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
-
-	if (rand() % 2 == 0)
-	{
-		ambientDark = RandFloat();
-		ambientLight = 1;
-	}
-	else
-	{
-		ambientDark = 0;
-		ambientLight = RandFloat();
-	}
-
-
-	color1.r = rand() % 128 + 64;
-	color1.g = rand() % 128 + 64;
-	color1.b = rand() % 128 + 64;
-
-	color2.r = color1.r + rand() % 32 + 32;
-	color2.g = color1.g + rand() % 32 + 32;
-	color2.b = color1.b + rand() % 32 + 32;
-
-	fog.r = rand() % 8;
-	fog.g = rand() % 8;
-	fog.b = rand() % 8;
-
-	enemies = make_unique<Enemies::Instance>(Enemies::naturalSpawns.RandomClone());
-	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
-}
-
 void Game::Start()
 {
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
@@ -732,13 +735,18 @@ void Game::TUpdate()
 		shouldSpawnBoss = false;
 	}
 	waveCount += int(inputs.period.pressed) - int(inputs.comma.pressed);
-	// New wave:
+
+	// Enemy spawn stuff:
 	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.slash.pressed)
 	{
 		waveCount++;
-		planet->enemies->SpawnRandomEnemies();
+		planet->faction1Spawns->SpawnRandomEnemies(secondsBetweenWaves / 60.f);
 		lastWave = tTime;
+		secondsBetweenWaves = RandFloat() * 60 + 30;
 	}
+	planet->wildSpawns->Update();
+
+
 
 	entities->Update(); // Updates all entities.
 	// Now that the player has moved mark where it is for rendering:
@@ -778,11 +786,11 @@ void Game::TUpdate()
 				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
 				std::to_string(int(timeTillNextBoss)) + "." +
 				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f,
-				planet->enemies->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
+				planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		}
 		else
 			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
-				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->enemies->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
+				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
 	}

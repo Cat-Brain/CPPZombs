@@ -213,3 +213,37 @@ namespace Updates
 }
 
 namespace TUpdates { bool DefaultTU(Entity* entity) { return true; } }
+
+/*class Spring : public DToCol
+{
+public:
+	float strength, dampening, restDist;
+
+	Spring(float strength, float dampening, float restDist, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+		RGBA color2 = RGBA(), float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
+		DToCol(pos, radius, color, color2, mass, maxHealth, health, name, allegiance),
+		strength(strength), dampening(dampening), restDist(restDist)
+	{
+		vUpdate = VUPDATE::SPRING;
+	}
+
+	Spring()
+	{
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
+	{
+		return 
+	}
+};
+
+namespace VUpdates
+{
+	void SpringVU(Entity* entity)
+	{
+		Spring* spring = static_cast<Spring*>(entity);
+		float dist = glm::distance(spring->pos, spring->creator->pos);
+		spring->vel += (spring->creator->pos - spring->pos) * ((dist - spring->restDist) * spring->strength / dist) -
+			spring->vel * spring->dampening;
+	}
+}*/

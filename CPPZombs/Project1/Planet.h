@@ -1,14 +1,17 @@
 #include "Game1.h"
+
 namespace Enemies
 {
 	class Instance;
+	class OvertimeInstance;
 }
 
 class Planet
 {
 public:
 	float friction, gravity, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
-	unique_ptr<Enemies::Instance> enemies, bosses;
+	unique_ptr<Enemies::Instance> faction1Spawns, bosses;
+	unique_ptr<Enemies::OvertimeInstance> wildSpawns;
 	FastNoiseLite worldNoise, caveNoise;
 	Vec3 sunDir;
 	JRGB color1, color2, fog;

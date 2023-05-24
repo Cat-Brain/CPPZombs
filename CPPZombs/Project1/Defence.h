@@ -56,7 +56,7 @@ public:
 class Tree : public FunctionalBlock2
 {
 public:
-	Tree* trunk, *last = nullptr;
+	Tree* trunk = nullptr, *last = nullptr;
 	ItemInstance collectible, seed;
 	RGBA leafColor; // trunkColor = this->color except in leafs which are weird.
 	// currentHeight will be from 1 - height in the trunk and from height+1 - height+leafLength in the leafs.
@@ -70,8 +70,8 @@ public:
 		float timePer, float radius, float leafRadius, RGBA color, RGBA leafColor,
 		float mass, int maxHealth, int health, string name) :
 		collectible(collectible), seed(seed),
-		height(height), currentHeight(0), leafLength(leafLength), chanceForSeed(chanceForSeed), leafColor(leafColor),
-		leafRadius(leafRadius),
+		height(height), currentHeight(0), leafLength(leafLength), chanceForSeed(chanceForSeed), branchCount(branchCount),
+		leafRadius(leafRadius), leafColor(leafColor),
 		FunctionalBlock2(timePer, vZero, radius, color, mass, maxHealth, health, name)
 	{
 		dUpdate = DUPDATE::TREE;

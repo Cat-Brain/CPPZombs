@@ -110,8 +110,8 @@ public:
 			}
 			if (currentSelected != -1)
 				game->DrawFBL(offset + ToIV2(Vec2(currentSelected / width, currentSelected % width) * (scale * 2)), (*this)[currentSelected]->color, Vec2(scale));
-			for (int y = 0, i = 0; y < height; y++)
-				for (int x = 0; x < width; x++, i++)
+			for (uint y = 0, i = 0; y < height; y++)
+				for (uint x = 0; x < width; x++, i++)
 				{
 					if ((*this)[i].count == 0) continue;
 					
@@ -121,7 +121,7 @@ public:
 			return;
 		}
 		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex]->color, Vec2(scale));
-		for (int i = 0; i < width; i++)
+		for (uint i = 0; i < width; i++)
 		{
 			if ((*this)[i].count == 0) continue;
 
@@ -259,7 +259,7 @@ class Engineer : public Player
 {
 public:
 	ENGMODE engMode = ENGMODE::ROVER;
-	vector<FadeCircle*> drones;
+	vector<SpringFadeCircle*> drones;
 	float currentJetpackFuel = 0, jetpackFuel, jetpackForce;
 
 	Engineer(float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
@@ -284,7 +284,7 @@ public:
 		this->baseClass = baseClass;
 		this->pos = pos;
 		this->creator = creator;
-		engMode = ENGMODE::TURRET;
+		engMode = ENGMODE::ROVER;
 		drones = {};
 		Start();
 	}
@@ -439,7 +439,7 @@ namespace ItemUs
 {
 	void WaveModifierU(ItemInstance item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		game->planet->enemies->superWave ^= true;
+		game->planet->faction1Spawns->superWave ^= true;
 		game->entities->push_back(make_unique<FadeOutGlow>(8.f, 3.f, pos, 4.f, item->color));
 		game->screenShake++;
 	}
@@ -616,18 +616,17 @@ namespace Updates
 	void EngineerU(Entity* entity)
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
-		float offset = tTime * PI_F * 2 / 5;
-		float lerpValue = powf(0.1f, game->dTime);
-		for (int i = 0; i < engineer->drones.size(); i++)
-		{
-			engineer->drones[i]->startTime = tTime;
-			engineer->drones[i]->pos = Lerp(
-				engineer->pos + Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f),
-				engineer->drones[i]->pos, lerpValue);
-		}
 		engineer->shouldScroll = !engineer->inputs.shift.held;
 		engineer->shouldPickup = false;
 		engineer->Update(UPDATE::PLAYER);
+
+		float offset = tTime * PI_F * 2 / 5;
+		for (int i = 0; i < engineer->drones.size(); i++)
+		{
+			engineer->drones[i]->startTime = tTime; // Make sure that they never die.
+			engineer->drones[i]->desiredPos = engineer->pos +
+				Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f);
+		}
 	}
 
 	void GrenadeU(Entity* entity)
@@ -687,13 +686,13 @@ namespace UIUpdates
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / 30.f;
 		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
-		offset.x -= scale * 2;
+		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
-		offset.x -= scale * 2;
+		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
-		offset.x -= scale * 2;
+		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / player->primaryTime)));
 	}
@@ -734,7 +733,7 @@ namespace PMovements
 	{
 		pMovements[UnEnum(PMOVEMENT::DEFAULT)](player);
 		Engineer* engineer = static_cast<Engineer*>(player);
-		if (game->entities->OverlapsTile(player->pos + Vec3(0, 0, -player->radius), player->radius - 0.01f))
+		if (engineer->Grounded())
 		{
 			engineer->currentJetpackFuel = engineer->jetpackFuel;
 		}
@@ -768,7 +767,7 @@ namespace Primaries
 		player->lastPrimary = tTime + player->primaryTime;
 		Engineer* engineer = static_cast<Engineer*>(player);
 		if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
-		for (Circle* circle : engineer->drones)
+		for (SpringCircle* circle : engineer->drones)
 			if (!game->entities->OverlapsTile(circle->pos, currentShootingItem->radius))
 			{
 				player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], circle->pos, player->inputs.mousePosition3, player, player->name, nullptr, 0);
@@ -831,7 +830,7 @@ namespace Secondaries
 		}
 		case ENGMODE::DRONE:
 		{
-			unique_ptr<FadeCircle> newDrone = make_unique<FadeCircle>(0.1f, engineer->pos, RGBA(0, 255), 1.f);
+			unique_ptr<SpringFadeCircle> newDrone = make_unique<SpringFadeCircle>(100.f, 5.0f, 0.1f, engineer->pos, vZero, RGBA(0, 255), 1.f);
 			engineer->drones.push_back(newDrone.get());
 			game->entities->particles.push_back(std::move(newDrone));
 			break;

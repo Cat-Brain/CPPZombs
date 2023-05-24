@@ -44,8 +44,8 @@ public:
 
 	void Update() override
 	{
-		if (color.a == 255 && tTime == startTime)
-			return game->DrawCircle(pos, color, radius);
+		//if (color.a == 255 && tTime == startTime)
+		//	return game->DrawCircle(pos, color, radius);
 		game->DrawCircle(pos, RGBA(color.r, color.g, color.b, static_cast<byte>(color.a * (1.f - (tTime - startTime) / duration))), radius);
 	}
 };
@@ -92,6 +92,36 @@ public:
 	{
 		VelocityParticle::Update();
 		game->DrawCircle(pos, color, radius);
+	}
+};
+
+class SpringCircle : public VelocityCircle
+{
+public:
+	float strength, dampening;
+	Vec3 desiredPos;
+
+	SpringCircle(float strength, float dampening, float radius, Vec3 pos, Vec3 velocity, RGBA color, float duration) :
+		VelocityCircle(radius, pos, velocity, color, duration), desiredPos(pos), strength(strength), dampening(dampening) { }
+
+	void Update() override
+	{
+		velocity += (desiredPos - pos) * (strength * game->dTime) - velocity * (dampening * game->dTime);
+		VelocityCircle::Update();
+	}
+};
+
+class SpringFadeCircle : public SpringCircle
+{
+public:
+	using SpringCircle::SpringCircle;
+
+	void Update() override
+	{
+		byte tempAlpha = color.a;
+		color.a = static_cast<byte>(color.a * (1.f - (tTime - startTime) / duration));
+		SpringCircle::Update();
+		color.a = tempAlpha;
 	}
 };
 

@@ -1,46 +1,8 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,79): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,72): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Chunk.h(105,65): warning C4244: 'argument': conversion from 'T' to 'GLfloat', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1300,91): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1305,64): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(113,29): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(114,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(124,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(690,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(693,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(696,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,13): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(10,29): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(27,58): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  891 of 5518 functions (16.1%) were compiled, the rest were copied from previous compilation.
-    17 functions were new in current compilation
-    168 functions had inline decision re-evaluated but remain unchanged
+  1 of 5569 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    16 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

@@ -102,7 +102,7 @@ public:
 	void Draw()
 	{
 		if (indCount == 0) return;
-		glUniform3f(glGetUniformLocation(chunkShader, "position"), pos.x, pos.y, pos.z);
+		glUniform3f(glGetUniformLocation(chunkShader, "position"), float(pos.x), float(pos.y), float(pos.z));
 		glBindVertexArray(vao);
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indCount), GL_UNSIGNED_INT, 0);
 	}
