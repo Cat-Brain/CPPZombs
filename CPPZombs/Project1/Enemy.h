@@ -2,6 +2,20 @@
 
 namespace Enemies
 {
+	Entity* NearestFoe(Vec3 pos, float farDist, Entity* entity)
+	{
+		Entity* result = nullptr;
+		vector<Entity*> nearbyFoes = game->entities->FindOverlaps(pos, farDist, MaskF::IsNonAlly, entity);
+		float dist = farDist * farDist, newDist;
+		for (Entity* nEntity : nearbyFoes)
+			if ((newDist = glm::distance2(entity->pos, nEntity->pos)) < dist)
+			{
+				dist = newDist;
+				result = nEntity;
+			}
+		return result;
+	}
+
 #pragma region Enemy types
 	// The base class of all enemies.
 	class Enemy;
@@ -103,6 +117,13 @@ namespace Enemies
 		{
 			vel = Vec3(TryAdd2V2(vel, Vec2(dir) * game->dTime * (speed + game->planet->friction),
 				maxSpeed), vel.z);
+		}
+
+		Vec3 FindDir()
+		{
+			Entity* entity = NearestFoe(pos, 30.f, this);
+			if (entity == nullptr) return vZero;
+			return Vec3(Normalized2(Vec2(entity->pos - pos)), 0);
 		}
 	};
 
@@ -515,7 +536,7 @@ namespace Enemies
 				if (tTime - lastLegUpdates[i] > legCycleSpeed)
 				{
 					lastLegUpdates[i] += legCycleSpeed;
-					Vec3 desiredPos = LegPos(i) + Normalized(game->PlayerPos() - pos) * legTolerance * 0.5f;
+					Vec3 desiredPos = LegPos(i) + dir * legTolerance * 0.5f;
 					if (glm::distance2(legs[i]->desiredPos, desiredPos) > legTolerance * legTolerance)
 						legs[i]->desiredPos = desiredPos;
 				}
@@ -607,7 +628,7 @@ namespace Enemies
 			unique_ptr<Pouncer> newEnemy = make_unique<Pouncer>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
-			newEnemy->dir = Normalized(game->PlayerPos() - newEnemy->pos);
+			newEnemy->dir = FindDir();
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -635,7 +656,7 @@ namespace Enemies
 			unique_ptr<Cat> newEnemy = make_unique<Cat>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
-			newEnemy->dir = Normalized(game->PlayerPos() - newEnemy->pos);
+			newEnemy->dir = FindDir();
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -664,7 +685,7 @@ namespace Enemies
 			unique_ptr<BoomCat> newEnemy = make_unique<BoomCat>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
-			newEnemy->dir = Normalized(game->PlayerPos() - newEnemy->pos);
+			newEnemy->dir = FindDir();
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -695,7 +716,7 @@ namespace Enemies
 			unique_ptr<Cataclysm> newEnemy = make_unique<Cataclysm>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
-			newEnemy->dir = Normalized(game->PlayerPos() - newEnemy->pos);
+			newEnemy->dir = FindDir();
 			newEnemy->Start();
 			return std::move(newEnemy);
 		}
@@ -736,7 +757,7 @@ namespace Enemies
 			unique_ptr<Tank> newEnemy = make_unique<Tank>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
-			newEnemy->dir = Normalized(game->PlayerPos() - newEnemy->pos);
+			newEnemy->dir = FindDir();
 			newEnemy->Start();
 			return newEnemy;
 		}
@@ -811,7 +832,7 @@ namespace Enemies
 		{
 			Cat* cat = static_cast<Cat*>(entity);
 
-			cat->dir = RotateTowardsNorm(cat->dir, game->PlayerPos() - cat->pos, game->dTime * cat->homeSpeed);
+			cat->dir = RotateTowardsNorm(cat->dir, cat->FindDir(), game->dTime * cat->homeSpeed);
 			cat->MoveDir();
 
 			cat->Update(UPDATE::POUNCER);
@@ -821,13 +842,13 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 
-			if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
+			/*if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
 			{
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(game->PlayerPos() - cat->pos +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->duration +
 					Vec3(0, 0, cat->projectile2->radius), PI_F * 0.125f), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, game->PlayerPos() - cat->pos +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, cat->FindDir() * cat->projectile2->duration +
 					Vec3(0, 0, cat->projectile2->radius), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(game->PlayerPos() - cat->pos +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->duration +
 					Vec3(0, 0, cat->projectile2->radius), PI_F * -0.125f), cat));
 			}
 			
@@ -857,7 +878,7 @@ namespace Enemies
 				cat->dir = Normalized(game->PlayerPos() - cat->pos);
 				cat->vel = cat->dir * cat->speed;
 			}
-			else cat->Update(UPDATE::CAT);
+			else */cat->Update(UPDATE::CAT);
 		}
 	}
 
@@ -1166,7 +1187,7 @@ namespace Enemies
 	{
 		bool DefaultMU(Enemy* enemy)
 		{
-			enemy->dir = Normalized(game->PlayerPos() - enemy->pos);
+			enemy->dir = enemy->FindDir();
 			enemy->MoveDir();
 			enemy->ShouldTryJump();
 			return false;
@@ -1177,7 +1198,7 @@ namespace Enemies
 			Snake* snake = static_cast<Snake*>(enemy);
 			if (snake->front == nullptr)
 			{
-				snake->dir = Normalized(game->PlayerPos() - snake->pos);
+				snake->dir = snake->FindDir();
 				snake->ShouldTryJump();
 			}
 			else
@@ -1189,7 +1210,7 @@ namespace Enemies
 		bool PouncerSnakeMU(Enemy* enemy)
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(enemy);
-			pSnake->dir = Normalized(game->PlayerPos() - pSnake->pos);
+			pSnake->dir = pSnake->FindDir();
 			if (pSnake->front == nullptr)
 				pSnake->vel = pSnake->dir * pSnake->speed + up * 12.f;
 			return true;
@@ -1200,7 +1221,7 @@ namespace Enemies
 			SnakeConnected* snake = static_cast<SnakeConnected*>(enemy);
 			if (snake->next == nullptr)
 			{
-				snake->dir = Normalized(game->PlayerPos() - snake->pos);
+				snake->dir = snake->FindDir();
 				snake->ShouldTryJump();
 			}
 			else
@@ -1212,8 +1233,8 @@ namespace Enemies
 		bool VacuumerMU(Enemy* enemy)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(enemy);
-			float distance = glm::distance(game->PlayerPos(), vacuumer->pos);
-			vacuumer->dir = Normalized(game->PlayerPos() - vacuumer->pos) * (distance > vacuumer->desiredDistance ? 1.f : -1.f);
+			//float distance = glm::distance(game->PlayerPos(), vacuumer->pos);
+			vacuumer->dir = vacuumer->FindDir();//Normalized(game->PlayerPos() - vacuumer->pos) * (distance > vacuumer->desiredDistance ? 1.f : -1.f);
 			vacuumer->MoveDir();
 			vacuumer->ShouldTryJump();
 			return false;
@@ -1235,7 +1256,7 @@ namespace Enemies
 		bool PouncerMU(Enemy* enemy)
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(enemy);
-			pouncer->dir = Normalized(game->PlayerPos() - pouncer->pos);
+			pouncer->dir = pouncer->FindDir();
 			pouncer->vel = pouncer->dir * pouncer->speed;
 			return true;
 		}
@@ -1251,8 +1272,9 @@ namespace Enemies
 		{
 			Tank* tank = static_cast<Tank*>(enemy);
 
-			tank->dir = Vec3(RotateTowardsNorm2(tank->dir, game->PlayerPos() - tank->pos, tank->turnSpeed * game->dTime), 0);
-			if (glm::dot(Vec2(tank->dir), Normalized2(game->PlayerPos() - tank->pos)) > 0.75f)
+			Vec3 dDir = tank->FindDir();
+			tank->dir = Vec3(RotateTowardsNorm2(tank->dir, dDir, tank->turnSpeed * game->dTime), 0);
+			if (glm::dot(tank->dir, dDir) > 0.75f)
 				tank->MoveDir();
 			tank->ShouldTryJump();
 			return false;
@@ -1263,13 +1285,13 @@ namespace Enemies
 	{
 		bool DefaultAU(Enemy* enemy)
 		{
-			return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonEnemy, enemy);
+			return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy);
 		}
 
 		bool ExploderAU(Enemy* enemy)
 		{
 			Exploder* exploder = static_cast<Exploder*>(enemy);
-			if (!game->entities->DoesOverlap(exploder->ExplosionPos(), exploder->explosionRadius, MaskF::IsNonEnemy, exploder))
+			if (!game->entities->DoesOverlap(exploder->ExplosionPos(), exploder->explosionRadius, MaskF::IsNonAlly, exploder))
 				return false;
 			CreateExplosion(exploder->ExplosionPos(), exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
 			return true;
@@ -1389,7 +1411,8 @@ namespace Enemies
 		void SpawnEnemy(int index)
 		{
 			float randomValue = RandFloat() * 6.283184f;
-			game->entities->push_back((*this)[index]->Clone(Vec3(cosf(randomValue), sinf(randomValue), 0) * game->DistToCorner() + game->PlayerPos()));
+			game->entities->push_back((*this)[index]->Clone(Vec3(RandCircPoint2(), 0) * 30.f * (RandFloat() * 0.5f + 0.5f)
+				+ game->PlayerPos() + up * 30.f));
 		}
 
 		void SpawnRandomEnemies(float multiplier = 1)

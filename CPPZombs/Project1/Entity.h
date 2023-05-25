@@ -419,16 +419,24 @@ namespace OverlapRes
 	{
 		float dist = glm::length(b->pos - a->pos);
 
-		// Compute unit normal and unit tangent vectors
-		Vec3 v_un = Normalized(b->pos - a->pos); // unit normal vector
+		// Compute normal
+		Vec3 v_un = Normalized(b->pos - a->pos);
 
-		// Compute scalar projections of velocities onto v_un and v_ut
-		float v1n = glm::dot(v_un, a->vel); // Dot product
+		Vec3 tanA = glm::cross(v_un, Normalized(glm::cross(v_un, a->vel)));
+		Vec3 tanB = glm::cross(v_un, Normalized(glm::cross(v_un, b->vel)));
+
+		float v1t = glm::dot(tanA, a->vel);
+		float v2t = glm::dot(tanB, b->vel);
+
+		float v1n = glm::dot(v_un, a->vel);
 		float v2n = glm::dot(v_un, b->vel);
 
+		float m1 = (v1n * (a->mass - b->mass) + 2.0f * b->mass * v2n) / (a->mass + b->mass);
+		float m2 = (v2n * (b->mass - a->mass) + 2.0f * a->mass * v1n) / (a->mass + b->mass);
+
 		// Set new velocities in x and y coordinates
-		a->vel = v_un * (v1n * (a->mass - b->mass) + 2.f * b->mass * v2n) / (a->mass + b->mass);
-		b->vel = v_un * (v2n * (b->mass - a->mass) + 2.f * a->mass * v1n) / (b->mass + a->mass);
+		a->vel = tanA * v1t + v_un * m1;
+		b->vel = tanB * v2t + v_un * m2;
 
 		Vec3 multiplier = (b->pos - a->pos) * (1.01f * (dist - a->radius - b->radius) / (dist * (a->mass + b->mass)));
 		a->SetPos(a->pos + multiplier * b->mass);

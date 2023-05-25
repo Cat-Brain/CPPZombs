@@ -360,7 +360,6 @@ public:
 		if (index == -1) return UnEnum(TILE::AIR);
 		return chunks[index].TileAtPos(ToIV3(pos));
 	}
-
 	// Add more overlap functions.
 #pragma endregion
 

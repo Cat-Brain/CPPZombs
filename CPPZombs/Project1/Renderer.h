@@ -337,8 +337,6 @@ public:
 		glUseProgram(lineShader);
 		glUniformMatrix4fv(glGetUniformLocation(lineShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 
-		a -= PlayerPos() + screenOffset;
-		b -= PlayerPos() + screenOffset;
 		glUniform3f(glGetUniformLocation(lineShader, "a"), a.x, a.y, a.z);
 		glUniform3f(glGetUniformLocation(lineShader, "b"), b.x, b.y, b.z);
 		glUniform1f(glGetUniformLocation(lineShader, "thickness"), thickness);

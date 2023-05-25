@@ -2,4 +2,4 @@ color band = true
 vSync = true
 difficulty = hard
 maximized = true
-character = 2
+character = 0

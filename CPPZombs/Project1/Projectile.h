@@ -3,11 +3,12 @@
 class Projectile : public Entity
 {
 public:
-    float duration;
-    int damage;
-    float speed, begin;
-    int callType = 0;
-    bool shouldCollide;
+    float duration; // How far it can travel before landing.
+    int damage; // It's damage on hit.
+    float speed; // It's speed.
+    float begin; // When it was created.
+    int callType = 0; // Internal value for what type of death this projectile had.
+    bool shouldCollide; // Should this collide with objects.
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
         float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, Allegiance allegiance = 0) :
