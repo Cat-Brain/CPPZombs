@@ -6,10 +6,57 @@ layout (location = 2) out vec4 position;
 layout (depth_less) out float gl_FragDepth;
 
 uniform mat4 camera, cameraInv, perspective;
-uniform vec4 color, posScale;
+uniform vec4 color;
+uniform vec3 a, b, camPos;
+uniform float thickness;
 
 in vec3 tPos;
 
+
+vec4 iCylinder( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, float ra ) 
+{
+    vec3  ba = pb - pa;
+    vec3  oc = ro - pa;
+
+    float baba = dot(ba,ba);
+    float bard = dot(ba,rd);
+    float baoc = dot(ba,oc);
+    
+    float k2 = baba            - bard*bard;
+    float k1 = baba*dot(oc,rd) - baoc*bard;
+    float k0 = baba*dot(oc,oc) - baoc*baoc - ra*ra*baba;
+    
+    /*
+    // in case you really need to handle parallel raycasts
+    if( k2==0.0 )
+    {
+        float ta = -dot(ro-pa,ba)/bard;
+        float tb = ta + baba/bard;
+        
+        vec4 pt = (bard>0.0) ? vec4(pa,-ta) : vec4(pb,tb);
+        
+        vec3 q = ro + rd*abs(pt.w) - pt.xyz;
+        if( dot(q,q)>ra*ra ) return vec4(-1.0);
+        
+        return vec4( abs(pt.w), sign(pt.w)*ba/sqrt(baba) );
+    }
+    */
+    
+    float h = k1*k1 - k2*k0;
+    if( h<0.0 ) return vec4(-1.0);
+    h = sqrt(h);
+    float t = (-k1-h)/k2;
+
+    // body
+    float y = baoc + t*bard;
+    if( y>0.0 && y<baba ) return vec4( t, (oc+t*rd - ba*y/baba)/ra );
+    
+    // caps
+    t = ( ((y<0.0) ? 0.0 : baba) - baoc)/bard;
+    if( abs(k1+k2*t)<h ) return vec4( t, ba*sign(y)/sqrt(baba) );
+
+    return vec4(-1.0);
+}
 
 // simplified version of joeedh's https://www.shadertoy.com/view/Md3GWf
 // see also https://www.shadertoy.com/view/MdtGD7
@@ -40,27 +87,17 @@ float mask(vec2 p) {
     // --- indeed, is a tone mapping ( equivalent to do the reciprocal on the image, see tests )
     // returned value in [0,37.2] , but < 0.57 with P=50% 
     return  (pow(f, 150.) + 1.3*f ) / 2.3; // <.98 : ~ f/2, P=50%  >.98 : ~f^150, P=50%
-}
+} 
 
 void main()
 {
-	vec3 dir = normalize(vec3(camera * vec4(tPos, 1.)));
-	vec3 pos = vec3(camera * vec4(posScale.xyz, 1.));
-	float b = 2 * dot(-pos, dir);
-	float c = dot(pos, pos) - posScale.w * posScale.w;
-	float d = b * b - 4 * c; // Discriminant from quadratic formula.
-
-	if (d <= 0) discard;
-	if (color.a != 1. && color.a < mask(gl_FragCoord.xy)) discard;
-
-	float s = sqrt(d);
-	float dstToSphereNear = max(0, (-s - b) * 0.5);
-
-
-	FragColor = color;
+	vec3 dir = normalize(tPos - camPos);
+	vec4 tNor = iCylinder(camPos, dir, a, b, thickness);
+	if (tNor.x < 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 	
-	position = vec4(dir * dstToSphereNear, 1.);
-	normal = vec4(normalize(position.xyz - pos), color.a);
+	position = vec4(dir * tNor.x, 1.);
+	FragColor = color;
+	normal = vec4(tNor.yzw, 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
 	position = cameraInv * position;
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;

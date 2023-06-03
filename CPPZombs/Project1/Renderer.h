@@ -34,6 +34,7 @@ public:
 	bool colorBand = true, vSync = true;
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	CHARS character = CHARS::SOLDIER;
+	uint chunkRenderDist = 5;
 	bool maximized = true;
 
 	void TryOpen()
@@ -57,7 +58,13 @@ public:
 					difficulty = DIFFICULTY::HARD;
 				else if (contents == "maximized = false")
 					maximized = false;
-				else
+				else if (contents.find("chunk render dist = ") == 0)
+				{
+					int result = std::stoi(contents.substr(20));
+					if (result != -1)
+						chunkRenderDist = result;
+				}
+				else if (contents.find("character = ") == 0)
 					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
 						if (contents == "character = " + to_string(i))
 							character = CHARS(i);
@@ -72,6 +79,7 @@ public:
 		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
 			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
 			"\nmaximized = " + string(maximized ? "true" : "false") +
+			"\nchunk render dist = " + to_string(chunkRenderDist) +
 			"\ncharacter = " + to_string(UnEnum(character));
 		std::ofstream file;
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
@@ -121,6 +129,9 @@ private:
 
 		glEnable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CW);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #pragma endregion
 
@@ -154,7 +165,7 @@ private:
 
 		cube = Mesh({-1.f, -1.f, -1.f,  -1.f, -1.f, 1.f,  -1.f, 1.f, -1.f,  -1.f, 1.f, 1.f,
 			1.f, -1.f, -1.f,  1.f, -1.f, 1.f,  1.f, 1.f, -1.f,  1.f, 1.f, 1.f}, {1, 3, 7, 1, 7, 5,
-			0, 1, 3, 0, 3, 2,  0, 1, 5, 0, 5, 4,  2, 3, 7, 2, 7, 6,  6, 7, 5, 6, 5, 4}, GL_TRIANGLES, GL_STATIC_DRAW, 3);
+			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7}, GL_TRIANGLES, GL_STATIC_DRAW, 3);
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
 		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
@@ -214,7 +225,7 @@ public:
 	string name = "Martionatany";
 	Inputs inputs;
 	Vec3 screenOffset = Vec3(0);
-	glm::mat4 perspective = glm::mat4(1);
+	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), perspective = glm::mat4(1);
 
 	Renderer() { }
 
@@ -230,6 +241,11 @@ public:
 	virtual void Start() { }
 	virtual void Update() { }
 	virtual void End() { }
+
+	bool AABBInCam(Vec3 minPos, Vec3 maxPos)
+	{
+		return true;
+	}
 
 	// FBL stands for From Bottom Left.
 	void DrawFBL(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
@@ -269,28 +285,26 @@ public:
 	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
 		glUseProgram(circleShader);
-		glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-		
 		glUniform4f(glGetUniformLocation(circleShader, "posScale"), pos.x, pos.y, pos.z, radius);
-
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		cube.Draw();
 	}
 
-	inline void DrawRightTri(Vec3 pos, Vec2 scale, float rotation, RGBA color)
+	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
 	{
-		glUseProgram(triangleShader);
-		glUniformMatrix4fv(glGetUniformLocation(triangleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+		glUseProgram(coneShader);
+		glUniform3f(glGetUniformLocation(coneShader, "a"), a.x, a.y, a.z);
+		glUniform3f(glGetUniformLocation(coneShader, "b"), b.x, b.y, b.z);
+		glUniform1f(glGetUniformLocation(coneShader, "thickness"), max(thicknessA, thicknessB));
+		glUniform1f(glGetUniformLocation(coneShader, "thicknessA"), thicknessA);
+		glUniform1f(glGetUniformLocation(coneShader, "thicknessB"), thicknessB);
 
-		glUniform1f(glGetUniformLocation(triangleShader, "rotation"), rotation);
-		glUniform2f(glGetUniformLocation(triangleShader, "scale"), scale.x, scale.y);
-
-		
-		glUniform3f(glGetUniformLocation(triangleShader, "position"), pos.x, pos.y, pos.z);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(triangleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-		rightTriangle.Draw();
+		glUniform4f(glGetUniformLocation(coneShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glDisable(GL_CULL_FACE);
+		cube.Draw();
+		glEnable(GL_CULL_FACE);
 	}
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
@@ -298,29 +312,13 @@ public:
 		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - Vec2(PlayerPos())) * 2.f) / Vec2(mainScreen->ScrDim()) * Vec2(ScrDim())), scale, color);
 	}
 
-	void DrawTextured(Texture& texture, uint spriteToDraw, iVec2 pos, RGBA color, iVec2 dimensions = vOne)
+	void DrawTextured(Texture& texture, uint spriteToDraw, Vec2 pivot, Vec2 pos, RGBA color, Vec2 dimensions)
 	{
 		glUseProgram(texturedShader);
-		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
-		{
-			glUniform2f(glGetUniformLocation(texturedShader, "scale"),
-				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
+		glUniform2f(glGetUniformLocation(texturedShader, "scale"),
+			dimensions.x / screenRatio, dimensions.y);
 
-			glUniform2f(glGetUniformLocation(texturedShader, "position"),
-				float(pos.x) / ScrWidth(),
-				float(pos.y) / ScrHeight());
-		}
-		else
-		{
-			// The * 2s are there as the screen goes from -1 to 1 instead of 0 to 1.
-			// The "/ ScrWidth() or ScrHeight()" are to put it in pixel dimensions.
-			glUniform2f(glGetUniformLocation(texturedShader, "scale"),
-				float(dimensions.x * 2) / ScrWidth(), float(dimensions.y * 2) / ScrHeight());
-
-			glUniform2f(glGetUniformLocation(texturedShader, "position"),
-				float((pos.x - PlayerPos().x) * 2) / ScrWidth(),
-				float((pos.y - PlayerPos().y) * 2) / ScrHeight());
-		}
+		glUniform2f(glGetUniformLocation(texturedShader, "position"), pivot.x + pos.x / screenRatio, pivot.y + pos.y);
 
 		float spriteWidth = 1.0f / texture.spriteCount;
 		glUniform2f(glGetUniformLocation(texturedShader, "uvData"),
@@ -332,24 +330,36 @@ public:
 		quad.Draw();
 	}
 
-	inline void DrawLine(Vec3 a, Vec3 b, RGBA color, float thickness)
+	inline void DrawCylinder(Vec3 a, Vec3 b, RGBA color, float thickness)
 	{
-		glUseProgram(lineShader);
-		glUniformMatrix4fv(glGetUniformLocation(lineShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-
-		glUniform3f(glGetUniformLocation(lineShader, "a"), a.x, a.y, a.z);
-		glUniform3f(glGetUniformLocation(lineShader, "b"), b.x, b.y, b.z);
-		glUniform1f(glGetUniformLocation(lineShader, "thickness"), thickness);
+		glUseProgram(cylinderShader);
+		glUniform3f(glGetUniformLocation(cylinderShader, "a"), a.x, a.y, a.z);
+		glUniform3f(glGetUniformLocation(cylinderShader, "b"), b.x, b.y, b.z);
+		glUniform1f(glGetUniformLocation(cylinderShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(lineShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-		quad.Draw();
+		glUniform4f(glGetUniformLocation(cylinderShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glDisable(GL_CULL_FACE);
+		cube.Draw();
+		glEnable(GL_CULL_FACE);
+	}
+
+	inline void DrawCapsule(Vec3 a, Vec3 b, RGBA color, float thickness)
+	{
+		glUseProgram(capsuleShader);
+		glUniform3f(glGetUniformLocation(capsuleShader, "a"), a.x, a.y, a.z);
+		glUniform3f(glGetUniformLocation(capsuleShader, "b"), b.x, b.y, b.z);
+		glUniform1f(glGetUniformLocation(capsuleShader, "thickness"), thickness);
+
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(capsuleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glDisable(GL_CULL_FACE);
+		cube.Draw();
+		glEnable(GL_CULL_FACE);
 	}
 
 	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
-		
-
 		glUniform3f(glGetUniformLocation(shadowShader, "position"), pos.x, pos.y, pos.z);
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
 

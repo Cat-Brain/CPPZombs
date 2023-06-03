@@ -202,8 +202,8 @@ namespace Livestock
 			Kiwi* kiwi = static_cast<Kiwi*>(entity);
 
 			float ratio = kiwi->radius / SQRTTWO_F;
-			game->DrawRightTri(kiwi->pos + kiwi->dir * ratio, vOne * ratio,
-				atan2f(kiwi->dir.y, kiwi->dir.x) - PI_F * 0.5f, kiwi->color);
+			game->DrawCone(kiwi->pos + kiwi->dir * ratio,
+				kiwi->pos + kiwi->dir * (ratio * 2), kiwi->color, ratio);
 
 			kiwi->DUpdate(DUPDATE::DTOCOL);
 		}

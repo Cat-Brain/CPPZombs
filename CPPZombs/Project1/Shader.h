@@ -41,21 +41,21 @@ uint CreateShader(char* vertexShaderSource, char* fragmentShaderSource, string s
 
 }
 
-uint defaultShader, framebufferShader, backgroundShader, lineShader, textShader, rotatedTextShader, shadowShader, shadingShader,
-texturedShader, circleShader, sunShader, triangleShader, chunkShader;
+uint defaultShader, framebufferShader, cylinderShader, capsuleShader, textShader, rotatedTextShader, shadowShader, shadingShader,
+texturedShader, circleShader, sunShader, coneShader, chunkShader;
 
 vector<std::tuple<std::pair<int, int>, uint*, string>> shaders{
 	{{DEFAULT_VERT, DEFAULT_FRAG}, &defaultShader, "Default Shader"},
 	{{FRAMEBUFFER_VERT, FRAMEBUFFER_FRAG}, &framebufferShader, "Framebuffer Shader"},
-	{{BACKGROUND_VERT, BACKGROUND_FRAG}, &backgroundShader, "Background Shader"},
-	{{LINE_VERT, LINE_FRAG}, &lineShader, "Line Shader"},
+	{{LINE_VERT, CYLINDER_FRAG}, &cylinderShader, "Cylinder Shader"},
+	{{LINE_VERT, CAPSULE_FRAG}, &capsuleShader, "Capsule Shader"},
 	{{TEXT_VERT, TEXT_FRAG}, &textShader, "Text Shader"},
 	{{ROTATED_TEXT_VERT, ROTATED_TEXT_FRAG}, &rotatedTextShader, "Rotated Text Shader"},
 	{{SHADOW_VERT, SHADOW_FRAG}, &shadowShader, "Shadow Shader"},
 	{{SHADING_VERT, SHADING_FRAG}, &shadingShader, "Shading Shader"},
 	{{TEXTURED_VERT, TEXTURED_FRAG}, &texturedShader, "Textured Shader"},
-	{{SDF_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader"},
+	{{CIRCLE_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader"},
 	{{SUN_VERT, SUN_FRAG}, &sunShader, "Sun Shader"},
-	{{TRIANGLE_VERT, TRIANGLE_FRAG}, &triangleShader, "Triangle Shader"},
+	{{LINE_VERT, CONE_FRAG}, &coneShader, "Cone Shader"},
 	{{CHUNK_VERT, CHUNK_FRAG}, &chunkShader, "Chunk Shader"},
 };

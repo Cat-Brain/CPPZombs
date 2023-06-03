@@ -28,6 +28,7 @@ public:
 	vector<unique_ptr<Entity>> toAddEntities;
 	vector<Chunk> chunks;
 	vector<Chunk*> renderedChunks;
+	bool createdChunkThisFrame;
 
 	Entities() :
 		vector(0), addedEntity(false), index(0)
@@ -404,6 +405,8 @@ public:
 
 	void Update()
 	{
+		createdChunkThisFrame = false;
+
 		for (int i = 0; i < toDelEntities.size(); i++)
 			Remove(toDelEntities[i]);
 		toDelEntities.clear();
@@ -463,16 +466,41 @@ public:
 
 	void DUpdate()
 	{
-		vector<int> chunkOverlaps = FindCreateChunkOverlaps(game->PlayerPos(), game->CurrentDistToCorner()), chunkOverlaps2 = {};
-		for (int i : chunkOverlaps)
-			if (chunks[i].pos.x + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
-				chunks[i].pos.y + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom &&
-				chunks[i].pos.x <= game->PlayerPos().x + game->zoom * screenRatio &&
-				chunks[i].pos.y <= game->PlayerPos().y + game->zoom &&
-				chunks[i].pos.z <= game->PlayerPos().z + game->screenOffset.z)
-				chunkOverlaps2.push_back(i);
+		std::pair<iVec3, iVec3> minMaxPos = Chunk::MinMaxPos(game->PlayerPos(), game->settings.chunkRenderDist * CHUNK_WIDTH);
+		vector<int> chunkOverlaps = {};
+		for (int i = 0, x = minMaxPos.first.x; x <= minMaxPos.second.x; x++)
+			for (int y = minMaxPos.first.y; y <= minMaxPos.second.y; y++)
+				for (int z = minMaxPos.first.z; z <= minMaxPos.second.z; z++)
+				{
+					if (x * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
+						y * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom &&
+						x * CHUNK_WIDTH <= game->PlayerPos().x + game->zoom * screenRatio &&
+						y * CHUNK_WIDTH <= game->PlayerPos().y + game->zoom &&
+						z * CHUNK_WIDTH <= game->PlayerPos().z + game->screenOffset.z)
+					{
+						int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
+						if (chunk != -1)
+						{
+							chunkOverlaps.push_back(chunk);
+							continue;
+						}
+						else if (!createdChunkThisFrame)
+						{
+							chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+							chunks[chunks.size() - 1].Finalize();
+						}
+					}
+					else
+					{
+						if (ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)) == -1 && !createdChunkThisFrame)
+						{
+							chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+							chunks[chunks.size() - 1].Finalize();
+						}
+					}
+				}
 
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps2, game->PlayerPos(), game->CurrentDistToCorner(), MaskF::IsCorporealNotCollectible);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->CurrentDistToCorner(), MaskF::IsCorporealNotCollectible);
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -491,7 +519,7 @@ public:
 		{
 			entity->DUpdate();
 		}
-
+		// Particles
 		for (int i = 0; i < particles.size(); i++)
 		{
 			particles[i]->Update();
@@ -502,9 +530,9 @@ public:
 				i--;
 			}
 		}
+		// Chunks:
 		glUseProgram(chunkShader);
-		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
-		for (int i : chunkOverlaps2)
+		for (int i : chunkOverlaps)
 			chunks[i].Draw();
 	}
 

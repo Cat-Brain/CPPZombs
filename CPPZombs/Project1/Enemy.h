@@ -123,7 +123,7 @@ namespace Enemies
 		{
 			Entity* entity = NearestFoe(pos, 30.f, this);
 			if (entity == nullptr) return vZero;
-			return Vec3(Normalized2(Vec2(entity->pos - pos)), 0);
+			return Normalized(entity->pos - pos);
 		}
 	};
 
@@ -917,7 +917,7 @@ namespace Enemies
 		{
 			Parent* parent = static_cast<Parent*>(entity);
 			parent->DUpdate(DUPDATE::DTOCOL); // Modify to actually draw now that rendering's been changed.
-			float drawHeight = parent->radius * sqrtf(1.f - 0.5f * 0.5f), drawDist = parent->radius * 0.5f;
+			float drawHeight = parent->radius * sqrtf(0.75f), drawDist = parent->radius * 0.5f;
 			parent->child->Draw(parent->pos + Vec3(0, drawDist, drawHeight));
 			parent->child->Draw(parent->pos + Vec3(-drawDist, 0, drawHeight));
 			parent->child->Draw(parent->pos + Vec3(0, -drawDist, drawHeight));
@@ -965,8 +965,8 @@ namespace Enemies
 			Pouncer* pouncer = static_cast<Pouncer*>(entity);
 
 			float ratio = pouncer->radius / SQRTTWO_F;
-			game->DrawRightTri(pouncer->pos + pouncer->dir * ratio, vOne * ratio,
-				atan2f(pouncer->dir.y, pouncer->dir.x) - PI_F * 0.5f, pouncer->color);
+			game->DrawCone(pouncer->pos + pouncer->dir * ratio,
+				pouncer->pos + pouncer->dir * (ratio * 2), pouncer->color, ratio);
 
 			pouncer->DUpdate(DUPDATE::DTOCOL);
 		}
@@ -1008,6 +1008,9 @@ namespace Enemies
 			tank->DUpdate(DUPDATE::DTOCOL);
 			Vec3 rightDir = RotateRight(tank->dir) * tank->radius, upDir = tank->dir * tank->radius;
 			float treadRadius = tank->radius * 0.33333f;
+			float drawHeight = tank->radius * sqrtf(0.75f), drawDist = tank->radius * 0.5f;
+			Vec3 dir = glm::normalize(glm::cross(up, tank->dir));
+			//Vec3 a = drawHeight * dir + drawDist * tank->dir;
 			game->DrawCircle(tank->pos + rightDir + tank->dir * -0.33333f, tank->projectile->color, treadRadius);
 			game->DrawCircle(tank->pos + rightDir + tank->dir * -0.16666f, tank->projectile->color, treadRadius);
 			game->DrawCircle(tank->pos + rightDir, tank->projectile->color, treadRadius);
@@ -1020,8 +1023,7 @@ namespace Enemies
 			game->DrawCircle(tank->pos - rightDir + tank->dir * 0.16666f, tank->projectile->color, treadRadius);
 			game->DrawCircle(tank->pos - rightDir + tank->dir * 0.33333f, tank->projectile->color, treadRadius);
 
-			game->DrawCircle(tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
-			game->DrawLine(tank->pos, tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
+			game->DrawCylinder(tank->pos, tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
 		}
 	}
 
@@ -1388,7 +1390,7 @@ namespace Enemies
 
 		static float GetPoints()
 		{
-			float time = tTime / 60;
+			float time = tTime2 / 60;
 			if (game->settings.difficulty == DIFFICULTY::EASY)
 				return pow(1.25f, time) + time * 2 - 1;
 			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)

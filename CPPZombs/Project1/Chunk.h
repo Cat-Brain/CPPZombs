@@ -177,11 +177,11 @@ public:
 			int posStart = int(data.size()) - sideCount * 36;
 			GenerateVert(data, posStart, x, y + 1, z, 0, 1, 0, JRGB(r, g, b));
 			posStart += 9;
-			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, JRGB(r, g, b));
 			posStart += 9;
 			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
 			sideCount--;
 		}
 		if (genNY)
@@ -201,11 +201,11 @@ public:
 			int posStart = int(data.size()) - sideCount * 36;
 			GenerateVert(data, posStart, x + 1, y + 1, z, 1, 0, 0, JRGB(r, g, b));
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, JRGB(r, g, b));
 			posStart += 9;
 			GenerateVert(data, posStart, x + 1, y, z + 1, 1, 0, 0, JRGB(r, g, b));
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, JRGB(r, g, b));
 			sideCount--;
 		}
 		if (genNX)

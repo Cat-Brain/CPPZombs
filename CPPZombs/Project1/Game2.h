@@ -60,6 +60,7 @@ Chunk::Chunk(iVec3 pos) :
 		{
 			float tX = float(pos.x + x), tY = float(pos.y + y);
 			float noise = game->planet->worldNoise.GetNoise(tX, tY) * 0.5f + 0.5f;
+			
 			noise = noise * 4.f + 0.5f; // 0.5-4.5
 			if (noise > 3)
 				noise = (noise - 3) * 5 + 3; // 3-10.5
@@ -448,6 +449,8 @@ void Chunk::GenerateMesh()
 
 void Game::Start()
 {
+	tTime2 = 0;
+
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	planet = std::make_unique<Planet>();
@@ -639,7 +642,6 @@ void Game::ApplyLighting()
 
 
 	glUseProgram(shadowShader);
-	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 	glUniform1i(glGetUniformLocation(shadowShader, "colorBand"), int(settings.colorBand));
 	glUniform1i(glGetUniformLocation(shadowShader, "normalMap"), 0);
 	glUniform1i(glGetUniformLocation(shadowShader, "positionMap"), 1);
@@ -709,6 +711,7 @@ void Game::TUpdate()
 	if (game->uiMode == UIMODE::INGAME)
 	{
 		tTime += dTime;
+		tTime2 += dTime;
 		game->inputs.Update(window);
 	}
 	else
@@ -751,12 +754,36 @@ void Game::TUpdate()
 	entities->Update(); // Updates all entities.
 	// Now that the player has moved mark where it is for rendering:
 	Vec3 camPos = screenOffset + player->pos;
-	glm::mat4 transformMat = glm::translate(glm::identity<glm::mat4>(), -camPos);
+	camera = glm::identity<glm::mat4>();
+	camera = glm::rotate(camera, glm::radians(-22.5f), glm::vec3(1.0f, 0.0f, 0.0f));
+	camera = glm::translate(camera, -camPos);
+	cameraInv = glm::inverse(camera);
+	perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);
 
-	perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f) * transformMat;
 	lastPlayerPos = player->pos;
 	glUseProgram(circleShader);
-	glUniform3f(glGetUniformLocation(circleShader, "camPos"), camPos.x, camPos.y, camPos.z);
+	glUniformMatrix4fv(glGetUniformLocation(circleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(circleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
+	glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUseProgram(cylinderShader);
+	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
+	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUniform3f(glGetUniformLocation(cylinderShader, "camPos"), camPos.x, camPos.y, camPos.z);
+	glUseProgram(capsuleShader);
+	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
+	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUniform3f(glGetUniformLocation(capsuleShader, "camPos"), camPos.x, camPos.y, camPos.z);
+	glUseProgram(coneShader);
+	glUniformMatrix4fv(glGetUniformLocation(coneShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(coneShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
+	glUniformMatrix4fv(glGetUniformLocation(coneShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUniform3f(glGetUniformLocation(coneShader, "camPos"), camPos.x, camPos.y, camPos.z);
+	glUseProgram(chunkShader);
+	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
+	glUseProgram(shadowShader);
+	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
 
 
 	glClearColor(0, 0, 0, 1);

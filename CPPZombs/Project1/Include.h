@@ -54,7 +54,7 @@ bool playerAlive = true;
 int totalGamePoints;
 int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
-float tTime = 0.0f;
+float tTime = 0, tTime2 = 0;
 string deathCauseName = "NULL DEATH CAUSE";
 
 // Very important!

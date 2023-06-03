@@ -94,11 +94,14 @@ public:
 	{
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / (3.f * width), scale2 = scale * 0.2f;
+		float tScale = 0.66666f / width, tScale2 = tScale * 0.2f;
 		iVec2 offset = vZeroI2 - ScrDim();
+		Vec2 tOffset = -vOne;
 		if (isOpen)
 		{
 			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale * height, scale * width));
 			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
+			game->DrawFBL(Vec2(0, currentIndex * scale * 2.f) - Vec2(ScrDim()), RGBA(0, 0, 0, 127), Vec2(scale));
 			if (isHovering)
 			{
 				iVec2 rPos = game->inputs.screenMousePosition / scale;
@@ -115,8 +118,8 @@ public:
 				{
 					if ((*this)[i].count == 0) continue;
 					
-					game->DrawTextured(spriteSheet, (*this)[i]->intType, offset + iVec2(static_cast<int>(scale * y * 2), static_cast<int>(scale * x * 2)),
-						i == currentIndex || i == currentSelected ? RGBA() : (*this)[i]->color, Vec2(scale));
+					game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(tScale * y, tScale * x),
+						(*this)[i]->color, Vec2(tScale));
 				}
 			return;
 		}
@@ -125,8 +128,8 @@ public:
 		{
 			if ((*this)[i].count == 0) continue;
 
-			game->DrawTextured(spriteSheet, (*this)[i]->intType, offset + iVec2(0, static_cast<int>(scale * i * 2)),
-				i == currentIndex ? RGBA() : (*this)[i]->color, Vec2(scale, scale));
+			game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(0, tScale * i),
+				i == currentIndex ? RGBA() : (*this)[i]->color, Vec2(tScale));
 			font.Render(" " + (*this)[i]->name + "  " + to_string((*this)[i].count) + "  " + (*this)[i]->typeName,
 				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i]->color);
 		}
@@ -652,9 +655,10 @@ namespace DUpdates
 
 		Vec3 dir = Normalized(player->inputs.mousePosition3);
 		float ratio = player->radius / SQRTTWO_F;
+		game->DrawCone(player->pos + dir * ratio,
+			player->pos + dir * (ratio * 2), player->Color(), ratio);
+		
 		player->DUpdate(DUPDATE::DTOCOL);
-		game->DrawRightTri(player->pos + dir * ratio, vOne * ratio,
-			atan2f(dir.y, dir.x) - PI_F * 0.5f, player->Color());
 	}
 
 	void TurretDU(Entity* entity)

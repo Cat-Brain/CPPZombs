@@ -200,7 +200,6 @@ public:
 	{
 		pos = FromTo(pos, desiredPos, moveSpeed * game->dTime);
 
-		game->DrawCircle(pos, color, thickness);
-		game->DrawLine(pos, parent->pos, color, thickness);
+		game->DrawCapsule(pos, parent->pos, color, thickness);
 	}
 };

@@ -6,10 +6,49 @@ layout (location = 2) out vec4 position;
 layout (depth_less) out float gl_FragDepth;
 
 uniform mat4 camera, cameraInv, perspective;
-uniform vec4 color, posScale;
+uniform vec4 color;
+uniform vec3 a, b, camPos;
+uniform float thickness;
 
 in vec3 tPos;
 
+
+float capIntersect( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, in float ra )
+{
+    vec3  ba = pb - pa;
+    vec3  oa = ro - pa;
+    float baba = dot(ba,ba);
+    float bard = dot(ba,rd);
+    float baoa = dot(ba,oa);
+    float rdoa = dot(rd,oa);
+    float oaoa = dot(oa,oa);
+    float a = baba      - bard*bard;
+    float b = baba*rdoa - baoa*bard;
+    float c = baba*oaoa - baoa*baoa - ra*ra*baba;
+    float h = b*b - a*c;
+    if( h >= 0.0 )
+    {
+        float t = (-b-sqrt(h))/a;
+        float y = baoa + t*bard;
+        // body
+        if( y>0.0 && y<baba ) return t;
+        // caps
+        vec3 oc = (y <= 0.0) ? oa : ro - pb;
+        b = dot(rd,oc);
+        c = dot(oc,oc) - ra*ra;
+        h = b*b - c;
+        if( h>0.0 ) return -b - sqrt(h);
+    }
+    return -1.0;
+}
+
+vec3 capNormal( in vec3 pos, in vec3 a, in vec3 b, in float r )
+{
+    vec3  ba = b - a;
+    vec3  pa = pos - a;
+    float h = clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0);
+    return (pa - h*ba)/r;
+}
 
 // simplified version of joeedh's https://www.shadertoy.com/view/Md3GWf
 // see also https://www.shadertoy.com/view/MdtGD7
@@ -40,27 +79,17 @@ float mask(vec2 p) {
     // --- indeed, is a tone mapping ( equivalent to do the reciprocal on the image, see tests )
     // returned value in [0,37.2] , but < 0.57 with P=50% 
     return  (pow(f, 150.) + 1.3*f ) / 2.3; // <.98 : ~ f/2, P=50%  >.98 : ~f^150, P=50%
-}
+} 
 
 void main()
 {
 	vec3 dir = normalize(vec3(camera * vec4(tPos, 1.)));
-	vec3 pos = vec3(camera * vec4(posScale.xyz, 1.));
-	float b = 2 * dot(-pos, dir);
-	float c = dot(pos, pos) - posScale.w * posScale.w;
-	float d = b * b - 4 * c; // Discriminant from quadratic formula.
-
-	if (d <= 0) discard;
-	if (color.a != 1. && color.a < mask(gl_FragCoord.xy)) discard;
-
-	float s = sqrt(d);
-	float dstToSphereNear = max(0, (-s - b) * 0.5);
-
-
-	FragColor = color;
+	float dist = capIntersect(camPos, dir, a, b, thickness);
+	if (dist < 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 	
-	position = vec4(dir * dstToSphereNear, 1.);
-	normal = vec4(normalize(position.xyz - pos), color.a);
+	FragColor = color;
+	position = vec4(dir * dist, 1.);
+	normal = vec4(capNormal(position.xyz, a, b, thickness), 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
 	position = cameraInv * position;
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;

@@ -1,17 +1,16 @@
 #version 330 core
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec3 aPos;
 
-uniform mat4 perspective;
+uniform mat4 camera, perspective;
 uniform vec3 a, b;
 uniform float thickness;
-out vec2 dir;
-out float dist;
+out vec3 tPos;
 
 void main()
 {
-	dir = b.xy - a.xy;
-	dir = normalize(vec2(dir.y, -dir.x));
-	vec3 pos = a + aPos.x * (b - a) + (aPos.y * 2 - 1) * thickness * vec3(dir, 0.);
-	gl_Position = perspective * vec4(pos, 1.);
-	dist = aPos.y * 2. - 1.;
+	vec3 weights = aPos * 0.5 + vec3(0.5);
+	vec3 invWeights = vec3(1) - weights;
+	vec3 offset = sign(b - a) * thickness;
+	tPos = weights * (a - offset) + invWeights * (b + offset);
+	gl_Position = perspective * camera * vec4(tPos, 1.0);
 } 
