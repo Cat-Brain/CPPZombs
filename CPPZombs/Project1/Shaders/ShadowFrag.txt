@@ -6,12 +6,12 @@ uniform sampler2D normalMap, positionMap;
 uniform vec3 position, color;
 uniform float range;
 uniform bool colorBand;
-
-in vec2 screenPos;
+uniform vec2 screenDim;
 
 
 void main()
 {
+	vec2 screenPos = gl_FragCoord.xy / screenDim;
 	vec3 normal = texture(normalMap, screenPos).xyz;
 	vec3 pos =  texture(positionMap, screenPos).xyz;
 	float distance = length(pos - position);

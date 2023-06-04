@@ -1,22 +1,36 @@
 #include "Vec.h"
 
-struct Key
+struct KeyPress
 {
 	bool pressed = false, held = false, released = false;
 };
 
+struct Key : public KeyPress
+{
+	int keycode = -1;
+	Key(int keycode = -1) :
+		keycode(keycode) {}
+};
+
 struct Inputs
 {
-	Key up, left, down, right, // Movement keys
-		crouch, inventory, // Player interaction buttons
-		enter, c, q, e, escape, space, shift, // Technical buttons and dev buttons
-		leftMouse, rightMouse, middleMouse, // Mouse buttons
+	Key up = Key(GLFW_KEY_W), left = Key(GLFW_KEY_A), down = Key(GLFW_KEY_S), right = Key(GLFW_KEY_D), jump = Key(GLFW_KEY_SPACE), // Movement keys
+		primary = Key(GLFW_MOUSE_BUTTON_LEFT), secondary = Key(GLFW_MOUSE_BUTTON_RIGHT), utility = Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
+		crouch = Key(GLFW_KEY_Z), inventory = Key(GLFW_KEY_TAB), // Player interaction buttons
+		enter = Key(GLFW_KEY_ENTER), hideUI = Key(GLFW_KEY_C), zoomIn = Key(GLFW_KEY_Q), zoomOut = Key(GLFW_KEY_E), pause = Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
 		comma, period, slash, phase; // Command keys.
 	int mouseScroll = 0;
-	Vec2 mousePosition = vZero, screenMousePosition = vZero;
+	Vec2 mousePosition = vZero2, screenMousePosition = vZero2, mouseOffset = vZero2;
 	Vec3 mousePosition3 = vZero; // Just mousePosition but with a 0 for the z value.
+	int bindingButton = -1;
+
 
 	Inputs() = default;
+
+	void SetKey(int keycode)
+	{
+
+	}
 
 	static void ResetKey(Key& key)
 	{
@@ -25,57 +39,54 @@ struct Inputs
 		key.released = false;
 	}
 
-	static void UpdateKey(GLFWwindow* window, Key& key, int keycode)
+	static void UpdateKey(GLFWwindow* window, Key& key)
 	{
-		bool held = glfwGetKey(window, keycode) == GLFW_PRESS;
+		bool held = glfwGetKey(window, key.keycode) == GLFW_PRESS;
 		key.pressed = !key.held && held;
 		key.released = key.held && !held;
 		key.held = held;
 	}
 
-	static void UpdateKey2(GLFWwindow* window, Key& key, int keycode)
+	static void UpdateKey2(GLFWwindow* window, Key& key)
 	{
-		bool held = glfwGetKey(window, keycode) == GLFW_PRESS;
+		bool held = glfwGetKey(window, key.keycode) == GLFW_PRESS;
 		key.pressed = !key.held && held;
 		key.released = key.held && !held;
 		key.held |= held;
 	}
 
-	static void UpdateMouse(GLFWwindow* window, Key& key, int keycode)
+	static void UpdateMouse(GLFWwindow* window, Key& key)
 	{
-		bool held = glfwGetMouseButton(window, keycode) == GLFW_PRESS;
+		bool held = glfwGetMouseButton(window, key.keycode) == GLFW_PRESS;
 		key.pressed = !key.held && held;
 		key.released = key.held && !held;
 		key.held = held;
 	}
 
-	Vec3 MoveDir()
-	{
-		return Normalized(Vec3(float(right.held) - float(left.held), float(up.held) - float(down.held), 0));
-	}
+	Vec3 MoveDir();
 
 	void Update(GLFWwindow* window)
 	{
-		UpdateKey(window, up, GLFW_KEY_W);
-		UpdateKey(window, left, GLFW_KEY_A);
-		UpdateKey(window, down, GLFW_KEY_S);
-		UpdateKey(window, right, GLFW_KEY_D);
+		UpdateKey(window, up);
+		UpdateKey(window, left);
+		UpdateKey(window, down);
+		UpdateKey(window, right);
 
-		UpdateKey(window, crouch, GLFW_KEY_Z);
-		UpdateKey(window, inventory, GLFW_KEY_TAB);
+		UpdateKey(window, crouch);
+		UpdateKey(window, inventory);
 
-		UpdateKey(window, enter, GLFW_KEY_ENTER);
-		UpdateKey(window, c, GLFW_KEY_C);
-		UpdateKey(window, q, GLFW_KEY_Q);
-		UpdateKey(window, e, GLFW_KEY_E);
-		UpdateKey(window, escape, GLFW_KEY_ESCAPE);
-		UpdateKey(window, space, GLFW_KEY_SPACE);
-		UpdateKey(window, shift, GLFW_KEY_LEFT_SHIFT);
+		UpdateKey(window, enter);
+		UpdateKey(window, hideUI);
+		UpdateKey(window, zoomIn);
+		UpdateKey(window, zoomOut);
+		UpdateKey(window, pause);
+		UpdateKey(window, jump);
+		UpdateKey(window, utility);
 
-		UpdateKey(window, comma, GLFW_KEY_COMMA);
-		UpdateKey(window, period, GLFW_KEY_PERIOD);
-		UpdateKey(window, slash, GLFW_KEY_SLASH);
-		UpdateKey(window, phase, GLFW_KEY_RIGHT_SHIFT);
+		UpdateKey(window, comma);
+		UpdateKey(window, period);
+		UpdateKey(window, slash);
+		UpdateKey(window, phase);
 	}
 
 	void UpdateMouse(GLFWwindow* window, float zoom)
@@ -87,13 +98,14 @@ struct Inputs
 		xPos *= zoom * 2;
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
 		yPos *= zoom * 2;
+		Vec2 oldMousePosition = mousePosition;
 		mousePosition.x = static_cast<float>(xPos - zoom * screenRatio);
 		mousePosition.y = static_cast<float>(yPos - zoom);
+		mouseOffset = mousePosition - oldMousePosition;
 		mousePosition3 = Vec3(mousePosition, 0);
 		
-		UpdateMouse(window, leftMouse, GLFW_MOUSE_BUTTON_LEFT);
-		UpdateMouse(window, rightMouse, GLFW_MOUSE_BUTTON_RIGHT);
-		UpdateMouse(window, middleMouse, GLFW_MOUSE_BUTTON_MIDDLE);
+		UpdateMouse(window, primary);
+		UpdateMouse(window, secondary);
 	}
 };
 

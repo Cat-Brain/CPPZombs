@@ -155,6 +155,10 @@ public:
 	vector<TimedEvent> events{};
 	float iTime = 0, sTime = 0; // Invincibility time, if <= 0 takes damage, else doesn't.
 	Inputs inputs;
+	float yaw, pitch;
+	Vec3 camDir = vZero, // The direction that the camera is facing.
+		moveDir = vZero, // camDir but without the verticality.
+		rightDir = vZero; // moveDir but rotated 90 degrees to the right.
 
 	Player(bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight =  4, float vacDist = 6, float vacSpeed = 16,
@@ -376,14 +380,14 @@ Player soldier = Player(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f
 		Resources::Eggs::kiwiEgg.Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
 
-Player flicker = Player(false, true, 0.25f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
+Player flicker = Player(false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
 	100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
 		Resources::Seeds::cheeseVineSeed.Clone(3), Resources::Seeds::quartzVineSeed.Clone(2), Resources::Seeds::rockShrubSeed.Clone(3),
 		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
-Engineer engineer = Engineer(2.f, 3.f, false, true, 0.49f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
+Engineer engineer = Engineer(2.f, 3.f, false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
 	100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
 		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
@@ -429,7 +433,11 @@ namespace OnDeaths
 {
 	void PlayerOD(Entity* entity, Entity* damageDealer)
 	{
-		entity->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
+		Player* player = static_cast<Player*>(entity);
+
+		game->cursorUnlockCount = 1;
+
+		player->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
 		playerAlive = false;
 		if (damageDealer != nullptr)
 			deathCauseName = damageDealer->name;
@@ -454,7 +462,16 @@ void PlayerInventory::Update(bool shouldScroll)
 	if (game->inputs.inventory.pressed)
 	{
 		currentSelected = -1;
-		isOpen ^= true;
+		if (isOpen)
+		{
+			isOpen = false;
+			game->cursorUnlockCount--;
+		}
+		else
+		{
+			isOpen = true;
+			game->cursorUnlockCount++;
+		}
 	}
 	if (shouldScroll)
 		currentIndex = JMod(currentIndex + game->inputs.mouseScroll, int(width));
@@ -464,7 +481,7 @@ void PlayerInventory::Update(bool shouldScroll)
 		game->inputs.screenMousePosition.x < scale * height && game->inputs.screenMousePosition.y < scale * width)
 	{
 		isHovering = true;
-		if (game->inputs.leftMouse.pressed)
+		if (game->inputs.primary.pressed)
 		{
 			iVec2 rPos = game->inputs.screenMousePosition / scale;
 
@@ -481,11 +498,17 @@ void PlayerInventory::Update(bool shouldScroll)
 				currentSelected = -1;
 			}
 		}
-		game->player->inputs.leftMouse.pressed = false;
-		game->player->inputs.leftMouse.held = false;
-		game->player->inputs.leftMouse.released = true;
+		game->player->inputs.primary.pressed = false;
+		game->player->inputs.primary.held = false;
+		game->player->inputs.primary.released = true;
 	}
-	else if (game->inputs.leftMouse.pressed) currentSelected = -1;
+	else if (game->inputs.primary.pressed) currentSelected = -1;
+}
+
+Vec3 Inputs::MoveDir()
+{
+	return Normalized((float(right.held) - float(left.held)) * game->player->rightDir +
+		(float(up.held) - float(down.held)) * game->player->moveDir);
 }
 
 namespace Updates
@@ -522,13 +545,24 @@ namespace Updates
 			player->currentMenuedEntity->uiActive = true;
 		}
 
+		Vec2 mouseOffset = game->inputs.mouseOffset * game->settings.sensitivity;
+		player->yaw -= mouseOffset.x;
+		player->pitch = ClampF(player->pitch + mouseOffset.y, -89, 89);
+
+		player->camDir.x = cos(glm::radians(player->yaw)) * cos(glm::radians(player->pitch));
+		player->camDir.y = sin(glm::radians(player->yaw)) * cos(glm::radians(player->pitch));
+		player->camDir.z = sin(glm::radians(player->pitch));
+		player->camDir = glm::normalize(player->camDir);
+		player->moveDir = glm::normalize(Vec3(Vec2(player->camDir), 0));
+		player->rightDir = Vec3(player->moveDir.y, -player->moveDir.x, 0);
+
 		if (player->sTime <= 0)
 		{
 			pMovements[UnEnum(player->movement)](player); // This handles all of the locomotion of the player.
 
 			ItemInstance currentShootingItem = player->items.GetCurrentItem();
 
-			if (player->inputs.middleMouse.released && player->heldEntity != nullptr)
+			/*if (player->inputs.middleMouse.released && player->heldEntity != nullptr)
 			{
 				player->heldEntity->observers.erase(std::find(player->heldEntity->observers.begin(), player->heldEntity->observers.end(), player));
 				player->heldEntity = nullptr;
@@ -546,13 +580,13 @@ namespace Updates
 				player->heldEntity = hitEntity;
 				player->heldEntity->observers.push_back(player);
 			}
-			else // Do primaries, secondaries, and/or utilities.
+			else*/ // Do primaries, secondaries, and/or utilities.
 			{
-				if (player->inputs.leftMouse.held && tTime - player->lastPrimary >= player->primaryTime && primaries[UnEnum(player->primary)](player))
+				if (player->inputs.primary.held && tTime - player->lastPrimary >= player->primaryTime && primaries[UnEnum(player->primary)](player))
 					player->lastPrimary = tTime;
-				if (player->inputs.rightMouse.held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
+				if (player->inputs.secondary.held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
 					player->lastSecondary = tTime;
-				if (player->inputs.shift.held && tTime - player->lastUtility >= player->utilityTime && utilities[UnEnum(player->utility)](player))
+				if (player->inputs.utility.held && tTime - player->lastUtility >= player->utilityTime && utilities[UnEnum(player->utility)](player))
 					player->lastUtility = tTime;
 			}
 
@@ -619,7 +653,7 @@ namespace Updates
 	void EngineerU(Entity* entity)
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
-		engineer->shouldScroll = !engineer->inputs.shift.held;
+		engineer->shouldScroll = !engineer->inputs.utility.held;
 		engineer->shouldPickup = false;
 		engineer->Update(UPDATE::PLAYER);
 
@@ -651,14 +685,7 @@ namespace DUpdates
 {
 	void PlayerDU(Entity* entity)
 	{
-		Player* player = static_cast<Player*>(entity);
-
-		Vec3 dir = Normalized(player->inputs.mousePosition3);
-		float ratio = player->radius / SQRTTWO_F;
-		game->DrawCone(player->pos + dir * ratio,
-			player->pos + dir * (ratio * 2), player->Color(), ratio);
-		
-		player->DUpdate(DUPDATE::DTOCOL);
+		// Lol used to do something and probably should some day.
 	}
 
 	void TurretDU(Entity* entity)
@@ -705,9 +732,9 @@ namespace UIUpdates
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
 		if (!game->showUI) return;
-		engineer->shouldRenderInventory = !engineer->inputs.shift.held;
+		engineer->shouldRenderInventory = !engineer->inputs.utility.held;
 		engineer->UIUpdate(UIUPDATE::PLAYER);
-		if (engineer->inputs.shift.held)
+		if (engineer->inputs.utility.held)
 		{
 			float scale = ScrHeight() / (3.0f * max(8, int(UnEnum(ENGMODE::COUNT)))), scale2 = scale / 5.0f;
 			for (int i = 0; i < UnEnum(ENGMODE::COUNT); i++)
@@ -725,7 +752,7 @@ namespace PMovements
 	void Default(Player* player)
 	{
 		player->vel = TryAdd2(player->vel, player->inputs.MoveDir() * game->dTime * player->moveSpeed, player->maxSpeed);
-		if (player->inputs.space.pressed && tTime - player->lastJump > 0.25f &&
+		if (player->inputs.jump.pressed && tTime - player->lastJump > 0.25f &&
 			player->Grounded())
 		{
 			player->vel.z += 7;
@@ -741,7 +768,7 @@ namespace PMovements
 		{
 			engineer->currentJetpackFuel = engineer->jetpackFuel;
 		}
-		if (player->inputs.space.held && engineer->currentJetpackFuel > 0)
+		if (player->inputs.jump.held && engineer->currentJetpackFuel > 0)
 		{
 			player->vel.z += (game->planet->gravity + engineer->jetpackForce) * game->dTime;
 			engineer->currentJetpackFuel -= game->dTime;
@@ -756,7 +783,8 @@ namespace Primaries
 		ItemInstance currentShootingItem = player->items.GetCurrentItem();
 		if (currentShootingItem == dItem->Clone() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
 			return false;
-		player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], player->pos, player->inputs.mousePosition3, player, player->name, nullptr, 0);
+		ItemInstance& currentItem = player->items[player->items.currentIndex];
+		currentItem->Use(currentItem, player->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
 		player->items.RemoveIfEmpty(player->items.currentIndex);
 		player->lastPrimary = tTime + player->primaryTime;
 		return false;
@@ -767,14 +795,16 @@ namespace Primaries
 		ItemInstance currentShootingItem = player->items.GetCurrentItem();
 		if (currentShootingItem == dItem->Clone() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
 			return false;
-		player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], player->pos, player->inputs.mousePosition3, player, player->name, nullptr, 0);
+
+		ItemInstance& currentItem = player->items[player->items.currentIndex];
+		currentItem->Use(currentItem, player->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
 		player->lastPrimary = tTime + player->primaryTime;
 		Engineer* engineer = static_cast<Engineer*>(player);
 		if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
 		for (SpringCircle* circle : engineer->drones)
 			if (!game->entities->OverlapsTile(circle->pos, currentShootingItem->radius))
 			{
-				player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], circle->pos, player->inputs.mousePosition3, player, player->name, nullptr, 0);
+				player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], circle->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
 				if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED) return false;
 			}
 		return false;
@@ -790,10 +820,12 @@ namespace Secondaries
 {
 	bool GrenadeThrow(Player* player)
 	{
-		game->entities->push_back(grenade->Clone(player->pos, player->inputs.mousePosition3, player));
+#define GRENADE_THROW_SPEED 10.f
+		game->entities->push_back(grenade->Clone(player->pos, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
 
+#define TORNADO_SPIN_RADIUS 1.f
 	bool TornadoSpinUndo(void* entity, TimedEvent* mEvent)
 	{
 		Player* player = static_cast<Player*>(entity);
@@ -804,7 +836,7 @@ namespace Secondaries
 		}
 		else if (roundf(tTime * 5) != roundf((tTime - game->dTime) * 5))
 		{
-			vector<Entity*> entities = game->entities->FindOverlaps(player->pos, 3.f, MaskF::IsNonAlly, player);
+			vector<Entity*> entities = game->entities->FindOverlaps(player->pos, TORNADO_SPIN_RADIUS, MaskF::IsNonAlly, player);
 			for (Entity* e : entities)
 				e->statuses.push_back(StatusEffect(e, STATUS::FIRE, 1));
 		}
@@ -816,9 +848,9 @@ namespace Secondaries
 		player->sTime += 0.5f;
 		player->iTime++;
 		player->vUpdate = VUPDATE::ENTITY;
-		player->vel = TryAdd2(player->vel, Normalized(player->inputs.mousePosition3) * 5.f, 20.f);
+		player->vel = TryAdd2(player->vel, player->camDir * 5.f, 20.f);
 		player->events.push_back(TimedEvent(TornadoSpinUndo));
-		game->entities->particles.push_back(make_unique<TrackCircle>(player, 3.f, RGBA(255, 127, 0, 127), 1.f));
+		game->screenShake += 0.25f;
 		return true;
 	}
 
@@ -829,7 +861,7 @@ namespace Secondaries
 		{
 		case ENGMODE::ROVER:
 		{
-			game->entities->push_back(rover->Clone(engineer->pos, game->inputs.mousePosition3, engineer));
+			game->entities->push_back(rover->Clone(engineer->pos, engineer->camDir, engineer));
 			break;
 		}
 		case ENGMODE::DRONE:
@@ -846,7 +878,7 @@ namespace Secondaries
 		}
 		case ENGMODE::TURRET:
 		{
-			game->entities->push_back(turret->Clone(engineer->pos, player->inputs.mousePosition3, engineer));
+			game->entities->push_back(turret->Clone(engineer->pos, engineer->camDir, engineer));
 			break;
 		}
 		}
@@ -875,7 +907,7 @@ namespace Utilities
 #define MIGHTY_SHOVE_SPEED -200.f
 #define MIGHTY_SHOVE_MAX_SPEED 15.f
 		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
-		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0)));
+		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0, 127)));
 		player->iTime++;
 		player->vel.z += 10;
 		// Find all nearby entities to light them ablaze, including the player (that's why nullptr instead of player):

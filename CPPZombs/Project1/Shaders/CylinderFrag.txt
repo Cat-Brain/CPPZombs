@@ -13,49 +13,30 @@ uniform float thickness;
 in vec3 tPos;
 
 
-vec4 iCylinder( in vec3 ro, in vec3 rd, in vec3 pa, in vec3 pb, float ra ) 
+vec4 cylIntersect( in vec3 ro, in vec3 rd, in vec3 a, in vec3 b, float ra )
 {
-    vec3  ba = pb - pa;
-    vec3  oc = ro - pa;
-
+    vec3  ba = b  - a;
+    vec3  oc = ro - a;
     float baba = dot(ba,ba);
     float bard = dot(ba,rd);
     float baoc = dot(ba,oc);
-    
     float k2 = baba            - bard*bard;
     float k1 = baba*dot(oc,rd) - baoc*bard;
     float k0 = baba*dot(oc,oc) - baoc*baoc - ra*ra*baba;
-    
-    /*
-    // in case you really need to handle parallel raycasts
-    if( k2==0.0 )
-    {
-        float ta = -dot(ro-pa,ba)/bard;
-        float tb = ta + baba/bard;
-        
-        vec4 pt = (bard>0.0) ? vec4(pa,-ta) : vec4(pb,tb);
-        
-        vec3 q = ro + rd*abs(pt.w) - pt.xyz;
-        if( dot(q,q)>ra*ra ) return vec4(-1.0);
-        
-        return vec4( abs(pt.w), sign(pt.w)*ba/sqrt(baba) );
-    }
-    */
-    
     float h = k1*k1 - k2*k0;
-    if( h<0.0 ) return vec4(-1.0);
+    if( h<0.0 ) return vec4(-1.0);//no intersection
     h = sqrt(h);
     float t = (-k1-h)/k2;
-
     // body
     float y = baoc + t*bard;
     if( y>0.0 && y<baba ) return vec4( t, (oc+t*rd - ba*y/baba)/ra );
-    
     // caps
     t = ( ((y<0.0) ? 0.0 : baba) - baoc)/bard;
-    if( abs(k1+k2*t)<h ) return vec4( t, ba*sign(y)/sqrt(baba) );
-
-    return vec4(-1.0);
+    if( abs(k1+k2*t)<h )
+    {
+        return vec4( t, ba*sign(y)/sqrt(baba) );
+    }
+    return vec4(-1.0);//no intersection
 }
 
 // simplified version of joeedh's https://www.shadertoy.com/view/Md3GWf
@@ -92,11 +73,12 @@ float mask(vec2 p) {
 void main()
 {
 	vec3 dir = normalize(tPos - camPos);
-	vec4 tNor = iCylinder(camPos, dir, a, b, thickness);
+	vec4 tNor = cylIntersect(camPos, dir, a, b, thickness);
 	if (tNor.x < 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 	
-	position = vec4(dir * tNor.x, 1.);
 	FragColor = color;
+    dir = normalize(vec3(camera * vec4(tPos, 1.)));
+	position = vec4(dir * tNor.x, 1.);
 	normal = vec4(tNor.yzw, 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
 	position = cameraInv * position;

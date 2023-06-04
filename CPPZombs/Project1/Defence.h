@@ -466,24 +466,24 @@ namespace Plants
 namespace Resources::Seeds
 {
 	// Shrubs
-	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius);
-	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius);
-	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius);
+	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius, false, true, true);
+	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
+	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
 	CorruptOnKill rubyShrubSeed = CorruptOnKill(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Corruption Seed", 2, Plants::Shrubs::rubyShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius);
 	CorruptOnKill emeraldShrubSeed = CorruptOnKill(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Corruption Seed", 2, Plants::Shrubs::emeraldShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius);
-	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius);
-	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius);
-	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius);
-	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius);
-	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius);
-	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius);
+	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
+	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
+	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
+	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
+	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
+	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
 
 	// Vines
-	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius);
-	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius);
+	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
+	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius, false, true, true);
 	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
-	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius);
-	PlacedOnLanding quartzVineSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_VINE_SEED, &Plants::Vines::quartzVine, "Quartz vine seed", "Seed", 4, Plants::Vines::quartzVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::quartzVine.babyRadius);
+	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius, false, true, true);
+	PlacedOnLanding quartzVineSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_VINE_SEED, &Plants::Vines::quartzVine, "Quartz vine seed", "Seed", 4, Plants::Vines::quartzVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::quartzVine.babyRadius, false, true, true);
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,

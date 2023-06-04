@@ -1005,7 +1005,6 @@ namespace Enemies
 		void TankDU(Entity* entity)
 		{
 			Tank* tank = static_cast<Tank*>(entity);
-			tank->DUpdate(DUPDATE::DTOCOL);
 			Vec3 rightDir = RotateRight(tank->dir) * tank->radius, upDir = tank->dir * tank->radius;
 			float treadRadius = tank->radius * 0.33333f;
 			float drawHeight = tank->radius * sqrtf(0.75f), drawDist = tank->radius * 0.5f;
@@ -1024,6 +1023,8 @@ namespace Enemies
 			game->DrawCircle(tank->pos - rightDir + tank->dir * 0.33333f, tank->projectile->color, treadRadius);
 
 			game->DrawCylinder(tank->pos, tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
+
+			tank->DUpdate(DUPDATE::DTOCOL);
 		}
 	}
 
@@ -1511,7 +1512,7 @@ namespace Enemies
 
 	Types faction1Spawns
 	{
-		{&walker, &tanker, &tinyTank},
+		{/*&walker, &tanker, */&tinyTank},
 		{&deceiver, &exploder, &vacuumer, &pusher},
 		{&parent, &megaTanker},
 		{&hyperSpeedster, &gigaExploder}

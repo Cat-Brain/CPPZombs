@@ -83,11 +83,12 @@ float mask(vec2 p) {
 
 void main()
 {
-	vec3 dir = normalize(vec3(camera * vec4(tPos, 1.)));
+	vec3 dir = normalize(tPos - camPos);
 	float dist = capIntersect(camPos, dir, a, b, thickness);
 	if (dist < 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 	
 	FragColor = color;
+    dir = normalize(vec3(camera * vec4(tPos, 1.)));
 	position = vec4(dir * dist, 1.);
 	normal = vec4(capNormal(position.xyz, a, b, thickness), 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);

@@ -95,6 +95,7 @@ void main()
 	if (tNor.x < 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 	
 	FragColor = color;
+    dir = normalize(vec3(camera * vec4(tPos, 1.)));
 	position = vec4(dir * tNor.x, 1.);
 	normal = vec4(tNor.yzw, 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);

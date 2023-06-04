@@ -26,7 +26,7 @@ public:
 	float timeStartBossPrep = 0.0f;
 	float screenShake = 0.0f;
 	Vec3 lastPlayerPos = vZero;
-	FastNoiseLite screenShkX, screenShkY;
+	FastNoiseLite screenShkX, screenShkY, screenShkZ;
 
 	Game() : entities(nullptr), player(nullptr) { }
 
@@ -62,9 +62,15 @@ bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(
 	if (CheckInputSquareHover(minPos, scale, text))
 	{
 		font.Render(text, minPos * 2.f - Vec2(ScrDim()), scale * 2, color2);
-		return game->inputs.leftMouse.pressed;
+		return game->inputs.primary.pressed;
 	}
 	else
 		font.Render(text, { minPos * 2.f - Vec2(ScrDim()) }, scale * 2, color1);
 	return false;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (game->inputs.bindingButton != -1 && action == GLFW_PRESS)
+		game->inputs.SetKey(key);
 }

@@ -114,13 +114,14 @@ public:
 	float radius;
 	bool corporeal; // Is this corporeal when shot? Ignored by collectible which is never corporeal.
 	bool shouldCollide; // Should this as a projectile be destroyed upon contact?
+	bool collideTerrain;
 	float mass;
 	int health;
 
 	Item(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		type(type), itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), name(name), typeName(typeName), intType(intType), color(color), damage(damage),
-		range(range), useTime(useTime), speed(speed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), mass(mass), health(health)
+		range(range), useTime(useTime), speed(speed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), collideTerrain(collideTerrain), mass(mass), health(health)
 	{
 		items[UnEnum(type)] = this;
 	}
@@ -171,8 +172,8 @@ class GoneOnLandItem : public Item
 {
 public:
 	GoneOnLandItem(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, float mass = 1, int health = 1) :
-		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, mass, health)
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
@@ -298,6 +299,6 @@ namespace Resources
 	Item copper = Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 10);
 	GoneOnLandItem iron = GoneOnLandItem(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 120, 15, 0.125f);
 	Item rock = Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 60, 5);
-	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, 25, 5);
-	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, 1.f, 1);
+	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, false, 25, 5);
+	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, false, 1.f, 1);
 }

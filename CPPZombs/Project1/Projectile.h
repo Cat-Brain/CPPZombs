@@ -9,11 +9,12 @@ public:
     float begin; // When it was created.
     int callType = 0; // Internal value for what type of death this projectile had.
     bool shouldCollide; // Should this collide with objects.
+    bool collideTerrain;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
-        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, Allegiance allegiance = 0) :
+        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
         Entity(vZero, radius, color, mass, maxHealth, health, name, allegiance),
-        duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide)
+        duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
     {
         update = UPDATE::PROJECTILE;
         isProjectile = true;
@@ -60,19 +61,37 @@ namespace Updates
             return projectile->MovePos();
 
         int result;
-
-        if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+        if (projectile->collideTerrain)
         {
-            projectile->callType = 1 + int(result == 3);
-            projectile->DestroySelf(nullptr);
-            return;
+            if ((result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+            {
+                projectile->callType = 1 + int(result == 3);
+                projectile->DestroySelf(nullptr);
+                return;
+            }
+            Vec3 oldPos = projectile->pos;
+            projectile->MovePos();
+            if (oldPos != projectile->pos && (result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+            {
+                projectile->callType = 1 + int(result == 3);
+                projectile->DestroySelf(nullptr);
+            }
         }
-        Vec3 oldPos = projectile->pos;
-        projectile->MovePos();
-        if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+        else
         {
-            projectile->callType = 1 + int(result == 3);
-            projectile->DestroySelf(nullptr);
+            if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+            {
+                projectile->callType = 1 + int(result == 3);
+                projectile->DestroySelf(nullptr);
+                return;
+            }
+            Vec3 oldPos = projectile->pos;
+            projectile->MovePos();
+            if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
+            {
+                projectile->callType = 1 + int(result == 3);
+                projectile->DestroySelf(nullptr);
+            }
         }
     }
 }
@@ -106,6 +125,7 @@ public:
         speed = item->speed;
         corporeal = item->corporeal;
         shouldCollide = item->shouldCollide;
+        collideTerrain = item->collideTerrain;
         radius = item->radius;
         health = item->health;
         name = item->name;
@@ -139,7 +159,9 @@ namespace ItemUs
     void ItemU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(item.Clone(1),
-            pos + Vec3(0, 0, 0.1f + item->radius - creator->radius), dir, creator));
+            pos, dir, creator));
+        /*game->entities->push_back(basicShotItem->Clone(item.Clone(1),
+            pos + Vec3(0, 0, 0.1f + item->radius - creator->radius), dir, creator));*/
         item.count--;
     }
 }

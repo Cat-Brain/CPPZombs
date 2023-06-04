@@ -21,15 +21,9 @@ Planet::Planet()
 	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
 
 	if (rand() % 2 == 0)
-	{
-		ambientDark = RandFloat();
-		ambientLight = 1;
-	}
+		ambientDark = RandFloat(), ambientLight = 1;
 	else
-	{
-		ambientDark = 0;
-		ambientLight = RandFloat();
-	}
+		ambientDark = 0, ambientLight = RandFloat();
 
 
 	color1.r = rand() % 128 + 64;
@@ -449,6 +443,8 @@ void Chunk::GenerateMesh()
 
 void Game::Start()
 {
+	cursorUnlockCount = 0;
+
 	tTime2 = 0;
 
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
@@ -478,8 +474,13 @@ void Game::Start()
 	screenShkX.SetFractalGain(0.5f);
 	screenShkX.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
 	screenShkX.SetSeed(static_cast<int>(time(NULL)));
+
 	screenShkY = screenShkX;
 	screenShkY.SetSeed(static_cast<int>(time(NULL) + 1));
+
+	screenShkZ = screenShkY;
+	screenShkZ.SetSeed(static_cast<int>(time(NULL) + 1));
+
 	screenShake = 0.0f;
 }
 	
@@ -495,11 +496,8 @@ void Game::Update()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
-		{
-			Start();
 			uiMode = UIMODE::CHARSELECT;
-		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
@@ -559,7 +557,7 @@ void Game::Update()
 			uiMode = UIMODE::INGAME;
 		}
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.escape.held)
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.pause.held)
 			uiMode = UIMODE::MAINMENU;
 		else
 			for (int i = 0; i < characters.size(); i++)
@@ -572,8 +570,19 @@ void Game::Update()
 	}
 	else // In game or paused
 	{
-		if (playerAlive && inputs.escape.pressed)
-			uiMode = uiMode == UIMODE::INGAME ? UIMODE::PAUSED : UIMODE::INGAME;
+		if (playerAlive && inputs.pause.pressed)
+		{
+			if (uiMode == INGAME)
+			{
+				uiMode = UIMODE::PAUSED;
+				cursorUnlockCount++;
+			}
+			else
+			{
+				uiMode = UIMODE::INGAME;
+				cursorUnlockCount--;
+			}
+		}
 
 		if (playerAlive)
 		{
@@ -582,7 +591,7 @@ void Game::Update()
 			{
 				currentFramebuffer = TRUESCREEN;
 				UseFramebuffer();
-				inputs.UpdateKey(window, inputs.escape, GLFW_KEY_ESCAPE);
+				inputs.UpdateKey(window, inputs.pause);
 				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 					uiMode = UIMODE::INGAME;
 				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
@@ -715,13 +724,16 @@ void Game::TUpdate()
 		game->inputs.Update(window);
 	}
 	else
-		dTime = 0;
+	{
+		dTime = 0; // Don't let time pass while paused.
+		inputs.mouseOffset = vZero; // Don't let the player do any rotation while paused.
+	}
 
 
 	screenShake *= powf(0.25f, game->dTime);
-	screenOffset = Vec3(Vec2(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f)) * screenShake, zoom);
+	screenOffset = Vec3(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f), screenShkZ.GetNoise(tTime, 0.f)) * screenShake;
 
-	zoom = ClampF(zoom + float(int(inputs.e.held) - int(inputs.q.held)) * dTime * zoomSpeed, minZoom, maxZoom);
+	zoom = ClampF(zoom + float(int(inputs.zoomOut.held) - int(inputs.zoomIn.held)) * dTime * zoomSpeed, minZoom, maxZoom);
 
 	brightness = planet->GetBrightness();
 
@@ -750,13 +762,13 @@ void Game::TUpdate()
 	planet->wildSpawns->Update();
 
 
-
 	entities->Update(); // Updates all entities.
 	// Now that the player has moved mark where it is for rendering:
 	Vec3 camPos = screenOffset + player->pos;
-	camera = glm::identity<glm::mat4>();
-	camera = glm::rotate(camera, glm::radians(-22.5f), glm::vec3(1.0f, 0.0f, 0.0f));
-	camera = glm::translate(camera, -camPos);
+
+	camera = glm::lookAt(camPos, camPos + player->camDir, up);
+
+
 	cameraInv = glm::inverse(camera);
 	perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);
 
@@ -784,6 +796,7 @@ void Game::TUpdate()
 	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
 	glUseProgram(shadowShader);
 	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
+	glUniform2f(glGetUniformLocation(shadowShader, "screenDim"), float(trueScreenWidth), float(trueScreenHeight));
 
 
 	glClearColor(0, 0, 0, 1);
@@ -801,7 +814,7 @@ void Game::TUpdate()
 	
 
 
-	if (inputs.c.pressed)
+	if (inputs.hideUI.pressed)
 		showUI = !showUI;
 	if (showUI && playerAlive)
 	{

@@ -11,8 +11,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
 void window_maximize_callback(GLFWwindow* window, int maximized);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 #define START_SCR_WIDTH 990
 #define START_SCR_HEIGHT 990
@@ -35,6 +35,7 @@ public:
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	CHARS character = CHARS::SOLDIER;
 	uint chunkRenderDist = 5;
+	float sensitivity = 5;
 	bool maximized = true;
 
 	void TryOpen()
@@ -123,6 +124,7 @@ private:
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetScrollCallback(window, scroll_callback);
 		glfwSetWindowMaximizeCallback(window, window_maximize_callback);
+		glfwSetKeyCallback(window, key_callback);
 
 		if (settings.maximized)
 			glfwMaximizeWindow(window);
@@ -133,6 +135,8 @@ private:
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CW);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 #pragma endregion
 
 		GLFWcursor* cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
@@ -165,7 +169,8 @@ private:
 
 		cube = Mesh({-1.f, -1.f, -1.f,  -1.f, -1.f, 1.f,  -1.f, 1.f, -1.f,  -1.f, 1.f, 1.f,
 			1.f, -1.f, -1.f,  1.f, -1.f, 1.f,  1.f, 1.f, -1.f,  1.f, 1.f, 1.f}, {1, 3, 7, 1, 7, 5,
-			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7}, GL_TRIANGLES, GL_STATIC_DRAW, 3);
+			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7,  0, 4, 6, 0, 6, 2},
+			GL_TRIANGLES, GL_STATIC_DRAW, 3);
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
 		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
@@ -194,6 +199,11 @@ private:
 			fpsCount = 0;
 		}
 		lastTime = static_cast<float>(glfwGetTime());
+
+		if (cursorUnlockCount == 0)
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		else
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 		Update();
 
@@ -226,6 +236,7 @@ public:
 	Inputs inputs;
 	Vec3 screenOffset = Vec3(0);
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), perspective = glm::mat4(1);
+	int cursorUnlockCount = 1;
 
 	Renderer() { }
 
@@ -288,14 +299,23 @@ public:
 		glUniform4f(glGetUniformLocation(circleShader, "posScale"), pos.x, pos.y, pos.z, radius);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+
+		for (int i = 0; i < cube.vertices.size(); i += 3)
+			if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
+			{
+				glCullFace(GL_FRONT);
+				break;
+			}
+
 		cube.Draw();
+		glCullFace(GL_BACK);
 	}
 
 	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
 	{
 		glUseProgram(coneShader);
 		glUniform3f(glGetUniformLocation(coneShader, "a"), a.x, a.y, a.z);
-		glUniform3f(glGetUniformLocation(coneShader, "b"), b.x, b.y, b.z);
+		glUniform3f(glGetUniformLocation(coneShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
 		glUniform1f(glGetUniformLocation(coneShader, "thickness"), max(thicknessA, thicknessB));
 		glUniform1f(glGetUniformLocation(coneShader, "thicknessA"), thicknessA);
 		glUniform1f(glGetUniformLocation(coneShader, "thicknessB"), thicknessB);
@@ -334,7 +354,7 @@ public:
 	{
 		glUseProgram(cylinderShader);
 		glUniform3f(glGetUniformLocation(cylinderShader, "a"), a.x, a.y, a.z);
-		glUniform3f(glGetUniformLocation(cylinderShader, "b"), b.x, b.y, b.z);
+		glUniform3f(glGetUniformLocation(cylinderShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
 		glUniform1f(glGetUniformLocation(cylinderShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
@@ -348,7 +368,7 @@ public:
 	{
 		glUseProgram(capsuleShader);
 		glUniform3f(glGetUniformLocation(capsuleShader, "a"), a.x, a.y, a.z);
-		glUniform3f(glGetUniformLocation(capsuleShader, "b"), b.x, b.y, b.z);
+		glUniform3f(glGetUniformLocation(capsuleShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
 		glUniform1f(glGetUniformLocation(capsuleShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
@@ -365,7 +385,15 @@ public:
 
 		glUniform3f(glGetUniformLocation(shadowShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
 
-		screenSpaceQuad.Draw();
+		for (int i = 0; i < cube.vertices.size(); i += 3)
+			if ((camera * glm::vec4(pos + range * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
+			{
+				glCullFace(GL_FRONT);
+				break;
+			}
+
+		cube.Draw();
+		glCullFace(GL_BACK);
 	}
 
 	void DrawFramebufferOnto(uint newFramebuffer)

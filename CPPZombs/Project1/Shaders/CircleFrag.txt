@@ -60,8 +60,8 @@ void main()
 	FragColor = color;
 	
 	position = vec4(dir * dstToSphereNear, 1.);
-	normal = vec4(normalize(position.xyz - pos), color.a);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
 	position = cameraInv * position;
+	normal = vec4(normalize(position.xyz - posScale.xyz), 1.);
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;
 } 
