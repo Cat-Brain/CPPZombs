@@ -175,7 +175,7 @@ public:
 	void Update() override
 	{
 		WobbleScaler::Update();
-		font.RenderRotated(text, Vec2(pos - game->PlayerPos()) * Vec2(0.5f, 1) * Vec2(trueScreenWidth, trueScreenHeight) / game->zoom - scale / 2, rotation, scale, color);
+		//font.RenderRotated(text, Vec2(pos - game->PlayerPos()) * Vec2(0.5f, 1) * Vec2(trueScreenWidth, trueScreenHeight) / game->zoom - scale / 2, rotation, scale, color);
 	}
 };
 

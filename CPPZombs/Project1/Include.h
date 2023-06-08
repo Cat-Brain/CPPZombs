@@ -83,6 +83,11 @@ inline float RandFloat() // Float from 0-1
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
+inline int RandRangeInt(int min, int max) // Inclusive min and inclusive max
+{
+	return rand() % (max - min + 1) + min;
+}
+
 template <typename T>
 inline T JMod(T x, T m)
 {

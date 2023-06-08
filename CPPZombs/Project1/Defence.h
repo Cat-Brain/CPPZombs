@@ -15,11 +15,11 @@ public:
 
 	Shrub(ItemInstance collectible, ItemInstance seed, int cyclesToGrow, int deadStage, int chanceForSeed,
 		float timePer, float radius = 0.5f, float maxRadius = 0.5f, RGBA color = RGBA(), RGBA adultColor = RGBA(), RGBA deadColor = RGBA(),
-		float mass = 1, float maxMass = 2, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		float mass = 1, float maxMass = 2, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		babyRadius(radius), maxRadius(maxRadius), babyMass(mass), maxMass(maxMass),
-		FunctionalBlock2(timePer, pos, radius, color, mass, maxHealth, health, name)
+		FunctionalBlock2(timePer, pos, radius, color, mass, bounciness, maxHealth, health, name)
 	{
 		dUpdate = DUPDATE::SHRUB;
 		uiUpdate = UIUPDATE::SHRUB;
@@ -68,11 +68,11 @@ public:
 
 	Tree(ItemInstance collectible, ItemInstance seed, int height, int leafLength, int chanceForSeed, int branchCount,
 		float timePer, float radius, float leafRadius, RGBA color, RGBA leafColor,
-		float mass, int maxHealth, int health, string name) :
+		float mass, float bounciness, int maxHealth, int health, string name) :
 		collectible(collectible), seed(seed),
 		height(height), currentHeight(0), leafLength(leafLength), chanceForSeed(chanceForSeed), branchCount(branchCount),
 		leafRadius(leafRadius), leafColor(leafColor),
-		FunctionalBlock2(timePer, vZero, radius, color, mass, maxHealth, health, name)
+		FunctionalBlock2(timePer, vZero, radius, color, mass, bounciness, maxHealth, health, name)
 	{
 		dUpdate = DUPDATE::TREE;
 		uiUpdate = UIUPDATE::TREE;
@@ -187,9 +187,9 @@ public:
 	Vine(ItemInstance collectible, ItemInstance seed, float angleWobble, int bifurcationChance, int cyclesToGrow, int maxGenerations, int chanceForSeed,
 		float timePer, float radius = 0.5f, float maxRadius = 0.5f, RGBA color = RGBA(), RGBA adultColor = RGBA(),
 		RGBA deadColor = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 		Shrub(collectible, seed, cyclesToGrow, cyclesToGrow + 1, chanceForSeed, timePer, radius, maxRadius, color, adultColor, deadColor,
-			mass, mass, maxHealth, health, name),
+			mass, mass, bounciness, maxHealth, health, name),
 		maxGenerations(maxGenerations), generation(0), angleWobble(angleWobble), bifurcationChance(bifurcationChance)
 	{
 		uiUpdate = UIUPDATE::VINE;
@@ -202,7 +202,7 @@ public:
 		Shrub::Start();
 		bool bifurcated = rand() % 100 < bifurcationChance;
 		deadStage = cyclesToGrow + 1 + int(bifurcated);
-		dir = glm::rotateZ(dir, -float(bifurcated) * PI_F * 0.1666f);
+		dir = glm::rotateZ(dir, (RandFloat() * 2 - 1) * angleWobble - float(bifurcated) * PI_F * 0.1666f);
 		nextPlacementPos = dir;
 		radius = babyRadius;
 		//timeSince = timePer * RandFloat();
@@ -212,7 +212,9 @@ public:
 		Vine(*baseClass)
 	{
 		this->pos = pos;
-		this->dir = glm::rotateZ(dir, (RandFloat() * 2 - 1) * angleWobble);
+		dir.z = 0;
+		this->dir = Normalized(dir);
+		if (this->dir == vZero) this->dir = RandCircPoint();
 		this->baseClass = baseClass;
 		Start();
 	}
@@ -288,13 +290,8 @@ namespace TUpdates
 			unique_ptr<Entity> newVine = vine->baseClass->Clone(placementPos, vine->dir, vine);
 			((Vine*)newVine.get())->generation = vine->generation + 1;
 			game->entities->push_back(std::move(newVine));
-			vine->dir = RotateBy(vine->dir, PI_F * 0.33333f);
+			vine->dir = glm::rotateZ(vine->dir, PI_F * 0.33333f);
 			vine->nextPlacementPos = vine->dir;
-			if (game->entities->OverlapsAny(vine->pos + vine->radius * 2 * vine->nextPlacementPos, vine->radius - 0.01f, MaskF::IsCorporealNotCollectible, vine))
-			{
-				vine->dir = Vec3(0, 0, 1);
-				vine->nextPlacementPos = vine->dir;
-			}
 		}
 		vine->currentLifespan++;
 		vine->nextSpawnSeed = true;
@@ -405,56 +402,56 @@ namespace Plants
 	namespace Shrubs
 	{
 		RGBA babyCopperShrubColor = RGBA(207, 137, 81), copperShrubColor = RGBA(163, 78, 8), deadCopperShrubColor = RGBA(94, 52, 17);
-		Shrub copperShrub = Shrub(Resources::copper.Clone(), ItemInstance(ITEMTYPE::COPPER_SHRUB_SEED), 5, 25, 25, 4.0f, 0.25f, 1.5f, babyCopperShrubColor, copperShrubColor, deadCopperShrubColor, 0.2f, 3.0f, 10, 10, "Copper shrub");
+		Shrub copperShrub = Shrub(Resources::copper.Clone(), ItemInstance(ITEMTYPE::COPPER_SHRUB_SEED), 5, 25, 25, 4.0f, 0.25f, 1.5f, babyCopperShrubColor, copperShrubColor, deadCopperShrubColor, 0.2f, 3.0f, 0, 10, 10, "Copper shrub");
 
 		RGBA babyIronShrubColor = RGBA(96, 192, 225), ironShrubColor = RGBA(67, 90, 99), deadIronShrubColor = RGBA(45, 47, 48);
-		Shrub ironShrub = Shrub(Resources::iron.Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 180, 10, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 10, 10, "Iron shrub");
+		Shrub ironShrub = Shrub(Resources::iron.Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 180, 10, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 0, 10, 10, "Iron shrub");
 
 		RGBA babyRubyShrubColor = RGBA(207, 120, 156), rubyShrubColor = RGBA(135, 16, 66), deadRubyShrubColor = RGBA(120, 65, 88);
-		Shrub rubyShrub = Shrub(Resources::ruby.Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 10, 10, "Ruby shrub");
+		Shrub rubyShrub = Shrub(Resources::ruby.Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 0, 10, 10, "Ruby shrub");
 
 		RGBA babyEmeraldShrubColor = RGBA(145, 255, 204), emeraldShrubColor = RGBA(65, 166, 119), deadEmeraldShrubColor = RGBA(61, 97, 80);
-		Shrub emeraldShrub = Shrub(Resources::emerald.Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 10, 10, "Emerald shrub");
+		Shrub emeraldShrub = Shrub(Resources::emerald.Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 0, 10, 10, "Emerald shrub");
 
 		RGBA babyRockShrubColor = RGBA(212, 212, 212), rockShrubColor = RGBA(201, 196, 165), deadRockShrubColor = RGBA(130, 130, 130);
-		Shrub rockShrub = Shrub(Resources::rock.Clone(), ItemInstance(ITEMTYPE::ROCK_SHRUB_SEED), 5, 14, 25, 3.0f, 0.25f, 1.5f, babyRockShrubColor, rockShrubColor, deadRockShrubColor, 0.2f, 3.0f, 10, 10, "Rock shrub");
+		Shrub rockShrub = Shrub(Resources::rock.Clone(), ItemInstance(ITEMTYPE::ROCK_SHRUB_SEED), 5, 14, 25, 3.0f, 0.25f, 1.5f, babyRockShrubColor, rockShrubColor, deadRockShrubColor, 0.2f, 3.0f, 0, 10, 10, "Rock shrub");
 		
 		RGBA babyShadeShrubColor = RGBA(50, 50), shadeShrubColor = RGBA(25, 25), deadShadeShrubColor = RGBA();
-		Shrub shadeShrub = Shrub(Resources::shade.Clone(), ItemInstance(ITEMTYPE::SHADE_SHRUB_SEED), 10, 30, 25, 1.0f, 0.25f, 1.5f, babyShadeShrubColor, shadeShrubColor, deadShadeShrubColor, 0.2f, 3.0f, 10, 10, "Shade shrub");
+		Shrub shadeShrub = Shrub(Resources::shade.Clone(), ItemInstance(ITEMTYPE::SHADE_SHRUB_SEED), 10, 30, 25, 1.0f, 0.25f, 1.5f, babyShadeShrubColor, shadeShrubColor, deadShadeShrubColor, 0.2f, 3.0f, 0, 10, 10, "Shade shrub");
 	
 		RGBA babyBowlerShrubColor = RGBA(111, 101, 143), bowlerShrubColor = RGBA(21, 0, 89), deadBowlerShrub = RGBA(12, 4, 36);
-		Shrub bowlerShrub = Shrub(Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 50, 50, "Bowler shrub");
+		Shrub bowlerShrub = Shrub(Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 0, 50, 50, "Bowler shrub");
 	
 		RGBA babyVacuumiumShrubColor = RGBA(242, 239, 148), vacuumiumShrubColor = RGBA(204, 202, 153), deadVacuumiumShrubColor = RGBA(158, 156, 85);
-		Shrub vacuumiumShrub = Shrub(Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 60, 5, 0.5f, 2.f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 60, 60, "Vacuumium shrub");
+		Shrub vacuumiumShrub = Shrub(Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 60, 5, 0.5f, 2.f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 0, 60, 60, "Vacuumium shrub");
 	
 		RGBA babySilverShrubColor = RGBA(209, 157, 157), silverShrubColor = RGBA(171, 171, 171), deadSilverShrubColor = RGBA(87, 99, 74);
-		Shrub silverShrub = Shrub(Resources::silver.Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 30, 30, "Silver shrub");
+		Shrub silverShrub = Shrub(Resources::silver.Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 0, 30, 30, "Silver shrub");
 		
 		RGBA babyQuartzShrubColor = RGBA(202, 188, 224), quartzShrubColor = RGBA(161, 153, 173), deadQuartzShrubColor = RGBA(127, 70, 212);
-		Shrub quartzShrub = Shrub(Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_SHRUB_SEED), 3, 12, 25, 3.f, 0.25f, 0.5f, babyQuartzShrubColor, quartzShrubColor, deadQuartzShrubColor, 0.25f, 0.5f, 10, 10, "Quartz shrub");
+		Shrub quartzShrub = Shrub(Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_SHRUB_SEED), 3, 12, 25, 3.f, 0.25f, 0.5f, babyQuartzShrubColor, quartzShrubColor, deadQuartzShrubColor, 0.25f, 0.5f, 0, 10, 10, "Quartz shrub");
 	
 		RGBA babyCoalShrubColor = RGBA(99, 66, 20), coalShrubColor = RGBA(59, 44, 23), deadCoalShrubColor = RGBA(74, 65, 52);
-		Shrub coalShrub = Shrub(dItem->Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 50, 50, "Coal shrub");
+		Shrub coalShrub = Shrub(dItem->Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 0, 50, 50, "Coal shrub");
 	}
 
 
 	namespace Vines
 	{
 		RGBA babyCheeseVineColor = RGBA(255, 210, 112), cheeseVineColor = RGBA(200, 160, 75), deadCheeseVineColor = RGBA(140, 110, 50);
-		Vine cheeseVine = Vine(Resources::cheese.Clone(), ItemInstance(ITEMTYPE::CHEESE_VINE_SEED), 0.0f, 25, 1, 25, 25, 2.0f, 0.25f, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 10, 10, "Cheese vine");
+		Vine cheeseVine = Vine(Resources::cheese.Clone(), ItemInstance(ITEMTYPE::CHEESE_VINE_SEED), 0.0f, 25, 1, 25, 25, 2.0f, 0.25f, 0.5f, babyCheeseVineColor, cheeseVineColor, deadCheeseVineColor, 1, 0, 10, 10, "Cheese vine");
 
 		RGBA babyLeadVineColor = RGBA(198, 111, 227), leadVineColor = RGBA(153, 29, 194), deadLeadVineColor = RGBA(15, 50, 61);
-		Vine leadVine = Vine(Resources::lead.Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 0.8f, 25, 1, 25, 2, 3.0f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 10, 10, "Lead vine");
+		Vine leadVine = Vine(Resources::lead.Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 0.8f, 25, 1, 25, 25, 3.0f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 0, 10, 10, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
-		Vine topazVine = Vine(Resources::topaz.Clone(2), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 25, 1, 50, 5, 2.0f, 0.5f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 60, 60, "Topaz vine");
+		Vine topazVine = Vine(Resources::topaz.Clone(2), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 25, 1, 50, 10, 2.0f, 0.5f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 0, 60, 60, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
-		Vine sapphireVine = Vine(Resources::sapphire.Clone(5), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 25, 3, 25, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 40, 40, "Sapphire vine");
+		Vine sapphireVine = Vine(Resources::sapphire.Clone(5), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 25, 3, 25, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
 		
 		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
-		Vine quartzVine = Vine(Resources::quartz.Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 50, 3, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 10, 10, "Quarts vine");
+		Vine quartzVine = Vine(Resources::quartz.Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 50, 3, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 0, 10, 10, "Quarts vine");
 	}
 
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.

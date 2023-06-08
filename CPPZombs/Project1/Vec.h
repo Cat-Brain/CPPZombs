@@ -274,12 +274,6 @@ inline Vec3 RandCircPoint()
 	return CircPoint(RandFloat() * 2 * PI_F, RandFloat() * 2 * PI_F);
 }
 
-inline Vec3 RotateBy(Vec3 a, float rotation)
-{
-	float sinTheta = sinf(rotation), cosTheta = cosf(rotation);
-	return Vec3(cosTheta * a.x - sinTheta * a.y, sinTheta * a.x + cosTheta * a.y, a.z);
-}
-
 inline Vec3 RotateTowardsNorm(Vec3 currentDir, Vec3 desiredDir, float moveAmount)
 {
 	return Vec3(RotateTowardsNorm2(currentDir, desiredDir, moveAmount), 0.f);

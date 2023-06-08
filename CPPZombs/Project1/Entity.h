@@ -15,7 +15,7 @@ vector<function<void(Entity*)>> updates;
 
 enum class VUPDATE // Update
 {
-	ENTITY, FRICTION, SPRING
+	ENTITY, AIR_RESISTANCE, FRICTION, SPRING
 };
 
 vector<function<void(Entity*)>> vUpdates;
@@ -102,8 +102,10 @@ struct Allegiance
 	}
 };
 
+
 class Entities;
-class Entity
+
+class EntityData
 {
 public:
 	UPDATE update;
@@ -112,6 +114,19 @@ public:
 	EDUPDATE earlyDUpdate;
 	UIUPDATE uiUpdate;
 	ONDEATH onDeath;
+
+	EntityData(UPDATE update, VUPDATE vUpdate, DUPDATE dUpdate, EDUPDATE eDUpdate, UIUPDATE uiUpdate, ONDEATH onDeath):
+		update(update), vUpdate(vUpdate), dUpdate(dUpdate), earlyDUpdate(earlyDUpdate),
+		uiUpdate(uiUpdate), onDeath(onDeath)
+	{
+
+	}
+};
+
+class Entity
+{
+public:
+	EntityData* data;
 	Entity* baseClass;
 	Entity* creator;
 	vector<Entity*> observers{};
@@ -120,20 +135,18 @@ public:
 	Vec3 pos, lastPos, vel, dir;
 	float radius;
 	RGBA color;
-	float mass, frictionMultiplier = 1;
+	float mass, bounciness, frictionMultiplier = 1;
 	int maxHealth, health;
 	bool active = true, dActive = true, uiActive = false;
 	int sortLayer = 0;
 	float foodValue = 0; // If 0 then is not food.
-	bool isLight = true, canAttack = true, isEnemy = false, isProjectile = false, isCollectible = false, corporeal = true;
+	bool isCollectible = false, corporeal = true;
 	Allegiance allegiance;
 
-	Entity(Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA(),
-		float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = BARBARIAN_A) :
-		pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color),
-		mass(mass), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
-		update(UPDATE::ENTITY), vUpdate(VUPDATE::ENTITY), dUpdate(DUPDATE::ENTITY), earlyDUpdate(EDUPDATE::ENTITY),
-		uiUpdate(UIUPDATE::ENTITY), onDeath(ONDEATH::ENTITY), allegiance(allegiance)
+	Entity(EntityData* data, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = BARBARIAN_A) :
+		data(data), pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color), allegiance(allegiance),
+		mass(mass), bounciness(bounciness), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
 	{
 	}
 
@@ -163,7 +176,7 @@ public:
 #pragma region Psuedo-virtual functions
 	void Update() // Normally doesn't draw.
 	{
-		updates[UnEnum(update)](this);
+		updates[UnEnum(data->update)](this);
 	}
 	void Update(UPDATE tempUpdate) // Normally doesn't draw.
 	{
@@ -172,7 +185,7 @@ public:
 
 	void VUpdate() // Normally just increases position by velocity and modifies velocity.
 	{
-		vUpdates[UnEnum(vUpdate)](this);
+		vUpdates[UnEnum(data->vUpdate)](this);
 	}
 	void VUpdate(VUPDATE tempVUpdate) // Normally just increases position by velocity and modifies velocity.
 	{
@@ -181,7 +194,7 @@ public:
 
 	void DUpdate() // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
-		dUpdates[UnEnum(dUpdate)](this);
+		dUpdates[UnEnum(data->dUpdate)](this);
 	}
 	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
@@ -190,7 +203,7 @@ public:
 
 	void EarlyDUpdate() // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
-		eDUpdates[UnEnum(earlyDUpdate)](this);
+		eDUpdates[UnEnum(data->earlyDUpdate)](this);
 	}
 	void EarlyDUpdate(EDUPDATE tempEDUpdate) // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
 	{
@@ -199,7 +212,7 @@ public:
 
 	void UIUpdate() // Draws when uiActive is true.
 	{
-		uiUpdates[UnEnum(uiUpdate)](this);
+		uiUpdates[UnEnum(data->uiUpdate)](this);
 	}
 	void UIUpdate(UIUPDATE tempUIUpdate) // Draws when uiActive is true.
 	{
@@ -208,7 +221,7 @@ public:
 
 	void OnDeath(Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
 	{
-		onDeaths[UnEnum(onDeath)](this, damageDealer);
+		onDeaths[UnEnum(data->onDeath)](this, damageDealer);
 	}
 	void OnDeath(ONDEATH tempOnDeath, Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
 	{
@@ -218,7 +231,7 @@ public:
 
 	Vec2 BottomLeft() // Not always accurate.
 	{
-		return (pos - game->PlayerPos() + Vec3(radius, -radius, -radius)) * (trueScreenHeight / game->zoom);
+		return vZero;//(pos - game->PlayerPos() + Vec3(radius, -radius, -radius)) * (trueScreenHeight / game->zoom);
 	}
 
 	void DrawUIBox(Vec2 bottomLeft, Vec2 topRight, float boarderWidth, string text, RGBA textColor,
@@ -232,7 +245,7 @@ public:
 	virtual void SetPos(Vec3 newPos);
 	virtual void SetRadius(float newRadius);
 
-	virtual int ApplyHit(int damage, Entity* damageDealer);
+	virtual int ApplyHit(int damage, Entity* damageDealer); // 0 = lived, 1 = dead
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 	void DelayedDestroySelf(); // Never calls OnDeath;
@@ -247,17 +260,12 @@ public:
 
 	virtual void UnAttach(Entity* entity) { }
 	virtual void MoveAttachment(Entity* from, Entity* to) { }
-};
 
-
-class EntityImpl
-{
-public:
-	Entity* entity = nullptr;
-
-	EntityImpl()
+	void DetachObservers()
 	{
-
+		for (Entity* entity : observers)
+			UnAttach(this);
+		observers.clear();
 	}
 };
 
@@ -298,16 +306,6 @@ namespace MaskF
 		return from != to && to->corporeal && !to->isCollectible && from->allegiance.Ally(to->allegiance);
 	}
 
-	bool IsEnemy(Entity* from, Entity* to)
-	{
-		return  to->isEnemy && from != to && to->corporeal && !to->isCollectible && to != from->creator;
-	}
-
-	bool IsNonEnemy(Entity* from, Entity* to)
-	{
-		return !to->isEnemy && from != to && to->corporeal && !to->isCollectible;
-	}
-
 	bool IsSameType(Entity* from, Entity* to)
 	{
 		return to->baseClass == from->baseClass && from != to && to->corporeal;
@@ -343,8 +341,8 @@ class FadeOut : public Entity
 public:
 	float startTime, totalFadeTime;
 
-	FadeOut(float totalFadeTime = 1.0f, Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA()) :
-		Entity(pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
+	FadeOut(EntityData* data, float totalFadeTime = 1.0f, Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA()) :
+		Entity(data, pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
 		update = UPDATE::FADEOUT;
 		dUpdate = DUPDATE::FADEOUT;
@@ -376,12 +374,20 @@ namespace VUpdates
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
 	}
 
+	void AirResistanceVU(Entity* entity)
+	{
+		entity->lastPos = entity->pos;
+		entity->SetPos(entity->pos + entity->vel * game->dTime);
+		entity->vel = Vec3(entity->vel.x, entity->vel.y,
+			(entity->vel.z - game->planet->gravity * game->dTime) * powf(0.75f, game->dTime));
+	}
+
 	void FrictionVU(Entity* entity)
 	{
 		entity->lastPos = entity->pos;
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
 		entity->vel = Vec3(FromTo2(entity->vel, vZero, game->dTime * game->planet->friction * entity->frictionMultiplier),
-			(entity->vel.z - game->planet->gravity * game->dTime) * powf(0.5f, game->dTime));
+			(entity->vel.z - game->planet->gravity * game->dTime) * powf(0.75f, game->dTime));
 	}
 }
 

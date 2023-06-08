@@ -407,9 +407,6 @@ public:
 	{
 		createdChunkThisFrame = false;
 
-		for (int i = 0; i < toDelEntities.size(); i++)
-			Remove(toDelEntities[i]);
-		toDelEntities.clear();
 		for (int i = 0; i < toAddEntities.size(); i++)
 			push_back(std::move(toAddEntities[i]));
 		toAddEntities.clear();
@@ -432,6 +429,11 @@ public:
 				Entity* entity = sortedNCEntities[index];
 				entity->Update();
 			}
+
+		for (int i = 0; i < toDelEntities.size(); i++)
+			Remove(toDelEntities[i]);
+		toDelEntities.clear();
+
 		for (int i = 0; i < size(); i++)
 			if ((*this)[i] && (*this)[i]->active)
 				(*this)[i]->VUpdate();
@@ -472,10 +474,10 @@ public:
 			for (int y = minMaxPos.first.y; y <= minMaxPos.second.y; y++)
 				for (int z = minMaxPos.first.z; z <= minMaxPos.second.z; z++)
 				{
-					if (x * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().x - game->zoom * screenRatio &&
-						y * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().y - game->zoom &&
-						x * CHUNK_WIDTH <= game->PlayerPos().x + game->zoom * screenRatio &&
-						y * CHUNK_WIDTH <= game->PlayerPos().y + game->zoom &&
+					if (x * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().x - 16 &&
+						y * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().y - 16 &&
+						x * CHUNK_WIDTH <= game->PlayerPos().x + 16 &&
+						y * CHUNK_WIDTH <= game->PlayerPos().y + 16 &&
 						z * CHUNK_WIDTH <= game->PlayerPos().z + game->screenOffset.z)
 					{
 						int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
@@ -500,7 +502,7 @@ public:
 					}
 				}
 
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->CurrentDistToCorner(), MaskF::IsCorporealNotCollectible);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->settings.chunkRenderDist * CHUNK_WIDTH, MaskF::IsCorporealNotCollectible, nullptr);
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
@@ -597,7 +599,7 @@ public:
 
 #pragma region Post Entities functions
 
-int Entity::ApplyHit(int damage, Entity* damageDealer)
+int Entity::ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 {
 	if (damage > 0)
 		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
@@ -619,8 +621,7 @@ void Entity::DestroySelf(Entity* damageDealer)
 	if (uiActive)
 		game->MenuedEntityDied(this);
 	OnDeath(damageDealer);
-	for (Entity* entity : observers)
-		entity->UnAttach(this);
+	DetachObservers();
 	game->entities->Remove(this);
 }
 
@@ -687,7 +688,7 @@ void Entity::UpdateChunkCollision()
 						overlappedAllPossible = false;
 				}
 	}
-	if (hitPositions.size() && !game->inputs.phase.held)
+	if (hitPositions.size() && !game->inputs.keys[KeyCode::PHASE].held)
 	{
 		if (overlappedAllPossible)
 			return SetPos(pos + up);
@@ -701,17 +702,26 @@ void Entity::UpdateChunkCollision()
 				distance = newDistance;
 			}
 
+		/*Vec3 p = pos - hitPosition;
+		Vec3 q = abs(p) - vOne;
+		float dist = glm::length(glm::max(q, vZero)) + glm::min(max(q.x, max(q.y, q.z)), 0.f);
+		Vec3 norm = glm::sign(p) * glm::normalize(q);
+		//SetPos(pos - norm * dist);
+		vel = Lerp(vel * (vOne - glm::abs(norm)), glm::reflect(vel, norm), 0.f/*bounciness*);
+		printf("(%f, %f, %f), ", norm.x, norm.y, norm.z);*/
 		Vec3 p = pos - hitPosition;
-		Vec3 w = glm::abs(p) - 0.5f;
+		Vec3 d = glm::abs(p) - 0.5f;
+		float  m = glm::min(0.0f, glm::max(d.x, max(d.y, d.z)));
+		Vec3 nearestPoint = p - Vec3(d.x >= m ? d.x : 0.0f, // Relative to box
+			d.y >= m ? d.y : 0.0f,
+			d.z >= m ? d.z : 0.0f) * sign(p);
 
-		float g = max(max(w.x, w.y), w.z);
-		Vec3  q = glm::max(w, vZero);
-		float l = length(q);
-
-		Vec3 normal = Vec3(glm::sign(p) * ((g > 0.0) ? q / l : ((w.x > w.z) ? (w.x > w.y ? west : north) : w.z > w.y ? up : north)));
-		Vec3 offset = (((g > 0.0) ? l : g) - radius) * normal;
+		Vec3 normal = p - nearestPoint;
+		float dist = glm::length(normal);
+		normal = glm::normalize(normal);
+		Vec3 offset = (dist - radius) * normal;
 		SetPos(pos - offset);
-		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), 0.f/*bounciness*/);
+		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), bounciness);
 	}
 }
 
@@ -753,8 +763,8 @@ public:
 	float explosionRadius;
 	float startTime;
 
-	ExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
-		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
+	ExplodeNextFrame(EntityData* data, int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+		Entity(data, pos, 0.5f, color, 1, 0, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
 		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
 		update = UPDATE::EXPLODENEXTFRAME;
@@ -770,8 +780,8 @@ public:
 	float explosionRadius;
 	float startTime;
 
-	UpExplodeNextFrame(int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
-		Entity(pos, 0.5f, color, 1, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
+	UpExplodeNextFrame(EntityData* data, int damage = 1, float explosionRadius = 0.5f, RGBA color = RGBA(), Vec3 pos = vZero, string name = "NULL NAME", Entity* creator = nullptr) :
+		Entity(data, pos, 0.5f, color, 1, 0, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
 		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
 		update = UPDATE::UPEXPLODENEXTFRAME;
@@ -786,9 +796,9 @@ public:
 	int damage;
 	float startTime, totalFadeTime, timePer, lastTime;
 
-	FadeOutPuddle(float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec3 pos = vZero,
+	FadeOutPuddle(EntityData* data, float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec3 pos = vZero,
 		float radius = 0.5f, RGBA color = RGBA()) :
-		Entity(pos, radius, color, 1, 1, 1, "Puddle"),
+		Entity(data, pos, radius, color, 1, 0, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
 	{
 		update = UPDATE::FADEOUTPUDDLE;
@@ -815,8 +825,8 @@ public:
 	float startRange;
 	LightSource* lightSource;
 
-	FadeOutGlow(float range, float totalFadeTime = 1.0f, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
-		FadeOut(totalFadeTime, pos, radius, color), startRange(range)
+	FadeOutGlow(EntityData* data, float range, float totalFadeTime = 1.0f, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
+		FadeOut(data, totalFadeTime, pos, radius, color), startRange(range)
 	{
 		dUpdate = DUPDATE::FADEOUTGLOW;
 		onDeath = ONDEATH::FADEOUTGLOW;
@@ -825,13 +835,13 @@ public:
 	}
 };
 
-class VacuumeFor : public FadeOut
+class VacuumFor : public FadeOut
 {
 public:
 	float vacDist, vacSpeed, maxVacSpeed;
 
-	VacuumeFor(Vec3 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
-		FadeOut(timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
+	VacuumFor(EntityData* data, Vec3 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
+		FadeOut(data, timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
 		update = UPDATE::VACUUMEFOR;
 		corporeal = false;
@@ -839,7 +849,7 @@ public:
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
-		return make_unique<VacuumeFor>(pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
+		return make_unique<VacuumFor>(pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
 	}
 };
 
@@ -1178,18 +1188,18 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle leadPuddle = FadeOutPuddle(3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumeFor vacuumPuddle = VacuumeFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
+	VacuumFor vacuumPuddle = VacuumFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
 {
-	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, false);
+	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, true, true);
 	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 0);
-	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12.f, 1.5f);
+	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f);
 	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f);
 	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
-	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f, 12, 0.1f);
-	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, false);
+	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f, 12, 0.1f, false, true, true);
+	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
 }
 
 namespace Collectibles

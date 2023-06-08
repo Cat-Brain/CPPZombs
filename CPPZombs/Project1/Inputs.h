@@ -3,6 +3,9 @@
 struct KeyPress
 {
 	bool pressed = false, held = false, released = false;
+
+	struct KeyPress(bool pressed = false, bool held = false, bool released = false) :
+		pressed(pressed), held(held), released(released) {}
 };
 
 struct Key : public KeyPress
@@ -10,15 +13,32 @@ struct Key : public KeyPress
 	int keycode = -1;
 	Key(int keycode = -1) :
 		keycode(keycode) {}
+
+	Key& operator= (const KeyPress& press)
+	{
+		pressed = press.pressed;
+		held = press.held;
+		released = press.released;
+		return *this;
+	}
 };
 
-struct Inputs
+namespace KeyCode
 {
-	Key up = Key(GLFW_KEY_W), left = Key(GLFW_KEY_A), down = Key(GLFW_KEY_S), right = Key(GLFW_KEY_D), jump = Key(GLFW_KEY_SPACE), // Movement keys
-		primary = Key(GLFW_MOUSE_BUTTON_LEFT), secondary = Key(GLFW_MOUSE_BUTTON_RIGHT), utility = Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
-		crouch = Key(GLFW_KEY_Z), inventory = Key(GLFW_KEY_TAB), // Player interaction buttons
-		enter = Key(GLFW_KEY_ENTER), hideUI = Key(GLFW_KEY_C), zoomIn = Key(GLFW_KEY_Q), zoomOut = Key(GLFW_KEY_E), pause = Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
-		comma, period, slash, phase; // Command keys.
+	enum
+	{
+		UP, LEFT, DOWN, RIGHT, JUMP, PRIMARY, SECONDARY, UTILITY, CROUCH, INVENTORY, ENTER, HIDEUI, ZOOMIN, ZOOMOUT, PAUSE, COMMA, PERIOD, SLASH, PHASE
+	};
+}
+
+class Inputs
+{
+public:
+	vector<Key> keys = { Key(GLFW_KEY_W), Key(GLFW_KEY_A), Key(GLFW_KEY_S), Key(GLFW_KEY_D), Key(GLFW_KEY_SPACE), // Movement keys
+		Key(GLFW_MOUSE_BUTTON_LEFT), Key(GLFW_MOUSE_BUTTON_RIGHT), Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
+		Key(GLFW_KEY_Z), Key(GLFW_KEY_TAB), // Player interaction buttons
+		Key(GLFW_KEY_ENTER), Key(GLFW_KEY_C), Key(GLFW_KEY_Q), Key(GLFW_KEY_E), Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
+		Key(GLFW_KEY_COMMA), Key(GLFW_KEY_PERIOD), Key(GLFW_KEY_SLASH), Key(GLFW_KEY_RIGHT_SHIFT) };
 	int mouseScroll = 0;
 	Vec2 mousePosition = vZero2, screenMousePosition = vZero2, mouseOffset = vZero2;
 	Vec3 mousePosition3 = vZero; // Just mousePosition but with a 0 for the z value.
@@ -26,6 +46,13 @@ struct Inputs
 
 
 	Inputs() = default;
+
+	Inputs& operator= (const Inputs& inputs)
+	{
+		for (int i = 0; i < keys.size(); i++)
+			keys[i] = inputs.keys[i];
+		return *this;
+	}
 
 	void SetKey(int keycode)
 	{
@@ -67,45 +94,43 @@ struct Inputs
 
 	void Update(GLFWwindow* window)
 	{
-		UpdateKey(window, up);
-		UpdateKey(window, left);
-		UpdateKey(window, down);
-		UpdateKey(window, right);
+		UpdateKey(window, keys[KeyCode::UP]);
+		UpdateKey(window, keys[KeyCode::LEFT]);
+		UpdateKey(window, keys[KeyCode::DOWN]);
+		UpdateKey(window, keys[KeyCode::RIGHT]);
+		UpdateKey(window, keys[KeyCode::JUMP]);
 
-		UpdateKey(window, crouch);
-		UpdateKey(window, inventory);
+		UpdateKey(window, keys[KeyCode::UTILITY]);
+		UpdateKey(window, keys[KeyCode::CROUCH]);
+		UpdateKey(window, keys[KeyCode::INVENTORY]);
 
-		UpdateKey(window, enter);
-		UpdateKey(window, hideUI);
-		UpdateKey(window, zoomIn);
-		UpdateKey(window, zoomOut);
-		UpdateKey(window, pause);
-		UpdateKey(window, jump);
-		UpdateKey(window, utility);
+		UpdateKey(window, keys[KeyCode::ENTER]);
+		UpdateKey(window, keys[KeyCode::HIDEUI]);
+		UpdateKey(window, keys[KeyCode::ZOOMIN]);
+		UpdateKey(window, keys[KeyCode::ZOOMOUT]);
+		UpdateKey(window, keys[KeyCode::PAUSE]);
 
-		UpdateKey(window, comma);
-		UpdateKey(window, period);
-		UpdateKey(window, slash);
-		UpdateKey(window, phase);
+		UpdateKey(window, keys[KeyCode::COMMA]);
+		UpdateKey(window, keys[KeyCode::PERIOD]);
+		UpdateKey(window, keys[KeyCode::SLASH]);
+		UpdateKey(window, keys[KeyCode::PHASE]);
 	}
 
-	void UpdateMouse(GLFWwindow* window, float zoom)
+	void UpdateMouse(GLFWwindow* window, float sensitivity)
 	{
 		double xPos, yPos;
 		glfwGetCursorPos(window, &xPos, &yPos);
 		screenMousePosition = { static_cast<int>(xPos), static_cast<int>(trueScreenHeight) - static_cast<int>(yPos) };
 		xPos /= trueScreenHeight;
-		xPos *= zoom * 2;
 		yPos = (trueScreenHeight - yPos) / trueScreenHeight;
-		yPos *= zoom * 2;
 		Vec2 oldMousePosition = mousePosition;
-		mousePosition.x = static_cast<float>(xPos - zoom * screenRatio);
-		mousePosition.y = static_cast<float>(yPos - zoom);
+		mousePosition.x = static_cast<float>(xPos * sensitivity);
+		mousePosition.y = static_cast<float>(yPos * sensitivity);
 		mouseOffset = mousePosition - oldMousePosition;
 		mousePosition3 = Vec3(mousePosition, 0);
 		
-		UpdateMouse(window, primary);
-		UpdateMouse(window, secondary);
+		UpdateMouse(window, keys[KeyCode::PRIMARY]);
+		UpdateMouse(window, keys[KeyCode::SECONDARY]);
 	}
 };
 

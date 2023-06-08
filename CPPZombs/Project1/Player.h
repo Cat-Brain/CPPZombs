@@ -155,7 +155,7 @@ public:
 	vector<TimedEvent> events{};
 	float iTime = 0, sTime = 0; // Invincibility time, if <= 0 takes damage, else doesn't.
 	Inputs inputs;
-	float yaw, pitch;
+	float yaw = 0, pitch = 0;
 	Vec3 camDir = vZero, // The direction that the camera is facing.
 		moveDir = vZero, // camDir but without the verticality.
 		rightDir = vZero; // moveDir but rotated 90 degrees to the right.
@@ -165,9 +165,10 @@ public:
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
 		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
 		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
-		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1,
+		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
+		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		LightBlock(lightColor, lightOrDark, range, vZero, radius, color, color2, mass, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
+		LightBlock(lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
 		moveSpeed(moveSpeed), holdMoveSpeed(holdMoveSpeed), startItems(startItems), blacklistedSeeds(blacklistedSeeds), vacBoth(vacBoth),
 		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
 		primaryTime(primaryTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), secondary(secondary),
@@ -274,11 +275,12 @@ public:
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
 		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
 		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
-		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1,
+		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
+		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
 		Player(vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, secondaryTime, utilityTime, movement, primary, secondary, utility, color, color2,
-			lightColor, lightOrDark, range, mass, maxHealth, health, name, startItems, blacklistedSeeds),
+			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems, blacklistedSeeds),
 		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
 	{
 		update = UPDATE::ENGINEER;
@@ -310,8 +312,8 @@ public:
 	Engineer* leader = nullptr;
 	
 	Turret(float timePer,
-		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, maxHealth, health, name, PLAYER_A),
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
 		timePer(timePer), timeTill(timePer)
 	{
 		update = UPDATE::TURRET;
@@ -343,8 +345,8 @@ public:
 	Engineer* leader = nullptr;
 
 	Rover(float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
-		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, maxHealth, health, name),
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
 		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
 		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
 	{
@@ -370,11 +372,11 @@ public:
 	}
 };
 
-unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 50, 50, "Turret");
-unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 20, 20, "Rover");
+unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
+unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0.f, 20, 20, "Rover");
 
 Player soldier = Player(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 100, 50,
+	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 0.5f, 100, 50,
 	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
 		Resources::Seeds::rubyShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
 		Resources::Eggs::kiwiEgg.Clone(2)}),
@@ -382,14 +384,14 @@ Player soldier = Player(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f
 
 Player flicker = Player(false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
+	0, 100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
 		Resources::Seeds::cheeseVineSeed.Clone(3), Resources::Seeds::quartzVineSeed.Clone(2), Resources::Seeds::rockShrubSeed.Clone(3),
 		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
 Engineer engineer = Engineer(2.f, 3.f, false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
-	100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
+	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
 		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
 		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
@@ -402,8 +404,8 @@ public:
 	int damage;
 	float pushForce, explosionRadius, startTime, timeTill, baseRange;
 
-	Grenade(int damage, float pushForce, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, RGBA(), mass, health, health, name),
+	Grenade(int damage, float pushForce, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, float bounciness, int health, string name) :
+		LightBlock(lightColor, true, range, vZero, radius, color, RGBA(), mass, bounciness, health, health, name),
 		damage(damage), explosionRadius(explosionRadius), startTime(0), timeTill(timeTill), baseRange(range), pushForce(pushForce)
 	{
 		update = UPDATE::GRENADE;
@@ -427,7 +429,7 @@ public:
 	}
 };
 
-unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 100.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 5, "Grenade");
+unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 100.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 0.f, 60, "Grenade");
 
 namespace OnDeaths
 {
@@ -459,7 +461,7 @@ namespace ItemUs
 void PlayerInventory::Update(bool shouldScroll)
 {
 	isHovering = false;
-	if (game->inputs.inventory.pressed)
+	if (game->inputs.keys[KeyCode::INVENTORY].pressed)
 	{
 		currentSelected = -1;
 		if (isOpen)
@@ -481,7 +483,7 @@ void PlayerInventory::Update(bool shouldScroll)
 		game->inputs.screenMousePosition.x < scale * height && game->inputs.screenMousePosition.y < scale * width)
 	{
 		isHovering = true;
-		if (game->inputs.primary.pressed)
+		if (game->inputs.keys[KeyCode::PRIMARY].pressed)
 		{
 			iVec2 rPos = game->inputs.screenMousePosition / scale;
 
@@ -498,17 +500,15 @@ void PlayerInventory::Update(bool shouldScroll)
 				currentSelected = -1;
 			}
 		}
-		game->player->inputs.primary.pressed = false;
-		game->player->inputs.primary.held = false;
-		game->player->inputs.primary.released = true;
+		game->player->inputs.keys[KeyCode::PRIMARY] = KeyPress(false, false, true);
 	}
-	else if (game->inputs.primary.pressed) currentSelected = -1;
+	else if (game->inputs.keys[KeyCode::PRIMARY].pressed) currentSelected = -1;
 }
 
 Vec3 Inputs::MoveDir()
 {
-	return Normalized((float(right.held) - float(left.held)) * game->player->rightDir +
-		(float(up.held) - float(down.held)) * game->player->moveDir);
+	return Normalized((float(keys[KeyCode::RIGHT].held) - float(keys[KeyCode::LEFT].held)) * game->player->rightDir +
+		(float(keys[KeyCode::UP].held) - float(keys[KeyCode::DOWN].held)) * game->player->moveDir);
 }
 
 namespace Updates
@@ -519,7 +519,7 @@ namespace Updates
 
 		player->inputs = game->inputs;
 
-		player->shouldVacuum ^= player->inputs.crouch.pressed;
+		player->shouldVacuum ^= player->inputs.keys[KeyCode::CROUCH].pressed;
 		player->items.Update(player->sTime <= 0 && player->shouldScroll);
 
 		player->iTime = max(0.f, player->iTime - game->dTime);
@@ -545,7 +545,7 @@ namespace Updates
 			player->currentMenuedEntity->uiActive = true;
 		}
 
-		Vec2 mouseOffset = game->inputs.mouseOffset * game->settings.sensitivity;
+		Vec2 mouseOffset = game->inputs.mouseOffset;
 		player->yaw -= mouseOffset.x;
 		player->pitch = ClampF(player->pitch + mouseOffset.y, -89, 89);
 
@@ -582,11 +582,11 @@ namespace Updates
 			}
 			else*/ // Do primaries, secondaries, and/or utilities.
 			{
-				if (player->inputs.primary.held && tTime - player->lastPrimary >= player->primaryTime && primaries[UnEnum(player->primary)](player))
+				if (player->inputs.keys[KeyCode::PRIMARY].held && tTime - player->lastPrimary >= player->primaryTime && primaries[UnEnum(player->primary)](player))
 					player->lastPrimary = tTime;
-				if (player->inputs.secondary.held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
+				if (player->inputs.keys[KeyCode::SECONDARY].held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
 					player->lastSecondary = tTime;
-				if (player->inputs.utility.held && tTime - player->lastUtility >= player->utilityTime && utilities[UnEnum(player->utility)](player))
+				if (player->inputs.keys[KeyCode::UTILITY].held && tTime - player->lastUtility >= player->utilityTime && utilities[UnEnum(player->utility)](player))
 					player->lastUtility = tTime;
 			}
 
@@ -614,7 +614,7 @@ namespace Updates
 		ItemInstance item = turret->items->GetCurrentItem();
 		Entity* hitEntity = nullptr;
 		if (turret->leader->shouldVacuum && item.type != ITEMTYPE::DITEM && item.count > 0 && turret->timeTill <= 0 &&
-			(hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsEnemy, turret)) != nullptr)
+			(hitEntity = game->entities->FirstOverlap(turret->pos, item->range, MaskF::IsNonAlly, turret)) != nullptr)
 		{
 			turret->dir = hitEntity->pos - turret->pos;
 			item->Use((*turret->items)[turret->items->currentIndex], turret->pos, turret->dir * item->range, turret, turret->name, hitEntity, 0);
@@ -653,7 +653,7 @@ namespace Updates
 	void EngineerU(Entity* entity)
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
-		engineer->shouldScroll = !engineer->inputs.utility.held;
+		engineer->shouldScroll = !engineer->inputs.keys[KeyCode::UTILITY].held;
 		engineer->shouldPickup = false;
 		engineer->Update(UPDATE::PLAYER);
 
@@ -732,9 +732,9 @@ namespace UIUpdates
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
 		if (!game->showUI) return;
-		engineer->shouldRenderInventory = !engineer->inputs.utility.held;
+		engineer->shouldRenderInventory = !engineer->inputs.keys[KeyCode::UTILITY].held;
 		engineer->UIUpdate(UIUPDATE::PLAYER);
-		if (engineer->inputs.utility.held)
+		if (engineer->inputs.keys[KeyCode::UTILITY].held)
 		{
 			float scale = ScrHeight() / (3.0f * max(8, int(UnEnum(ENGMODE::COUNT)))), scale2 = scale / 5.0f;
 			for (int i = 0; i < UnEnum(ENGMODE::COUNT); i++)
@@ -751,8 +751,9 @@ namespace PMovements
 {
 	void Default(Player* player)
 	{
-		player->vel = TryAdd2(player->vel, player->inputs.MoveDir() * game->dTime * player->moveSpeed, player->maxSpeed);
-		if (player->inputs.jump.pressed && tTime - player->lastJump > 0.25f &&
+		player->vel = Vec3(TryAdd2V2(player->vel, Vec2(player->inputs.MoveDir()) * game->dTime * (player->moveSpeed + game->planet->friction),
+			player->maxSpeed), player->vel.z);
+		if (player->inputs.keys[KeyCode::JUMP].pressed && tTime - player->lastJump > 0.25f &&
 			player->Grounded())
 		{
 			player->vel.z += 7;
@@ -768,7 +769,7 @@ namespace PMovements
 		{
 			engineer->currentJetpackFuel = engineer->jetpackFuel;
 		}
-		if (player->inputs.jump.held && engineer->currentJetpackFuel > 0)
+		if (player->inputs.keys[KeyCode::JUMP].held && engineer->currentJetpackFuel > 0)
 		{
 			player->vel.z += (game->planet->gravity + engineer->jetpackForce) * game->dTime;
 			engineer->currentJetpackFuel -= game->dTime;
@@ -820,7 +821,7 @@ namespace Secondaries
 {
 	bool GrenadeThrow(Player* player)
 	{
-#define GRENADE_THROW_SPEED 10.f
+#define GRENADE_THROW_SPEED 20.f
 		game->entities->push_back(grenade->Clone(player->pos, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
@@ -847,7 +848,7 @@ namespace Secondaries
 	{
 		player->sTime += 0.5f;
 		player->iTime++;
-		player->vUpdate = VUPDATE::ENTITY;
+		player->vUpdate = VUPDATE::AIR_RESISTANCE;
 		player->vel = TryAdd2(player->vel, player->camDir * 5.f, 20.f);
 		player->events.push_back(TimedEvent(TornadoSpinUndo));
 		game->screenShake += 0.25f;

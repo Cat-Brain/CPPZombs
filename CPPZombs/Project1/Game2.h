@@ -42,7 +42,7 @@ Planet::Planet()
 	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
 
 	wildSpawns = make_unique<Enemies::OvertimeInstance>(Enemies::wildSpawns.RandomClone());
-	wildSpawns->FindNewIndex();
+	wildSpawns->Randomize();
 }
 
 Chunk::Chunk(iVec3 pos) :
@@ -486,7 +486,7 @@ void Game::Start()
 	
 void Game::Update()
 {
-	inputs.UpdateMouse(window, zoom);
+	inputs.UpdateMouse(window, settings.sensitivity);
 
 	if (uiMode == UIMODE::MAINMENU)
 	{
@@ -557,7 +557,7 @@ void Game::Update()
 			uiMode = UIMODE::INGAME;
 		}
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.pause.held)
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].held)
 			uiMode = UIMODE::MAINMENU;
 		else
 			for (int i = 0; i < characters.size(); i++)
@@ -570,20 +570,6 @@ void Game::Update()
 	}
 	else // In game or paused
 	{
-		if (playerAlive && inputs.pause.pressed)
-		{
-			if (uiMode == INGAME)
-			{
-				uiMode = UIMODE::PAUSED;
-				cursorUnlockCount++;
-			}
-			else
-			{
-				uiMode = UIMODE::INGAME;
-				cursorUnlockCount--;
-			}
-		}
-
 		if (playerAlive)
 		{
 			TUpdate();
@@ -591,7 +577,7 @@ void Game::Update()
 			{
 				currentFramebuffer = TRUESCREEN;
 				UseFramebuffer();
-				inputs.UpdateKey(window, inputs.pause);
+				inputs.UpdateKey(window, inputs.keys[KeyCode::PAUSE]);
 				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 					uiMode = UIMODE::INGAME;
 				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
@@ -729,16 +715,34 @@ void Game::TUpdate()
 		inputs.mouseOffset = vZero; // Don't let the player do any rotation while paused.
 	}
 
+	if ((lastCursorUnlockCount == 0) != (cursorUnlockCount == 0))
+	{
+		lastCursorUnlockCount = cursorUnlockCount;
+		if (cursorUnlockCount != 0)
+			inputs.mouseOffset = vZero; // If the player just entered something like a menu then ignore the mouse offset.
+	}
+
+	if (playerAlive && inputs.keys[KeyCode::PAUSE].pressed)
+	{
+		if (uiMode == INGAME)
+		{
+			uiMode = UIMODE::PAUSED;
+			cursorUnlockCount++;
+		}
+		else
+		{
+			uiMode = UIMODE::INGAME;
+			cursorUnlockCount--;
+		}
+	}
 
 	screenShake *= powf(0.25f, game->dTime);
 	screenOffset = Vec3(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f), screenShkZ.GetNoise(tTime, 0.f)) * screenShake;
 
-	zoom = ClampF(zoom + float(int(inputs.zoomOut.held) - int(inputs.zoomIn.held)) * dTime * zoomSpeed, minZoom, maxZoom);
-
 	brightness = planet->GetBrightness();
 
 	// Spawn boss:
-	if (inputs.enter.pressed && !shouldSpawnBoss)
+	if (inputs.keys[KeyCode::ENTER].pressed && !shouldSpawnBoss)
 	{
 		shouldSpawnBoss = true;
 		timeStartBossPrep = tTime;
@@ -749,10 +753,10 @@ void Game::TUpdate()
 		planet->bosses->SpawnOneRandom();
 		shouldSpawnBoss = false;
 	}
-	waveCount += int(inputs.period.pressed) - int(inputs.comma.pressed);
+	waveCount += int(inputs.keys[KeyCode::PERIOD].pressed) - int(inputs.keys[KeyCode::COMMA].pressed);
 
 	// Enemy spawn stuff:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.slash.pressed)
+	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.keys[KeyCode::SLASH].pressed)
 	{
 		waveCount++;
 		planet->faction1Spawns->SpawnRandomEnemies(secondsBetweenWaves / 60.f);
@@ -814,7 +818,7 @@ void Game::TUpdate()
 	
 
 
-	if (inputs.hideUI.pressed)
+	if (inputs.keys[KeyCode::HIDEUI].pressed)
 		showUI = !showUI;
 	if (showUI && playerAlive)
 	{

@@ -35,7 +35,7 @@ public:
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	CHARS character = CHARS::SOLDIER;
 	uint chunkRenderDist = 5;
-	float sensitivity = 5;
+	float sensitivity = 300;
 	bool maximized = true;
 
 	void TryOpen()
@@ -200,10 +200,7 @@ private:
 		}
 		lastTime = static_cast<float>(glfwGetTime());
 
-		if (cursorUnlockCount == 0)
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		else
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetInputMode(window, GLFW_CURSOR, cursorUnlockCount == 0 ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 
 		Update();
 
@@ -230,13 +227,12 @@ public:
 	float lastTime = 0.0f, dTime = 0.0f;
 	bool shouldRun = true;
 	Settings settings;
-	float zoom = 30, minZoom = 10, maxZoom = 30, zoomSpeed = 5;
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
 	Vec3 screenOffset = Vec3(0);
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), perspective = glm::mat4(1);
-	int cursorUnlockCount = 1;
+	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 
 	Renderer() { }
 
@@ -431,16 +427,6 @@ public:
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-	}
-
-	float CurrentDistToCorner()
-	{
-		return sqrtf(zoom * zoom * (screenRatio * screenRatio + 1));
-	}
-
-	float DistToCorner()
-	{
-		return sqrtf(maxZoom * maxZoom * (screenRatio * screenRatio + 1));
 	}
 };
 

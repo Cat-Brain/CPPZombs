@@ -28,7 +28,7 @@ int main()
 	}
 	{
 		using namespace VUpdates;
-		vUpdates = { EntityVU, FrictionVU };
+		vUpdates = { EntityVU, AirResistanceVU, FrictionVU };
 	}
 	{
 		using namespace DUpdates;

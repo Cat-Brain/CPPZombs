@@ -12,12 +12,11 @@ public:
     bool collideTerrain;
 
     Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
-        float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
-        Entity(vZero, radius, color, mass, maxHealth, health, name, allegiance),
+        float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
+        Entity(vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
         duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
     {
         update = UPDATE::PROJECTILE;
-        isProjectile = true;
         sortLayer = 1;
         this->corporeal = corporeal;
         Start();
@@ -102,10 +101,27 @@ public:
     ItemInstance item;
     string creatorName;
 
-    ShotItem(ItemInstance item, float speed = 8.0f, float radius = 0.5f, float mass = 1, int maxHealth = 1, int health = 1) :
-        Projectile(item->range, item->damage, speed, radius, item->color, mass, maxHealth, health), item(item)
+    ShotItem(ItemInstance item, string name) :
+        Projectile(item->range, item->damage, item->speed, item->radius, item->color, item->mass, 0, item->health, item->health, name, item->corporeal, item->shouldCollide, item->collideTerrain), item(item)
     {
         onDeath = ONDEATH::SHOTITEM;
+        Start();
+    }
+
+    ShotItem(ShotItem* baseClass, Vec3 pos, Vec3 direction, Entity* creator) :
+        ShotItem(*baseClass)
+    {
+        this->creator = creator;
+        float magnitude = glm::length(direction);
+        this->dir = direction / magnitude;
+        duration = fminf(item->range, magnitude);
+        this->pos = pos;
+        begin = tTime;
+        if (creator != nullptr)
+        {
+            allegiance = creator->allegiance;
+            creatorName = creator->name;
+        }
         Start();
     }
 
@@ -141,6 +157,11 @@ public:
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
     }
+
+    unique_ptr<Entity> Clone(Vec3 pos, Vec3 direction, Entity* creator) override
+    {
+        return make_unique<ShotItem>(this, pos, direction, creator);
+    }
 };
 
 namespace OnDeaths
@@ -152,7 +173,7 @@ namespace OnDeaths
     }
 }
 
-ShotItem* basicShotItem = new ShotItem(Resources::copper.Clone(), 12, 0.5f, 1, 1, 1);
+ShotItem* basicShotItem = new ShotItem(Resources::copper.Clone(), "Basic Shot Item");
 
 namespace ItemUs
 {

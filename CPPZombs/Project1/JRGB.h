@@ -225,6 +225,12 @@ public:
 	}
 #pragma endregion
 
+	static RGBA RandNormalized(byte a = 255)
+	{
+		Vec3 point = glm::abs(RandCircPoint());
+		return RGBA(static_cast<byte>(point.x * 255), static_cast<byte>(point.y * 255), static_cast<byte>(point.z * 255), a);
+	}
+
 	bool MaxEq(RGBA newRGB)
 	{
 		if (r >= newRGB.r && g >= newRGB.g && b >= newRGB.b)

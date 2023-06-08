@@ -9,8 +9,8 @@ namespace Livestock
 		Entity* entityToSpawn;
 		float timeTill;
 
-		Egg(Entity* entityToSpawn, float timeTill, float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
-			DToCol(vZero, radius, color, color2, mass, maxHealth, health, name), entityToSpawn(entityToSpawn), timeTill(timeTill)
+		Egg(Entity* entityToSpawn, float timeTill, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+			DToCol(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name), entityToSpawn(entityToSpawn), timeTill(timeTill)
 		{
 			update = UPDATE::EGG;
 		}
@@ -57,8 +57,8 @@ namespace Livestock
 		Kiwi(int points, float lifetime, float moveSpeed, float maxSpeed, float turnSpeed, float sightDist, float sightAngle,
 			float startFullness, float awakeFullness, float maxFullness, float foodPerSecond, float foodPerSleepSecond,
 			int eggsLaid,
-			float radius, RGBA color, RGBA color2, float mass, int maxHealth, int health, string name) :
-			Livestock(vZero, radius, color, color2, mass, maxHealth, health, name),
+			float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+			Livestock(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			points(points), lifetime(lifetime),
 			moveSpeed(moveSpeed), maxSpeed(maxSpeed), turnSpeed(turnSpeed), sightDist(sightDist), sightAngle(sightAngle),
 			fullness(startFullness), awakeFullness(awakeFullness), maxFullness(maxFullness),
@@ -125,7 +125,7 @@ namespace Livestock
 				for (int i = 0; i < kiwi->eggsLaid; i++)
 				{
 					unique_ptr<Entity> newEgg = kiwi->birthEntity->Clone(kiwi->pos, north, kiwi);
-					newEgg->vel = RotateBy(kiwi->dir, 2 * PI_F * i / kiwi->eggsLaid) * 5.f;
+					newEgg->vel = glm::rotateZ(kiwi->dir, 2 * PI_F * i / kiwi->eggsLaid) * 5.f;
 					game->entities->push_back(std::move(newEgg));
 				}
 				return kiwi->DestroySelf(kiwi);
@@ -161,7 +161,7 @@ namespace Livestock
 				if (glm::distance2(kiwi->pos, kiwi->lastEatPos) > 15 * 15)
 					kiwi->dir = RotateTowardsNorm(kiwi->dir, kiwi->lastEatPos - kiwi->pos, game->dTime * kiwi->turnSpeed);
 				else
-					kiwi->dir = Normalized(RotateBy(kiwi->dir, kiwi->turnSpeed * game->dTime * randomness));
+					kiwi->dir = Normalized(glm::rotateZ(kiwi->dir, kiwi->turnSpeed * game->dTime * randomness));
 				kiwi->vel = TryAdd2(kiwi->vel, kiwi->dir * (game->planet->friction + kiwi->moveSpeed * game->dTime), kiwi->maxSpeed);
 				vector<Entity*> seenEntities = EntitiesOverlaps(kiwi->pos, kiwi->sightDist, game->entities->collectibles);
 				for (int i = 0; i < seenEntities.size(); i++)
@@ -220,8 +220,8 @@ namespace Livestock
 		}
 	}
 
-	Kiwi kiwi = Kiwi(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 30, 30, "Kiwi");
-	Egg kiwiEgg = Egg(&kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 50, 50, "Kiwi Egg");
+	Kiwi kiwi = Kiwi(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 0, 30, 30, "Kiwi");
+	Egg kiwiEgg = Egg(&kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 0, 50, 50, "Kiwi Egg");
 
 	vector<Livestock*> livestocks{ &kiwi };
 	vector<Entity*> livestockBirths{ &kiwiEgg };

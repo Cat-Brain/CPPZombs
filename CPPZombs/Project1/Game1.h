@@ -62,7 +62,7 @@ bool InputHoverSquare(Vec2 minPos, float scale, string text, RGBA color1 = RGBA(
 	if (CheckInputSquareHover(minPos, scale, text))
 	{
 		font.Render(text, minPos * 2.f - Vec2(ScrDim()), scale * 2, color2);
-		return game->inputs.primary.pressed;
+		return game->inputs.keys[KeyCode::PRIMARY].pressed;
 	}
 	else
 		font.Render(text, { minPos * 2.f - Vec2(ScrDim()) }, scale * 2, color1);

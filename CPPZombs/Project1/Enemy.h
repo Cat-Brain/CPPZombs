@@ -43,15 +43,14 @@ namespace Enemies
 
 		Enemy(Allegiance allegiance = 0, float timePer = 0.5f, float speed = 0.25f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
 			RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			DToCol(vZero, radius, color, color2, mass, maxHealth, health, name, allegiance),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			DToCol(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance),
 			timePer(timePer), lastTime(0.0f), speed(speed), maxSpeed(maxSpeed), timePerMove(0.0f), lastMove(0.0f), points(points), firstWave(firstWave),
 			damage(damage), jumpTime(jumpTime), lastJump(0), mUpdate(MUPDATE::DEFAULT), aUpdate(AUPDATE::DEFAULT)
 		{
 			update = UPDATE::ENEMY;
 			uiUpdate = UIUPDATE::ENEMY;
 			onDeath = ONDEATH::ENEMY;
-			isEnemy = true;
 		}
 
 		Enemy(Enemy* baseClass, Vec3 pos) :
@@ -132,12 +131,11 @@ namespace Enemies
 	{
 	public:
 		RGBA color3;
-		FastNoiseLite noise1, noise2, noise3; // <-For random colors.
 
 		Deceiver(Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
 			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), color3(color3), noise1(), noise2(), noise3()
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), color3(color3)
 		{
 			Start();
 			dUpdate = DUPDATE::DECEIVER;
@@ -148,10 +146,8 @@ namespace Enemies
 			unique_ptr<Deceiver> newEnemy = make_unique<Deceiver>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
+			newEnemy->color = RGBA::RandNormalized(newEnemy->color.a);
 			newEnemy->Start();
-			newEnemy->noise1.SetSeed(PsuedoRandom());
-			newEnemy->noise2.SetSeed(PsuedoRandom());
-			newEnemy->noise3.SetSeed(PsuedoRandom());
 			return std::move(newEnemy);
 		}
 	};
@@ -163,8 +159,8 @@ namespace Enemies
 
 		Parent(Enemy* child, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), child(child)
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), child(child)
 		{
 			Start();
 			dUpdate = DUPDATE::PARENT;
@@ -188,8 +184,8 @@ namespace Enemies
 
 		Exploder(float explosionRadius, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), explosionRadius(explosionRadius)
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), explosionRadius(explosionRadius)
 		{
 			dUpdate = DUPDATE::EXPLODER;
 			aUpdate = AUPDATE::EXPLODER;
@@ -222,8 +218,8 @@ namespace Enemies
 		Snake(int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), length(length), color3(color3),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
 			color4(color4), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
 		{
 			earlyDUpdate = EDUPDATE::SNAKE;
@@ -282,8 +278,9 @@ namespace Enemies
 		PouncerSnake(float pounceTime, float speed, float jumpTime, int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Snake(length, segmentWobbleForce, segmentWobbleFrequency, allegiance, timePer, speed, speed, jumpTime, points, firstWave, damage, radius, color, color2, color3, color4, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Snake(length, segmentWobbleForce, segmentWobbleFrequency, allegiance, timePer, speed, speed, jumpTime, points, firstWave,
+				damage, radius, color, color2, color3, color4, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
@@ -341,8 +338,8 @@ namespace Enemies
 		SnakeConnected(int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name), length(length), color3(color3),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
 			color4(color4), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
 		{
 			dUpdate = DUPDATE::SNAKECONNECTED;
@@ -408,9 +405,13 @@ namespace Enemies
 		{
 			if (health <= 0) return 1;
 			if (next != nullptr)
-				return front->Enemy::ApplyHit(damage, damageDealer);
-			health = max(health, damage);
-			return Enemy::ApplyHit(damage, damageDealer);
+				return front->ApplyHit(damage, damageDealer);
+
+			int result = Enemy::ApplyHit(damage, damageDealer);
+			if (result == 1)
+				for (Entity* entity : observers)
+					entity->UnAttach(this);
+			return result;
 		}
 	};
 
@@ -422,8 +423,8 @@ namespace Enemies
 
 		ColorCycler(vector<RGBA> colorsToCycle, float colorCycleSpeed = 1.0f, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, colorsToCycle[0], color2, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, colorsToCycle[0], color2, mass, bounciness, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
 		{
 			dUpdate = DUPDATE::COLORCYCLER;
@@ -454,8 +455,8 @@ namespace Enemies
 		Vacuumer(float vacDist, float vacSpeed, float maxVacSpeed, float desiredDistance, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), desiredDistance(desiredDistance), items(0)
 		{
 			update = UPDATE::VACUUMER;
@@ -486,8 +487,8 @@ namespace Enemies
 		Spider(LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
 		{
 			onDeath = ONDEATH::SPIDER;
@@ -553,9 +554,9 @@ namespace Enemies
 		Spoobderb(Entity* baseChild, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
-				allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name) { }
+				allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name) { }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -584,9 +585,9 @@ namespace Enemies
 		Centicrawler(float segmentWobbleForce, float segmentWobbleFrequency, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2,
-				mass, maxHealth, health, name), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
+				mass, bounciness, maxHealth, health, name), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
 		{
 			update = UPDATE::CENTICRAWLER;
 			onDeath = ONDEATH::CENTICRAWLER;
@@ -613,8 +614,8 @@ namespace Enemies
 
 		Pouncer(float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, moveSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, moveSpeed, moveSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
 		{
 			this->timePerMove = timePerMove;
@@ -642,8 +643,8 @@ namespace Enemies
 
 		Cat(float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Pouncer(pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, mass, maxHealth, health,
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Pouncer(pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health,
 				name), homeSpeed(homeSpeed), color3(color3)
 		{
 			update = UPDATE::CAT;
@@ -674,8 +675,9 @@ namespace Enemies
 
 		BoomCat(float explosionRadius, float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Cat(homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3, mass, maxHealth, health, name), explosionRadius(explosionRadius)
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Cat(homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
+				mass, bounciness, maxHealth, health, name), explosionRadius(explosionRadius)
 		{
 			aUpdate = AUPDATE::BOOMCAT;
 		}
@@ -702,9 +704,9 @@ namespace Enemies
 		Cataclysm(float circleTime, float circleRadius, float spinSpeed, Projectile* projectile, Projectile* projectile2, float timePerShot, float explosionRadius,
 			float homeSpeed, float pounceTime, float moveSpeed, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			BoomCat(explosionRadius, homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
-				mass, maxHealth, health, name), circleTime(circleTime), circleRadius(circleRadius), spinSpeed(spinSpeed), projectile(projectile),
+				mass, bounciness, maxHealth, health, name), circleTime(circleTime), circleRadius(circleRadius), spinSpeed(spinSpeed), projectile(projectile),
 			projectile2(projectile2), timePerShot(timePerShot), color4(color4)
 		{
 			update = UPDATE::CATACLYSM;
@@ -743,8 +745,8 @@ namespace Enemies
 
 		Tank(Projectile* projectile, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
-			float mass = 1, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, maxHealth, health, name),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			projectile(projectile), turnSpeed(turnSpeed)
 		{
 			dUpdate = DUPDATE::TANK;
@@ -887,29 +889,26 @@ namespace Enemies
 		void DeceiverDU(Entity* entity)
 		{
 			Deceiver* deceiver = static_cast<Deceiver*>(entity);
-			float r = deceiver->noise1.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
-			float g = deceiver->noise2.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
-			float b = deceiver->noise3.GetNoise(tTime, 0.0f) * 0.5f + 0.5f;
-			deceiver->color.r = static_cast<byte>(r * 255);
-			deceiver->color.g = static_cast<byte>(g * 255);
-			deceiver->color.b = static_cast<byte>(b * 255);
 
 			deceiver->DUpdate(DUPDATE::DTOCOL);
 
-			float healthRatio = (float)deceiver->health / deceiver->maxHealth;
-			deceiver->color.r = static_cast<byte>(r * deceiver->color3.r);
-			deceiver->color.g = static_cast<byte>(g * deceiver->color3.g);
-			deceiver->color.b = static_cast<byte>(b * deceiver->color3.b);
-
+			RGBA tempColor = deceiver->color;
 			Vec3 tempPos = deceiver->pos;
 
-			deceiver->pos = Vec3(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y, deceiver->pos.z);
+			deceiver->color.r = static_cast<byte>(deceiver->color.r / 255.f * deceiver->color3.r);
+			deceiver->color.g = static_cast<byte>(deceiver->color.g / 255.f * deceiver->color3.g);
+			deceiver->color.b = static_cast<byte>(deceiver->color.b / 255.f * deceiver->color3.b);
+			deceiver->color.a = static_cast<byte>(deceiver->color.a / 255.f * deceiver->color3.a);
+			
+			Vec3 playerPos = game->PlayerPos();
+			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
 			deceiver->DUpdate(DUPDATE::DTOCOL);
-			deceiver->pos = Vec3(deceiver->pos.x, game->PlayerPos().y * 2 - deceiver->pos.y, deceiver->pos.z);
+			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
 			deceiver->DUpdate(DUPDATE::DTOCOL);
-			deceiver->pos = Vec3(game->PlayerPos().x * 2 - deceiver->pos.x, deceiver->pos.y, deceiver->pos.z);
+			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
 			deceiver->DUpdate(DUPDATE::DTOCOL);
 
+			deceiver->color = tempColor;
 			deceiver->pos = tempPos;
 		}
 
@@ -1005,22 +1004,21 @@ namespace Enemies
 		void TankDU(Entity* entity)
 		{
 			Tank* tank = static_cast<Tank*>(entity);
-			Vec3 rightDir = RotateRight(tank->dir) * tank->radius, upDir = tank->dir * tank->radius;
+			Vec3 rightDir = RotateRight(tank->dir) * tank->radius, upDir = tank->dir * tank->radius, forwardDir = tank->dir * tank->radius;
 			float treadRadius = tank->radius * 0.33333f;
 			float drawHeight = tank->radius * sqrtf(0.75f), drawDist = tank->radius * 0.5f;
 			Vec3 dir = glm::normalize(glm::cross(up, tank->dir));
 			//Vec3 a = drawHeight * dir + drawDist * tank->dir;
-			game->DrawCircle(tank->pos + rightDir + tank->dir * -0.33333f, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos + rightDir + tank->dir * -0.16666f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * -0.33333f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * -0.16666f, tank->projectile->color, treadRadius);
 			game->DrawCircle(tank->pos + rightDir, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos + rightDir + tank->dir * 0.16666f, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos + rightDir + tank->dir * 0.33333f, tank->projectile->color, treadRadius);
-
-			game->DrawCircle(tank->pos - rightDir + tank->dir * -0.33333f, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos - rightDir + tank->dir * -0.16666f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * 0.16666f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * 0.33333f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * -0.33333f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * -0.16666f, tank->projectile->color, treadRadius);
 			game->DrawCircle(tank->pos - rightDir, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos - rightDir + tank->dir * 0.16666f, tank->projectile->color, treadRadius);
-			game->DrawCircle(tank->pos - rightDir + tank->dir * 0.33333f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * 0.16666f, tank->projectile->color, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * 0.33333f, tank->projectile->color, treadRadius);
 
 			game->DrawCylinder(tank->pos, tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
 
@@ -1321,54 +1319,59 @@ namespace Enemies
 #pragma region Wild enemies
 	// Prerequisites
 	LegParticle spiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
-	Centicrawler centicrawler = Centicrawler(0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 60, 60, "Centicrawler");
+	LegParticle miniSpiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.125f);
+	Centicrawler centicrawler = Centicrawler(0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
+	Centicrawler miniCenticrawler = Centicrawler(0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 0, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
 	// Earlies - 1
-	Spider spider = Spider(spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 20, 20, "Spider");
+	Spider spider = Spider(spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
 	// Mids - 4
-	Pouncer frog = Pouncer(2, 16, 0.5f, ENEMY1_A, 1, 4, 4, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 30, 30, "Frog");
+	Pouncer frog = Pouncer(2, 16, 0.5f, ENEMY1_A, 1, 4, 3, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
+	Parent miniSpiderParent = Parent(&miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
 	// Mid-lates - 6
-	Parent spiderParent = Parent(&centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 100, 100, "Spider Parent");
-	SnakeConnected snake = SnakeConnected(15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 300, 300, "Snake");
+	Parent spiderParent = Parent(&centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
+	SnakeConnected snake = SnakeConnected(15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 0, 300, 300, "Snake");
 	// Lates - 8
-	SnakeConnected bigSnake = SnakeConnected(30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 900, 900, "Big Snake");
-	PouncerSnake pouncerSnake = PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 30, 30, "Pouncer Snake");
+	SnakeConnected bigSnake = SnakeConnected(30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 0, 900, 900, "Big Snake");
+	PouncerSnake pouncerSnake = PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 0, 30, 30, "Pouncer Snake");
 	// Very lates - 12
-	Cat cat = Cat(1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 18, 18, "Cat");
-	BoomCat boomCat = BoomCat(4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 18, 18, "Boom Cat");
-	Spoobderb spoobderb = Spoobderb(&centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 1000, 1000, "Spoobderb - The 30 footed beast");
+	Cat cat = Cat(1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 0, 18, 18, "Cat");
+	BoomCat boomCat = BoomCat(4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 0, 18, 18, "Boom Cat");
+	Spoobderb spoobderb = Spoobderb(&centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 0, 1000, 1000, "Spoobderb - The 30 footed beast");
 #pragma endregion
 #pragma region Faction 1
 	//Predefinitions - Special
-	Projectile tinyTankProjectile = Projectile(15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 1, 1, "Tiny Tank Projectile");
-	Enemy child = Enemy(ENEMY2_A, 1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 5, 5, "Child");
+	Projectile tinyTankProjectile = Projectile(15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
+	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
+	ShotItem gigaTankProjectile = ShotItem(gigaTankItem.Clone(), "Giga Tank Projectile");
+	Enemy child = Enemy(ENEMY2_A, 1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 5, 5, "Child");
 	
 	// Earlies - 1
-	Enemy walker = Enemy(ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 30, 30, "Walker");
-	Enemy tanker = Enemy(ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 120, 120, "Tanker");
-	Tank tinyTank = Tank(&tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 30, 30, "Tiny Tank");
+	Enemy walker = Enemy(ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
+	Enemy tanker = Enemy(ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
+	Tank tinyTank = Tank(&tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
 
 	// Mids - 4
-	Deceiver deceiver = Deceiver(ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(255, 255, 255, 153), 1, 30, 30, "Deceiver");
-	Exploder exploder = Exploder(2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 30, 30, "Exploder");
-	Vacuumer vacuumer = Vacuumer(4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 30, 30, "Vacuumer");
-	Vacuumer pusher = Vacuumer(6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 30, 30, "Pusher");
+	Deceiver deceiver = Deceiver(ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
+	Exploder exploder = Exploder(2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 0, 30, 30, "Exploder");
+	Vacuumer vacuumer = Vacuumer(4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 30, 30, "Vacuumer");
+	Vacuumer pusher = Vacuumer(6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 0, 30, 30, "Pusher");
 	
 	// Mid-lates - 6
-	Parent parent = Parent(&child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 100, 100, "Parent");
-	Enemy megaTanker = Enemy(ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 480, 480, "Mega Tanker");
+	Parent parent = Parent(&child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 0, 100, 100, "Parent");
+	Enemy megaTanker = Enemy(ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 0, 480, 480, "Mega Tanker");
 	
 	// Lates - 8
-	ColorCycler hyperSpeedster = ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 240, 240, "Hyper Speedster");
-	Exploder gigaExploder = Exploder(7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 30, 30, "Giga Exploder");
+	ColorCycler hyperSpeedster = ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 0, 240, 240, "Hyper Speedster");
+	Exploder gigaExploder = Exploder(7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 0, 30, 30, "Giga Exploder");
 	
 	// Very lates - 12
-	// ADD VERY LATES
+	Tank gigaTank = Tank(&gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
 #pragma endregion
 
 	// Bosses - Special
-	Projectile* catProjectile = new Projectile(25.0f, 10, cat.speed, 0.4f, cat.color, 1, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile* catProjectile2 = new Projectile(25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 1, 1, "Cataclysmic Bullet", false, true);
-	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 9, 9, "Cataclysm - The nine lived feind");
+	Projectile* catProjectile = new Projectile(25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile* catProjectile2 = new Projectile(25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 
@@ -1467,9 +1470,10 @@ namespace Enemies
 	{
 	public:
 		int usedPoints = 0;
-		uint nextSpawnIndex = 0;
+		uint nextSpawnIndex = 0, nextSpawnCount = 1;
+		uint groupSpawnMin = 3, groupSpawnMax = 10;
 
-		void FindNewIndex()
+		void Randomize()
 		{
 			int currentlySpawnableEnemyCount = 1;
 			for (int i = 1; i < (*this).size(); i++)
@@ -1480,15 +1484,17 @@ namespace Enemies
 				if ((*this)[i]->firstWave <= waveCount)
 					currentlySpawnableEnemies[j++] = i;
 			nextSpawnIndex = currentlySpawnableEnemies[rand() % currentlySpawnableEnemies.size()];
+			nextSpawnCount = RandRangeInt(groupSpawnMin, groupSpawnMax);
 		}
 
 		void Update()
 		{
-			if (Types::GetPoints() - usedPoints > (*this)[nextSpawnIndex]->Cost())
+			if (Types::GetPoints() - usedPoints > (*this)[nextSpawnIndex]->Cost() * nextSpawnCount)
 			{
-				SpawnEnemy(nextSpawnIndex);
-				usedPoints += (*this)[nextSpawnIndex]->Cost();
-				FindNewIndex();
+				for (int i = 0; i < nextSpawnCount; i++)
+					SpawnEnemy(nextSpawnIndex);
+				usedPoints += (*this)[nextSpawnIndex]->Cost() * nextSpawnCount;
+				Randomize();
 			}
 		}
 	};
@@ -1504,7 +1510,7 @@ namespace Enemies
 	Types wildSpawns
 	{
 		{&spider},
-		{&frog},
+		{&frog, &miniSpiderParent},
 		{&spiderParent, &snake},
 		{&bigSnake, &pouncerSnake},
 		{&cat, &boomCat, &spoobderb}
@@ -1512,11 +1518,11 @@ namespace Enemies
 
 	Types faction1Spawns
 	{
-		{/*&walker, &tanker, */&tinyTank},
+		{&walker, &tanker, &tinyTank},
 		{&deceiver, &exploder, &vacuumer, &pusher},
 		{&parent, &megaTanker},
-		{&hyperSpeedster, &gigaExploder}
-		// ADD VERY LATERS
+		{&hyperSpeedster, &gigaExploder},
+		{&gigaTank}
 	};
 
 	Types spawnableBosses

@@ -50,8 +50,7 @@ void main()
 	float c = dot(pos, pos) - posScale.w * posScale.w;
 	float d = b * b - 4 * c; // Discriminant from quadratic formula.
 
-	if (d <= 0) discard;
-	if (color.a != 1. && color.a < mask(gl_FragCoord.xy)) discard;
+	if (d <= 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
 
 	float s = sqrt(d);
 	float dstToSphereNear = max(0, (-s - b) * 0.5);
