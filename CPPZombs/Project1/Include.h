@@ -56,6 +56,7 @@ int psuedoRandomizer = 0;
 int frameCount = 0, waveCount = 0;
 float tTime = 0, tTime2 = 0;
 string deathCauseName = "NULL DEATH CAUSE";
+string deathName = "NULL DEATH NAME";
 
 // Very important!
 class Game;
@@ -142,6 +143,14 @@ std::string ToStringWithPrecision(const T a_value, const int n = 6)
 template <typename E>
 constexpr typename std::underlying_type<E>::type UnEnum(E e) noexcept {
 	return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
+void ErrorHandle(string message)
+{
+	printf("Uh oh! There seems to have been a crash!\n\
+I know of this crash and am likely trying to track it down, sorry this happened.\n\
+The crash type is:%s", message.c_str());
+	ShowWindow(GetConsoleWindow(), SW_SHOW);
 }
 
 int PsuedoRandom()

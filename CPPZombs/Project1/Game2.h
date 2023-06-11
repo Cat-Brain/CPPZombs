@@ -454,14 +454,23 @@ void Game::Start()
 	entities = make_unique<Entities>();
 	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone();
 	player = playerUnique.get();
+
+	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
+	base = static_cast<Base*>(baseUnique.get());
+	player->base = base;
+
 	for (int i = 0; i < 100; i++)
 	{
-		if (!entities->OverlapsTile(player->pos, player->radius))
+		if (!entities->OverlapsTile(base->pos, base->radius))
 			break;
 		else
-			player->pos.z++;
+			base->pos.z++;
 	}
+	player->pos = base->pos + up * (base->radius + player->radius);
+
 	entities->push_back(std::move(playerUnique));
+	entities->push_back(std::move(baseUnique));
+
 	playerAlive = true;
 	totalGamePoints = 0;
 
@@ -594,7 +603,7 @@ void Game::Update()
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-			font.Render("Killed by : ", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
+			font.Render(deathName + " was killed by :", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 
 			if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))

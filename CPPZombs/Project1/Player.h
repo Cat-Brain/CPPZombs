@@ -136,9 +136,12 @@ public:
 	}
 };
 
+class Base;
+EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, EDUPDATE::ENTITY, UIUPDATE::PLAYER, ONDEATH::PLAYER);
 class Player : public LightBlock
 {
 public:
+	Base* base = nullptr;
 	Entity* heldEntity = nullptr, *currentMenuedEntity = nullptr;
 	PlayerInventory items;
 	Items startItems;
@@ -160,7 +163,7 @@ public:
 		moveDir = vZero, // camDir but without the verticality.
 		rightDir = vZero; // moveDir but rotated 90 degrees to the right.
 
-	Player(bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
+	Player(EntityData* data, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight =  4, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
 		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
@@ -168,17 +171,13 @@ public:
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
 		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		LightBlock(lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
+		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
 		moveSpeed(moveSpeed), holdMoveSpeed(holdMoveSpeed), startItems(startItems), blacklistedSeeds(blacklistedSeeds), vacBoth(vacBoth),
 		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
 		primaryTime(primaryTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), secondary(secondary),
 		utility(utility), maxHoldMoveSpeed(maxHoldMoveSpeed), holdMoveWeight(holdMoveWeight)
 	{
-		update = UPDATE::PLAYER;
-		dUpdate = DUPDATE::PLAYER;
-		uiUpdate = UIUPDATE::PLAYER;
 		uiActive = true;
-		onDeath = ONDEATH::PLAYER;
 	}
 
 	void Start() override
@@ -263,6 +262,7 @@ enum class ENGMODE
 string engModeStr[] = {"Rover", "Drone", "Remove Drone", "Turret"};
 
 class Drone;
+EntityData engineerData = EntityData(UPDATE::ENGINEER, VUPDATE::FRICTION, DUPDATE::PLAYER, EDUPDATE::ENTITY, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
 class Engineer : public Player
 {
 public:
@@ -270,7 +270,7 @@ public:
 	vector<SpringFadeCircle*> drones;
 	float currentJetpackFuel = 0, jetpackFuel, jetpackForce;
 
-	Engineer(float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
+	Engineer(EntityData* data, float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
 		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
@@ -278,14 +278,11 @@ public:
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
 		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		Player(vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
+		Player(data, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, secondaryTime, utilityTime, movement, primary, secondary, utility, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems, blacklistedSeeds),
 		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
-	{
-		update = UPDATE::ENGINEER;
-		uiUpdate = UIUPDATE::ENGINEER;
-	}
+	{ }
 
 	Engineer(Engineer* baseClass, Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) :
 		Engineer(*baseClass)
@@ -304,6 +301,7 @@ public:
 	}
 };
 
+EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Turret : public LightBlock
 {
 public:
@@ -311,14 +309,11 @@ public:
 	PlayerInventory* items = nullptr;
 	Engineer* leader = nullptr;
 	
-	Turret(float timePer,
+	Turret(EntityData* data, float timePer,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
 		timePer(timePer), timeTill(timePer)
-	{
-		update = UPDATE::TURRET;
-		dUpdate = DUPDATE::TURRET;
-	}
+	{ }
 
 	Turret(Turret* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
 		Turret(*baseClass)
@@ -337,6 +332,7 @@ public:
 	}
 };
 
+EntityData roverData = EntityData(UPDATE::ROVER, VUPDATE::FRICTION, DUPDATE::ROVER, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Rover : public LightBlock
 {
 public:
@@ -344,15 +340,12 @@ public:
 	Items* items = nullptr;
 	Engineer* leader = nullptr;
 
-	Rover(float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
+	Rover(EntityData* data, float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
 		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
 		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
-	{
-		update = UPDATE::ROVER;
-		dUpdate = DUPDATE::ROVER;
-	}
+	{ }
 
 	Rover(Rover* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
 		Rover(*baseClass)
@@ -372,25 +365,25 @@ public:
 	}
 };
 
-unique_ptr<Turret> turret = make_unique<Turret>(2.f, JRGB(255), 10.f, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
-unique_ptr<Rover> rover = make_unique<Rover>(32.f, 8.f, 4.f, 4.f, 4.f, 2.f, 10.f, JRGB(255, 255), 3.f, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0.f, 20, 20, "Rover");
+Turret turret = Turret(&turretData, 2, JRGB(255), 10, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
+Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 20, 20, "Rover");
 
-Player soldier = Player(false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 4.f, 6.f, 256.f, 32.f, 1.f, 0.f, 2.f, 4.f, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20.f, 5.f, 0.5f, 100, 50,
+Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 2, 4, PMOVEMENT::DEFAULT,
+	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.5f, 100, 50,
 	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
 		Resources::Seeds::rubyShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
 		Resources::Eggs::kiwiEgg.Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
 
-Player flicker = Player(false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
+Player flicker = Player(&playerData, false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
 	0, 100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
 		Resources::Seeds::cheeseVineSeed.Clone(3), Resources::Seeds::quartzVineSeed.Clone(2), Resources::Seeds::rockShrubSeed.Clone(3),
 		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
-	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
+	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
-Engineer engineer = Engineer(2.f, 3.f, false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 2.f, 4.f, 0.f, 0.f, 1.f, 0.f, 2.f, 0.f, PMOVEMENT::JETPACK,
-	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20.f, 5.f,
+Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 0, 0, 1, 0, 2, 0, PMOVEMENT::JETPACK,
+	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20, 5,
 	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
 		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
 		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
@@ -398,18 +391,17 @@ Engineer engineer = Engineer(2.f, 3.f, false, true, 0.4f, 32.f, 8.f, 32.f, 8.f, 
 
 vector<Player*> characters = { &soldier, &flicker, &engineer };
 
+EntityData grenadeData = EntityData(UPDATE::GRENADE, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Grenade : public LightBlock
 {
 public:
 	int damage;
 	float pushForce, explosionRadius, startTime, timeTill, baseRange;
 
-	Grenade(int damage, float pushForce, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, float bounciness, int health, string name) :
-		LightBlock(lightColor, true, range, vZero, radius, color, RGBA(), mass, bounciness, health, health, name),
+	Grenade(EntityData* data, int damage, float pushForce, float explosionRadius, float timeTill, JRGB lightColor, float range, float radius, RGBA color, float mass, float bounciness, int health, string name) :
+		LightBlock(data, lightColor, true, range, vZero, radius, color, RGBA(), mass, bounciness, health, health, name),
 		damage(damage), explosionRadius(explosionRadius), startTime(0), timeTill(timeTill), baseRange(range), pushForce(pushForce)
-	{
-		update = UPDATE::GRENADE;
-	}
+	{ }
 
 	Grenade(Grenade* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
 		Grenade(*baseClass)
@@ -429,7 +421,36 @@ public:
 	}
 };
 
-unique_ptr<Grenade> grenade = make_unique<Grenade>(60, 100.f, 5.f, 3.f, JRGB(255, 255), 15.f, 0.25f, RGBA(255, 255), 0.25f, 0.f, 60, "Grenade");
+Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
+
+EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::BASE);
+class Base : public LightBlock
+{
+public:
+	Player* player = nullptr;
+	int lives = 3;
+
+	Base(EntityData* data, JRGB lightColor, bool lightOrDark, float range, float radius, RGBA color, RGBA color2, float mass,
+		float bounciness, int health, string name) :
+		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, health, health, name) { }
+
+	Base(Base* baseClass, Vec3 pos) :
+		Base(*baseClass)
+	{
+		this->pos = pos;
+		player = game->player;
+		allegiance = player->allegiance;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = vZero, Entity* creator = nullptr) override
+	{
+		return make_unique<Base>(this, pos);
+	}
+};
+
+Base soldierBase = Base(&baseData, JRGB(127, 127, 255), true, 15, 2.5f, RGBA(127, 127, 255), RGBA(), 10, 0.25f, 360, "base");
+vector<Base*> charBases = { &soldierBase, &soldierBase, &soldierBase };
 
 namespace OnDeaths
 {
@@ -439,8 +460,26 @@ namespace OnDeaths
 
 		game->cursorUnlockCount = 1;
 
+		player->base->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
 		player->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
 		playerAlive = false;
+		deathName = player->name;
+		if (damageDealer != nullptr)
+			deathCauseName = damageDealer->name;
+		else
+			deathCauseName = "The planet";
+	}
+
+	void BaseOD(Entity* entity, Entity* damageDealer)
+	{
+		Base* base = static_cast<Base*>(entity);
+
+		game->cursorUnlockCount = 1;
+
+		base->player->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
+		base->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
+		playerAlive = false;
+		deathName = base->player->name + "'s base";
 		if (damageDealer != nullptr)
 			deathCauseName = damageDealer->name;
 		else
@@ -453,7 +492,7 @@ namespace ItemUs
 	void WaveModifierU(ItemInstance item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		game->planet->faction1Spawns->superWave ^= true;
-		game->entities->push_back(make_unique<FadeOutGlow>(8.f, 3.f, pos, 4.f, item->color));
+		game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, 8.f, 3.f, pos, 4.f, item->color));
 		game->screenShake++;
 	}
 }
@@ -709,11 +748,12 @@ namespace UIUpdates
 	{
 		Player* player = static_cast<Player*>(entity);
 		if (!game->showUI) return;
+
 		// Item UI:
 		if (player->shouldRenderInventory)
 			player->items.DUpdate();
-		// Ability UI:
 
+		// Ability UI:
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / 30.f;
 		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
@@ -726,6 +766,10 @@ namespace UIUpdates
 		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / player->primaryTime)));
+
+		// Reticle:
+		game->DrawTextured(reticleSprite, 0, vZero, -Vec2(1.f / 24),
+			RGBA(255, 255, 255, 127), Vec2(1.f / 12));
 	}
 
 	void EngineerUIU(Entity* entity)
@@ -756,7 +800,7 @@ namespace PMovements
 		if (player->inputs.keys[KeyCode::JUMP].pressed && tTime - player->lastJump > 0.25f &&
 			player->Grounded())
 		{
-			player->vel.z += 7;
+			player->vel.z += 7 - min(0.f, player->vel.z);
 			player->lastJump = tTime;
 		}
 	}
@@ -822,7 +866,7 @@ namespace Secondaries
 	bool GrenadeThrow(Player* player)
 	{
 #define GRENADE_THROW_SPEED 20.f
-		game->entities->push_back(grenade->Clone(player->pos, player->camDir * GRENADE_THROW_SPEED, player));
+		game->entities->push_back(grenade.Clone(player->pos, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
 
@@ -832,7 +876,7 @@ namespace Secondaries
 		Player* player = static_cast<Player*>(entity);
 		if (tTime - mEvent->startTime >= 1)
 		{
-			player->vUpdate = VUPDATE::FRICTION;
+			player->frictionMultiplier = 1;
 			return true;
 		}
 		else if (roundf(tTime * 5) != roundf((tTime - game->dTime) * 5))
@@ -848,7 +892,7 @@ namespace Secondaries
 	{
 		player->sTime += 0.5f;
 		player->iTime++;
-		player->vUpdate = VUPDATE::AIR_RESISTANCE;
+		player->frictionMultiplier = 0;
 		player->vel = TryAdd2(player->vel, player->camDir * 5.f, 20.f);
 		player->events.push_back(TimedEvent(TornadoSpinUndo));
 		game->screenShake += 0.25f;
@@ -862,7 +906,7 @@ namespace Secondaries
 		{
 		case ENGMODE::ROVER:
 		{
-			game->entities->push_back(rover->Clone(engineer->pos, engineer->camDir, engineer));
+			game->entities->push_back(rover.Clone(engineer->pos, engineer->camDir, engineer));
 			break;
 		}
 		case ENGMODE::DRONE:
@@ -879,7 +923,7 @@ namespace Secondaries
 		}
 		case ENGMODE::TURRET:
 		{
-			game->entities->push_back(turret->Clone(engineer->pos, engineer->camDir, engineer));
+			game->entities->push_back(turret.Clone(engineer->pos, engineer->camDir, engineer));
 			break;
 		}
 		}
@@ -908,7 +952,7 @@ namespace Utilities
 #define MIGHTY_SHOVE_SPEED -200.f
 #define MIGHTY_SHOVE_MAX_SPEED 15.f
 		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
-		game->entities->push_back(make_unique<FadeOutGlow>(MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0, 127)));
+		game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0, 127)));
 		player->iTime++;
 		player->vel.z += 10;
 		// Find all nearby entities to light them ablaze, including the player (that's why nullptr instead of player):

@@ -158,8 +158,9 @@ private:
 			*(std::get<1>(pairPair)) = CreateShader(vert2, frag2, std::get<2>(pairPair));
 		}
 
-		for (std::tuple<Texture&, int, int, uint>& textureTuple : textures)
-			std::get<0>(textureTuple) = Texture(std::get<1>(textureTuple), std::get<2>(textureTuple), std::get<3>(textureTuple));
+		uint textureType = std::get<0>(textures);
+		for (std::tuple<Texture&, int, int>& textureTuple : std::get<1>(textures))
+			std::get<0>(textureTuple) = Texture(std::get<1>(textureTuple), textureType, std::get<2>(textureTuple));
 
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
@@ -215,7 +216,7 @@ private:
 			glDeleteProgram(*(std::get<1>(pairPair)));
 		for (Framebuffer* framebuffer : framebuffers)
 			framebuffer->Destroy();
-		for (std::tuple<Texture&, int, int, uint>& textureTuple : textures)
+		for (std::tuple<Texture&, int, int>& textureTuple : std::get<1>(textures))
 			std::get<0>(textureTuple).Destroy();
 		for (Mesh* mesh : meshes)
 			mesh->Destroy();
@@ -249,8 +250,23 @@ public:
 	virtual void Update() { }
 	virtual void End() { }
 
-	bool AABBInCam(Vec3 minPos, Vec3 maxPos)
+	bool BoxInFrustum(Vec3 boxPos, Vec3 boxHalfDim)
 	{
+		Vec3 minPos = boxPos - boxHalfDim, maxPos = boxPos + boxHalfDim;
+		// check box outside/inside of frustum
+		for (int i = 0; i < 7; i++)
+		{
+			int out = 0;
+			/*out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, minPos.y, minPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, minPos.y, minPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, maxPos.y, minPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, maxPos.y, minPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, minPos.y, maxPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, minPos.y, maxPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, maxPos.y, maxPos.z)) < 0.0) ? 1 : 0);
+			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, maxPos.y, maxPos.z)) < 0.0) ? 1 : 0);*/
+			if (out == 8) return false;
+		}
 		return true;
 	}
 

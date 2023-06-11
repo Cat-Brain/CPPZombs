@@ -1,26 +1,23 @@
 #include "Particles.h"
 
+EntityData collectibleData = EntityData(UPDATE::COLLECTIBLE, VUPDATE::FRICTION);
 class Collectible : public Entity
 {
 public:
 	ItemInstance baseItem;
 
 	Collectible(ItemInstance baseItem, Vec3 pos = vZero) :
-		Entity(pos, baseItem->radius, baseItem->color, 1, 0, 1, 1, baseItem->name), baseItem(baseItem)
+		Entity(&collectibleData, pos, baseItem->radius, baseItem->color, 1, 0, 1, 1, baseItem->name), baseItem(baseItem)
 	{
 		isCollectible = true;
-		vUpdate = VUPDATE::FRICTION;
-		update = UPDATE::COLLECTIBLE;
 	}
 
 	Collectible(ItemInstance baseItem, Vec3 pos, RGBA color) :
-		Entity(pos, baseItem->radius, color, 1, 0, 1, 1, baseItem->name), baseItem(baseItem)
+		Entity(&collectibleData, pos, baseItem->radius, color, 1, 0, 1, 1, baseItem->name), baseItem(baseItem)
 	{
 		corporeal = false;
 		isCollectible = true;
-		vUpdate = VUPDATE::FRICTION;
 		radius = FindRadius();
-		update = UPDATE::COLLECTIBLE;
 	}
 
 	float FindRadius()

@@ -1,17 +1,14 @@
 #include "Projectile.h"
 
+EntityData dToColData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL);
 class DToCol : public Entity
 {
 public:
 	RGBA color2;
 
-	DToCol(Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
+	DToCol(EntityData* data, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
-		Entity(pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance), color2(color2)
-	{
-		vUpdate = VUPDATE::FRICTION;
-		dUpdate = DUPDATE::DTOCOL;
-	}
+		Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance), color2(color2) { }
 
 	inline RGBA Color()
 	{
@@ -31,6 +28,8 @@ namespace DUpdates
 	}
 }
 
+EntityData lightBlockData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+
 class LightBlock : public DToCol
 {
 public:
@@ -39,13 +38,10 @@ public:
 	LightSource* lightSource;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightBlock(JRGB lightColor, bool lightOrDark, float range = 50, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	LightBlock(EntityData* data, JRGB lightColor, bool lightOrDark, float range = 50, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
-		DToCol(pos, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance), lightColor(lightColor),
-		range(range), lightSource(nullptr), lightOrDark(lightOrDark)
-	{
-		onDeath = ONDEATH::LIGHTBLOCK;
-	}
+		DToCol(data, pos, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance), lightColor(lightColor),
+		range(range), lightSource(nullptr), lightOrDark(lightOrDark) { }
 
 	void Start() override
 	{
@@ -90,8 +86,8 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	LightBlock cheese = LightBlock({ 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
-	LightBlock shade = LightBlock({ 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
+	LightBlock cheese = LightBlock(&lightBlockData, { 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
+	LightBlock shade = LightBlock(&lightBlockData, { 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
 }
 
 namespace Resources
@@ -113,34 +109,43 @@ enum class TUPDATE
 
 vector<function<bool(Entity*)>> tUpdates;
 
-class FunctionalBlock : public Entity
+class FunctionalBlockData : public EntityData
 {
 public:
 	TUPDATE tUpdate;
+
+	FunctionalBlockData(TUPDATE tUpdate = TUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::FRICTION,
+		DUPDATE dUpdate = DUPDATE::ENTITY, EDUPDATE eDUpdate = EDUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
+		EntityData(update, vUpdate, dUpdate, eDUpdate, uiUpdate, onDeath),
+		tUpdate(tUpdate) {}
+};
+
+FunctionalBlockData functionalBlockData = FunctionalBlockData(TUPDATE::DEFAULT, UPDATE::FUNCTIONALBLOCK, VUPDATE::FRICTION);
+
+class FunctionalBlock : public Entity
+{
+public:
 	float timePer, lastTime;
 
-	FunctionalBlock(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock(EntityData* data, float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
-		timePer(timePer), lastTime(tTime), Entity(pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), lastTime(tTime), Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance)
 	{
-		update = UPDATE::FUNCTIONALBLOCK;
-		vUpdate = VUPDATE::FRICTION;
 		Start();
 	}
 
-	FunctionalBlock(float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock(EntityData* data, float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), lastTime(tTime + offset), Entity(pos, radius, color, mass, bounciness, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), lastTime(tTime + offset), Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name)
 	{
-		update = UPDATE::FUNCTIONALBLOCK;
 		Start();
 	}
 
 	FunctionalBlock() = default;
 
-	bool TUpdate()
+	inline bool TUpdate()
 	{
-		return tUpdates[UnEnum(tUpdate)](this);
+		return TUpdate(static_cast<FunctionalBlockData*>(data)->tUpdate);
 	}
 	bool TUpdate(TUPDATE tempTUpdate)
 	{
@@ -148,26 +153,24 @@ public:
 	}
 };
 
+FunctionalBlockData functionalBlock2Data = FunctionalBlockData(TUPDATE::DEFAULT, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION);
+
 class FunctionalBlock2 : public Entity // Can have speed multipliers.
 {
 public:
-	TUPDATE tUpdate;
 	float timePer, timeSince;
 
-	FunctionalBlock2(float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock2(EntityData* data, float timePer, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
-		timePer(timePer), timeSince(0), Entity(pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), timeSince(0), Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2;
-		vUpdate = VUPDATE::FRICTION;
 		Start();
 	}
 
-	FunctionalBlock2(float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
+	FunctionalBlock2(EntityData* data, float timePer, float offset, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		timePer(timePer), timeSince(0 + offset), Entity(pos, radius, color, mass, bounciness, maxHealth, health, name), tUpdate(TUPDATE::DEFAULT)
+		timePer(timePer), timeSince(0 + offset), Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name)
 	{
-		update = UPDATE::FUNCTIONALBLOCK2;
 		Start();
 	}
 
@@ -178,9 +181,9 @@ public:
 		return game->dTime;
 	}
 
-	bool TUpdate()
+	inline bool TUpdate()
 	{
-		return tUpdates[UnEnum(tUpdate)](this);
+		return TUpdate(static_cast<FunctionalBlockData*>(data)->tUpdate);
 	}
 	bool TUpdate(TUPDATE tempTUpdate)
 	{

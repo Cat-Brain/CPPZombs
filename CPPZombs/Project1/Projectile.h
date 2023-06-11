@@ -1,5 +1,6 @@
 #include "Entities.h"
 
+EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE);
 class Projectile : public Entity
 {
 public:
@@ -11,12 +12,11 @@ public:
     bool shouldCollide; // Should this collide with objects.
     bool collideTerrain;
 
-    Projectile(float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
+    Projectile(EntityData* data, float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
         float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
-        Entity(vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
+        Entity(data, vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
         duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
     {
-        update = UPDATE::PROJECTILE;
         sortLayer = 1;
         this->corporeal = corporeal;
         Start();
@@ -95,16 +95,29 @@ namespace Updates
     }
 }
 
+namespace DUpdates
+{
+    void ProjectileDU(Entity* entity)
+    {
+        Projectile* projectile = static_cast<Projectile*>(entity);
+
+        byte tempA = projectile->color.a;
+        projectile->color.a = static_cast<byte>(255 * min(1.f, 2 * (tTime - projectile->begin)));
+        projectile->DUpdate(DUPDATE::ENTITY);
+        projectile->color.a = tempA;
+    }
+}
+
+EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
 class ShotItem : public Projectile
 {
 public:
     ItemInstance item;
     string creatorName;
 
-    ShotItem(ItemInstance item, string name) :
-        Projectile(item->range, item->damage, item->speed, item->radius, item->color, item->mass, 0, item->health, item->health, name, item->corporeal, item->shouldCollide, item->collideTerrain), item(item)
+    ShotItem(EntityData* data, ItemInstance item, string name) :
+        Projectile(data, item->range, item->damage, item->speed, item->radius, item->color, item->mass, 0, item->health, item->health, name, item->corporeal, item->shouldCollide, item->collideTerrain), item(item)
     {
-        onDeath = ONDEATH::SHOTITEM;
         Start();
     }
 
@@ -173,7 +186,7 @@ namespace OnDeaths
     }
 }
 
-ShotItem* basicShotItem = new ShotItem(Resources::copper.Clone(), "Basic Shot Item");
+ShotItem* basicShotItem = new ShotItem(&shotItemData, Resources::copper.Clone(), "Basic Shot Item");
 
 namespace ItemUs
 {

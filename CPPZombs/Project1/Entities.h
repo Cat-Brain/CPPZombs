@@ -357,6 +357,8 @@ public:
 
 	byte TileAtPos(Vec3 pos)
 	{
+		if (glm::isnan(pos.x) || glm::isnan(pos.y) || glm::isnan(pos.z))
+			ErrorHandle("Tile at infinity");
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
 		if (index == -1) return UnEnum(TILE::AIR);
 		return chunks[index].TileAtPos(ToIV3(pos));
@@ -599,7 +601,7 @@ public:
 
 #pragma region Post Entities functions
 
-int Entity::ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
+int Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 {
 	if (damage > 0)
 		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
@@ -608,12 +610,7 @@ int Entity::ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 
 	health = min(health - damage, maxHealth);
-	if (health <= 0)
-	{
-		DestroySelf(damageDealer);
-		return 1;
-	}
-	return 0;
+	return health <= 0 ? 1 : 0;
 }
 
 void Entity::DestroySelf(Entity* damageDealer)
@@ -627,8 +624,7 @@ void Entity::DestroySelf(Entity* damageDealer)
 
 void Entity::DelayedDestroySelf()
 {
-	for (Entity* entity : observers)
-		entity->UnAttach(this);
+	DetachObservers();
 	game->entities->DelayedDestroy(this);
 }
 
@@ -756,6 +752,7 @@ bool TileData::Damage(int damage)
 #define EXPLOSION_PARTICLE_COUNT 25
 #define EXPLOSION_PARTICLE_SPEED 16.0f
 #define EXPLOSION_PARTICLE_DURATION 0.5f
+EntityData explodeNextFrameData = EntityData(UPDATE::EXPLODENEXTFRAME);
 class ExplodeNextFrame : public Entity
 {
 public:
@@ -767,12 +764,12 @@ public:
 		Entity(data, pos, 0.5f, color, 1, 0, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
 		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
-		update = UPDATE::EXPLODENEXTFRAME;
 		this->creator = creator;
 		corporeal = false;
 	}
 };
 
+EntityData upExplodeNextFrameData = EntityData(UPDATE::UPEXPLODENEXTFRAME);
 class UpExplodeNextFrame : public Entity
 {
 public:
@@ -784,12 +781,12 @@ public:
 		Entity(data, pos, 0.5f, color, 1, 0, 1, 1, string("Explosion from ") + name, creator == nullptr ? Allegiance(0) : creator->allegiance),
 		damage(damage), explosionRadius(explosionRadius), startTime(tTime)
 	{
-		update = UPDATE::UPEXPLODENEXTFRAME;
 		this->creator = creator;
 		corporeal = false;
 	}
 };
 
+EntityData fadeOutPuddleData = EntityData(UPDATE::FADEOUTPUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUTPUDDLE);
 class FadeOutPuddle : public Entity
 {
 public:
@@ -801,8 +798,6 @@ public:
 		Entity(data, pos, radius, color, 1, 0, 1, 1, "Puddle"),
 		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
 	{
-		update = UPDATE::FADEOUTPUDDLE;
-		dUpdate = DUPDATE::FADEOUTPUDDLE;
 		corporeal = false;
 	}
 
@@ -819,6 +814,7 @@ public:
 	}
 };
 
+EntityData fadeOutGlowData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
 class FadeOutGlow : public FadeOut
 {
 public:
@@ -828,13 +824,12 @@ public:
 	FadeOutGlow(EntityData* data, float range, float totalFadeTime = 1.0f, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
 		FadeOut(data, totalFadeTime, pos, radius, color), startRange(range)
 	{
-		dUpdate = DUPDATE::FADEOUTGLOW;
-		onDeath = ONDEATH::FADEOUTGLOW;
 		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
 		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
 	}
 };
 
+EntityData vacuumForData = EntityData(UPDATE::VACUUMFOR);
 class VacuumFor : public FadeOut
 {
 public:
@@ -843,13 +838,12 @@ public:
 	VacuumFor(EntityData* data, Vec3 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
 		FadeOut(data, timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
-		update = UPDATE::VACUUMEFOR;
 		corporeal = false;
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
-		return make_unique<VacuumFor>(pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
+		return make_unique<VacuumFor>(data, pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
 	}
 };
 
@@ -929,7 +923,7 @@ namespace Updates
 
 	void VacuumeForU(Entity* entity)
 	{
-		VacuumeFor* vac = static_cast<VacuumeFor*>(entity);
+		VacuumFor* vac = static_cast<VacuumFor*>(entity);
 
 		if (tTime - vac->startTime > vac->totalFadeTime)
 		{
@@ -947,7 +941,7 @@ namespace DUpdates
 	{
 		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
 		uint a = puddle->color.a;
-		puddle->color.a *= 255 - static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
+		puddle->color.a *= static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
 		puddle->DUpdate(DUPDATE::ENTITY);
 		puddle->color.a = a;
 	}
@@ -1041,14 +1035,14 @@ public:
 
 inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
-	game->entities->push_back(make_unique<ExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
+	game->entities->push_back(make_unique<ExplodeNextFrame>(&explodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
 }
 
 inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
 {
-	game->entities->push_back(make_unique<UpExplodeNextFrame>(explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
+	game->entities->push_back(make_unique<UpExplodeNextFrame>(&upExplodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
 }
 
 class ExplodeOnLanding : public Item
@@ -1187,17 +1181,17 @@ namespace ItemODs
 
 namespace Hazards
 {
-	FadeOutPuddle leadPuddle = FadeOutPuddle(3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumFor vacuumPuddle = VacuumFor(vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
+	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
+	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
 {
 	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, true, true);
-	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 0);
-	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f);
-	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f);
-	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Deadly Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true);
+	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", 1, RGBA(65, 224, 150), 0, 15, 0.25f, 12, 0.4f, false, true, true);
+	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f, false, true, true);
+	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
+	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true, 0.25f, 12, 0.4f, false, true, true);
 	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f, 12, 0.1f, false, true, true);
 	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
 }

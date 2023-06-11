@@ -48,5 +48,5 @@ public:
 	}
 };
 
-Texture spriteSheet;
-vector<std::tuple<Texture&, int, int, uint>> textures{ {spriteSheet, SPRITE_SHEET, PNG_FILE, 6} };
+Texture spriteSheet, reticleSprite;
+std::tuple<uint, vector<std::tuple<Texture&, int, int>>> textures{ PNG_FILE, {{spriteSheet, SPRITE_SHEET, 6}, {reticleSprite, RETICLE_SPRITE, 1}} };

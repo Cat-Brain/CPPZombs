@@ -1,14 +1,5 @@
 #include "Game2.h"
 
-class Temp
-{
-public:
-	void Test()
-	{
-
-	}
-};
-
 int main()
 {
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
@@ -23,24 +14,26 @@ int main()
 		using namespace Updates;
 		using namespace Enemies::Updates;
 		using namespace Livestock::Updates;
-		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU, FunctionalBlockU, FunctionalBlock2U,
-		EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU, KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
+		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU,
+			FunctionalBlockU, FunctionalBlock2U, VineU, EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU,
+			KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
 	}
 	{
 		using namespace VUpdates;
-		vUpdates = { EntityVU, AirResistanceVU, FrictionVU };
+		using namespace Enemies::VUpdates;
+		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU };
 	}
 	{
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, DToColDU, ShrubDU, TreeDU, DeceiverDU, ParentDU, ExploderDU,
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, DeceiverDU, ParentDU, ExploderDU,
 			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
 	{
 		using namespace EDUpdates;
 		using namespace Enemies::EDUpdates;
-		eDUpdates = { EntityEDU, SnakeEDU, SnakeConnectedEDU, SpiderEDU };
+		eDUpdates = { EntityEDU, SpiderEDU };
 	}
 	{
 		using namespace UIUpdates;
@@ -83,7 +76,7 @@ int main()
 		using namespace Enemies::OnDeaths;
 		using namespace Livestock::OnDeaths;
 		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
-			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD };
+			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD, BaseOD };
 
 		using namespace ItemUs;
 		itemUs = { ItemU, WaveModifierU };

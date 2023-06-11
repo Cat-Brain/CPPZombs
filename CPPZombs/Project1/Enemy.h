@@ -31,27 +31,35 @@ namespace Enemies
 	};
 	vector<function<bool(Enemy*)>> aUpdates;
 
-	class Enemy : public DToCol
+	class EnemyData : public EntityData
 	{
 	public:
 		MUPDATE mUpdate;
 		AUPDATE aUpdate;
+
+		EnemyData(MUPDATE mUpdate = MUPDATE::DEFAULT, AUPDATE aUpdate = AUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY,
+			VUPDATE vUpdate = VUPDATE::FRICTION, DUPDATE dUpdate = DUPDATE::ENTITY, EDUPDATE eDUpdate = EDUPDATE::ENTITY,
+			UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
+			EntityData(update, vUpdate, dUpdate, eDUpdate, uiUpdate, onDeath),
+			mUpdate(mUpdate), aUpdate(aUpdate) {}
+	};
+
+	EnemyData enemyData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	class Enemy : public DToCol
+	{
+	public:
 		float timePer, lastTime, speed, maxSpeed, timePerMove, lastMove, jumpTime, lastJump;
 
 		int points, firstWave;
 		int damage;
 
-		Enemy(Allegiance allegiance = 0, float timePer = 0.5f, float speed = 0.25f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
+		Enemy(EntityData* data, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 0.25f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
 			RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			DToCol(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance),
+			DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance),
 			timePer(timePer), lastTime(0.0f), speed(speed), maxSpeed(maxSpeed), timePerMove(0.0f), lastMove(0.0f), points(points), firstWave(firstWave),
-			damage(damage), jumpTime(jumpTime), lastJump(0), mUpdate(MUPDATE::DEFAULT), aUpdate(AUPDATE::DEFAULT)
-		{
-			update = UPDATE::ENEMY;
-			uiUpdate = UIUPDATE::ENEMY;
-			onDeath = ONDEATH::ENEMY;
-		}
+			damage(damage), jumpTime(jumpTime), lastJump(0)
+		{ }
 
 		Enemy(Enemy* baseClass, Vec3 pos) :
 			Enemy(*baseClass)
@@ -60,28 +68,23 @@ namespace Enemies
 			this->pos = pos;
 		}
 
-		void Start() override
-		{
-			lastTime = tTime + RandFloat() * timePer;
-		}
-
 		unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
 		{
 			return make_unique<Enemy>(this, pos);
 		}
 
-		bool MUpdate()
+		inline bool MUpdate()
 		{
-			return mUpdates[UnEnum(mUpdate)](this);
+			return MUpdate(static_cast<EnemyData*>(data)->mUpdate);
 		}
 		bool MUpdate(MUPDATE tempMUpdate)
 		{
 			return mUpdates[UnEnum(tempMUpdate)](this);
 		}
 
-		bool AUpdate()
+		inline bool AUpdate()
 		{
-			return aUpdates[UnEnum(aUpdate)](this);
+			return AUpdate(static_cast<EnemyData*>(data)->aUpdate);
 		}
 		bool AUpdate(AUPDATE tempAUpdate)
 		{
@@ -105,7 +108,7 @@ namespace Enemies
 
 		virtual void ShouldTryJump()
 		{
-			if (tTime - lastJump > jumpTime && game->entities->OverlapsTile(BitePos(), BiteRad()))
+			if (tTime - lastJump > jumpTime && game->entities->OverlapsAny(BitePos(), BiteRad(), MaskF::IsCorporealNotCollectible, this))
 			{
 				vel += Vec3(0, 0, 6);
 				lastJump = tTime;
@@ -127,19 +130,17 @@ namespace Enemies
 	};
 
 
+	EnemyData deceiverData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Deceiver : public Enemy
 	{
 	public:
 		RGBA color3;
 
-		Deceiver(Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
+		Deceiver(EntityData* data, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
 			RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), color3(color3)
-		{
-			Start();
-			dUpdate = DUPDATE::DECEIVER;
-		}
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), color3(color3)
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -152,20 +153,17 @@ namespace Enemies
 		}
 	};
 
+	EnemyData parentData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::PARENT);
 	class Parent : public Enemy
 	{
 	public:
 		Enemy* child;
 
-		Parent(Enemy* child, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Parent(EntityData* data, Enemy* child, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), child(child)
-		{
-			Start();
-			dUpdate = DUPDATE::PARENT;
-			onDeath = ONDEATH::PARENT;
-		}
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), child(child)
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -177,20 +175,17 @@ namespace Enemies
 		}
 	};
 
+	EnemyData exploderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::EXPLODER, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
 	class Exploder : public Enemy
 	{
 	public:
 		float explosionRadius;
 
-		Exploder(float explosionRadius, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Exploder(EntityData* data, float explosionRadius, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), explosionRadius(explosionRadius)
-		{
-			dUpdate = DUPDATE::EXPLODER;
-			aUpdate = AUPDATE::EXPLODER;
-			onDeath = ONDEATH::EXPLODER;
-		}
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), explosionRadius(explosionRadius)
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -207,6 +202,7 @@ namespace Enemies
 		}
 	};
 
+	EnemyData snakeData = EnemyData(MUPDATE::SNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::SNAKE);
 	class Snake : public Enemy
 	{
 	public:
@@ -215,17 +211,13 @@ namespace Enemies
 		int length;
 		float segmentWobbleForce, segmentWobbleFrequency;
 
-		Snake(int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Snake(EntityData* data, int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
 			color4(color4), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
-		{
-			earlyDUpdate = EDUPDATE::SNAKE;
-			onDeath = ONDEATH::SNAKE;
-			mUpdate = MUPDATE::SNAKE;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -270,23 +262,20 @@ namespace Enemies
 		}
 	};
 
+	EnemyData pouncerSnakeData = EnemyData(MUPDATE::POUNCERSNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
 	class PouncerSnake : public Snake
 	{
 	public:
 		float pounceTime;
 
-		PouncerSnake(float pounceTime, float speed, float jumpTime, int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		PouncerSnake(EntityData* data, float pounceTime, float speed, float jumpTime, int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Snake(length, segmentWobbleForce, segmentWobbleFrequency, allegiance, timePer, speed, speed, jumpTime, points, firstWave,
+			Snake(data, length, segmentWobbleForce, segmentWobbleFrequency, allegiance, timePer, speed, speed, jumpTime, points, firstWave,
 				damage, radius, color, color2, color3, color4, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
-		{
-			this->timePerMove = timePerMove;
-			onDeath = ONDEATH::POUNCERSNAKE;
-			mUpdate = MUPDATE::POUNCERSNAKE;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -327,6 +316,7 @@ namespace Enemies
 		}
 	};
 
+	EnemyData snakeConnectedData = EnemyData(MUPDATE::SNAKECONNECTED, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, EDUPDATE::ENTITY, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
 	class SnakeConnected : public Enemy
 	{
 	public:
@@ -335,19 +325,13 @@ namespace Enemies
 		int length;
 		float segmentWobbleForce, segmentWobbleFrequency;
 
-		SnakeConnected(int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		SnakeConnected(EntityData* data, int length, float segmentWobbleForce, float segmentWobbleFrequency, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name), length(length), color3(color3),
 			color4(color4), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
-		{
-			dUpdate = DUPDATE::SNAKECONNECTED;
-			earlyDUpdate = EDUPDATE::SNAKECONNECTED;
-			uiUpdate = UIUPDATE::SNAKECONNECTED;
-			onDeath = ONDEATH::SNAKECONNECTED;
-			mUpdate = MUPDATE::SNAKECONNECTED;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -407,28 +391,30 @@ namespace Enemies
 			if (next != nullptr)
 				return front->ApplyHit(damage, damageDealer);
 
-			int result = Enemy::ApplyHit(damage, damageDealer);
+			int result = Enemy::ApplyHitHarmless(damage, damageDealer);
 			if (result == 1)
-				for (Entity* entity : observers)
-					entity->UnAttach(this);
+			{
+				health = 0;
+				OnDeath(damageDealer);
+				DelayedDestroySelf();
+			}
 			return result;
 		}
 	};
 
+	EnemyData colorCyclerData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class ColorCycler : public Enemy
 	{
 	public:
 		vector<RGBA> colorsToCycle;
 		float colorOffset, colorCycleSpeed;
 
-		ColorCycler(vector<RGBA> colorsToCycle, float colorCycleSpeed = 1.0f, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
+		ColorCycler(EntityData* data, vector<RGBA> colorsToCycle, float colorCycleSpeed = 1.0f, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, colorsToCycle[0], color2, mass, bounciness, maxHealth, health, name),
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, colorsToCycle[0], color2, mass, bounciness, maxHealth, health, name),
 			colorsToCycle(colorsToCycle), colorCycleSpeed(colorCycleSpeed), colorOffset(0.0f)
-		{
-			dUpdate = DUPDATE::COLORCYCLER;
-		}
+		{ }
 
 		void Start() override
 		{
@@ -446,23 +432,20 @@ namespace Enemies
 		}
 	};
 
+	EnemyData vacuumerData = EnemyData(MUPDATE::VACUUMER, AUPDATE::DEFAULT, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
 	class Vacuumer : public Enemy
 	{
 	public:
 		float vacDist, vacSpeed, maxVacSpeed, desiredDistance;
 		Items items;
 
-		Vacuumer(float vacDist, float vacSpeed, float maxVacSpeed, float desiredDistance, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
+		Vacuumer(EntityData* data, float vacDist, float vacSpeed, float maxVacSpeed, float desiredDistance, Allegiance allegiance = 0, float timePer = 0.5f, float speed = 2, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			Enemy(data, allegiance, timePer, speed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), desiredDistance(desiredDistance), items(0)
-		{
-			update = UPDATE::VACUUMER;
-			onDeath = ONDEATH::VACUUMER;
-			mUpdate = MUPDATE::VACUUMER;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -474,6 +457,7 @@ namespace Enemies
 		}
 	};
 
+	EnemyData spiderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::SPIDER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::SPIDER, UIUPDATE::ENEMY, ONDEATH::SPIDER);
 	class Spider : public Enemy
 	{
 	public:
@@ -484,17 +468,13 @@ namespace Enemies
 		float legLength, legTolerance, legCycleSpeed;
 		float legRotation = 0.0f;
 
-		Spider(LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+		Spider(EntityData* data, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			Enemy(data, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			baseLeg(baseLeg), legCount(legCount), legLength(legLength), legTolerance(legTolerance), legCycleSpeed(legCycleSpeed)
-		{
-			onDeath = ONDEATH::SPIDER;
-			update = UPDATE::SPIDER;
-			earlyDUpdate = EDUPDATE::SPIDER;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -551,11 +531,11 @@ namespace Enemies
 	public:
 		Entity* baseChild;
 
-		Spoobderb(Entity* baseChild, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+		Spoobderb(EntityData* data, Entity* baseChild, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			baseChild(baseChild), Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
+			baseChild(baseChild), Spider(data, baseLeg, legCount, legLength, legTolerance, legCycleSpeed,
 				allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name) { }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
@@ -576,23 +556,20 @@ namespace Enemies
 		}
 	};
 
+	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::SPIDER, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
 	class Centicrawler : public Spider
 	{
 	public:
 		Centicrawler* back = nullptr, * front = nullptr;
 		float segmentWobbleForce, segmentWobbleFrequency;
 
-		Centicrawler(float segmentWobbleForce, float segmentWobbleFrequency, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
+		Centicrawler(EntityData* data, float segmentWobbleForce, float segmentWobbleFrequency, LegParticle baseLeg, int legCount = 8, float legLength = 5.0f, float legTolerance = 3.0f, float legCycleSpeed = 1.0f,
 			Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 2.0f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Spider(baseLeg, legCount, legLength, legTolerance, legCycleSpeed, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2,
+			Spider(data, baseLeg, legCount, legLength, legTolerance, legCycleSpeed, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2,
 				mass, bounciness, maxHealth, health, name), segmentWobbleForce(segmentWobbleForce), segmentWobbleFrequency(segmentWobbleFrequency)
-		{
-			update = UPDATE::CENTICRAWLER;
-			onDeath = ONDEATH::CENTICRAWLER;
-			mUpdate = MUPDATE::CENTICRAWLER;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -607,22 +584,18 @@ namespace Enemies
 		}
 	};
 
+	EnemyData pouncerData = EnemyData(MUPDATE::POUNCER, AUPDATE::DEFAULT, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Pouncer : public Enemy
 	{
 	public:
 		float pounceTime;
 
-		Pouncer(float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Pouncer(EntityData* data, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, moveSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			Enemy(data, allegiance, timePer, moveSpeed, moveSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
-		{
-			this->timePerMove = timePerMove;
-			update = UPDATE::POUNCER;
-			dUpdate = DUPDATE::POUNCER;
-			mUpdate = MUPDATE::POUNCER;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -635,22 +608,19 @@ namespace Enemies
 		}
 	};
 
+	EnemyData catData = EnemyData(MUPDATE::CAT, AUPDATE::DEFAULT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cat : public Pouncer
 	{
 	public:
 		float homeSpeed;
 		RGBA color3;
 
-		Cat(float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		Cat(EntityData* data, float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Pouncer(pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health,
+			Pouncer(data, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health,
 				name), homeSpeed(homeSpeed), color3(color3)
-		{
-			update = UPDATE::CAT;
-			dUpdate = DUPDATE::CAT;
-			mUpdate = MUPDATE::CAT;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -668,19 +638,18 @@ namespace Enemies
 		}
 	};
 
+	EnemyData boomCatData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class BoomCat : public Cat
 	{
 	public:
 		float explosionRadius;
 
-		BoomCat(float explosionRadius, float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
+		BoomCat(EntityData* data, float explosionRadius, float homeSpeed, float pounceTime, float moveSpeed = 2, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Cat(homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
+			Cat(data, homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
 				mass, bounciness, maxHealth, health, name), explosionRadius(explosionRadius)
-		{
-			aUpdate = AUPDATE::BOOMCAT;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -693,6 +662,7 @@ namespace Enemies
 		}
 	};
 
+	EnemyData cataclysmData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cataclysm : public BoomCat
 	{
 	public:
@@ -701,17 +671,14 @@ namespace Enemies
 		Projectile* projectile, *projectile2;
 		RGBA color4;
 
-		Cataclysm(float circleTime, float circleRadius, float spinSpeed, Projectile* projectile, Projectile* projectile2, float timePerShot, float explosionRadius,
+		Cataclysm(EntityData* data, float circleTime, float circleRadius, float spinSpeed, Projectile* projectile, Projectile* projectile2, float timePerShot, float explosionRadius,
 			float homeSpeed, float pounceTime, float moveSpeed, float jumpTime = 0.5f, Allegiance allegiance = 0, float timePer = 0.5f, float timePerMove = 0.5f, int points = 1, int firstWave = 1, int damage = 1,
 			float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(), RGBA color4 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			BoomCat(explosionRadius, homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
+			BoomCat(data, explosionRadius, homeSpeed, pounceTime, moveSpeed, jumpTime, allegiance, timePer, timePerMove, points, firstWave, damage, radius, color, color2, color3,
 				mass, bounciness, maxHealth, health, name), circleTime(circleTime), circleRadius(circleRadius), spinSpeed(spinSpeed), projectile(projectile),
 			projectile2(projectile2), timePerShot(timePerShot), color4(color4)
-		{
-			update = UPDATE::CATACLYSM;
-			dUpdate = DUPDATE::CATACLYSM;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -737,22 +704,19 @@ namespace Enemies
 		}
 	};
 
+	EnemyData tankData = EnemyData(MUPDATE::TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Tank : public Enemy
 	{
 	public:
 		Projectile* projectile;
 		float turnSpeed;
 
-		Tank(Projectile* projectile, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
+		Tank(EntityData* data, Projectile* projectile, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			Enemy(data, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			projectile(projectile), turnSpeed(turnSpeed)
-		{
-			dUpdate = DUPDATE::TANK;
-			mUpdate = MUPDATE::TANK;
-			aUpdate = AUPDATE::TANK;
-		}
+		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -881,6 +845,58 @@ namespace Enemies
 				cat->vel = cat->dir * cat->speed;
 			}
 			else */cat->Update(UPDATE::CAT);
+		}
+	}
+
+	namespace VUpdates
+	{
+		void SnakeVU(Entity* entity)
+		{
+			Snake* snake = static_cast<Snake*>(entity);
+
+			if (snake->front == nullptr && snake->back)
+			{
+				Snake* currentBack;
+				for (int i = 0; i < 5; i++)
+				{
+					snake->back->SetPos(snake->pos + Normalized(snake->back->pos - snake->pos) * (snake->radius + snake->back->radius));
+					currentBack = snake->back->back;
+					while (currentBack)
+					{
+						Entity* front = currentBack->front;
+						float dist = glm::distance(front->pos, currentBack->pos);
+						Vec3 multiplier = (front->pos - currentBack->pos) * (1.01f * (dist - currentBack->radius - front->radius) / (dist * (currentBack->mass + front->mass)));
+						currentBack->SetPos(currentBack->pos + multiplier * front->mass);
+						front->SetPos(front->pos - multiplier * currentBack->mass);
+						currentBack = currentBack->back;
+					}
+				}
+			}
+			snake->VUpdate(VUPDATE::FRICTION);
+		}
+
+		void SnakeConnectedVU(Entity* entity)
+		{
+			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
+
+			if (snake->next == nullptr)
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					SnakeConnected* currentFarthest = snake->back;
+					while (currentFarthest)
+					{
+						Entity* front = currentFarthest->next;
+						float dist = glm::distance(front->pos, currentFarthest->pos);
+						Vec3 multiplier = (front->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - front->radius) / (dist * (currentFarthest->mass + front->mass)));
+						currentFarthest->SetPos(currentFarthest->pos + multiplier * front->mass);
+						front->SetPos(front->pos - multiplier * currentFarthest->mass);
+
+						currentFarthest = currentFarthest->back;
+					}
+				}
+			}
+			snake->VUpdate(VUPDATE::FRICTION);
 		}
 	}
 
@@ -1028,53 +1044,6 @@ namespace Enemies
 
 	namespace EDUpdates
 	{
-		void SnakeEDU(Entity* entity)
-		{
-			Snake* snake = static_cast<Snake*>(entity);
-
-			if (snake->front == nullptr && snake->back)
-			{
-				Snake* currentBack;
-				for (int i = 0; i < 5; i++)
-				{
-					snake->back->SetPos(snake->pos + Normalized(snake->back->pos - snake->pos) * (snake->radius + snake->back->radius));
-					currentBack = snake->back->back;
-					while (currentBack)
-					{
-						Entity* front = currentBack->front;
-						float dist = glm::distance(front->pos, currentBack->pos);
-						Vec3 multiplier = (front->pos - currentBack->pos) * (1.01f * (dist - currentBack->radius - front->radius) / (dist * (currentBack->mass + front->mass)));
-						currentBack->SetPos(currentBack->pos + multiplier * front->mass);
-						front->SetPos(front->pos - multiplier * currentBack->mass);
-						currentBack = currentBack->back;
-					}
-				}
-			}
-		}
-
-		void SnakeConnectedEDU(Entity* entity)
-		{
-			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
-
-			if (snake->next == nullptr)
-			{
-				for (int i = 0; i < 5; i++)
-				{
-					SnakeConnected* currentFarthest = snake->back;
-					while (currentFarthest)
-					{
-						Entity* front = currentFarthest->next;
-						float dist = glm::distance(front->pos, currentFarthest->pos);
-						Vec3 multiplier = (front->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - front->radius) / (dist * (currentFarthest->mass + front->mass)));
-						currentFarthest->SetPos(currentFarthest->pos + multiplier * front->mass);
-						front->SetPos(front->pos - multiplier * currentFarthest->mass);
-
-						currentFarthest = currentFarthest->back;
-					}
-				}
-			}
-		}
-
 		void SpiderEDU(Entity* entity)
 		{
 			Spider* spider = static_cast<Spider*>(entity);
@@ -1320,58 +1289,58 @@ namespace Enemies
 	// Prerequisites
 	LegParticle spiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
 	LegParticle miniSpiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.125f);
-	Centicrawler centicrawler = Centicrawler(0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
-	Centicrawler miniCenticrawler = Centicrawler(0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 0, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
+	Centicrawler centicrawler = Centicrawler(&centicrawlerData, 0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
+	Centicrawler miniCenticrawler = Centicrawler(&centicrawlerData, 0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 0, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
 	// Earlies - 1
-	Spider spider = Spider(spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
+	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
 	// Mids - 4
-	Pouncer frog = Pouncer(2, 16, 0.5f, ENEMY1_A, 1, 4, 3, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
-	Parent miniSpiderParent = Parent(&miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
+	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 3, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
+	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
 	// Mid-lates - 6
-	Parent spiderParent = Parent(&centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
-	SnakeConnected snake = SnakeConnected(15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 0, 300, 300, "Snake");
+	Parent spiderParent = Parent(&parentData, &centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
+	SnakeConnected snake = SnakeConnected(&snakeConnectedData, 15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 0, 300, 300, "Snake");
 	// Lates - 8
-	SnakeConnected bigSnake = SnakeConnected(30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 0, 900, 900, "Big Snake");
-	PouncerSnake pouncerSnake = PouncerSnake(3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 0, 30, 30, "Pouncer Snake");
+	SnakeConnected bigSnake = SnakeConnected(&snakeConnectedData, 30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 0, 900, 900, "Big Snake");
+	PouncerSnake pouncerSnake = PouncerSnake(&pouncerSnakeData, 3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 0, 30, 30, "Pouncer Snake");
 	// Very lates - 12
-	Cat cat = Cat(1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 0, 18, 18, "Cat");
-	BoomCat boomCat = BoomCat(4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 0, 18, 18, "Boom Cat");
-	Spoobderb spoobderb = Spoobderb(&centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 0, 1000, 1000, "Spoobderb - The 30 footed beast");
+	Cat cat = Cat(&catData, 1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 0, 18, 18, "Cat");
+	BoomCat boomCat = BoomCat(&boomCatData, 4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 0, 18, 18, "Boom Cat");
+	Spoobderb spoobderb = Spoobderb(&spiderData, &centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 0, 1000, 1000, "Spoobderb - The 30 footed beast");
 #pragma endregion
 #pragma region Faction 1
 	//Predefinitions - Special
-	Projectile tinyTankProjectile = Projectile(15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
+	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
 	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
-	ShotItem gigaTankProjectile = ShotItem(gigaTankItem.Clone(), "Giga Tank Projectile");
-	Enemy child = Enemy(ENEMY2_A, 1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 5, 5, "Child");
+	ShotItem gigaTankProjectile = ShotItem(&shotItemData, gigaTankItem.Clone(), "Giga Tank Projectile");
+	Enemy child = Enemy(&enemyData, ENEMY2_A, 1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 5, 5, "Child");
 	
 	// Earlies - 1
-	Enemy walker = Enemy(ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
-	Enemy tanker = Enemy(ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
-	Tank tinyTank = Tank(&tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
+	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
+	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
+	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
 
 	// Mids - 4
-	Deceiver deceiver = Deceiver(ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
-	Exploder exploder = Exploder(2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 0, 30, 30, "Exploder");
-	Vacuumer vacuumer = Vacuumer(4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 30, 30, "Vacuumer");
-	Vacuumer pusher = Vacuumer(6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 0, 30, 30, "Pusher");
+	Deceiver deceiver = Deceiver(&deceiverData, ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
+	Exploder exploder = Exploder(&exploderData, 2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 0, 30, 30, "Exploder");
+	Vacuumer vacuumer = Vacuumer(&vacuumerData, 4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 30, 30, "Vacuumer");
+	Vacuumer pusher = Vacuumer(&vacuumerData, 6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 0, 30, 30, "Pusher");
 	
 	// Mid-lates - 6
-	Parent parent = Parent(&child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 0, 100, 100, "Parent");
-	Enemy megaTanker = Enemy(ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 0, 480, 480, "Mega Tanker");
+	Parent parent = Parent(&parentData, &child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 0, 100, 100, "Parent");
+	Enemy megaTanker = Enemy(&enemyData, ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 0, 480, 480, "Mega Tanker");
 	
 	// Lates - 8
-	ColorCycler hyperSpeedster = ColorCycler({ RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 0, 240, 240, "Hyper Speedster");
-	Exploder gigaExploder = Exploder(7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 0, 30, 30, "Giga Exploder");
+	ColorCycler hyperSpeedster = ColorCycler(&colorCyclerData, { RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 0, 240, 240, "Hyper Speedster");
+	Exploder gigaExploder = Exploder(&exploderData, 7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 0, 30, 30, "Giga Exploder");
 	
 	// Very lates - 12
-	Tank gigaTank = Tank(&gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
+	Tank gigaTank = Tank(&tankData, &gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
 #pragma endregion
 
 	// Bosses - Special
-	Projectile* catProjectile = new Projectile(25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile* catProjectile2 = new Projectile(25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Cataclysm* cataclysm = new Cataclysm(10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
+	Projectile* catProjectile = new Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile* catProjectile2 = new Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Cataclysm* cataclysm = new Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
 #pragma endregion
 
 

@@ -3,17 +3,16 @@
 
 namespace Livestock
 {
+	EntityData eggData = EntityData(UPDATE::EGG, VUPDATE::FRICTION, DUPDATE::DTOCOL);
 	class Egg : public DToCol
 	{
 	public:
 		Entity* entityToSpawn;
 		float timeTill;
 
-		Egg(Entity* entityToSpawn, float timeTill, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-			DToCol(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name), entityToSpawn(entityToSpawn), timeTill(timeTill)
-		{
-			update = UPDATE::EGG;
-		}
+		Egg(EntityData* data, Entity* entityToSpawn, float timeTill, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+			DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name), entityToSpawn(entityToSpawn), timeTill(timeTill)
+		{ }
 
 		Egg(Egg* baseClass, Vec3 pos) :
 			Egg(*baseClass)
@@ -42,6 +41,7 @@ namespace Livestock
 		using DToCol::DToCol;
 	};
 
+	EntityData kiwiData = EntityData(UPDATE::KIWI, VUPDATE::FRICTION, DUPDATE::KIWI, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::KIWI);
 	class Kiwi : public Livestock
 	{
 	public:
@@ -54,21 +54,19 @@ namespace Livestock
 		Vec3 lastEatPos = vZero;
 		FastNoiseLite noise;
 
-		Kiwi(int points, float lifetime, float moveSpeed, float maxSpeed, float turnSpeed, float sightDist, float sightAngle,
+		Kiwi(EntityData* data, int points, float lifetime, float moveSpeed, float maxSpeed, float turnSpeed, float sightDist, float sightAngle,
 			float startFullness, float awakeFullness, float maxFullness, float foodPerSecond, float foodPerSleepSecond,
 			int eggsLaid,
 			float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-			Livestock(vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			Livestock(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			points(points), lifetime(lifetime),
 			moveSpeed(moveSpeed), maxSpeed(maxSpeed), turnSpeed(turnSpeed), sightDist(sightDist), sightAngle(sightAngle),
 			fullness(startFullness), awakeFullness(awakeFullness), maxFullness(maxFullness),
 			foodPerSecond(foodPerSecond), foodPerSleepSecond(foodPerSleepSecond),
 			eggsLaid(eggsLaid)
 		{
-			update = UPDATE::KIWI;
-			dUpdate = DUPDATE::KIWI;
-			onDeath = ONDEATH::KIWI;
 			noise = FastNoiseLite();
+			noise.SetSeed(PsuedoRandom());
 			noise.SetFrequency(0.25f);
 		}
 
@@ -220,8 +218,8 @@ namespace Livestock
 		}
 	}
 
-	Kiwi kiwi = Kiwi(10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 0, 30, 30, "Kiwi");
-	Egg kiwiEgg = Egg(&kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 0, 50, 50, "Kiwi Egg");
+	Kiwi kiwi = Kiwi(&kiwiData, 10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 0, 30, 30, "Kiwi");
+	Egg kiwiEgg = Egg(&eggData, &kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 0, 50, 50, "Kiwi Egg");
 
 	vector<Livestock*> livestocks{ &kiwi };
 	vector<Entity*> livestockBirths{ &kiwiEgg };

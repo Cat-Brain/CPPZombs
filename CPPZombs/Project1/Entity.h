@@ -6,8 +6,8 @@
 #pragma region Psuedo-virtual functions
 enum class UPDATE // Update
 {
-	ENTITY, FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMEFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
-	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
+	ENTITY, FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
+	VINE, ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
 	EGG, KIWI, PLAYER, TURRET, ROVER, ENGINEER, GRENADE
 };
 
@@ -15,14 +15,14 @@ vector<function<void(Entity*)>> updates;
 
 enum class VUPDATE // Update
 {
-	ENTITY, AIR_RESISTANCE, FRICTION, SPRING
+	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED
 };
 
 vector<function<void(Entity*)>> vUpdates;
 
 enum class DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, DTOCOL, SHRUB, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER,
+	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, PROJECTILE, DTOCOL, SHRUB, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER,
 	POUNCER, CAT, CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
 };
 
@@ -30,7 +30,7 @@ vector<function<void(Entity*)>> dUpdates;
 
 enum class EDUPDATE // Early Draw Update
 {
-	ENTITY, SNAKE, SNAKECONNECTED, SPIDER
+	ENTITY, SPIDER
 };
 
 vector<function<void(Entity*)>> eDUpdates;
@@ -45,7 +45,7 @@ vector<function<void(Entity*)>> uiUpdates;
 enum class ONDEATH
 {
 	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, VINE, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
-	CENTICRAWLER, KIWI, PLAYER
+	CENTICRAWLER, KIWI, PLAYER, BASE
 };
 
 vector<function<void(Entity*, Entity*)>> onDeaths;
@@ -115,7 +115,8 @@ public:
 	UIUPDATE uiUpdate;
 	ONDEATH onDeath;
 
-	EntityData(UPDATE update, VUPDATE vUpdate, DUPDATE dUpdate, EDUPDATE eDUpdate, UIUPDATE uiUpdate, ONDEATH onDeath):
+	EntityData(UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::ENTITY, DUPDATE dUpdate = DUPDATE::ENTITY,
+		EDUPDATE earlyDUpdate = EDUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY):
 		update(update), vUpdate(vUpdate), dUpdate(dUpdate), earlyDUpdate(earlyDUpdate),
 		uiUpdate(uiUpdate), onDeath(onDeath)
 	{
@@ -245,7 +246,14 @@ public:
 	virtual void SetPos(Vec3 newPos);
 	virtual void SetRadius(float newRadius);
 
-	virtual int ApplyHit(int damage, Entity* damageDealer); // 0 = lived, 1 = dead
+	virtual int ApplyHitHarmless(int damage, Entity* damageDealer); // 0 = lived, 1 = dead
+	virtual int ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
+	{
+		int result = ApplyHitHarmless(damage, damageDealer);
+		if (result == 1)
+			DestroySelf(damageDealer);
+		return result;
+	}
 
 	void DestroySelf(Entity* damageDealer); // Always calls OnDeath;
 	void DelayedDestroySelf(); // Never calls OnDeath;
@@ -264,7 +272,7 @@ public:
 	void DetachObservers()
 	{
 		for (Entity* entity : observers)
-			UnAttach(this);
+			entity->UnAttach(this);
 		observers.clear();
 	}
 };
@@ -335,6 +343,7 @@ vector<Entity*> EntitiesOverlaps(Vec3 pos, float radius, vector<Entity*> entitie
 #pragma endregion
 
 
+EntityData fadeOutData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUT);
 
 class FadeOut : public Entity
 {
@@ -344,8 +353,6 @@ public:
 	FadeOut(EntityData* data, float totalFadeTime = 1.0f, Vec3 pos = Vec3(0), float radius = 0.5f, RGBA color = RGBA()) :
 		Entity(data, pos, radius, color), totalFadeTime(totalFadeTime), startTime(tTime)
 	{
-		update = UPDATE::FADEOUT;
-		dUpdate = DUPDATE::FADEOUT;
 		corporeal = false;
 	}
 
@@ -427,9 +434,10 @@ namespace OverlapRes
 	void CircleOR(Entity* a, Entity* b)
 	{
 		float dist = glm::length(b->pos - a->pos);
+		if (dist <= 0) return;
 
 		// Compute normal
-		Vec3 v_un = Normalized(b->pos - a->pos);
+		Vec3 v_un = (b->pos - a->pos) / dist;
 
 		Vec3 tanA = glm::cross(v_un, Normalized(glm::cross(v_un, a->vel)));
 		Vec3 tanB = glm::cross(v_un, Normalized(glm::cross(v_un, b->vel)));
