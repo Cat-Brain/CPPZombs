@@ -36,19 +36,13 @@ public:
 
     virtual void ResetDim()
     {
+        width = trueScreenWidth;
+        height = trueScreenHeight;
+
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    }
-
-    void ResetWidth()
-    {
-        int newWidth = int(ceilf(height * screenRatio));
-        if (width == newWidth)
-            return;
-        width = newWidth;
-        ResetDim();
     }
 
     inline float ScreenRatio()

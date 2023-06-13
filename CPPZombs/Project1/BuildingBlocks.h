@@ -29,7 +29,6 @@ namespace DUpdates
 }
 
 EntityData lightBlockData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
-
 class LightBlock : public DToCol
 {
 public:
@@ -53,17 +52,19 @@ public:
 			game->entities->darkSources.push_back(std::move(sharedPtr));
 	}
 
-	LightBlock(LightBlock* baseClass, Vec3 pos) :
+	LightBlock(LightBlock* baseClass, Vec3 pos, Entity* creator = nullptr) :
 		LightBlock(*baseClass)
 	{
 		this->pos = pos;
 		this->baseClass = baseClass;
+		if (creator != nullptr)
+			allegiance = creator->allegiance;
 		Start();
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
-		return make_unique<LightBlock>(this, pos);
+		return make_unique<LightBlock>(this, pos, creator);
 	}
 
 	void SetPos(Vec3 newPos) override

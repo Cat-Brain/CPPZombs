@@ -810,11 +810,11 @@ namespace Enemies
 
 			/*if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
 			{
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->duration +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->range +
 					Vec3(0, 0, cat->projectile2->radius), PI_F * 0.125f), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, cat->FindDir() * cat->projectile2->duration +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, cat->FindDir() * cat->projectile2->range +
 					Vec3(0, 0, cat->projectile2->radius), cat));
-				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->duration +
+				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->range +
 					Vec3(0, 0, cat->projectile2->radius), PI_F * -0.125f), cat));
 			}
 			
@@ -1277,7 +1277,7 @@ namespace Enemies
 		bool TankAU(Enemy* enemy)
 		{
 			Tank* tank = static_cast<Tank*>(enemy);
-			game->entities->push_back(tank->projectile->Clone(tank->pos + tank->dir * tank->radius * 1.5f, tank->dir * tank->projectile->duration, tank));
+			game->entities->push_back(tank->projectile->Clone(tank->pos + tank->dir * tank->radius * 1.5f, tank->dir * tank->projectile->range, tank));
 			return true;
 		}
 	}

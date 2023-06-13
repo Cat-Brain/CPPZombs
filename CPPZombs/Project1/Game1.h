@@ -1,10 +1,7 @@
 #include "Renderer.h"
 
-class Entity;
-class Entities;
-class Player;
-class Base;
-class Planet;
+class Entity; class Entities; class Player;
+class Base; class Planet; class LogBook;
 
 enum UIMODE
 {
@@ -19,7 +16,8 @@ public:
 	unique_ptr<Entities> entities;
 	Player* player;
 	Base* base;
-	std::unique_ptr<Planet> planet;
+	unique_ptr<Planet> planet;
+	unique_ptr<LogBook> logBook;
 
 	bool showUI = true;
 	UIMODE uiMode = UIMODE::MAINMENU;

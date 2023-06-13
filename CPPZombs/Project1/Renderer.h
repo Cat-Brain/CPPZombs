@@ -2,12 +2,13 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+	glViewport(0, 0, width, height);
 	trueScreenWidth = width;
 	trueScreenHeight = height;
 	screenRatio = (float)trueScreenWidth / (float)trueScreenHeight;
 	for (Framebuffer* framebuffer : framebuffers)
 		if (framebuffer->shouldScreenRes)
-			framebuffer->ResetWidth();
+			framebuffer->ResetDim();
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

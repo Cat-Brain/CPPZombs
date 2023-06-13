@@ -357,7 +357,7 @@ public:
 
 	byte TileAtPos(Vec3 pos)
 	{
-		if (glm::isnan(pos.x) || glm::isnan(pos.y) || glm::isnan(pos.z))
+		if (Isnan(pos))
 			ErrorHandle("Tile at infinity");
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
 		if (index == -1) return UnEnum(TILE::AIR);
@@ -714,7 +714,9 @@ void Entity::UpdateChunkCollision()
 
 		Vec3 normal = p - nearestPoint;
 		float dist = glm::length(normal);
-		normal = glm::normalize(normal);
+		normal /= dist;
+		if (Isnan(normal))
+			return SetPos(pos + up);
 		Vec3 offset = (dist - radius) * normal;
 		SetPos(pos - offset);
 		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), bounciness);

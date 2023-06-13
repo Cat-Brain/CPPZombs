@@ -208,6 +208,11 @@ inline iVec3 ToIV3(Vec3 a)
 	return iVec3(floorf(a.x), floorf(a.y), floorf(a.z));
 }
 
+bool Isnan(Vec3 v)
+{
+	return glm::isnan(v.x) || glm::isnan(v.y) || glm::isnan(v.z);
+}
+
 inline Vec3 RotateLeft(Vec3 a)
 {
 	return Vec3(-a.y, a.x, a.z);
@@ -237,9 +242,8 @@ inline Vec3 RotateRight45(Vec3 a)
 
 inline Vec3 Normalized(Vec3 a) // Safe version of glm::normalize
 {
-	if (a == Vec3(0))
-		return Vec3(0);
-	return glm::normalize(a);
+	a = glm::normalize(a);
+	return Isnan(a) ? vZero : a;
 }
 
 inline iVec3 Rormalized(Vec3 a)

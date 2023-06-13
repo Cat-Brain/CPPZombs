@@ -55,12 +55,52 @@ public:
 		height; // How many per horizontal slice.
 	int currentSelected = -1; // Currently selected item for item place swapping. -1 means nothing selected.
 	bool isOpen = false;
+	Entity* player;
 
-	PlayerInventory(uint width = 10, uint height = 4, Items startItems = Items()) :
-		width(width), height(height), Items(width * height, ItemInstance(ITEMTYPE::DITEM, 0))
+	PlayerInventory(Entity* player = nullptr, uint width = 10, uint height = 4, Items startItems = Items()) :
+		player(player), width(width), height(height), Items(width * height, ItemInstance(ITEMTYPE::DITEM, 0))
 	{
 		for (int i = 0; i < startItems.size() && i < size(); i++)
 			(*this)[i] = startItems[i];
+	}
+
+	byte TryTake(ItemInstance item) override
+	{
+		for (int i = 0; i < size(); i++)
+		{
+			if ((*this)[i] == item)
+			{
+				if ((*this)[i].count < item.count)
+					return TRYTAKE::TO_FEW;
+				if ((*this)[i].count != item.count)
+				{
+					(*this)[i].count -= item.count;
+					return TRYTAKE::DECREMENTED;
+				}
+				(*this)[i] = ItemInstance(ITEMTYPE::DITEM, 0);
+				return TRYTAKE::DELETED;
+			}
+		}
+		return TRYTAKE::UNFOUND;
+	}
+
+	bool CanMake(Recipe cost) override
+	{
+		PlayerInventory clone = *this;
+		for (ItemInstance item : cost)
+			if (TRYTAKE::Failure(clone.TryTake(item)))
+				return false;
+		return true;
+	}
+
+	bool TryMake(Recipe cost) override
+	{
+		PlayerInventory clone = *this;
+		for (ItemInstance item : cost)
+			if (TRYTAKE::Failure(clone.TryTake(item)))
+				return false;
+		*this = clone;
+		return true;
 	}
 
 	bool RemoveIfEmpty(int index)
@@ -121,6 +161,34 @@ public:
 					game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(tScale * y, tScale * x),
 						(*this)[i]->color, Vec2(tScale));
 				}
+
+#pragma region Crafting
+
+			vector<Tower*> buildableTowers;
+			for (Tower* tower : Defences::Towers::towers)
+				if (CanMake(tower->recipe))
+					buildableTowers.push_back(tower);
+
+
+
+			for (int i = 0; i < buildableTowers.size(); i++)
+			{
+				string text = buildableTowers[i]->name;
+				float textWidth = font.TextWidthTrue(text) * scale;
+				Vec2 bottomLeft = Vec2(-ScrWidth() + scale * width, scale * 2 * (i + 1) - ScrHeight());
+				Vec2 mousePos = game->inputs.screenMousePosition * 2.f - Vec2(ScrDim());
+				bool isHover = mousePos.x > bottomLeft.x &&
+					mousePos.x < bottomLeft.x + textWidth * 2 &&
+					mousePos.y > bottomLeft.y &&
+					mousePos.y < bottomLeft.y + scale * 2;
+				game->DrawFBL(bottomLeft, isHover ? RGBA(0, 0, 0, 63) : RGBA(255, 255, 255, 63), Vec2(textWidth, scale));
+				font.Render(text, bottomLeft, scale * 2, buildableTowers[i]->color);
+				if (isHover && game->inputs.keys[KeyCode::PRIMARY].pressed)
+					buildableTowers[i]->TryCreate(this, player->pos, player->dir, player);
+			}
+
+#pragma endregion
+
 			return;
 		}
 		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex]->color, Vec2(scale));
@@ -192,7 +260,7 @@ public:
 		lastUtility = tTime - utilityTime;
 		shouldVacuum = true;
 
-		items = PlayerInventory(10, 4, startItems);
+		items = PlayerInventory(this, 10, 4, startItems);
 
 		vector<int> spawnedIndices(NUM_START_ITEMS + blacklistedSeeds.size(), -1);
 		for (int i = 0; i < blacklistedSeeds.size(); i++)
@@ -342,7 +410,7 @@ public:
 
 	Rover(EntityData* data, float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
 		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
 		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
 	{ }
@@ -386,7 +454,7 @@ Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20, 5,
 	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
 		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
-		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
+		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 vector<Player*> characters = { &soldier, &flicker, &engineer };
@@ -594,8 +662,9 @@ namespace Updates
 		player->camDir = glm::normalize(player->camDir);
 		player->moveDir = glm::normalize(Vec3(Vec2(player->camDir), 0));
 		player->rightDir = Vec3(player->moveDir.y, -player->moveDir.x, 0);
+		player->dir = player->moveDir;
 
-		if (player->sTime <= 0)
+		if (player->sTime <= 0 && game->uiMode == UIMODE::INGAME)
 		{
 			pMovements[UnEnum(player->movement)](player); // This handles all of the locomotion of the player.
 
@@ -621,7 +690,7 @@ namespace Updates
 			}
 			else*/ // Do primaries, secondaries, and/or utilities.
 			{
-				if (player->inputs.keys[KeyCode::PRIMARY].held && tTime - player->lastPrimary >= player->primaryTime && primaries[UnEnum(player->primary)](player))
+				if (!player->items.isOpen && player->inputs.keys[KeyCode::PRIMARY].held && tTime - player->lastPrimary >= player->primaryTime &&primaries[UnEnum(player->primary)](player))
 					player->lastPrimary = tTime;
 				if (player->inputs.keys[KeyCode::SECONDARY].held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
 					player->lastSecondary = tTime;
@@ -845,12 +914,12 @@ namespace Primaries
 		currentItem->Use(currentItem, player->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
 		player->lastPrimary = tTime + player->primaryTime;
 		Engineer* engineer = static_cast<Engineer*>(player);
-		if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
+		if (player->items.RemoveIfEmpty(player->items.currentIndex) != TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
 		for (SpringCircle* circle : engineer->drones)
 			if (!game->entities->OverlapsTile(circle->pos, currentShootingItem->radius))
 			{
 				player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], circle->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
-				if (player->items.RemoveIfEmpty(player->items.currentIndex) != Items::TRYTAKE::DECREMENTED) return false;
+				if (player->items.RemoveIfEmpty(player->items.currentIndex) != TRYTAKE::DECREMENTED) return false;
 			}
 		return false;
 	}

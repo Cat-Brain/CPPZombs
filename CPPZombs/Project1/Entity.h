@@ -6,9 +6,16 @@
 #pragma region Psuedo-virtual functions
 enum class UPDATE // Update
 {
-	ENTITY, FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMFOR, PROJECTILE, FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
-	VINE, ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
-	EGG, KIWI, PLAYER, TURRET, ROVER, ENGINEER, GRENADE
+	ENTITY,
+	FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMFOR,
+	PROJECTILE,
+	FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
+	VINE,
+	BASIC_TURRET,
+	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
+	EGG, KIWI,
+	PLAYER,
+	TURRET, ROVER, ENGINEER, GRENADE
 };
 
 vector<function<void(Entity*)>> updates;
@@ -22,8 +29,16 @@ vector<function<void(Entity*)>> vUpdates;
 
 enum class DUPDATE // Draw Update
 {
-	ENTITY, FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW, PROJECTILE, DTOCOL, SHRUB, TREE, DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER,
-	POUNCER, CAT, CATACLYSM, TANK, KIWI, PLAYER, TURRET, ROVER
+	ENTITY,
+	FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW,
+	PROJECTILE,
+	DTOCOL,
+	SHRUB, TREE,
+	BASIC_TURRET,
+	DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT, CATACLYSM, TANK,
+	KIWI,
+	PLAYER,
+	TURRET, ROVER
 };
 
 vector<function<void(Entity*)>> dUpdates;
@@ -81,9 +96,19 @@ struct Allegiance
 		*this = value; // Uses custom = operator;
 	}
 
-	void operator = (byte value)
+	inline void operator = (byte value)
 	{
 		*(byte*)this = value;
+	}
+
+	inline Allegiance operator | (Allegiance other)
+	{
+		return *((byte*)this) | *((byte*)&other);
+	}
+
+	inline Allegiance operator + (Allegiance other)
+	{
+		return *this | other;
 	}
 
 	inline byte OverlapByte(Allegiance other)

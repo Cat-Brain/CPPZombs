@@ -4,7 +4,7 @@ EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPD
 class Projectile : public Entity
 {
 public:
-    float duration; // How far it can travel before landing.
+    float range; // How far it can travel before landing.
     int damage; // It's damage on hit.
     float speed; // It's speed.
     float begin; // When it was created.
@@ -12,10 +12,10 @@ public:
     bool shouldCollide; // Should this collide with objects.
     bool collideTerrain;
 
-    Projectile(EntityData* data, float duration = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
+    Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
         float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
         Entity(data, vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
-        duration(duration), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
+        range(range), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
     {
         sortLayer = 1;
         this->corporeal = corporeal;
@@ -53,7 +53,7 @@ namespace Updates
     {
         Projectile* projectile = static_cast<Projectile*>(_entity);
 
-        if (tTime - projectile->begin >= projectile->duration / projectile->speed)
+        if (tTime - projectile->begin >= projectile->range / projectile->speed)
             return projectile->DestroySelf(projectile);
 
         if (!projectile->shouldCollide)
@@ -127,7 +127,7 @@ public:
         this->creator = creator;
         float magnitude = glm::length(direction);
         this->dir = direction / magnitude;
-        duration = fminf(item->range, magnitude);
+        range = fminf(item->range, magnitude);
         this->pos = pos;
         begin = tTime;
         if (creator != nullptr)
@@ -144,7 +144,7 @@ public:
         this->creator = creator;
         float magnitude = glm::length(direction);
         this->dir = direction / magnitude;
-        duration = fminf(item->range, magnitude);
+        range = fminf(item->range, magnitude);
         this->pos = pos;
         begin = tTime;
         damage = item->damage;

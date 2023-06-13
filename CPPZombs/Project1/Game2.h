@@ -1,5 +1,80 @@
 #include "Player.h"
 
+enum class LOGMODE
+{
+	MAIN, PLANTS, TOWERS
+};
+class LogBook
+{
+public:
+	bool isOpen = false;
+	int individualIndex = -1, wrapIndex = 0;
+	LOGMODE logMode = LOGMODE::MAIN;
+
+	void DUpdate()
+	{
+		switch (logMode)
+		{
+		case LOGMODE::MAIN:
+		{
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+				isOpen = false;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Plants"))
+				logMode = LOGMODE::PLANTS;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Towers"))
+				logMode = LOGMODE::TOWERS;
+			break;
+		}
+		case LOGMODE::PLANTS:
+		{
+			if (individualIndex == -1)
+			{
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					logMode = LOGMODE::MAIN;
+				for (int i = 0; i < Plants::plants.size(); i++)
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Plants::plants[i]->name,
+						Plants::plants[i]->color, Plants::plants[i]->color / 2))
+					{
+						individualIndex = i;
+					}
+			}
+			else
+			{
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					individualIndex = -1;
+			}
+			break;
+		}
+		case LOGMODE::TOWERS:
+		{
+			if (individualIndex == -1)
+			{
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					logMode = LOGMODE::MAIN;
+				for (int i = 0; i < Defences::Towers::towers.size(); i++)
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Defences::Towers::towers[i]->name,
+						Defences::Towers::towers[i]->color, Defences::Towers::towers[i]->color / 2))
+					{
+						individualIndex = i;
+					}
+			}
+			else
+			{
+				Tower* tower = Defences::Towers::towers[individualIndex];
+				int i = 0;
+				for (ItemInstance itemInst : tower->recipe)
+					font.Render(itemInst->name + " - " + to_string(itemInst.count),
+						iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f - i++ * 0.25f))), ScrHeight() / 5.f, itemInst->color);
+
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					individualIndex = -1;
+			}
+			break;
+		}
+		}
+	}
+};
+
 Planet::Planet()
 {
 	worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
@@ -450,6 +525,7 @@ void Game::Start()
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	planet = std::make_unique<Planet>();
+	logBook = make_unique<LogBook>();
 
 	entities = make_unique<Entities>();
 	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone();
@@ -587,10 +663,21 @@ void Game::Update()
 				currentFramebuffer = TRUESCREEN;
 				UseFramebuffer();
 				inputs.UpdateKey(window, inputs.keys[KeyCode::PAUSE]);
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-					uiMode = UIMODE::INGAME;
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main menu"))
-					uiMode = UIMODE::MAINMENU;
+
+				if (logBook->isOpen)
+					logBook->DUpdate();
+				else // Don't render this stuff whenever the logbook's open!
+				{
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					{
+						cursorUnlockCount--;
+						uiMode = UIMODE::INGAME;
+					}
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main Menu"))
+						uiMode = UIMODE::MAINMENU;
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Log Book"))
+						logBook->isOpen = true;
+				}
 			}
 		}
 		else

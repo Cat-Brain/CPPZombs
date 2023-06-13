@@ -120,6 +120,11 @@ public:
         return result;
     }
 
+    float TextWidthTrue(string text)
+    {
+        return TextWidth(text) / (float)minimumSize;
+    }
+
     void Render(string text, Vec2 pos, float scale, RGBA color)
     {
         scale /= minimumSize;

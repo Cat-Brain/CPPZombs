@@ -21,7 +21,7 @@ public:
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		babyRadius(radius), maxRadius(maxRadius), babyMass(mass), maxMass(maxMass),
-		FunctionalBlock2(data, timePer, vZero, radius, color, mass, bounciness, maxHealth, health, name) { }
+		FunctionalBlock2(data, timePer, vZero, radius, color, mass, bounciness, maxHealth, health, name, PLANTS_A) { }
 
 	Shrub(Shrub* baseClass, Vec3 dir, Vec3 pos) :
 		Shrub(*baseClass)
@@ -180,7 +180,7 @@ class Vine : public Shrub
 {
 public:
 	Vine* base = nullptr, * back = nullptr, * front = nullptr;
-	float angleWobble;
+	float angleWobble, nextAngleWobble = 0;
 	int maxGenerations, generation;
 	sByte nextSide = 0;
 
@@ -195,7 +195,7 @@ public:
 	void Start() override
 	{
 		Shrub::Start();
-		dir = glm::rotateZ(dir, (RandFloat() * 2 - 1) * angleWobble);
+		nextAngleWobble = (RandFloat() * 2 - 1) * angleWobble;
 		nextPlacementPos = dir;
 		radius = babyRadius;
 		nextSpawnSeed = true;
@@ -206,8 +206,8 @@ public:
 	{
 		this->pos = pos;
 		dir.z = 0;
-		this->dir = Normalized(dir);
-		if (this->dir == vZero) this->dir = RandCircPoint();
+		this->dir = glm::normalize(dir);
+		if (Isnan(this->dir)) this->dir = RandCircPoint();
 		this->baseClass = baseClass;
 		base = this;
 		Start();
@@ -254,7 +254,7 @@ namespace Updates
 			if (vine->back != nullptr)
 			{
 				vine->dir = Normalized(vine->pos - vine->back->pos);
-				vine->nextPlacementPos = vine->dir;
+				vine->nextPlacementPos = glm::rotateZ(vine->dir, vine->nextAngleWobble);
 			}
 		}
 		else
@@ -596,17 +596,101 @@ namespace Collectibles::Seeds
 
 #pragma region Tower defense
 
-EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
-class BasicTurret : public LightBlock
+EntityData towerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL);
+class Tower : public DToCol
+{
+public:
+	Recipe recipe;
+
+	Tower(EntityData* data, Recipe recipe,
+		float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+		DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
+		recipe(recipe)
+	{ }
+
+	Tower(Tower* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
+		Tower(*baseClass)
+	{
+		this->pos = pos;
+		this->dir = dir;
+		this->creator = creator;
+		allegiance = creator->allegiance + PLANTS_A;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
+	{
+		return make_unique<Tower>(this, pos, dir, creator);
+	}
+
+	virtual bool TryCreate(Items* items, Vec3 pos, Vec3 dir, Entity* creator)
+	{
+		if (!items->TryMake(recipe))
+			return false;
+		game->entities->push_back(Clone(pos + dir * (creator->radius + radius), dir, creator));
+		return true;
+	}
+};
+
+EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+class LightTower : public Tower
+{
+public:
+	JRGB lightColor;
+	float range;
+	LightSource* lightSource = nullptr;
+	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
+
+	LightTower(EntityData* data, Recipe recipe, JRGB lightColor, bool lightOrDark, float range = 50, float radius = 0.5f, RGBA color = RGBA(),
+		RGBA color2 = RGBA(), float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+		Tower(data, recipe, radius, color, color2, mass, bounciness, maxHealth, health, name), lightColor(lightColor),
+		range(range), lightOrDark(lightOrDark) { }
+
+	void Start() override
+	{
+		unique_ptr<LightSource> sharedPtr = make_unique<LightSource>(pos, lightColor, range);
+		lightSource = sharedPtr.get();
+		if (lightOrDark)
+			game->entities->lightSources.push_back(std::move(sharedPtr));
+		else
+			game->entities->darkSources.push_back(std::move(sharedPtr));
+	}
+
+	LightTower(LightTower* baseClass, Vec3 pos, Entity* creator = nullptr) :
+		LightTower(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		if (creator != nullptr)
+			allegiance = creator->allegiance;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
+	{
+		return make_unique<LightTower>(this, pos, creator);
+	}
+
+	void SetPos(Vec3 newPos) override
+	{
+		DToCol::SetPos(newPos);
+		lightSource->pos = pos;
+	}
+};
+
+EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+class BasicTurret : public LightTower
 {
 public:
 	Projectile* projectile;
 	float timeTill, timePer;
+	RGBA color3; // Used for the color of the barrel.
 
-	BasicTurret(EntityData* data, Projectile* projectile, float timePer,
-		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
-		projectile(projectile), timePer(timePer), timeTill(timePer)
+	BasicTurret(EntityData* data, Recipe recipe, Projectile* projectile, float timePer,
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
+		int health, string name) :
+		LightTower(data, recipe, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		projectile(projectile), timePer(timePer), timeTill(timePer), color3(color3)
 	{ }
 
 	BasicTurret(BasicTurret* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
@@ -615,14 +699,65 @@ public:
 		this->pos = pos;
 		this->dir = dir;
 		this->creator = creator;
-		allegiance = creator->allegiance;
+		allegiance = creator->allegiance + PLANTS_A;
 		Start();
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
 	{
-		return make_unique<Turret>(this, pos, dir, creator);
+		return make_unique<BasicTurret>(this, pos, dir, creator);
 	}
 };
+
+namespace Updates
+{
+	void BasicTurretU(Entity* entity)
+	{
+		BasicTurret* turret = static_cast<BasicTurret*>(entity);
+		turret->timeTill -= game->dTime;
+		Entity* hitEntity = nullptr;
+		if (turret->timeTill <= 0 && (hitEntity =
+			game->entities->FirstOverlap(turret->pos, turret->projectile->range, MaskF::IsNonAlly, turret)) != nullptr)
+		{
+			turret->dir = Normalized(hitEntity->pos - turret->pos);
+			game->entities->push_back(turret->projectile->Clone(turret->pos, turret->dir * turret->projectile->range, turret));
+			turret->timeTill = turret->timePer;
+		}
+	}
+}
+
+namespace DUpdates
+{
+	void BasicTurretDU(Entity* entity)
+	{
+		BasicTurret* turret = static_cast<BasicTurret*>(entity);
+
+		turret->DUpdate(DUPDATE::DTOCOL);
+		game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * turret->dir, turret->color3, turret->radius * 0.25f);
+	}
+}
+
+namespace Defences
+{
+	namespace Projectiles
+	{
+		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
+		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
+		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
+	}
+
+	namespace Towers
+	{
+#pragma region Turrets
+
+		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(0, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
+		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
+		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &Projectiles::rockTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 0, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
+
+#pragma endregion
+
+		vector<Tower*> towers = { &pulseTurret, &rockTurret, &sapphireTurret };
+	}
+}
 
 #pragma endregion

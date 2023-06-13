@@ -186,7 +186,18 @@ namespace ItemODs
 	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType) { }
 }
 
-class Items : public vector<ItemInstance> // Vector of ItemsInstance with helper functions
+typedef vector<ItemInstance> Recipe;
+
+namespace TRYTAKE
+{
+	byte DECREMENTED = 0, DELETED = 1, TO_FEW = 2, UNFOUND = 3,
+		SUCCESS = DELETED, FAILURE = TO_FEW; // TryMake <= SUCCESS  TryMake >= FAILURE
+
+	inline bool Success(byte value) { return value <= SUCCESS; }
+	inline bool Failure(byte value) { return value >= FAILURE; }
+}
+
+class Items : public vector<ItemInstance> // Vector of ItemInstance with helper functions
 {
 public:
 	using vector<ItemInstance>::vector;
@@ -217,11 +228,7 @@ public:
 		std::sort(begin(), end());
 	}
 
-	enum TRYTAKE : byte
-	{
-		DECREMENTED, DELETED, TO_FEW, UNFOUND
-	};
-	TRYTAKE TryTake(ItemInstance item) // Returns true if could remove.
+	virtual byte TryTake(ItemInstance item)
 	{
 		for (int i = 0; i < size(); i++)
 		{
@@ -275,15 +282,21 @@ public:
 		return true;
 	}
 
-	bool TryMake(vector<ItemInstance> cost)
+	virtual bool CanMake(Recipe cost)
 	{
 		Items clone = *this;
 		for (ItemInstance item : cost)
-		{
-			bool successful = clone.TryTake(item);
-			if (!successful)
+			if (TRYTAKE::Failure(clone.TryTake(item)))
 				return false;
-		}
+		return true;
+	}
+
+	virtual bool TryMake(Recipe cost)
+	{
+		Items clone = *this;
+		for (ItemInstance item : cost)
+			if (TRYTAKE::Failure(clone.TryTake(item)))
+				return false;
 		*this = clone;
 		return true;
 	}
