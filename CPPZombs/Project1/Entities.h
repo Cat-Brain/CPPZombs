@@ -698,13 +698,6 @@ void Entity::UpdateChunkCollision()
 				distance = newDistance;
 			}
 
-		/*Vec3 p = pos - hitPosition;
-		Vec3 q = abs(p) - vOne;
-		float dist = glm::length(glm::max(q, vZero)) + glm::min(max(q.x, max(q.y, q.z)), 0.f);
-		Vec3 norm = glm::sign(p) * glm::normalize(q);
-		//SetPos(pos - norm * dist);
-		vel = Lerp(vel * (vOne - glm::abs(norm)), glm::reflect(vel, norm), 0.f/*bounciness*);
-		printf("(%f, %f, %f), ", norm.x, norm.y, norm.z);*/
 		Vec3 p = pos - hitPosition;
 		Vec3 d = glm::abs(p) - 0.5f;
 		float  m = glm::min(0.0f, glm::max(d.x, max(d.y, d.z)));
@@ -714,9 +707,9 @@ void Entity::UpdateChunkCollision()
 
 		Vec3 normal = p - nearestPoint;
 		float dist = glm::length(normal);
-		normal /= dist;
-		if (Isnan(normal))
+		if (dist == 0)
 			return SetPos(pos + up);
+		normal /= dist;
 		Vec3 offset = (dist - radius) * normal;
 		SetPos(pos - offset);
 		vel = Lerp(vel * (vOne - glm::abs(normal)), glm::reflect(vel, normal), bounciness);

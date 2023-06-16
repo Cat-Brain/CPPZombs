@@ -2,7 +2,7 @@
 
 enum class LOGMODE
 {
-	MAIN, PLANTS, TOWERS
+	MAIN, CONTROLS, PLANTS, TOWERS
 };
 class LogBook
 {
@@ -19,10 +19,23 @@ public:
 		{
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 				isOpen = false;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Plants"))
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Controls"))
+				logMode = LOGMODE::CONTROLS;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Plants"))
 				logMode = LOGMODE::PLANTS;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Towers"))
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, "Towers"))
 				logMode = LOGMODE::TOWERS;
+			break;
+		}
+		case LOGMODE::CONTROLS:
+		{
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+				logMode = LOGMODE::MAIN;
+			
+			font.Render("WASD for movement", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
+			font.Render("Left click, right click, and shift attack", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.25f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
+			font.Render("Tab to open the inventory", iVec2(-ScrWidth(), 0), ScrHeight() / 5.f, RGBA(255, 255, 255));
+			font.Render("Craftable recipes will be in inventory", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (-0.25f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
 			break;
 		}
 		case LOGMODE::PLANTS:
@@ -137,8 +150,8 @@ Chunk::Chunk(iVec3 pos) :
 			{
 				float noise2 = 0.f;// game->planet->caveNoise.GetNoise(float(pos.x + x), float(pos.y + y), float(pos.z + z));
 				int tZ = z + pos.z;
-				tiles[x][y][z] = UnEnum(noise < tZ || noise2 > 0.75f ? TILE::AIR : tZ > 7 ? TILE::SNOW : tZ > 3 ? TILE::ROCK : tZ > 2 ? TILE::SAND : tZ > 1 ?
-					TILE::BAD_SOIL : tZ > 0 ? TILE::MID_SOIL : TILE::MAX_SOIL);
+				tiles[x][y][z] = UnEnum(noise < tZ || noise2 > 0.75f ? TILE::AIR : tZ > 7 ? TILE::SNOW : tZ > 3 ?
+					TILE::ROCK : tZ > 2 ? TILE::SAND : TILE::BAD_SOIL);
 			}
 		}
 }

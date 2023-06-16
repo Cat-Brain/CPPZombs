@@ -75,7 +75,7 @@ int main()
 		using namespace OnDeaths;
 		using namespace Enemies::OnDeaths;
 		using namespace Livestock::OnDeaths;
-		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, VineOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
+		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, LightTowerOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
 			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD, BaseOD };
 
 		using namespace ItemUs;

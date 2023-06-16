@@ -149,7 +149,7 @@ void ErrorHandle(string message)
 {
 	printf("Uh oh! There seems to have been a crash!\n\
 I know of this crash and am likely trying to track it down, sorry this happened.\n\
-The crash type is: %s", message.c_str());
+The crash type is: %s\n", message.c_str());
 	ShowWindow(GetConsoleWindow(), SW_SHOW);
 }
 

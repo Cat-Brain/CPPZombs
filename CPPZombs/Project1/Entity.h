@@ -59,7 +59,7 @@ vector<function<void(Entity*)>> uiUpdates;
 
 enum class ONDEATH
 {
-	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, VINE, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
+	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, LIGHTTOWER, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
 	CENTICRAWLER, KIWI, PLAYER, BASE
 };
 
@@ -464,8 +464,8 @@ namespace OverlapRes
 		// Compute normal
 		Vec3 v_un = (b->pos - a->pos) / dist;
 
-		Vec3 tanA = glm::cross(v_un, Normalized(glm::cross(v_un, a->vel)));
-		Vec3 tanB = glm::cross(v_un, Normalized(glm::cross(v_un, b->vel)));
+		Vec3 tanA = Normalized(glm::cross(v_un, glm::cross(v_un, a->vel)));
+		Vec3 tanB = Normalized(glm::cross(v_un, glm::cross(v_un, b->vel)));
 
 		float v1t = glm::dot(tanA, a->vel);
 		float v2t = glm::dot(tanB, b->vel);

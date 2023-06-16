@@ -278,26 +278,17 @@ namespace VUpdates
 				{
 					Vine* back = currentFarthest->back;
 					float dist = glm::distance(back->pos, currentFarthest->pos);
-					Vec3 multiplier = (back->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - back->radius) / (dist * (currentFarthest->mass + back->mass)));
-					currentFarthest->SetPos(currentFarthest->pos + multiplier * back->mass);
-					back->SetPos(back->pos - multiplier * currentFarthest->mass);
+					if (dist * (currentFarthest->mass + back->mass) != 0)
+					{
+						Vec3 multiplier = (back->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - back->radius) / (dist * (currentFarthest->mass + back->mass)));
+						currentFarthest->SetPos(currentFarthest->pos + multiplier * back->mass);
+						back->SetPos(back->pos - multiplier * currentFarthest->mass);
+					}
 					currentFarthest = currentFarthest->front;
 				}
 			}
 		}
 		vine->VUpdate(VUPDATE::FRICTION);
-	}
-}
-
-namespace OnDeaths
-{
-	void VineOD(Entity* entity, Entity* damageDealer)
-	{
-		/*Vine* vine = static_cast<Vine*>(entity);
-		if (rand() % 100 < vine->chanceForSeed)
-			game->entities->push_back(make_unique<Collectible>(vine->seed, vine->pos));
-		else
-			game->entities->push_back(make_unique<Collectible>(vine->collectible, vine->pos));*/
 	}
 }
 
@@ -517,10 +508,10 @@ namespace Plants
 		Vine leadVine = Vine(&vineData, Resources::lead.Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 0.8f, 1, 4, 25, 25, 3.0f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 0, 10, 10, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
-		Vine topazVine = Vine(&vineData, Resources::topaz.Clone(2), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 1, 6, 50, 10, 2.0f, 0.25f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 0, 60, 60, "Topaz vine");
+		Vine topazVine = Vine(&vineData, Resources::topaz.Clone(), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 1, 9, 50, 10, 2.0f, 0.25f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 0, 60, 60, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
-		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(5), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 6, 25, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
+		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 5, 100, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
 		
 		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
 		Vine quartzVine = Vine(&vineData, Resources::quartz.Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 3, 5, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 0, 10, 10, "Quarts vine");
@@ -632,7 +623,7 @@ public:
 	}
 };
 
-EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class LightTower : public Tower
 {
 public:
@@ -678,7 +669,19 @@ public:
 	}
 };
 
-EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+namespace OnDeaths
+{
+	void LightTowerOD(Entity* entity, Entity* damageDealer)
+	{
+		LightTower* tower = static_cast<LightTower*>(entity);
+		if (tower->lightOrDark)
+			game->entities->RemoveLight(tower->lightSource);
+		else
+			game->entities->RemoveDark(tower->lightSource);
+	}
+}
+
+EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class BasicTurret : public LightTower
 {
 public:

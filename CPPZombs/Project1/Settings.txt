@@ -3,4 +3,4 @@ vSync = false
 difficulty = easy
 maximized = true
 chunk render dist = 5
-character = 0
+character = 2

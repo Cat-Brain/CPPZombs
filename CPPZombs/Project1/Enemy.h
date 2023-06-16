@@ -124,8 +124,7 @@ namespace Enemies
 		Vec3 FindDir()
 		{
 			Entity* entity = NearestFoe(pos, 30.f, this);
-			if (entity == nullptr) return vZero;
-			return Normalized(entity->pos - pos);
+			return Normalized((entity == nullptr ? reinterpret_cast<Entity*>(game->base) : entity)->pos - pos);
 		}
 	};
 
@@ -1386,7 +1385,7 @@ namespace Enemies
 		void SpawnEnemy(int index)
 		{
 			float randomValue = RandFloat() * 6.283184f;
-			game->entities->push_back((*this)[index]->Clone(Vec3(RandCircPoint2(), 0) * 30.f * (RandFloat() * 0.5f + 0.5f)
+			game->entities->push_back((*this)[index]->Clone(Vec3(RandCircPoint2(), 0) * 30.f * (RandFloat() * 0.5f + 1.5f)
 				+ game->PlayerPos() + up * 30.f));
 		}
 
