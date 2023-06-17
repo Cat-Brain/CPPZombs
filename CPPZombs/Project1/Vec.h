@@ -208,9 +208,19 @@ inline iVec3 ToIV3(Vec3 a)
 	return iVec3(floorf(a.x), floorf(a.y), floorf(a.z));
 }
 
-bool Isnan(Vec3 v)
+bool IsNan(Vec3 v)
 {
 	return glm::isnan(v.x) || glm::isnan(v.y) || glm::isnan(v.z);
+}
+
+bool IsInf(Vec3 v)
+{
+	return glm::isinf(v.x) || glm::isinf(v.y) || glm::isinf(v.z);
+}
+
+bool IsUnreal(Vec3 v)
+{
+	return IsNan(v) || IsInf(v);
 }
 
 inline Vec3 RotateLeft(Vec3 a)
@@ -243,7 +253,7 @@ inline Vec3 RotateRight45(Vec3 a)
 inline Vec3 Normalized(Vec3 a) // Safe version of glm::normalize
 {
 	a = glm::normalize(a);
-	return Isnan(a) ? vZero : a;
+	return IsUnreal(a) ? vZero : a;
 }
 
 inline iVec3 Rormalized(Vec3 a)

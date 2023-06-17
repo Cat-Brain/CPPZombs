@@ -4,7 +4,7 @@ int main()
 {
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	printf("Greetings universe!\n");
-
+	
 	for (int i = 0; i < Livestock::livestocks.size(); i++)
 		Livestock::livestocks[i]->birthEntity = Livestock::livestockBirths[i];
 

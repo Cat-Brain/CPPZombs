@@ -475,7 +475,7 @@ namespace OverlapRes
 
 		float m1 = (v1n * (a->mass - b->mass) + 2.0f * b->mass * v2n) / (a->mass + b->mass);
 		float m2 = (v2n * (b->mass - a->mass) + 2.0f * a->mass * v1n) / (a->mass + b->mass);
-
+		
 		// Set new velocities in x and y coordinates
 		a->vel = tanA * v1t + v_un * m1;
 		b->vel = tanB * v2t + v_un * m2;

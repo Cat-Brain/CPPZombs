@@ -207,7 +207,7 @@ public:
 		this->pos = pos;
 		dir.z = 0;
 		this->dir = glm::normalize(dir);
-		if (Isnan(this->dir)) this->dir = RandCircPoint();
+		if (IsUnreal(this->dir)) this->dir = RandCircPoint();
 		this->baseClass = baseClass;
 		base = this;
 		Start();

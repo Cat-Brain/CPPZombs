@@ -1,13 +1,13 @@
 ﻿  main.cpp
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entity.h(437,31): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(507,144): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(505,144): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1462,23): warning C4018: '<': signed/unsigned mismatch
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(917,75): warning C4805: '!=': unsafe mix of type 'bool' and type 'byte' in operation
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(922,77): warning C4805: '!=': unsafe mix of type 'bool' and type 'byte' in operation
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  7 of 6068 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    12 functions had inline decision re-evaluated but remain unchanged
+  54 of 6070 functions ( 0.9%) were compiled, the rest were copied from previous compilation.
+    4 functions were new in current compilation
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
