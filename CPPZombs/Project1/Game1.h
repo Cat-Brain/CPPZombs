@@ -1,7 +1,7 @@
 #include "Renderer.h"
 
 class Entity; class Entities; class Player;
-class Base; class Planet; class LogBook;
+class Base; class Planet;
 
 enum UIMODE
 {
@@ -9,6 +9,22 @@ enum UIMODE
 };
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
+
+
+enum class LOGMODE
+{
+	MAIN, CONTROLS, PLANTS, TOWERS
+};
+class LogBook
+{
+public:
+	bool isOpen = false;
+	int individualIndex = -1, wrapIndex = 0;
+	float scroll = 0;
+	LOGMODE logMode = LOGMODE::MAIN;
+
+	void DUpdate();
+};
 
 class Game : public Renderer
 {
@@ -28,7 +44,7 @@ public:
 	Vec3 lastPlayerPos = vZero;
 	FastNoiseLite screenShkX, screenShkY, screenShkZ;
 
-	Game() : entities(nullptr), player(nullptr) { }
+	Game() : entities(nullptr), player(nullptr), base(nullptr), logBook(make_unique<LogBook>()) { }
 
 	void Start() override;
 

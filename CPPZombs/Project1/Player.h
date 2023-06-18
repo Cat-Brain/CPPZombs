@@ -51,17 +51,28 @@ class PlayerInventory : public Items
 private:
 	bool isHovering = false;
 public:
-	uint width, // How many per vertical slice. The amount shown when the inventory is closed.
-		height; // How many per horizontal slice.
+	uint width; // How many per vertical slice. The amount shown when the inventory is closed.
+	uint height; // How many per horizontal slice.
 	int currentSelected = -1; // Currently selected item for item place swapping. -1 means nothing selected.
-	bool isOpen = false;
+	int currentRow = 0; // ADD DESCRIPTION
+	bool isOpen = false, isBuilding = false;
 	Entity* player;
+	vector<std::pair<int, ITEMTYPE>> oldPlacements;
 
 	PlayerInventory(Entity* player = nullptr, uint width = 10, uint height = 4, Items startItems = Items()) :
 		player(player), width(width), height(height), Items(width * height, ItemInstance(ITEMTYPE::DITEM, 0))
 	{
 		for (int i = 0; i < startItems.size() && i < size(); i++)
 			(*this)[i] = startItems[i];
+	}
+
+	ItemInstance GetCurrentItem() override
+	{
+		if (size() > 0)
+			return (*this)[currentIndex].Clone(1);
+		if (isBuilding)
+			return bItem.Clone(0);
+		return ItemInstance(ITEMTYPE::DITEM, 0);
 	}
 
 	byte TryTake(ItemInstance item) override
@@ -103,11 +114,12 @@ public:
 		return true;
 	}
 
-	bool RemoveIfEmpty(int index)
+	bool RemoveIfEmpty(int index) // True means did remove, false means did not.
 	{
 		if ((*this)[index].count > 0)
 			return false;
 
+		oldPlacements.push_back({ index, (*this)[index].type });
 		(*this)[index] = ItemInstance(ITEMTYPE::DITEM, 0);
 		return true;
 	}
@@ -120,10 +132,21 @@ public:
 				(*this)[i].count += instance.count;
 				return;
 			}
-		for (int i = 0; i < size(); i++)
-			if ((*this)[i].count == 0)
+		for (int i = 0; i < oldPlacements.size(); i++)
+			if (oldPlacements[i].second == instance.type)
 			{
-				(*this)[i] = instance;
+				if ((*this)[oldPlacements[i].first].count == 0)
+				{
+					(*this)[oldPlacements[i].first] = instance;
+					oldPlacements.erase(oldPlacements.begin() + i);
+					return;
+				}
+				break;
+			}
+		for (int i = 0, j = width * currentRow; i < size(); i++, j = (j + 1) % size())
+			if ((*this)[j].count == 0)
+			{
+				(*this)[j] = instance;
 				return;
 			}
 	}
@@ -137,10 +160,46 @@ public:
 		float tScale = 0.66666f / width, tScale2 = tScale * 0.2f;
 		iVec2 offset = vZeroI2 - ScrDim();
 		Vec2 tOffset = -vOne;
-		if (isOpen)
+		if (isBuilding)
+		{
+#pragma region Crafting
+			vector<Tower*> buildableTowers;
+			for (Tower* tower : Defences::Towers::towers)
+				if (CanMake(tower->recipe))
+					buildableTowers.push_back(tower);
+			if (buildableTowers.size() == 0) return;
+
+			// Show which is currently selected
+			game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), RGBA(),
+				Vec2(font.TextWidthTrue(buildableTowers[currentIndex]->name) * scale, scale));
+			for (uint i = 0; i < buildableTowers.size(); i++)
+			{
+				font.Render(buildableTowers[i]->name,
+					iVec2(-ScrWidth(), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, buildableTowers[i]->color);
+			}
+
+			/*for (int i = 0; i < buildableTowers.size(); i++)
+			{
+				string text = buildableTowers[i]->name;
+				float textWidth = font.TextWidthTrue(text) * scale;
+				Vec2 bottomLeft = Vec2(-ScrWidth() + scale * width, scale * 2 * (i + 1) - ScrHeight());
+				Vec2 mousePos = game->inputs.screenMousePosition * 2.f - Vec2(ScrDim());
+				bool isHover = mousePos.x > bottomLeft.x &&
+					mousePos.x < bottomLeft.x + textWidth * 2 &&
+					mousePos.y > bottomLeft.y &&
+					mousePos.y < bottomLeft.y + scale * 2;
+				game->DrawFBL(bottomLeft, isHover ? RGBA(0, 0, 0, 63) : RGBA(255, 255, 255, 63), Vec2(textWidth, scale));
+				font.Render(text, bottomLeft, scale * 2, buildableTowers[i]->color);
+				if (isHover && game->inputs.keys[KeyCode::PRIMARY].pressed)
+					buildableTowers[i]->TryCreate(this, player->pos, player->dir, player);
+			}*/
+#pragma endregion
+			return;
+		}
+		else if (isOpen)
 		{
 			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale * height, scale * width));
-			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
+			game->DrawFBL(Vec2(offset.x + currentRow * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
 			game->DrawFBL(Vec2(0, currentIndex * scale * 2.f) - Vec2(ScrDim()), RGBA(0, 0, 0, 127), Vec2(scale));
 			if (isHovering)
 			{
@@ -161,48 +220,65 @@ public:
 					game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(tScale * y, tScale * x),
 						(*this)[i]->color, Vec2(tScale));
 				}
+			return;
+		}
+		int indexOffset = width * currentRow;
+		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex + indexOffset]->color, Vec2(scale));
+		for (uint i = 0; i < width; i++)
+		{
+			if ((*this)[i + indexOffset].count == 0) continue;
 
-#pragma region Crafting
+			game->DrawTextured(spriteSheet, (*this)[i + indexOffset]->intType, tOffset, Vec2(0, tScale * i),
+				i == currentIndex ? RGBA() : (*this)[i + indexOffset]->color, Vec2(tScale));
+			font.Render(" " + (*this)[i + indexOffset]->name + "  " + to_string((*this)[i + indexOffset].count) + "  " + (*this)[i + indexOffset]->typeName,
+				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i + indexOffset]->color);
+		}
+	}
 
+	bool CanUse()
+	{
+		if (isBuilding)
+		{
+			for (Tower* tower : Defences::Towers::towers)
+				if (CanMake(tower->recipe))
+					return true;
+			return false;
+		}
+		return (*this)[currentIndex + width * currentRow].count != 0;
+	}
+
+	bool Use(Vec3 dir) // True means stack is empty* and false means the opposite.
+	{ // *if isBuilding is true then it will return true.
+		if (isBuilding)
+		{
 			vector<Tower*> buildableTowers;
 			for (Tower* tower : Defences::Towers::towers)
 				if (CanMake(tower->recipe))
 					buildableTowers.push_back(tower);
-
-
-
-			for (int i = 0; i < buildableTowers.size(); i++)
+			if (buildableTowers.size() == 0) return true;
+			if (buildableTowers[currentIndex]->TryCreate(this, player->pos, dir, player))
 			{
-				string text = buildableTowers[i]->name;
-				float textWidth = font.TextWidthTrue(text) * scale;
-				Vec2 bottomLeft = Vec2(-ScrWidth() + scale * width, scale * 2 * (i + 1) - ScrHeight());
-				Vec2 mousePos = game->inputs.screenMousePosition * 2.f - Vec2(ScrDim());
-				bool isHover = mousePos.x > bottomLeft.x &&
-					mousePos.x < bottomLeft.x + textWidth * 2 &&
-					mousePos.y > bottomLeft.y &&
-					mousePos.y < bottomLeft.y + scale * 2;
-				game->DrawFBL(bottomLeft, isHover ? RGBA(0, 0, 0, 63) : RGBA(255, 255, 255, 63), Vec2(textWidth, scale));
-				font.Render(text, bottomLeft, scale * 2, buildableTowers[i]->color);
-				if (isHover && game->inputs.keys[KeyCode::PRIMARY].pressed)
-					buildableTowers[i]->TryCreate(this, player->pos, player->dir, player);
+				// If we created a tower then we should make sure that currentIndex is still a valid value.
+				buildableTowers.clear();
+				for (Tower* tower : Defences::Towers::towers)
+					if (CanMake(tower->recipe))
+						buildableTowers.push_back(tower);
+
+				if (buildableTowers.size() == 0)
+					currentIndex = 0;
+				else
+					currentIndex = currentIndex % buildableTowers.size();
 			}
-
-#pragma endregion
-
-			return;
+			return true;
 		}
-		game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), (*this)[currentIndex]->color, Vec2(scale));
-		for (uint i = 0; i < width; i++)
-		{
-			if ((*this)[i].count == 0) continue;
-
-			game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(0, tScale * i),
-				i == currentIndex ? RGBA() : (*this)[i]->color, Vec2(tScale));
-			font.Render(" " + (*this)[i]->name + "  " + to_string((*this)[i].count) + "  " + (*this)[i]->typeName,
-				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i]->color);
-		}
+		int index = currentIndex + currentRow * width;
+		ItemInstance& currentItem = (*this)[index];
+		currentItem->Use(currentItem, player->pos, dir * currentItem->range, player, player->name, nullptr, 0);
+		return RemoveIfEmpty(index);
 	}
 };
+
+
 
 class Base;
 EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, EDUPDATE::ENTITY, UIUPDATE::PLAYER, ONDEATH::PLAYER);
@@ -438,7 +514,7 @@ Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f,
 
 Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 2, 4, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.5f, 100, 50,
-	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
+	"Soldier", Items({ Resources::rock.Clone(500), Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
 		Resources::Seeds::rubyShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
 		Resources::Eggs::kiwiEgg.Clone(2)}),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
@@ -478,7 +554,11 @@ public:
 		this->pos = pos;
 		this->dir = dir;
 		vel = dir;
-		this->creator = creator;
+		if (creator != nullptr)
+		{
+			allegiance = creator->allegiance;
+			this->creator = creator;
+		}
 		startTime = tTime;
 		Start();
 	}
@@ -567,6 +647,39 @@ namespace ItemUs
 
 void PlayerInventory::Update(bool shouldScroll)
 {
+#pragma region Crafting
+	if (!isBuilding)
+	{
+		if (game->inputs.keys[KeyCode::BUILD].pressed)
+		{
+			isBuilding = true;
+			int buildCount = 0;
+			for (int i = 0; i < Defences::Towers::towers.size(); i++)
+				if (CanMake(Defences::Towers::towers[i]->recipe)) buildCount++;
+			if (buildCount == 0)
+				currentIndex = 0;
+			else
+				currentIndex = JMod(currentIndex + game->inputs.mouseScroll, buildCount);
+			return;
+		}
+	}
+	else if (game->inputs.keys[KeyCode::BUILD].pressed || game->inputs.keys[KeyCode::INVENTORY].pressed)
+	{
+		isBuilding = false;
+	}
+	else if (shouldScroll)
+	{
+		int buildCount = 0;
+		for (int i = 0; i < Defences::Towers::towers.size(); i++)
+			if (CanMake(Defences::Towers::towers[i]->recipe)) buildCount++;
+		if (buildCount == 0)
+			currentIndex = 0;
+		else
+			currentIndex = JMod(currentIndex + game->inputs.mouseScroll, buildCount);
+		return;
+	}
+#pragma endregion
+
 	isHovering = false;
 	if (game->inputs.keys[KeyCode::INVENTORY].pressed)
 	{
@@ -584,6 +697,10 @@ void PlayerInventory::Update(bool shouldScroll)
 	}
 	if (shouldScroll)
 		currentIndex = JMod(currentIndex + game->inputs.mouseScroll, int(width));
+
+	currentRow = JMod(currentRow + int(game->inputs.keys[KeyCode::ROW_RIGHT].pressed) -
+		int(game->inputs.keys[KeyCode::ROW_LEFT].pressed), int(height));
+
 	int scrHeight = ScrHeight();
 	float scale = scrHeight / (3.f * width), scale2 = scale * 0.2f;
 	if (isOpen && game->inputs.screenMousePosition.x > 0 && game->inputs.screenMousePosition.y > 0 &&
@@ -822,6 +939,7 @@ namespace UIUpdates
 		if (player->shouldRenderInventory)
 			player->items.DUpdate();
 
+
 		// Ability UI:
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / 30.f;
@@ -834,7 +952,7 @@ namespace UIUpdates
 		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
 		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / player->primaryTime)));
+		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / (player->items.GetCurrentItem()->useTime * player->shootSpeed))));
 
 		// Reticle:
 		game->DrawTextured(reticleSprite, 0, vZero, -Vec2(1.f / 24),
@@ -895,32 +1013,24 @@ namespace Primaries
 	bool Slingshot(Player* player)
 	{
 		ItemInstance currentShootingItem = player->items.GetCurrentItem();
-		if (currentShootingItem == dItem->Clone() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
+		if (!player->items.CanUse() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
 			return false;
-		ItemInstance& currentItem = player->items[player->items.currentIndex];
-		currentItem->Use(currentItem, player->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
-		player->items.RemoveIfEmpty(player->items.currentIndex);
 		player->lastPrimary = tTime + player->primaryTime;
+		player->items.Use(player->camDir);
 		return false;
 	}
 
 	bool EngShoot(Player* player)
 	{
 		ItemInstance currentShootingItem = player->items.GetCurrentItem();
-		if (currentShootingItem == dItem->Clone() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
+		if (!player->items.CanUse() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
 			return false;
 
-		ItemInstance& currentItem = player->items[player->items.currentIndex];
-		currentItem->Use(currentItem, player->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
 		player->lastPrimary = tTime + player->primaryTime;
+		if (player->items.Use(player->camDir)) return false;
 		Engineer* engineer = static_cast<Engineer*>(player);
-		if (player->items.RemoveIfEmpty(player->items.currentIndex) != TRYTAKE::DECREMENTED || !engineer->shouldVacuum) return false;
 		for (SpringCircle* circle : engineer->drones)
-			if (!game->entities->OverlapsTile(circle->pos, currentShootingItem->radius))
-			{
-				player->items[player->items.currentIndex]->Use(player->items[player->items.currentIndex], circle->pos, player->camDir * currentItem->range, player, player->name, nullptr, 0);
-				if (player->items.RemoveIfEmpty(player->items.currentIndex) != TRYTAKE::DECREMENTED) return false;
-			}
+			if (player->items.Use(player->camDir)) return false;
 		return false;
 	}
 

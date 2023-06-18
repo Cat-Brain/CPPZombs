@@ -48,6 +48,17 @@ public:
 	{
 		return game->dTime * AreaQuality();
 	}
+
+	virtual vector<string> DisplayStrings()
+	{
+		vector<string> result(4, "");
+		int i = 0;
+		result[i++] = ToStringWithPrecision(timePer, 1) + " seconds per cycle";
+		result[i++] = to_string(cyclesToGrow) + " cycles to grow";
+		result[i++] = to_string(deadStage) + " cycles to die";
+		result[i++] = to_string(chanceForSeed) + "% chance for seed";
+		return result;
+	}
 };
 
 /*class Tree : public FunctionalBlock2
@@ -240,6 +251,18 @@ public:
 			OnDeath(damageDealer);
 			DelayedDestroySelf();
 		}
+		return result;
+	}
+
+	vector<string> DisplayStrings() override
+	{
+		vector<string> result(5, "");
+		int i = 0;
+		result[i++] = ToStringWithPrecision(timePer, 1) + " seconds per cycle";
+		result[i++] = to_string(cyclesToGrow) + " cycles to grow";
+		result[i++] = to_string(deadStage) + " cycles to die";
+		result[i++] = to_string(chanceForSeed) + "% chance for seed";
+		result[i++] = to_string(maxGenerations) + " total generations";
 		return result;
 	}
 };
@@ -486,7 +509,7 @@ namespace Plants
 		Shrub bowlerShrub = Shrub(&shrubData, Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 0, 50, 50, "Bowler shrub");
 	
 		RGBA babyVacuumiumShrubColor = RGBA(242, 239, 148), vacuumiumShrubColor = RGBA(204, 202, 153), deadVacuumiumShrubColor = RGBA(158, 156, 85);
-		Shrub vacuumiumShrub = Shrub(&shrubData, Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 60, 5, 0.5f, 2.f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 0, 60, 60, "Vacuumium shrub");
+		Shrub vacuumiumShrub = Shrub(&shrubData, Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 20, 25, 0.5f, 1.5f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 0, 60, 60, "Vacuumium shrub");
 	
 		RGBA babySilverShrubColor = RGBA(209, 157, 157), silverShrubColor = RGBA(171, 171, 171), deadSilverShrubColor = RGBA(87, 99, 74);
 		Shrub silverShrub = Shrub(&shrubData, Resources::silver.Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 0, 30, 30, "Silver shrub");
@@ -495,7 +518,7 @@ namespace Plants
 		Shrub quartzShrub = Shrub(&shrubData, Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_SHRUB_SEED), 3, 12, 25, 3.f, 0.25f, 0.5f, babyQuartzShrubColor, quartzShrubColor, deadQuartzShrubColor, 0.25f, 0.5f, 0, 10, 10, "Quartz shrub");
 	
 		RGBA babyCoalShrubColor = RGBA(99, 66, 20), coalShrubColor = RGBA(59, 44, 23), deadCoalShrubColor = RGBA(74, 65, 52);
-		Shrub coalShrub = Shrub(&shrubData, dItem->Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 0, 50, 50, "Coal shrub");
+		Shrub coalShrub = Shrub(&shrubData, dItem.Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 0, 50, 50, "Coal shrub");
 	}
 
 
@@ -745,8 +768,8 @@ namespace Defences
 	namespace Projectiles
 	{
 		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
-		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
-		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
+		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
+		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
 	}
 
 	namespace Towers

@@ -87,8 +87,8 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	LightBlock cheese = LightBlock(&lightBlockData, { 255, 255, 0 }, true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
-	LightBlock shade = LightBlock(&lightBlockData, { 255, 255, 255 }, false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
+	LightBlock cheese = LightBlock(&lightBlockData, JRGB(191, 191, 61), true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
+	LightBlock shade = LightBlock(&lightBlockData, JRGB(255, 255, 255), false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
 }
 
 namespace Resources

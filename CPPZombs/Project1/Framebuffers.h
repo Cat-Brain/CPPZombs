@@ -134,6 +134,7 @@ public:
 
     void ResetDim() override
     {
+        Framebuffer::ResetDim();
         glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindTexture(GL_TEXTURE_2D, normalBuffer);

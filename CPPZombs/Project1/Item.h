@@ -2,8 +2,10 @@
 
 enum class ITEMTYPE : byte
 {
+	// Internal
+	DITEM, BITEM,
 	// Ammo
-	DITEM, COPPER, IRON, ROCK, BOWLER, SILVER, RUBY, EMERALD, TOPAZ, SAPPHIRE, LEAD, VACUUMIUM, QUARTZ, COAL, CHEESE, SHADE,
+	COPPER, IRON, ROCK, BOWLER, SILVER, RUBY, EMERALD, TOPAZ, SAPPHIRE, LEAD, VACUUMIUM, QUARTZ, COAL, CHEESE, SHADE,
 	// Tree seeds:
 	COPPER_SHRUB_SEED, IRON_SHRUB_SEED, ROCK_SHRUB_SEED, RUBY_SHRUB_SEED, EMERALD_SHRUB_SEED,
 	SHADE_SHRUB_SEED, BOWLER_SHRUB_SEED, VACUUMIUM_SHRUB_SEED, SILVER_SHRUB_SEED, QUARTZ_SHRUB_SEED,
@@ -168,7 +170,10 @@ public:
 		Use(itemU, item, pos, dir, creator, creatorName, callReason, callType);
 	}
 };
-Item* dItem = new Item(ITEMTYPE::DITEM, "NULL", "NULL TYPE", 0, RGBA(), 0);
+
+Item dItem = Item(ITEMTYPE::DITEM, "NULL", "NULL TYPE", 0, RGBA(), 0);
+Item bItem = Item(ITEMTYPE::BITEM, "BUILD", "NULL TYPE", 0, RGBA(), 0);
+
 
 class GoneOnLandItem : public Item
 {
@@ -301,7 +306,7 @@ public:
 		return true;
 	}
 
-	ItemInstance GetCurrentItem()
+	virtual ItemInstance GetCurrentItem()
 	{
 		if (size() > 0)
 			return (*this)[currentIndex].Clone(1);

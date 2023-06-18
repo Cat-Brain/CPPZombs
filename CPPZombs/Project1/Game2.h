@@ -1,92 +1,116 @@
 #include "Player.h"
 
-enum class LOGMODE
-{
-	MAIN, CONTROLS, PLANTS, TOWERS
+vector<RGBA> logBookColors = {
+	RGBA(255, 127, 127),
+	RGBA(255, 191, 127),
+	RGBA(255, 255, 127),
+	RGBA(127, 255, 127),
+	RGBA(127, 127, 255),
+	RGBA(255, 127, 255)
 };
-class LogBook
+void LogBook::DUpdate()
 {
-public:
-	bool isOpen = false;
-	int individualIndex = -1, wrapIndex = 0;
-	LOGMODE logMode = LOGMODE::MAIN;
-
-	void DUpdate()
+	switch (logMode)
 	{
-		switch (logMode)
+	case LOGMODE::MAIN:
+	{
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			isOpen = false;
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Controls"))
+			logMode = LOGMODE::CONTROLS;
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Plants"))
+			logMode = LOGMODE::PLANTS;
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, "Towers"))
+			logMode = LOGMODE::TOWERS;
+		break;
+	}
+	case LOGMODE::CONTROLS:
+	{
+		vector<string> renderStrings = {
+			"WASD for movement",
+			"Left click shoots and plants",
+			"right click and shift attack",
+			"Plants grow best on soil",
+			"Soil is by default brown",
+			"Tab for inventory",
+			"Q and E to switch row",
+			"F to enter build mode",
+			"Left click to place",
+			"UNIMPLEMENTED Right click to destroy"
+		};
+		float scale = ScrHeight() * 0.125f;
+		int rows = renderStrings.size() + 1;
+		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, rows - 8));
+		float offset = scroll * scale;
+		int i = 0;
+		for (string str : renderStrings)
+			font.Render(str, iVec2(-ScrWidth(), static_cast<int>(offset * 2 + ScrHeight() * (0.5f - i++ * 0.25f))),
+				ScrHeight() * 0.2f, logBookColors[i % logBookColors.size()]);
+
+		if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			logMode = LOGMODE::MAIN;
+		break;
+	}
+	case LOGMODE::PLANTS:
+	{
+		if (individualIndex == -1)
 		{
-		case LOGMODE::MAIN:
-		{
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-				isOpen = false;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Controls"))
-				logMode = LOGMODE::CONTROLS;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Plants"))
-				logMode = LOGMODE::PLANTS;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, "Towers"))
-				logMode = LOGMODE::TOWERS;
-			break;
+			float scale = ScrHeight() * 0.125f;
+			int rows = Plants::plants.size() + 1;
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
+			float offset = scroll * scale;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() * 0.1f, "Return"))
+				logMode = LOGMODE::MAIN;
+			for (int i = 0; i < Plants::plants.size(); i++)
+				if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() * 0.1f, Plants::plants[i]->name,
+					Plants::plants[i]->color, Plants::plants[i]->color / 2))
+				{
+					individualIndex = i;
+				}
 		}
-		case LOGMODE::CONTROLS:
+		else
+		{
+			Shrub* plant = Plants::plants[individualIndex];
+			int i = 0;
+			vector<string> displayStrings = plant->DisplayStrings();
+			for (string str : displayStrings)
+				font.Render(str, iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f - i++ * 0.25f))),
+					ScrHeight() / 5.f, logBookColors[i % logBookColors.size()]);
+
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+				individualIndex = -1;
+		}
+		break;
+	}
+	case LOGMODE::TOWERS:
+	{
+		if (individualIndex == -1)
 		{
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 				logMode = LOGMODE::MAIN;
-			
-			font.Render("WASD for movement", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
-			font.Render("Left click, right click, and shift attack", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.25f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
-			font.Render("Tab to open the inventory", iVec2(-ScrWidth(), 0), ScrHeight() / 5.f, RGBA(255, 255, 255));
-			font.Render("Craftable recipes will be in inventory", iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (-0.25f))), ScrHeight() / 5.f, RGBA(255, 255, 255));
-			break;
+			for (int i = 0; i < Defences::Towers::towers.size(); i++)
+				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Defences::Towers::towers[i]->name,
+					Defences::Towers::towers[i]->color, Defences::Towers::towers[i]->color / 2))
+				{
+					individualIndex = i;
+				}
 		}
-		case LOGMODE::PLANTS:
+		else
 		{
-			if (individualIndex == -1)
-			{
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-					logMode = LOGMODE::MAIN;
-				for (int i = 0; i < Plants::plants.size(); i++)
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Plants::plants[i]->name,
-						Plants::plants[i]->color, Plants::plants[i]->color / 2))
-					{
-						individualIndex = i;
-					}
-			}
-			else
-			{
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-					individualIndex = -1;
-			}
-			break;
-		}
-		case LOGMODE::TOWERS:
-		{
-			if (individualIndex == -1)
-			{
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-					logMode = LOGMODE::MAIN;
-				for (int i = 0; i < Defences::Towers::towers.size(); i++)
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Defences::Towers::towers[i]->name,
-						Defences::Towers::towers[i]->color, Defences::Towers::towers[i]->color / 2))
-					{
-						individualIndex = i;
-					}
-			}
-			else
-			{
-				Tower* tower = Defences::Towers::towers[individualIndex];
-				int i = 0;
-				for (ItemInstance itemInst : tower->recipe)
-					font.Render(itemInst->name + " - " + to_string(itemInst.count),
-						iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f - i++ * 0.25f))), ScrHeight() / 5.f, itemInst->color);
+			Tower* tower = Defences::Towers::towers[individualIndex];
+			int i = 0;
+			for (ItemInstance itemInst : tower->recipe)
+				font.Render(itemInst->name + " - " + to_string(itemInst.count),
+					iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f - i++ * 0.25f))), ScrHeight() / 5.f, itemInst->color);
 
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
-					individualIndex = -1;
-			}
-			break;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+				individualIndex = -1;
 		}
-		}
+		break;
 	}
-};
+	}
+	game->inputs.mouseScrollF = 0;
+}
 
 Planet::Planet()
 {
@@ -593,32 +617,35 @@ void Game::Update()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		if (logBook->isOpen)
+			return logBook->DUpdate();
+
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
 			uiMode = UIMODE::CHARSELECT;
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
-			Fullscreen();
-		else if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
 			RGBA(0, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::EASY;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
 			RGBA(255, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::MEDIUM;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
 			RGBA(255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::HARD;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "Settings"))
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, "Settings"))
 			uiMode = UIMODE::SETTINGS;
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "LogBook"))
+			logBook->isOpen = true;
 	}
 	else if (uiMode == UIMODE::SETTINGS)
 	{
@@ -641,6 +668,8 @@ void Game::Update()
 			settings.colorBand ^= true;
 			settings.Write();
 		}
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+			Fullscreen();
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
 	{

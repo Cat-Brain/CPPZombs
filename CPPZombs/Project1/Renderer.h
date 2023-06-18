@@ -2,6 +2,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
 	trueScreenWidth = width;
 	trueScreenHeight = height;
@@ -450,6 +451,7 @@ public:
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	((Renderer*)game.get())->inputs.mouseScroll += static_cast<int>(yoffset);
+	((Renderer*)game.get())->inputs.mouseScrollF += yoffset;
 }
 
 void window_maximize_callback(GLFWwindow* window, int maximized)

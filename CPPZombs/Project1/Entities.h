@@ -740,7 +740,7 @@ bool TileData::Damage(int damage)
 #pragma endregion
 
 
-// Post entities definition entities:
+#pragma region Post entities definition entities
 
 #define EXPLOSION_PARTICLE_COUNT 25
 #define EXPLOSION_PARTICLE_SPEED 16.0f
@@ -826,17 +826,26 @@ EntityData vacuumForData = EntityData(UPDATE::VACUUMFOR);
 class VacuumFor : public FadeOut
 {
 public:
+	bool vacBoth, vacCollectibles;
 	float vacDist, vacSpeed, maxVacSpeed;
 
-	VacuumFor(EntityData* data, Vec3 pos, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
-		FadeOut(data, timeTill, pos, vacDist, color), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
+	VacuumFor(EntityData* data, Vec3 pos, bool vacBoth, bool vacCollectibles, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
+		FadeOut(data, timeTill, pos, vacDist, color),
+		vacBoth(vacBoth), vacCollectibles(vacCollectibles), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
 		corporeal = false;
 	}
 
+	VacuumFor(VacuumFor* baseClass, Vec3 pos) :
+		VacuumFor(*baseClass)
+	{
+		this->pos = pos;
+		startTime = tTime;
+	}
+
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
 	{
-		return make_unique<VacuumFor>(data, pos, totalFadeTime, vacDist, vacSpeed, maxVacSpeed, color);
+		return make_unique<VacuumFor>(this, pos);
 	}
 };
 
@@ -924,7 +933,7 @@ namespace Updates
 			return;
 		}
 
-		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, vac->maxVacSpeed, true);
+		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, vac->maxVacSpeed, vac->vacBoth, vac->vacCollectibles);
 	}
 }
 
@@ -955,7 +964,9 @@ namespace OnDeaths
 	}
 }
 
-// Post entities definition items:
+#pragma endregion
+
+#pragma region Post entities definition items
 
 class PlacedOnLanding : public Item
 {
@@ -1175,7 +1186,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
-	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, 2, 5, -16, 16, RGBA(255, 255, 255, 51));
+	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, false, true, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources
@@ -1185,7 +1196,7 @@ namespace Resources
 	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f, false, true, true);
 	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
 	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", 1, RGBA(80, 43, 92), 0, 15.0f, true, 0.25f, 12, 0.4f, false, true, true);
-	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.0625f, 12, 0.1f, false, true, true);
+	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", 1, RGBA(255, 255, 255), 0, 15, false, 0.25f, 12, 0.1f, false, true, true);
 	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
 }
 
@@ -1199,3 +1210,5 @@ namespace Collectibles
 	Collectible* vacuumium = new Collectible(Resources::vacuumium.Clone());
 	Collectible* quartz = new Collectible(Resources::quartz.Clone());
 }
+
+#pragma endregion

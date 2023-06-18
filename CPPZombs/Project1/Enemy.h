@@ -2,6 +2,7 @@
 
 namespace Enemies
 {
+#pragma region Enemy types
 	Entity* NearestFoe(Vec3 pos, float farDist, Entity* entity)
 	{
 		Entity* result = nullptr;
@@ -16,7 +17,6 @@ namespace Enemies
 		return result;
 	}
 
-#pragma region Enemy types
 	// The base class of all enemies.
 	class Enemy;
 	enum class MUPDATE
@@ -274,7 +274,9 @@ namespace Enemies
 			Snake(data, length, segmentWobbleForce, segmentWobbleFrequency, allegiance, timePer, speed, speed, jumpTime, points, firstWave,
 				damage, radius, color, color2, color3, color4, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
-		{ }
+		{
+			this->timePerMove = timePerMove;
+		}
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -594,7 +596,9 @@ namespace Enemies
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			Enemy(data, allegiance, timePer, moveSpeed, moveSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
 			pounceTime(pounceTime)
-		{ }
+		{
+			this->timePerMove = timePerMove;
+		}
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
@@ -980,7 +984,7 @@ namespace Enemies
 
 			float ratio = pouncer->radius / SQRTTWO_F;
 			game->DrawCone(pouncer->pos + pouncer->dir * ratio,
-				pouncer->pos + pouncer->dir * (ratio * 2), pouncer->color, ratio);
+				pouncer->pos + pouncer->dir * (ratio * 2), pouncer->Color(), ratio);
 
 			pouncer->DUpdate(DUPDATE::DTOCOL);
 		}
