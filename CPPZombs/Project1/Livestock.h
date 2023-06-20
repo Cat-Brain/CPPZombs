@@ -41,7 +41,7 @@ namespace Livestock
 		using DToCol::DToCol;
 	};
 
-	EntityData kiwiData = EntityData(UPDATE::KIWI, VUPDATE::FRICTION, DUPDATE::KIWI, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::KIWI);
+	EntityData kiwiData = EntityData(UPDATE::KIWI, VUPDATE::FRICTION, DUPDATE::KIWI, UIUPDATE::ENTITY, ONDEATH::KIWI);
 	class Kiwi : public Livestock
 	{
 	public:

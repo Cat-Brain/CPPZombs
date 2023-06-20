@@ -1,6 +1,6 @@
 color band = false
 vSync = false
-difficulty = easy
+difficulty = hard
 maximized = true
 chunk render dist = 5
 character = 0

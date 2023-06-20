@@ -108,7 +108,7 @@ namespace DUpdates
     }
 }
 
-EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
+EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
 class ShotItem : public Projectile
 {
 public:

@@ -22,7 +22,7 @@ vector<function<void(Entity*)>> updates;
 
 enum class VUPDATE // Update
 {
-	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED
+	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED, SPIDER
 };
 
 vector<function<void(Entity*)>> vUpdates;
@@ -42,13 +42,6 @@ enum class DUPDATE // Draw Update
 };
 
 vector<function<void(Entity*)>> dUpdates;
-
-enum class EDUPDATE // Early Draw Update
-{
-	ENTITY, SPIDER
-};
-
-vector<function<void(Entity*)>> eDUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
@@ -136,13 +129,12 @@ public:
 	UPDATE update;
 	VUPDATE vUpdate;
 	DUPDATE dUpdate;
-	EDUPDATE earlyDUpdate;
 	UIUPDATE uiUpdate;
 	ONDEATH onDeath;
 
 	EntityData(UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::ENTITY, DUPDATE dUpdate = DUPDATE::ENTITY,
-		EDUPDATE earlyDUpdate = EDUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY):
-		update(update), vUpdate(vUpdate), dUpdate(dUpdate), earlyDUpdate(earlyDUpdate),
+		UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY):
+		update(update), vUpdate(vUpdate), dUpdate(dUpdate),
 		uiUpdate(uiUpdate), onDeath(onDeath)
 	{
 
@@ -225,15 +217,6 @@ public:
 	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
 	{
 		dUpdates[UnEnum(tempDUpdate)](this);
-	}
-
-	void EarlyDUpdate() // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
-	{
-		eDUpdates[UnEnum(data->earlyDUpdate)](this);
-	}
-	void EarlyDUpdate(EDUPDATE tempEDUpdate) // Does nothing by default, used by weird rendering systems like the mighty spoobderb.
-	{
-		eDUpdates[UnEnum(tempEDUpdate)](this);
 	}
 
 	void UIUpdate() // Draws when uiActive is true.

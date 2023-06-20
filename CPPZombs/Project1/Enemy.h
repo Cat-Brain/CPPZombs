@@ -38,13 +38,13 @@ namespace Enemies
 		AUPDATE aUpdate;
 
 		EnemyData(MUPDATE mUpdate = MUPDATE::DEFAULT, AUPDATE aUpdate = AUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY,
-			VUPDATE vUpdate = VUPDATE::FRICTION, DUPDATE dUpdate = DUPDATE::ENTITY, EDUPDATE eDUpdate = EDUPDATE::ENTITY,
+			VUPDATE vUpdate = VUPDATE::FRICTION, DUPDATE dUpdate = DUPDATE::ENTITY,
 			UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
-			EntityData(update, vUpdate, dUpdate, eDUpdate, uiUpdate, onDeath),
+			EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
 			mUpdate(mUpdate), aUpdate(aUpdate) {}
 	};
 
-	EnemyData enemyData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData enemyData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Enemy : public DToCol
 	{
 	public:
@@ -110,7 +110,11 @@ namespace Enemies
 		{
 			if (tTime - lastJump > jumpTime && game->entities->OverlapsAny(BitePos(), BiteRad(), MaskF::IsCorporealNotCollectible, this))
 			{
-				vel += Vec3(0, 0, 6);
+				Vec3 jumpForce = Vec3(0, 0, 6);
+				vel += jumpForce;
+				Entity* overlap = game->entities->FirstOverlap(BitePos(), BiteRad(), MaskF::IsCorporealNotCollectible, this);
+				if (overlap != nullptr)
+					overlap->vel -= jumpForce * (mass / overlap->mass);
 				lastJump = tTime;
 			}
 		}
@@ -129,7 +133,7 @@ namespace Enemies
 	};
 
 
-	EnemyData deceiverData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData deceiverData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Deceiver : public Enemy
 	{
 	public:
@@ -152,7 +156,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData parentData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::PARENT);
+	EnemyData parentData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, UIUPDATE::ENEMY, ONDEATH::PARENT);
 	class Parent : public Enemy
 	{
 	public:
@@ -174,7 +178,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData exploderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::EXPLODER, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
+	EnemyData exploderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::EXPLODER, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
 	class Exploder : public Enemy
 	{
 	public:
@@ -201,7 +205,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData snakeData = EnemyData(MUPDATE::SNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::SNAKE);
+	EnemyData snakeData = EnemyData(MUPDATE::SNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SNAKE);
 	class Snake : public Enemy
 	{
 	public:
@@ -261,7 +265,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData pouncerSnakeData = EnemyData(MUPDATE::POUNCERSNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
+	EnemyData pouncerSnakeData = EnemyData(MUPDATE::POUNCERSNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
 	class PouncerSnake : public Snake
 	{
 	public:
@@ -317,7 +321,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData snakeConnectedData = EnemyData(MUPDATE::SNAKECONNECTED, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, EDUPDATE::ENTITY, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
+	EnemyData snakeConnectedData = EnemyData(MUPDATE::SNAKECONNECTED, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
 	class SnakeConnected : public Enemy
 	{
 	public:
@@ -403,7 +407,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData colorCyclerData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData colorCyclerData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class ColorCycler : public Enemy
 	{
 	public:
@@ -433,7 +437,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData vacuumerData = EnemyData(MUPDATE::VACUUMER, AUPDATE::DEFAULT, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
+	EnemyData vacuumerData = EnemyData(MUPDATE::VACUUMER, AUPDATE::DEFAULT, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
 	class Vacuumer : public Enemy
 	{
 	public:
@@ -458,7 +462,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData spiderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::SPIDER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::SPIDER, UIUPDATE::ENEMY, ONDEATH::SPIDER);
+	EnemyData spiderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::SPIDER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SPIDER);
 	class Spider : public Enemy
 	{
 	public:
@@ -497,11 +501,13 @@ namespace Enemies
 
 			for (int i = 0; i < legCount; i++)
 			{
-				legs[i] = new LegParticle(baseLeg);
-				legs[i]->parent = this;
-				legs[i]->desiredPos = LegPos(i);
-				legs[i]->pos = legs[i]->desiredPos;
+				unique_ptr<LegParticle> newLeg = make_unique<LegParticle>(baseLeg);
+				newLeg->parent = this;
+				newLeg->desiredPos = LegPos(i);
+				newLeg->pos = newLeg->desiredPos;
 				lastLegUpdates[i] = offsettedTTime + i * legCycleSpeed / legCount;
+				legs[i] = newLeg.get();
+				game->entities->particles.push_back(std::move(newLeg));
 			}
 		}
 
@@ -514,7 +520,6 @@ namespace Enemies
 		void UpdateLegs()
 		{
 			for (int i = 0; i < legCount; i++)
-			{
 				if (tTime - lastLegUpdates[i] > legCycleSpeed)
 				{
 					lastLegUpdates[i] += legCycleSpeed;
@@ -522,8 +527,6 @@ namespace Enemies
 					if (glm::distance2(legs[i]->desiredPos, desiredPos) > legTolerance * legTolerance)
 						legs[i]->desiredPos = desiredPos;
 				}
-				legs[i]->Update();
-			}
 		}
 	};
 
@@ -557,7 +560,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::SPIDER, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
+	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
 	class Centicrawler : public Spider
 	{
 	public:
@@ -585,7 +588,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData pouncerData = EnemyData(MUPDATE::POUNCER, AUPDATE::DEFAULT, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData pouncerData = EnemyData(MUPDATE::POUNCER, AUPDATE::DEFAULT, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Pouncer : public Enemy
 	{
 	public:
@@ -611,7 +614,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData catData = EnemyData(MUPDATE::CAT, AUPDATE::DEFAULT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData catData = EnemyData(MUPDATE::CAT, AUPDATE::DEFAULT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cat : public Pouncer
 	{
 	public:
@@ -641,7 +644,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData boomCatData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData boomCatData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class BoomCat : public Cat
 	{
 	public:
@@ -665,7 +668,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData cataclysmData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData cataclysmData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cataclysm : public BoomCat
 	{
 	public:
@@ -707,7 +710,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData tankData = EnemyData(MUPDATE::TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, EDUPDATE::ENTITY, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData tankData = EnemyData(MUPDATE::TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Tank : public Enemy
 	{
 	public:
@@ -751,7 +754,7 @@ namespace Enemies
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
 			vacuumer->Update(UPDATE::ENEMY);
 
-			game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, true);
+			vacuumer->vel -= game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, true) / vacuumer->mass;
 
 			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->radius, game->entities->collectibles);
 			for (Entity* collectible : collectibles)
@@ -901,6 +904,13 @@ namespace Enemies
 			}
 			snake->VUpdate(VUPDATE::FRICTION);
 		}
+
+		void SpiderVU(Entity* entity)
+		{
+			Spider* spider = static_cast<Spider*>(entity);
+			spider->UpdateLegs();
+			spider->VUpdate(VUPDATE::FRICTION);
+		}
 	}
 
 	namespace DUpdates
@@ -1045,16 +1055,6 @@ namespace Enemies
 		}
 	}
 
-	namespace EDUpdates
-	{
-		void SpiderEDU(Entity* entity)
-		{
-			Spider* spider = static_cast<Spider*>(entity);
-
-			spider->UpdateLegs();
-		}
-	}
-
 	namespace UIUpdates
 	{
 		void EnemyUIU(Entity* entity)
@@ -1141,8 +1141,8 @@ namespace Enemies
 		{
 			Spider* spider = static_cast<Spider*>(entity);
 			spider->OnDeath(ONDEATH::ENEMY, damageDealer);
-			for (int i = 0; i < spider->legCount; i++)
-				delete spider->legs[i];
+			for (LegParticle* leg : spider->legs)
+				leg->parent = nullptr;
 		}
 
 		void CenticrawlerOD(Entity* entity, Entity* damageDealer)
@@ -1339,11 +1339,12 @@ namespace Enemies
 	// Very lates - 12
 	Tank gigaTank = Tank(&tankData, &gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
 #pragma endregion
-
+#pragma region Bosses
 	// Bosses - Special
 	Projectile* catProjectile = new Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
 	Projectile* catProjectile2 = new Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
 	Cataclysm* cataclysm = new Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
+#pragma endregion
 #pragma endregion
 
 

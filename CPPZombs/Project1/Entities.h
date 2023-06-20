@@ -506,17 +506,9 @@ public:
 		// Collectibles
 		for (Entity* entity : toRenderPair.second)
 		{
-			entity->EarlyDUpdate();
-		}
-		for (Entity* entity : toRenderPair.second)
-		{
 			entity->DUpdate();
 		}
 		// Normal entities
-		for (Entity* entity : toRenderPair.first)
-		{
-			entity->EarlyDUpdate();
-		}
 		for (Entity* entity : toRenderPair.first)
 		{
 			entity->DUpdate();
@@ -532,6 +524,8 @@ public:
 				i--;
 			}
 		}
+		game->DrawAllCircles();
+
 		// Chunks:
 		glUseProgram(chunkShader);
 		for (int i : chunkOverlaps)
@@ -580,20 +574,27 @@ public:
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
 
-	void VacuumBurst(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	// Returns sum of added velocities
+	Vec3 VacuumBurst(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
 	{
+		Vec3 result = vZero;
 		for (unique_ptr<Entity>& entity : *this)
 		{
 			float distance;
 			if (entity && (vacBoth || entity->isCollectible == vacCollectibles) && (entity->isCollectible || entity->corporeal) && entity->active &&
 				(distance = glm::distance(pos, entity->pos)) > 0 && distance <= vacDist + entity->radius)
+			{
+				Vec3 oldVel = entity->vel;
 				entity->vel = TryAdd2(entity->vel, Normalized(pos - entity->pos) * (speed / entity->mass), maxSpeed);
+				result += entity->vel - oldVel;
+			}
 		}
+		return result;
 	}
 
-	inline void Vacuum(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	inline Vec3 Vacuum(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
 	{
-		VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
+		return VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
 	}
 };
 
@@ -807,7 +808,7 @@ public:
 	}
 };
 
-EntityData fadeOutGlowData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
+EntityData fadeOutGlowData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
 class FadeOutGlow : public FadeOut
 {
 public:

@@ -4,7 +4,7 @@
 
 float difficultyGrowthModifier[] = { 2.0f, 1.0f, 0.5f };
 
-FunctionalBlockData shrubData = FunctionalBlockData(TUPDATE::SHRUB, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION, DUPDATE::SHRUB, EDUPDATE::ENTITY, UIUPDATE::SHRUB);
+FunctionalBlockData shrubData = FunctionalBlockData(TUPDATE::SHRUB, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION, DUPDATE::SHRUB, UIUPDATE::SHRUB);
 class Shrub : public FunctionalBlock2
 {
 public:
@@ -186,7 +186,7 @@ namespace DUpdates
 }
 
 
-FunctionalBlockData vineData = FunctionalBlockData(TUPDATE::VINE, UPDATE::VINE, VUPDATE::VINE, DUPDATE::SHRUB, EDUPDATE::ENTITY, UIUPDATE::SHRUB, ONDEATH::ENTITY);
+FunctionalBlockData vineData = FunctionalBlockData(TUPDATE::VINE, UPDATE::VINE, VUPDATE::VINE, DUPDATE::SHRUB, UIUPDATE::SHRUB, ONDEATH::ENTITY);
 class Vine : public Shrub
 {
 public:
@@ -646,7 +646,7 @@ public:
 	}
 };
 
-EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class LightTower : public Tower
 {
 public:
@@ -704,7 +704,7 @@ namespace OnDeaths
 	}
 }
 
-EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class BasicTurret : public LightTower
 {
 public:

@@ -6,7 +6,7 @@ layout (location = 2) out vec4 position;
 layout (depth_less) out float gl_FragDepth;
 
 uniform mat4 camera, cameraInv, perspective;
-uniform vec4 color, posScale;
+in vec4 color, posScale;
 
 in vec3 tPos;
 
@@ -46,14 +46,15 @@ void main()
 {
 	vec3 dir = normalize(vec3(camera * vec4(tPos, 1.)));
 	vec3 pos = vec3(camera * vec4(posScale.xyz, 1.));
-	float b = 2 * dot(-pos, dir);
+	float b = dot(-pos, dir);
 	float c = dot(pos, pos) - posScale.w * posScale.w;
-	float d = b * b - 4 * c; // Discriminant from quadratic formula.
+	float d = b * b - c; // Discriminant from quadratic formula.
 
-	if (d <= 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
+	if (d <= 0) discard;
 
-	float s = sqrt(d);
-	float dstToSphereNear = max(0, (-s - b) * 0.5);
+	float h = sqrt(d);
+	if (-b + h <= 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
+	float dstToSphereNear = max(0, (-h - b));
 
 
 	FragColor = color;

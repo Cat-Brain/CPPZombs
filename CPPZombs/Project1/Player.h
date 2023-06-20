@@ -281,7 +281,7 @@ public:
 
 
 class Base;
-EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, EDUPDATE::ENTITY, UIUPDATE::PLAYER, ONDEATH::PLAYER);
+EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::PLAYER, ONDEATH::PLAYER);
 class Player : public LightBlock
 {
 public:
@@ -406,7 +406,7 @@ enum class ENGMODE
 string engModeStr[] = {"Rover", "Drone", "Remove Drone", "Turret"};
 
 class Drone;
-EntityData engineerData = EntityData(UPDATE::ENGINEER, VUPDATE::FRICTION, DUPDATE::PLAYER, EDUPDATE::ENTITY, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
+EntityData engineerData = EntityData(UPDATE::ENGINEER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
 class Engineer : public Player
 {
 public:
@@ -445,7 +445,7 @@ public:
 	}
 };
 
-EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Turret : public LightBlock
 {
 public:
@@ -476,7 +476,7 @@ public:
 	}
 };
 
-EntityData roverData = EntityData(UPDATE::ROVER, VUPDATE::FRICTION, DUPDATE::ROVER, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData roverData = EntityData(UPDATE::ROVER, VUPDATE::FRICTION, DUPDATE::ROVER, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Rover : public LightBlock
 {
 public:
@@ -535,7 +535,7 @@ Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 
 
 vector<Player*> characters = { &soldier, &flicker, &engineer };
 
-EntityData grenadeData = EntityData(UPDATE::GRENADE, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData grenadeData = EntityData(UPDATE::GRENADE, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Grenade : public LightBlock
 {
 public:
@@ -571,7 +571,7 @@ public:
 
 Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
-EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::BASE);
+EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
 class Base : public LightBlock
 {
 public:

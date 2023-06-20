@@ -28,7 +28,7 @@ namespace DUpdates
 	}
 }
 
-EntityData lightBlockData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, EDUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData lightBlockData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class LightBlock : public DToCol
 {
 public:
@@ -116,8 +116,8 @@ public:
 	TUPDATE tUpdate;
 
 	FunctionalBlockData(TUPDATE tUpdate = TUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::FRICTION,
-		DUPDATE dUpdate = DUPDATE::ENTITY, EDUPDATE eDUpdate = EDUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
-		EntityData(update, vUpdate, dUpdate, eDUpdate, uiUpdate, onDeath),
+		DUPDATE dUpdate = DUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
+		EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
 		tUpdate(tUpdate) {}
 };
 

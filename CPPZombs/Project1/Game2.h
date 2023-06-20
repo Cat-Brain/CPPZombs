@@ -906,10 +906,10 @@ void Game::TUpdate()
 
 	entities->Update(); // Updates all entities.
 	// Now that the player has moved mark where it is for rendering:
-	Vec3 camPos = screenOffset + player->pos;
+	camPos = screenOffset + player->pos;
 
 	camera = glm::lookAt(camPos, camPos + player->camDir, up);
-
+	camForward = player->camDir;
 
 	cameraInv = glm::inverse(camera);
 	perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);

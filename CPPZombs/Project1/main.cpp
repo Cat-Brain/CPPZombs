@@ -21,7 +21,7 @@ int main()
 	{
 		using namespace VUpdates;
 		using namespace Enemies::VUpdates;
-		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU };
+		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU };
 	}
 	{
 		using namespace DUpdates;
@@ -29,11 +29,6 @@ int main()
 		using namespace Livestock::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, DeceiverDU, ParentDU, ExploderDU,
 			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
-	}
-	{
-		using namespace EDUpdates;
-		using namespace Enemies::EDUpdates;
-		eDUpdates = { EntityEDU, SpiderEDU };
 	}
 	{
 		using namespace UIUpdates;

@@ -1,13 +1,17 @@
 #version 420 core
 layout (location = 0) in vec3 aPos;
+layout (location = 2) in vec4 aPosScale;
+layout (location = 3) in vec4 aColor;
 
-uniform vec4 posScale;
 uniform mat4 camera, perspective;
 
 out vec3 tPos;
+out vec4 color, posScale;
 
 void main()
 {
+	posScale = aPosScale;
+	color = aColor;
 	tPos = aPos * posScale.w + posScale.xyz;
 	gl_Position = perspective * camera * vec4(tPos, 1.0);
 } 

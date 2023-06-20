@@ -199,7 +199,7 @@ public:
 	void Update() override
 	{
 		pos = FromTo(pos, desiredPos, moveSpeed * game->dTime);
-
-		game->DrawCapsule(pos, parent->pos, color, thickness);
+		if (parent != nullptr)
+			game->DrawCapsule(pos, parent->pos, color, thickness);
 	}
 };

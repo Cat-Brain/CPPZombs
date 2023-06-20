@@ -175,6 +175,17 @@ private:
 			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7,  0, 4, 6, 0, 6, 2},
 			GL_TRIANGLES, GL_STATIC_DRAW, 3);
 
+		glGenBuffers(1, &instanceVBO);
+		glBindVertexArray(cube.vao);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(4 * sizeof(float)));
+		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
 		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
 		framebuffers = { mainScreen.get(), shadowMap.get() };
@@ -233,9 +244,13 @@ public:
 	uint fpsCount = 0;
 	string name = "Martionatany";
 	Inputs inputs;
-	Vec3 screenOffset = Vec3(0);
+	Vec3 screenOffset = vZero;
+	Vec3 camPos = vZero, camForward = vZero;
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
+
+	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
+	uint instanceVBO;
 
 	Renderer() { }
 
@@ -309,20 +324,37 @@ public:
 
 	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
-		glUseProgram(circleShader);
-		glUniform4f(glGetUniformLocation(circleShader, "posScale"), pos.x, pos.y, pos.z, radius);
-		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
-
 		for (int i = 0; i < cube.vertices.size(); i += 3)
 			if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
 			{
-				glCullFace(GL_FRONT);
+				radius *= -1;
 				break;
 			}
+		toDrawCircles.push_back({ glm::vec4(pos, radius), glm::vec4(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f) });
+	}
+
+	void DrawCircleInstantly(glm::vec4 posScale, RGBA color) // DOESN'T WORK
+	{
+		glUseProgram(circleShader);
+		glUniform4f(glGetUniformLocation(circleShader, "posScale"), posScale.x, posScale.y, posScale.z, posScale.w);
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 
 		cube.Draw();
-		glCullFace(GL_BACK);
+	}
+
+	void DrawAllCircles()
+	{
+		glBindVertexArray(cube.vao);
+
+		//glDeleteBuffers(1, &instanceVBO);
+		//glGenBuffers(1, &instanceVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * toDrawCircles.size(), &toDrawCircles[0], GL_DYNAMIC_DRAW);
+
+		glUseProgram(circleShader);
+		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, toDrawCircles.size());
+		toDrawCircles.clear();
 	}
 
 	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
