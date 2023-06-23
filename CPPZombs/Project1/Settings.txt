@@ -1,6 +1,6 @@
 color band = true
 vSync = false
-displayFPS = false
+displayFPS = true
 difficulty = medium
 maximized = true
 chunk render dist = 5

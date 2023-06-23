@@ -1492,8 +1492,6 @@ namespace Enemies
 	Types faction1Spawns
 	{
 		{&walker, &tanker, &tinyTank},
-		{&spider},
-		{&frog},
 		{&deceiver, &exploder, &vacuumer, &pusher},
 		{&parent, &megaTanker},
 		{&hyperSpeedster, &gigaExploder},

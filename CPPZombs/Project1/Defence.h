@@ -839,7 +839,7 @@ namespace Defences
 	{
 #pragma region Turrets
 
-		LightTower lantern = LightTower(&lightTowerData, { Resources::cheese.Clone(25) }, JRGB(255, 255, 255), true, 25, 0.5f, RGBA(255, 255, 127), RGBA(), 1, 0.5f, 60, 60, "Lantern");
+		LightTower lantern = LightTower(&lightTowerData, { Resources::cheese.Clone(10) }, JRGB(255, 255, 255), true, 30, 0.5f, RGBA(255, 255, 127), RGBA(), 1, 0.5f, 60, 60, "Lantern");
 
 		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(63, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
 		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
