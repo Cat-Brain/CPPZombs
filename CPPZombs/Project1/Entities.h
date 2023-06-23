@@ -11,6 +11,14 @@ struct EntityIndex // For sorting.
 	}
 };
 
+struct RaycastHit
+{
+	Vec3 pos, norm;
+	float dist;
+	bool chunkOrEntity;
+	int index;
+};
+
 class LightSource;
 class Entities : public vector<unique_ptr<Entity>>
 {
@@ -84,7 +92,8 @@ public:
 			chunks[chunk].push_back(index);
 	}
 
-#pragma region Overlaps and collisionstuff
+#pragma region Overlaps and Collision Stuff
+#pragma region Chunk Stuff
 	int ChunkAtPos(iVec3 pos)
 	{
 		for (int i = 0; i < chunks.size(); i++)
@@ -139,7 +148,8 @@ public:
 		std::pair<iVec3, iVec3> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return FindCreateChunkOverlapsMain(minMaxPos.first, minMaxPos.second);
 	}
-
+#pragma endregion
+#pragma region Overlap Stuff
 	bool OverlapsTile(Vec3 pos, float radius)
 	{
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(pos, radius);
@@ -248,6 +258,69 @@ public:
 		return FindPairOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius, func, from);
 	}
 
+	inline bool OverlapsAny(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	{
+		return OverlapsTile(pos, radius) || DoesOverlap(pos, radius, func, from);
+	}
+
+	byte TileAtPos(Vec3 pos)
+	{
+		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
+		if (index == -1) return UnEnum(TILE::AIR);
+		return chunks[index].TileAtPos(ToIV3(pos));
+	}
+
+	RaycastHit Raycast(Vec3 ro, Vec3 rd, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	{
+		iVec3 pos = iVec3(glm::floor(ro / float(CHUNK_WIDTH))) * CHUNK_WIDTH;
+
+		Vec3 step = glm::sign(rd);
+		Vec3 tDelta = step / rd;
+
+
+		float tMaxX, tMaxY, tMaxZ;
+
+		Vec3 fr = glm::fract(rd);
+
+		tMaxX = tDelta.x * ((rd.x > 0) ? (1 - fr.x) : fr.x);
+		tMaxY = tDelta.y * ((rd.y > 0) ? (1 - fr.y) : fr.y);
+		tMaxZ = tDelta.z * ((rd.z > 0) ? (1 - fr.z) : fr.z);
+
+		Vec3 norm;
+		const int maxTrace = 100;
+
+		for (int i = 0; i < maxTrace; i++) {
+			ChunkAtPos(pos);
+
+
+			if (tMaxX < tMaxY) {
+				if (tMaxZ < tMaxX) {
+					tMaxZ += tDelta.z;
+					pos.z += step.z;
+					norm = Vec3(0, 0, -step.z);
+				}
+				else {
+					tMaxX += tDelta.x;
+					pos.x += step.x;
+					norm = Vec3(-step.x, 0, 0);
+				}
+			}
+			else {
+				if (tMaxZ < tMaxY) {
+					tMaxZ += tDelta.z;
+					pos.z += step.z;
+					norm = Vec3(0, 0, -step.z);
+				}
+				else {
+					tMaxY += tDelta.y;
+					pos.y += step.y;
+					norm = Vec3(0, -step.y, 0);
+				}
+			}
+		}
+	}
+#pragma endregion
+#pragma region Damage stuff
 	int TryDealDamage(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
 	{
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
@@ -349,19 +422,8 @@ public:
 				result = 2 + entity->ApplyHit(damage, from);
 		return result;
 	}
-
-	bool OverlapsAny(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
-	{
-		return OverlapsTile(pos, radius) || DoesOverlap(pos, radius, func, from);
-	}
-
-	byte TileAtPos(Vec3 pos)
-	{
-		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
-		if (index == -1) return UnEnum(TILE::AIR);
-		return chunks[index].TileAtPos(ToIV3(pos));
-	}
-	// Add more overlap functions.
+#pragma endregion
+// Add more overlap functions.
 #pragma endregion
 
 	void SortEntities()
@@ -474,11 +536,11 @@ public:
 			for (int y = minMaxPos.first.y; y <= minMaxPos.second.y; y++)
 				for (int z = minMaxPos.first.z; z <= minMaxPos.second.z; z++)
 				{
-					if (x * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().x - 16 &&
-						y * CHUNK_WIDTH + CHUNK_WIDTH >= game->PlayerPos().y - 16 &&
-						x * CHUNK_WIDTH <= game->PlayerPos().x + 16 &&
-						y * CHUNK_WIDTH <= game->PlayerPos().y + 16 &&
-						z * CHUNK_WIDTH <= game->PlayerPos().z + game->screenOffset.z)
+					if (game->camFrustum.BoxInFrustum(Vec3(
+						x * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f,
+						y * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f,
+						z * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f),
+						Vec3(CHUNK_WIDTH * 0.5f)))
 					{
 						int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
 						if (chunk != -1)
@@ -597,6 +659,9 @@ public:
 		return VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
 	}
 };
+
+
+
 
 #pragma region Post Entities functions
 
@@ -719,10 +784,9 @@ void Entity::UpdateCollision()
 {
 	UpdateChunkCollision();
 
-	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::IsCorporealNotCollectible);
+	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::IsCorporealNotCollectible, this);
 	for (Entity* entity : entities)
-		if (entity->pos != pos && entity->creator != this && creator != entity)
-			OverlapRes::CircleOR(this, entity);
+		OverlapRes::CircleOR(this, entity);
 }
 
 bool TileData::Damage(int damage)

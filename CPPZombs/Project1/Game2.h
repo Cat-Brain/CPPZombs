@@ -126,16 +126,23 @@ Planet::Planet()
 	friction = RandFloat() * 10 + 5;
 	gravity = 10;
 
-	dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
-	dayTime = RandFloat() * 60.0f;
-	duskTime = RandFloat() * 60.0f;
-	nightTime = RandFloat() * 60.0f;
+	//dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
+	//dayTime = RandFloat() * 60.0f;
+	//duskTime = RandFloat() * 60.0f;
+	//nightTime = RandFloat() * 60.0f;
 	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
 
-	if (rand() % 2 == 0)
-		ambientDark = RandFloat(), ambientLight = 1;
-	else
-		ambientDark = 0, ambientLight = RandFloat();
+	//if (rand() % 2 == 0)
+	//	ambientDark = RandFloat(), ambientLight = 1;
+	//else
+	//	ambientDark = 0, ambientLight = RandFloat();
+	dawnTime  = 20;
+	dayTime   = 80;
+	duskTime  = 40;
+	nightTime = 40;
+
+	ambientDark = 0;
+	ambientLight = 0.9f;
 
 
 	color1.r = rand() % 128 + 64;
@@ -668,7 +675,14 @@ void Game::Update()
 			settings.colorBand ^= true;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f,
+			settings.displayFPS ? "Yes display FPS" : "No display FPS", settings.displayFPS ? RGBA(0, 255) : RGBA(255), settings.displayFPS ? RGBA(0, 127) : RGBA(127)))
+		{
+			settings.displayFPS ^= true;
+			settings.Write();
+		}
+
+		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
@@ -763,7 +777,8 @@ void Game::ApplyLighting()
 
 	glUseProgram(sunShader);
 	glUniform3f(glGetUniformLocation(sunShader, "color"), ambientColor.r / 255.0f, ambientColor.g / 255.0f, ambientColor.b / 255.0f);
-	glUniform3f(glGetUniformLocation(sunShader, "direction"), planet->sunDir.x, planet->sunDir.y, planet->sunDir.z);
+	Vec3 sunDir = Vec3(camRot * glm::vec4(planet->sunDir, 1));
+	glUniform3f(glGetUniformLocation(sunShader, "direction"), sunDir.x, sunDir.y, sunDir.z);
 	glUniform1i(glGetUniformLocation(sunShader, "colorBand"), int(settings.colorBand));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mainScreen->normalBuffer);
@@ -909,32 +924,42 @@ void Game::TUpdate()
 	camPos = screenOffset + player->pos;
 
 	camera = glm::lookAt(camPos, camPos + player->camDir, up);
+	camRot = glm::lookAt(vZero, player->camDir, up);
 	camForward = player->camDir;
+	camRight = player->rightDir;
+	camUp =       player->upDir;
 
 	cameraInv = glm::inverse(camera);
-	perspective = glm::perspective(glm::radians(90.f), screenRatio, 0.1f, 100.f);
+	perspective = glm::perspective(fov, screenRatio, nearDist, farDist);
+	CalcFrustum();
 
 	lastPlayerPos = player->pos;
 	glUseProgram(circleShader);
 	glUniformMatrix4fv(glGetUniformLocation(circleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
 	glUniformMatrix4fv(glGetUniformLocation(circleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
 	glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
+	glUniform3f(glGetUniformLocation(circleShader, "camPos"), camPos.x, camPos.y, camPos.z);
 	glUseProgram(cylinderShader);
 	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
 	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
 	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 	glUniform3f(glGetUniformLocation(cylinderShader, "camPos"), camPos.x, camPos.y, camPos.z);
 	glUseProgram(capsuleShader);
 	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
 	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
 	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 	glUniform3f(glGetUniformLocation(capsuleShader, "camPos"), camPos.x, camPos.y, camPos.z);
 	glUseProgram(coneShader);
 	glUniformMatrix4fv(glGetUniformLocation(coneShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(coneShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
 	glUniformMatrix4fv(glGetUniformLocation(coneShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
 	glUniformMatrix4fv(glGetUniformLocation(coneShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
 	glUniform3f(glGetUniformLocation(coneShader, "camPos"), camPos.x, camPos.y, camPos.z);
 	glUseProgram(chunkShader);
+	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
+	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
 	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
 	glUseProgram(shadowShader);
 	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));

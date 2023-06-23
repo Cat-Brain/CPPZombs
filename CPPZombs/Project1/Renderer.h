@@ -33,10 +33,10 @@ string settingsLocation = "Settings.txt";
 class Settings
 {
 public:
-	bool colorBand = true, vSync = true;
+	bool colorBand = true, vSync = true, displayFPS = true;
 	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
 	CHARS character = CHARS::SOLDIER;
-	uint chunkRenderDist = 5;
+	uint chunkRenderDist = 3;
 	float sensitivity = 300;
 	bool maximized = true;
 
@@ -55,6 +55,8 @@ public:
 					colorBand = false;
 				else if (contents == "vSync = false")
 					vSync = false;
+				else if (contents == "displayFPS = false")
+					displayFPS = false;
 				else if (contents == "difficulty = easy")
 					difficulty = DIFFICULTY::EASY;
 				else if (contents == "difficulty = hard")
@@ -80,6 +82,7 @@ public:
 	void Write()
 	{
 		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
+			+"\ndisplayFPS = " + string(displayFPS ? "true" : "false") +
 			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
 			"\nmaximized = " + string(maximized ? "true" : "false") +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
@@ -88,6 +91,57 @@ public:
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
 		file << contents;
 		file.close();
+	}
+};
+
+struct Plane
+{
+	// unit vector
+	Vec3 normal = up;
+	// distance from origin to the nearest point in the plane
+	float distance = 0.f;
+
+	Plane(Vec3 pos = vZero, Vec3 normal = up) :
+		normal(normal), distance(glm::dot(pos, normal)) { }
+	
+	float SignedDistance(const Vec3& point)
+	{
+		return glm::dot(normal, point) - distance;
+	}
+
+	bool InPlane(const Vec3& point)
+	{
+		return SignedDistance(point) > 0;
+	}
+
+	bool AABBOverlaps(Vec3 pos, Vec3 halfDim)
+	{
+		const float r = halfDim.x * std::abs(normal.x) +
+			halfDim.y * std::abs(normal.y) + halfDim.z * std::abs(normal.z);
+
+		return -r <= SignedDistance(pos);
+	}
+};
+
+struct Frustum
+{
+	Plane leftFace;
+	Plane rightFace;
+
+	Plane topFace;
+	Plane bottomFace;
+
+	Plane nearFace;
+	Plane farFace;
+
+	bool BoxInFrustum(Vec3 boxPos, Vec3 boxHalfDim)
+	{
+		return leftFace.AABBOverlaps(boxPos, boxHalfDim) &&
+			rightFace.AABBOverlaps(boxPos, boxHalfDim) &&
+			topFace.AABBOverlaps(boxPos, boxHalfDim) &&
+			bottomFace.AABBOverlaps(boxPos, boxHalfDim) &&
+			nearFace.AABBOverlaps(boxPos, boxHalfDim) &&
+			farFace.AABBOverlaps(boxPos, boxHalfDim);
 	}
 };
 
@@ -209,7 +263,7 @@ private:
 		fpsCount++;
 		if (int(lastTime) != int(glfwGetTime()))
 		{
-			glfwSetWindowTitle(window, (name + " FPS = " + to_string(fpsCount)).c_str());
+			glfwSetWindowTitle(window, (name + (settings.displayFPS ? " FPS = " + to_string(fpsCount) : "")).c_str());
 			fpsCount = 0;
 		}
 		lastTime = static_cast<float>(glfwGetTime());
@@ -245,12 +299,14 @@ public:
 	string name = "Martionatany";
 	Inputs inputs;
 	Vec3 screenOffset = vZero;
-	Vec3 camPos = vZero, camForward = vZero;
-	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), perspective = glm::mat4(1);
+	float fov = glm::radians(90.f), nearDist = 0.1f, farDist = 100;
+	Vec3 camPos = vZero, camForward = vZero, camRight = vZero, camUp = vZero;
+	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
+	Frustum camFrustum;
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
-	uint instanceVBO;
+	uint instanceVBO = 0;
 
 	Renderer() { }
 
@@ -266,25 +322,23 @@ public:
 	virtual void Start() { }
 	virtual void Update() { }
 	virtual void End() { }
-
-	bool BoxInFrustum(Vec3 boxPos, Vec3 boxHalfDim)
+	
+	void CalcFrustum()
 	{
-		Vec3 minPos = boxPos - boxHalfDim, maxPos = boxPos + boxHalfDim;
-		// check box outside/inside of frustum
-		for (int i = 0; i < 7; i++)
-		{
-			int out = 0;
-			/*out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, minPos.y, minPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, minPos.y, minPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, maxPos.y, minPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, maxPos.y, minPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, minPos.y, maxPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, minPos.y, maxPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(minPos.x, maxPos.y, maxPos.z)) < 0.0) ? 1 : 0);
-			out += ((glm::dot(fru.mPlane[i], Vec3(maxPos.x, maxPos.y, maxPos.z)) < 0.0) ? 1 : 0);*/
-			if (out == 8) return false;
-		}
-		return true;
+		float halfVSide = farDist * tanf(fov * 0.5f);
+		float halfHSide = halfVSide * screenRatio;
+		glm::vec3 frontMultFar = farDist * camForward;
+
+		camFrustum.nearFace = { camPos + nearDist * camForward, camForward };
+		camFrustum.farFace = { camPos + frontMultFar, -camForward };
+		camFrustum.rightFace = { camPos,
+								glm::cross(frontMultFar - camRight * halfHSide, camUp) };
+		camFrustum.leftFace = { camPos,
+								glm::cross(camUp,frontMultFar + camRight * halfHSide) };
+		camFrustum.topFace = { camPos,
+								glm::cross(camRight, frontMultFar - camUp * halfVSide) };
+		camFrustum.bottomFace = { camPos,
+									glm::cross(frontMultFar + camUp * halfVSide, camRight) };
 	}
 
 	// FBL stands for From Bottom Left.
@@ -324,12 +378,11 @@ public:
 
 	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
-		for (int i = 0; i < cube.vertices.size(); i += 3)
-			if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
-			{
-				radius *= -1;
-				break;
-			}
+		//for (int i = 0; i < cube.vertices.size(); i += 3)
+		//	if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
+		//	{
+		//	}
+		// radius *= -1;
 		toDrawCircles.push_back({ glm::vec4(pos, radius), glm::vec4(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f) });
 	}
 
@@ -347,14 +400,13 @@ public:
 	{
 		glBindVertexArray(cube.vao);
 
-		//glDeleteBuffers(1, &instanceVBO);
-		//glGenBuffers(1, &instanceVBO);
 		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * toDrawCircles.size(), &toDrawCircles[0], GL_DYNAMIC_DRAW);
-
+		glDisable(GL_BLEND);
 		glUseProgram(circleShader);
 		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, toDrawCircles.size());
 		toDrawCircles.clear();
+		glEnable(GL_BLEND);
 	}
 
 	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
@@ -426,18 +478,14 @@ public:
 
 	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
+		glUniform3f(glGetUniformLocation(shadowShader, "pos"), pos.x, pos.y, pos.z);
+		pos = camera * glm::vec4(pos, 1);
 		glUniform3f(glGetUniformLocation(shadowShader, "position"), pos.x, pos.y, pos.z);
 		glUniform1f(glGetUniformLocation(shadowShader, "range"), range);
 
 		glUniform3f(glGetUniformLocation(shadowShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
 
-		for (int i = 0; i < cube.vertices.size(); i += 3)
-			if ((camera * glm::vec4(pos + range * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
-			{
-				glCullFace(GL_FRONT);
-				break;
-			}
-
+		glCullFace(GL_FRONT);
 		cube.Draw();
 		glCullFace(GL_BACK);
 	}
@@ -460,8 +508,9 @@ public:
 		glUseProgram(defaultShader);
 	}
 
-	inline Vec3 PlayerPos(); // The position of the player in normal coordinates.
-
+	inline Vec3 PlayerPos(); // The position of the player
+	inline Vec3 BasePos(); // The position of the player
+	
 	bool IsFullscreen()
 	{
 		return glfwGetWindowMonitor(window) != nullptr;

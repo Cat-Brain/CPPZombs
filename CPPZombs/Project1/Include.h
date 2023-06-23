@@ -49,7 +49,7 @@ typedef int8_t sByte; // Signed byte
 #define CHUNK_WIDTH 16
 
 uint trueScreenWidth, trueScreenHeight;
-float screenRatio;
+float screenRatio; // Width / height
 bool playerAlive = true;
 int totalGamePoints;
 int psuedoRandomizer = 0;

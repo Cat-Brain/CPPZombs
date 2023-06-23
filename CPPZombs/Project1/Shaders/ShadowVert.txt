@@ -2,10 +2,10 @@
 layout (location = 0) in vec3 aPos;
 
 uniform mat4 perspective;
-uniform vec3 position;
+uniform vec3 pos;
 uniform float range;
 
 void main()
 {
-	gl_Position = perspective * vec4(position + aPos * range, 1.);
+	gl_Position = perspective * vec4(pos + aPos * range, 1.);
 } 

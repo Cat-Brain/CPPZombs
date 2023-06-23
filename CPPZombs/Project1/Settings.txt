@@ -1,6 +1,7 @@
-color band = false
+color band = true
 vSync = false
-difficulty = hard
+displayFPS = false
+difficulty = medium
 maximized = true
 chunk render dist = 5
 character = 0

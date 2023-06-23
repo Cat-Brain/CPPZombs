@@ -2,7 +2,9 @@
 
 #pragma region Plantlife
 
-float difficultyGrowthModifier[] = { 2.0f, 1.0f, 0.5f };
+#pragma region Plant types
+
+float difficultyGrowthModifier[] = { 1.5f, 1.0f, 0.7f };
 
 FunctionalBlockData shrubData = FunctionalBlockData(TUPDATE::SHRUB, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION, DUPDATE::SHRUB, UIUPDATE::SHRUB);
 class Shrub : public FunctionalBlock2
@@ -474,6 +476,7 @@ namespace UIUpdates
 	}
 }
 
+#pragma endregion
 
 #pragma region Plants
 // Having an enum of all seeds will come in handy:
@@ -491,7 +494,7 @@ namespace Plants
 		Shrub copperShrub = Shrub(&shrubData, Resources::copper.Clone(), ItemInstance(ITEMTYPE::COPPER_SHRUB_SEED), 5, 25, 25, 4.0f, 0.25f, 1.5f, babyCopperShrubColor, copperShrubColor, deadCopperShrubColor, 0.2f, 3.0f, 0, 10, 10, "Copper shrub");
 
 		RGBA babyIronShrubColor = RGBA(96, 192, 225), ironShrubColor = RGBA(67, 90, 99), deadIronShrubColor = RGBA(45, 47, 48);
-		Shrub ironShrub = Shrub(&shrubData, Resources::iron.Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 180, 10, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 0, 10, 10, "Iron shrub");
+		Shrub ironShrub = Shrub(&shrubData, Resources::iron.Clone(), ItemInstance(ITEMTYPE::IRON_SHRUB_SEED), 120, 140, 20, 0.5f, 0.25f, 1.5f, babyIronShrubColor, ironShrubColor, deadIronShrubColor, 0.2f, 3.0f, 0, 10, 10, "Iron shrub");
 
 		RGBA babyRubyShrubColor = RGBA(207, 120, 156), rubyShrubColor = RGBA(135, 16, 66), deadRubyShrubColor = RGBA(120, 65, 88);
 		Shrub rubyShrub = Shrub(&shrubData, Resources::ruby.Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 0, 10, 10, "Ruby shrub");
@@ -537,7 +540,7 @@ namespace Plants
 		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 5, 100, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
 		
 		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
-		Vine quartzVine = Vine(&vineData, Resources::quartz.Clone(3), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 3, 5, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 0, 10, 10, "Quarts vine");
+		Vine quartzVine = Vine(&vineData, Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 3, 5, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 0, 10, 10, "Quarts vine");
 	}
 
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.
@@ -705,6 +708,7 @@ namespace OnDeaths
 }
 
 EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+EntityData hoverTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::AIR_RESISTANCE, DUPDATE::BASIC_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class BasicTurret : public LightTower
 {
 public:
@@ -735,6 +739,36 @@ public:
 	}
 };
 
+EntityData circleTurretData = EntityData(UPDATE::CIRCLE_TURRET, VUPDATE::FRICTION, DUPDATE::CIRCLE_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+class CircleTurret : public BasicTurret
+{
+public:
+	uint bulletsPer;
+	float spinSpeed;
+
+	CircleTurret(EntityData* data, Recipe recipe, Projectile* projectile, uint bulletsPer, float spinSpeed, float timePer,
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
+		int health, string name) :
+		BasicTurret(data, recipe, projectile, timePer, lightColor, range, radius, color, color2, color3, mass, bounciness, maxHealth, health, name),
+		bulletsPer(bulletsPer), spinSpeed(spinSpeed)
+	{ }
+
+	CircleTurret(CircleTurret* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
+		CircleTurret(*baseClass)
+	{
+		this->pos = pos;
+		this->dir = Vec3(Normalized2(dir), 0);
+		this->creator = creator;
+		allegiance = creator->allegiance + PLANTS_A;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
+	{
+		return make_unique<CircleTurret>(this, pos, dir, creator);
+	}
+};
+
 namespace Updates
 {
 	void BasicTurretU(Entity* entity)
@@ -750,6 +784,19 @@ namespace Updates
 			turret->timeTill = turret->timePer;
 		}
 	}
+
+	void CircleTurretU(Entity* entity)
+	{
+		CircleTurret* turret = static_cast<CircleTurret*>(entity);
+		turret->timeTill -= game->dTime;
+		turret->dir = glm::rotateZ(turret->dir, game->dTime * turret->spinSpeed);
+		if (turret->timeTill <= 0 && game->entities->DoesOverlap(turret->pos, turret->projectile->range, MaskF::IsNonAlly, turret))
+		{
+			for (uint i = 0; i < turret->bulletsPer; i++)
+				game->entities->push_back(turret->projectile->Clone(turret->pos, glm::rotateZ(turret->dir, 2 * PI_F * i / turret->bulletsPer) * turret->projectile->range, turret));
+			turret->timeTill = turret->timePer;
+		}
+	}
 }
 
 namespace DUpdates
@@ -761,7 +808,18 @@ namespace DUpdates
 		turret->DUpdate(DUPDATE::DTOCOL);
 		game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * turret->dir, turret->color3, turret->radius * 0.25f);
 	}
+
+	void CircleTurretDU(Entity* entity)
+	{
+		CircleTurret* turret = static_cast<CircleTurret*>(entity);
+
+		turret->DUpdate(DUPDATE::DTOCOL);
+		for (uint i = 0; i < turret->bulletsPer; i++)
+			game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * glm::rotateZ(turret->dir, 2 * PI_F * i / turret->bulletsPer), turret->color3, turret->radius * 0.25f);
+	}
 }
+
+
 
 namespace Defences
 {
@@ -770,19 +828,35 @@ namespace Defences
 		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
 		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
 		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
+		
+		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 16, 0.1f, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
+		Projectile hoverTurretProjectile = Projectile(&projectileData, 20, 20, 16, 0.3f, RGBA(255, 127, 127), 0, 0, 0, 0, "Hover Turret Projectile");
+
+		Projectile circleTurretProjectile = Projectile(&projectileData, 10, 10, 2, 0.4f, RGBA(255, 193, 127), 0, 0, 0, 0, "Circle Turret Projectile");
 	}
 
 	namespace Towers
 	{
 #pragma region Turrets
 
-		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(0, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
+		LightTower lantern = LightTower(&lightTowerData, { Resources::cheese.Clone(25) }, JRGB(255, 255, 255), true, 25, 0.5f, RGBA(255, 255, 127), RGBA(), 1, 0.5f, 60, 60, "Lantern");
+
+		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(63, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
 		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
-		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &Projectiles::rockTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 0, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
+		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &Projectiles::sapphireTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 63, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
+		
+		BasicTurret droneTurret = BasicTurret(&hoverTurretData, { Resources::emerald.Clone(5), Resources::silver.Clone(25), }, &Projectiles::droneTurretProjectile, 1.0f, JRGB(255, 255, 255), 5, 0.125f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Drone Turret");
+		BasicTurret hoverTurret = BasicTurret(&hoverTurretData, { Resources::vacuumium.Clone(50), Resources::iron.Clone(50), }, &Projectiles::hoverTurretProjectile, 1.5f, JRGB(255, 127, 127), 5, 0.5f, RGBA(127, 63, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Hover Turret");
+
+		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &Projectiles::circleTurretProjectile, 3, 2.f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");
 
 #pragma endregion
 
-		vector<Tower*> towers = { &pulseTurret, &rockTurret, &sapphireTurret };
+		vector<Tower*> towers = {
+			&lantern,
+			&pulseTurret, &rockTurret, &sapphireTurret,
+			&droneTurret, &hoverTurret,
+			&circleTurret };
 	}
 }
 

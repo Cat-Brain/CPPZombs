@@ -11,7 +11,7 @@ enum class UPDATE // Update
 	PROJECTILE,
 	FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
 	VINE,
-	BASIC_TURRET,
+	BASIC_TURRET, CIRCLE_TURRET,
 	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
 	EGG, KIWI,
 	PLAYER,
@@ -34,7 +34,7 @@ enum class DUPDATE // Draw Update
 	PROJECTILE,
 	DTOCOL,
 	SHRUB, TREE,
-	BASIC_TURRET,
+	BASIC_TURRET, CIRCLE_TURRET,
 	DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT, CATACLYSM, TANK,
 	KIWI,
 	PLAYER,
@@ -393,8 +393,7 @@ namespace VUpdates
 	{
 		entity->lastPos = entity->pos;
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
-		entity->vel = Vec3(entity->vel.x, entity->vel.y,
-			(entity->vel.z - game->planet->gravity * game->dTime) * powf(0.75f, game->dTime));
+		entity->vel = FromTo(entity->vel, vZero, game->dTime * game->planet->friction * entity->frictionMultiplier);
 	}
 
 	void FrictionVU(Entity* entity)

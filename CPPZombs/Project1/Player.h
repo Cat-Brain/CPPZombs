@@ -68,10 +68,10 @@ public:
 
 	ItemInstance GetCurrentItem() override
 	{
-		if (size() > 0)
-			return (*this)[currentIndex].Clone(1);
 		if (isBuilding)
 			return bItem.Clone(0);
+		if ((*this)[width * currentRow + currentIndex].count > 0)
+			return (*this)[width * currentRow + currentIndex].Clone(1);
 		return ItemInstance(ITEMTYPE::DITEM, 0);
 	}
 
@@ -235,16 +235,17 @@ public:
 		}
 	}
 
-	bool CanUse()
+	bool CanUse(float lastUse, float shootSpeed)
 	{
 		if (isBuilding)
 		{
 			for (Tower* tower : Defences::Towers::towers)
 				if (CanMake(tower->recipe))
-					return true;
+					return tTime - lastUse >= bItem.useTime * shootSpeed;
 			return false;
 		}
-		return (*this)[currentIndex + width * currentRow].count != 0;
+		int index = currentIndex + width * currentRow;
+		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
 	bool Use(Vec3 dir) // True means stack is empty* and false means the opposite.
@@ -303,9 +304,10 @@ public:
 	float iTime = 0, sTime = 0; // Invincibility time, if <= 0 takes damage, else doesn't.
 	Inputs inputs;
 	float yaw = 0, pitch = 0;
-	Vec3 camDir = vZero, // The direction that the camera is facing.
-		moveDir = vZero, // camDir but without the verticality.
-		rightDir = vZero; // moveDir but rotated 90 degrees to the right.
+	Vec3 camDir = vZero; // The direction that the camera is facing.
+	Vec3 moveDir = vZero; // camDir but without the verticality.
+	Vec3 rightDir = vZero; // moveDir but rotated 90 degrees to the right.
+	Vec3 upDir = vZero; // Perpendicular to rightDir and moveDir.
 
 	Player(EntityData* data, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight =  4, float vacDist = 6, float vacSpeed = 16,
@@ -514,10 +516,10 @@ Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f,
 
 Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 2, 4, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.5f, 100, 50,
-	"Soldier", Items({ Resources::rock.Clone(500), Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
-		Resources::Seeds::rubyShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
+	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
+		Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
 		Resources::Eggs::kiwiEgg.Clone(2)}),
-	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::RUBY }));
+	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 Player flicker = Player(&playerData, false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
@@ -778,7 +780,8 @@ namespace Updates
 		player->camDir.z = sin(glm::radians(player->pitch));
 		player->camDir = glm::normalize(player->camDir);
 		player->moveDir = glm::normalize(Vec3(Vec2(player->camDir), 0));
-		player->rightDir = Vec3(player->moveDir.y, -player->moveDir.x, 0);
+		player->rightDir = glm::normalize(glm::cross(player->camDir, up));
+		player->upDir = glm::normalize(glm::cross(player->rightDir, player->camDir));
 		player->dir = player->moveDir;
 
 		if (player->sTime <= 0 && game->uiMode == UIMODE::INGAME)
@@ -1012,18 +1015,17 @@ namespace Primaries
 {
 	bool Slingshot(Player* player)
 	{
-		ItemInstance currentShootingItem = player->items.GetCurrentItem();
-		if (!player->items.CanUse() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
-			return false;
-		player->lastPrimary = tTime + player->primaryTime;
-		player->items.Use(player->camDir);
+		if (player->items.CanUse(player->lastPrimary, player->shootSpeed))
+		{
+			player->lastPrimary = tTime + player->primaryTime;
+			player->items.Use(player->camDir);
+		}
 		return false;
 	}
 
 	bool EngShoot(Player* player)
 	{
-		ItemInstance currentShootingItem = player->items.GetCurrentItem();
-		if (!player->items.CanUse() || tTime - player->lastPrimary <= currentShootingItem->useTime * player->shootSpeed)
+		if (!player->items.CanUse(player->lastPrimary, player->shootSpeed))
 			return false;
 
 		player->lastPrimary = tTime + player->primaryTime;
@@ -1121,7 +1123,6 @@ namespace Utilities
 			return false;
 		player->vel = TryAdd2(player->vel, dir * TACTICOOL_ROLL_SPEED, 20.f);
 		player->iTime++;
-		player->sTime += 0.5f;
 		return true;
 	}
 
@@ -1186,4 +1187,14 @@ namespace StatusFuncs
 		status.entity->frictionMultiplier *= 10.f;
 	}
 #pragma endregion
+}
+
+Vec3 Renderer::PlayerPos()
+{
+	return ((Game*)this)->player->pos;
+}
+
+Vec3 Renderer::BasePos()
+{
+	return ((Game*)this)->base->pos;
 }

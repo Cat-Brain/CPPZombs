@@ -61,11 +61,6 @@ public:
 	float BrightnessAtPos(iVec2 pos);
 };
 
-Vec3 Renderer::PlayerPos()
-{
-	return ((Game*)this)->lastPlayerPos;
-}
-
 bool CheckInputSquareHover(Vec2 minPos, float scale, string text) // Returns if square is being hovered over.
 {
 	return game->inputs.screenMousePosition.x > minPos.x && game->inputs.screenMousePosition.x < minPos.x + font.TextWidth(text) * scale / font.minimumSize &&

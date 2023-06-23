@@ -6,40 +6,43 @@ layout (location = 2) out vec4 position;
 layout (depth_less) out float gl_FragDepth;
 
 uniform mat4 camera, cameraInv, perspective;
+uniform vec3 camPos;
 in vec4 color, posScale;
 
 in vec3 tPos;
 
+vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
+float noise(vec3 p){
+    vec3 a = floor(p);
+    vec3 d = p - a;
+    d = d * d * (3.0 - 2.0 * d);
 
-// simplified version of joeedh's https://www.shadertoy.com/view/Md3GWf
-// see also https://www.shadertoy.com/view/MdtGD7
+    vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 k1 = perm(b.xyxy);
+    vec4 k2 = perm(k1.xyxy + b.zzww);
 
-// --- checkerboard noise : to decorelate the pattern between size x size tiles 
+    vec4 c = k2 + a.zzzz;
+    vec4 k3 = perm(c);
+    vec4 k4 = perm(c + 1.0);
 
-// simple x-y decorrelated noise seems enough
-#define stepnoise0(p, size) rnd( floor(p/size)*size ) 
-#define rnd(U) fract(sin( 1e3*(U)*mat2(1,-7.131, 12.9898, 1.233) )* 43758.5453)
+    vec4 o1 = fract(k3 * (1.0 / 41.0));
+    vec4 o2 = fract(k4 * (1.0 / 41.0));
 
-//   joeedh's original noise (cleaned-up)
-vec2 stepnoise(vec2 p, float size) { 
-    p = floor((p+10.)/size)*size;          // is p+10. useful ?   
-    p = fract(p*.1) + 1. + p*vec2(2,3)/1e4;    
-    p = fract( 1e5 / (.1*p.x*(p.y+vec2(0,1)) + 1.) );
-    p = fract( 1e5 / (p*vec2(.1234,2.35) + 1.) );      
-    return p;    
+    vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
+    vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
+
+    return o4.y * d.y + o4.x * (1.0 - d.y);
 }
 
-// --- stippling mask  : regular stippling + per-tile random offset + tone-mapping
-float mask(vec2 p) { 
-#define SEED1 1.705
-#define DMUL  8.12235325       // are exact DMUL and -.5 important ?
-    p += ( stepnoise0(p, 5.5) - .5 ) *DMUL;   // bias [-2,2] per tile otherwise too regular
-    float f = fract( p.x*SEED1 + p.y/(SEED1+.15555) ); //  weights: 1.705 , 0.5375
-  //return f;  // If you want to skeep the tone mapping
-    f *= 1.03; //  to avoid zero-stipple in plain white ?
-    // --- indeed, is a tone mapping ( equivalent to do the reciprocal on the image, see tests )
-    // returned value in [0,37.2] , but < 0.57 with P=50% 
-    return  (pow(f, 150.) + 1.3*f ) / 2.3; // <.98 : ~ f/2, P=50%  >.98 : ~f^150, P=50%
+float Mask(vec3 pos)
+{
+	pos *= 2;
+	return noise(pos);
+	pos *= 12;
+	return sin(pos.x + pos.y + pos.z) * 0.5 + 0.5;
+	pos *= 12;
+	return (sin(pos.x) + sin(pos.y) + sin(pos.z)) * 0.16666 + 0.5;
 }
 
 void main()
@@ -53,7 +56,7 @@ void main()
 	if (d <= 0) discard;
 
 	float h = sqrt(d);
-	if (-b + h <= 0 || (color.a != 1. && color.a < mask(gl_FragCoord.xy))) discard;
+	if (-b + h <= 0 || (color.a != 1. && color.a < Mask(normalize(tPos - posScale.xyz) * posScale.w))) discard;
 	float dstToSphereNear = max(0, (-h - b));
 
 
@@ -61,7 +64,6 @@ void main()
 	
 	position = vec4(dir * dstToSphereNear, 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
-	position = cameraInv * position;
-	normal = vec4(normalize(position.xyz - posScale.xyz), 1.);
+	normal = vec4(normalize(position.xyz - pos), 1.);
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;
 } 

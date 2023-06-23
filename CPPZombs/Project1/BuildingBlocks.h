@@ -10,6 +10,21 @@ public:
 		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = 0) :
 		Entity(data, pos, radius, color, mass, bounciness, maxHealth, health, name, allegiance), color2(color2) { }
 
+	DToCol(DToCol* baseClass, Vec3 pos, Entity* creator = nullptr) :
+		DToCol(*baseClass)
+	{
+		this->pos = pos;
+		this->baseClass = baseClass;
+		if (creator != nullptr)
+			allegiance = creator->allegiance;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
+	{
+		return make_unique<DToCol>(this, pos, creator);
+	}
+
 	inline RGBA Color()
 	{
 		return color2.CLerp(color, (float)health / (float)maxHealth);
@@ -87,18 +102,24 @@ namespace OnDeaths {
 
 namespace Shootables
 {
+	DToCol brick = DToCol(&dToColData, vZero, 0.75, RGBA(), RGBA(), 15, 0.2f, 600, 600, "Brick");
+
 	LightBlock cheese = LightBlock(&lightBlockData, JRGB(191, 191, 61), true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
 	LightBlock shade = LightBlock(&lightBlockData, JRGB(255, 255, 255), false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
 }
 
 namespace Resources
 {
+	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	
 	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Light", 3, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 }
 
 namespace Collectibles
 {
+	Collectible* brick = new Collectible(Resources::brick.Clone());
+
 	Collectible* cheese = new Collectible(Resources::cheese.Clone());
 	Collectible* shade = new Collectible(Resources::shade.Clone());
 }

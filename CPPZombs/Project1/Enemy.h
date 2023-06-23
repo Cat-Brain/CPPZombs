@@ -9,7 +9,7 @@ namespace Enemies
 		vector<Entity*> nearbyFoes = game->entities->FindOverlaps(pos, farDist, MaskF::IsNonAlly, entity);
 		float dist = farDist * farDist, newDist;
 		for (Entity* nEntity : nearbyFoes)
-			if ((newDist = glm::distance2(entity->pos, nEntity->pos)) < dist)
+			if ((newDist = glm::distance2(entity->pos, nEntity->pos) - nEntity->radius * nEntity->radius) < dist)
 			{
 				dist = newDist;
 				result = nEntity;
@@ -1297,7 +1297,7 @@ namespace Enemies
 	// Earlies - 1
 	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
 	// Mids - 4
-	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 3, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
+	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 2, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
 	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
 	// Mid-lates - 6
 	Parent spiderParent = Parent(&parentData, &centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
@@ -1391,7 +1391,7 @@ namespace Enemies
 		{
 			float randomValue = RandFloat() * 6.283184f;
 			game->entities->push_back((*this)[index]->Clone(Vec3(RandCircPoint2(), 0) * 30.f * (RandFloat() * 0.5f + 1.5f)
-				+ game->PlayerPos() + up * 30.f));
+				+ game->BasePos() + up * 30.f));
 		}
 
 		void SpawnRandomEnemies(float multiplier = 1)
@@ -1492,6 +1492,8 @@ namespace Enemies
 	Types faction1Spawns
 	{
 		{&walker, &tanker, &tinyTank},
+		{&spider},
+		{&frog},
 		{&deceiver, &exploder, &vacuumer, &pusher},
 		{&parent, &megaTanker},
 		{&hyperSpeedster, &gigaExploder},

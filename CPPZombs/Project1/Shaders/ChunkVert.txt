@@ -4,14 +4,16 @@ layout (location = 1) in vec3 aCol;
 layout (location = 2) in vec3 aNorm;
 
 uniform vec3 position;
+uniform mat4 camera, camRot;
 uniform mat4 perspective;
 
-out vec3 pos, norm, col;
+out vec3 pos, pos2, norm, col;
 
 void main()
 {
-	norm = aNorm;
+	norm = vec3(camRot * vec4(aNorm, 1.));
 	col = aCol;
 	pos = aPos + position;
 	gl_Position = perspective * vec4(pos, 1.0);
+	pos2 = vec3(camera * vec4(pos, 1.));
 } 

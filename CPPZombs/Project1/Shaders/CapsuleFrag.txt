@@ -5,7 +5,7 @@ layout (location = 2) out vec4 position;
 
 layout (depth_less) out float gl_FragDepth;
 
-uniform mat4 camera, cameraInv, perspective;
+uniform mat4 camera, camRot, cameraInv, perspective;
 uniform vec4 color;
 uniform vec3 a, b, camPos;
 uniform float thickness;
@@ -90,8 +90,7 @@ void main()
 	FragColor = color;
     dir = normalize(vec3(camera * vec4(tPos, 1.)));
 	position = vec4(dir * dist, 1.);
-	normal = vec4(capNormal(position.xyz, a, b, thickness), 1.);
+	normal = camRot * vec4(capNormal(position.xyz, a, b, thickness), 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
-	position = cameraInv * position;
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;
 } 
