@@ -29,14 +29,20 @@ void LogBook::DUpdate()
 		vector<string> renderStrings = {
 			"WASD for movement",
 			"Left click shoots and plants",
-			"right click and shift attack",
+			"Right click and shift attack",
+			"Characters have different attacks",
+			"",
 			"Plants grow best on soil",
 			"Soil is by default brown",
+			"Quartz improves soil",
+			"Ruby creates super soil",
+			"",
 			"Tab for inventory",
 			"Q and E to switch row",
+			"",
 			"F to enter build mode",
 			"Left click to place",
-			"UNIMPLEMENTED Right click to destroy"
+			"Right click to destroy"
 		};
 		float scale = ScrHeight() * 0.125f;
 		int rows = renderStrings.size() + 1;
@@ -86,10 +92,14 @@ void LogBook::DUpdate()
 	{
 		if (individualIndex == -1)
 		{
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			float scale = ScrHeight() * 0.125f;
+			int rows = Defences::Towers::towers.size() + 1;
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
+			float offset = scroll * scale;
+			if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() * 0.1f, "Return"))
 				logMode = LOGMODE::MAIN;
 			for (int i = 0; i < Defences::Towers::towers.size(); i++)
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() / 10.0f, Defences::Towers::towers[i]->name,
+				if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() * 0.1f, Defences::Towers::towers[i]->name,
 					Defences::Towers::towers[i]->color, Defences::Towers::towers[i]->color / 2))
 				{
 					individualIndex = i;
@@ -126,16 +136,8 @@ Planet::Planet()
 	friction = RandFloat() * 10 + 5;
 	gravity = 10;
 
-	//dawnTime = RandFloat() * 59.99f + 0.01f; // Can't be 0 or it will crash.
-	//dayTime = RandFloat() * 60.0f;
-	//duskTime = RandFloat() * 60.0f;
-	//nightTime = RandFloat() * 60.0f;
 	sunDir = Normalized(Vec3(RandCircPoint2(), -3.f));
 
-	//if (rand() % 2 == 0)
-	//	ambientDark = RandFloat(), ambientLight = 1;
-	//else
-	//	ambientDark = 0, ambientLight = RandFloat();
 	dawnTime  = 20;
 	dayTime   = 80;
 	duskTime  = 40;
@@ -157,9 +159,10 @@ Planet::Planet()
 	fog.g = rand() % 8;
 	fog.b = rand() % 8;
 
-	faction1Spawns = make_unique<Enemies::Instance>(Enemies::faction1Spawns.RandomClone());
 	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
 
+	faction1Spawns = make_unique<Enemies::OvertimeInstance>(Enemies::faction1Spawns.RandomClone());
+	faction1Spawns->Randomize();
 	wildSpawns = make_unique<Enemies::OvertimeInstance>(Enemies::wildSpawns.RandomClone());
 	wildSpawns->Randomize();
 }
@@ -572,7 +575,7 @@ void Game::Start()
 	logBook = make_unique<LogBook>();
 
 	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone();
+	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone(settings.startSeeds);
 	player = playerUnique.get();
 
 	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
@@ -594,7 +597,6 @@ void Game::Start()
 	playerAlive = true;
 	totalGamePoints = 0;
 
-	lastWave = tTime;
 	waveCount = 0;
 	shouldSpawnBoss = false;
 
@@ -617,6 +619,8 @@ void Game::Update()
 {
 	inputs.UpdateMouse(window, settings.sensitivity);
 
+	float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+
 	if (uiMode == UIMODE::MAINMENU)
 	{
 		currentFramebuffer = 0;
@@ -627,8 +631,12 @@ void Game::Update()
 		if (logBook->isOpen)
 			return logBook->DUpdate();
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Character Select",
+			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
+		{
+			scroll = 0;
 			uiMode = UIMODE::CHARSELECT;
+		}
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
@@ -656,34 +664,51 @@ void Game::Update()
 	}
 	else if (uiMode == UIMODE::SETTINGS)
 	{
+		float scale = ScrHeight() * 0.1f;
+		int i = 1;
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, "Return"))
 			uiMode = UIMODE::MAINMENU;
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, settings.vSync ? "Yes vSync" : "No vSync", settings.vSync ? RGBA(0, 255) : RGBA(255),
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, settings.vSync ? "Yes vSync" : "No vSync", settings.vSync ? RGBA(0, 255) : RGBA(255),
 			settings.vSync ? RGBA(0, 127) : RGBA(127)))
 		{
 			settings.vSync ^= true;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f,
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
 			settings.colorBand ? "Yes color band" : "No color band", settings.colorBand ? RGBA(0, 255) : RGBA(255), settings.colorBand ? RGBA(0, 127) : RGBA(127)))
 		{
 			settings.colorBand ^= true;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f,
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
 			settings.displayFPS ? "Yes display FPS" : "No display FPS", settings.displayFPS ? RGBA(0, 255) : RGBA(255), settings.displayFPS ? RGBA(0, 127) : RGBA(127)))
 		{
 			settings.displayFPS ^= true;
 			settings.Write();
 		}
-
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			Fullscreen();
+		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(settings.chunkRenderDist)) * scale;
+		font.Render("Chunk Render Dist = " + to_string(settings.chunkRenderDist), Vec2(-ScrWidth(), ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
+		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i)), scale,
+			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			settings.chunkRenderDist--;
+			settings.chunkRenderDist = max(1u, settings.chunkRenderDist);
+			settings.Write();
+		}
+		horOffset += font.TextWidthTrue("\\/ ") * scale;
+		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i++)), scale,
+			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			settings.chunkRenderDist++;
+			settings.Write();
+		}
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
 	{
@@ -692,22 +717,69 @@ void Game::Update()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Seed Select",
+			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
+		{
+			scroll = 0;
+			uiMode = UIMODE::SEED_SELECT;
+		}
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].pressed)
+			uiMode = UIMODE::MAINMENU;
+
+		for (int i = 0; i < characters.size(); i++)
+			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
+				UnEnum(settings.character) == i ? characters[i]->color : RGBA(255, 255, 255), UnEnum(settings.character) == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
+			{
+				settings.character = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+				settings.Write();
+			}
+	}
+	else if (uiMode == UIMODE::SEED_SELECT)
+	{
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 8));
+		game->inputs.mouseScrollF = 0;
+		float offset = ScrHeight() * 0.125f * scroll;
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin",
+			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
 			Start();
 			uiMode = UIMODE::INGAME;
 		}
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].pressed)
+		{
+			scroll = 0;
+			uiMode = UIMODE::CHARSELECT;
+		}
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].held)
-			uiMode = UIMODE::MAINMENU;
-		else
-			for (int i = 0; i < characters.size(); i++)
-				if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
-					UnEnum(settings.character) == i ? characters[i]->color : RGBA(255, 255, 255), UnEnum(settings.character) == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
-				{
-					settings.character = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
-					settings.Write();
-				}
+		int selectedTotal = 0;
+		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+			if (settings.startSeeds[i])
+				selectedTotal++;
+		int allowedTotal = difficultySeedSelectQuantity[game->settings.difficulty];
+		if (selectedTotal > allowedTotal)
+		{
+			for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+				settings.startSeeds[i] = false;
+			settings.Write();
+		}
+		string strAmountRemaining = std::to_string(allowedTotal - selectedTotal);
+		font.Render(strAmountRemaining, Vec2(ScrWidth() - ScrHeight() * 0.1f, ScrHeight() * 0.9f), ScrHeight() * 0.1f, RGBA(255, 255, 255));
+		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+		{
+			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (0.625f - i * 0.125f)), ScrHeight() / 10.0f, Plants::plants[i]->name,
+				settings.startSeeds[i] ? Plants::plants[i]->color.CLerp(RGBA(), sineLerp) : RGBA(255, 255, 255), settings.startSeeds[i] ? Plants::plants[i]->color / 2 : RGBA(127, 127, 127)) &&
+				(selectedTotal < allowedTotal || settings.startSeeds[i]))
+			{
+				settings.startSeeds[i] ^= true; // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+				settings.Write();
+			}
+		}
 	}
 	else // In game or paused
 	{
@@ -729,9 +801,14 @@ void Game::Update()
 						cursorUnlockCount--;
 						uiMode = UIMODE::INGAME;
 					}
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Main Menu"))
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Restart"))
+					{
+						Start();
+						uiMode = UIMODE::INGAME;
+					}
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Main Menu"))
 						uiMode = UIMODE::MAINMENU;
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Log Book"))
+					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, "Log Book"))
 						logBook->isOpen = true;
 				}
 			}
@@ -906,16 +983,10 @@ void Game::TUpdate()
 		planet->bosses->SpawnOneRandom();
 		shouldSpawnBoss = false;
 	}
-	waveCount += int(inputs.keys[KeyCode::PERIOD].pressed) - int(inputs.keys[KeyCode::COMMA].pressed);
+	waveCount = tTime2 / 60;
 
 	// Enemy spawn stuff:
-	if (tTime - lastWave > secondsBetweenWaves && frameCount != 0 || inputs.keys[KeyCode::SLASH].pressed)
-	{
-		waveCount++;
-		planet->faction1Spawns->SpawnRandomEnemies(secondsBetweenWaves / 60.f);
-		lastWave = tTime;
-		secondsBetweenWaves = RandFloat() * 60 + 30;
-	}
+	planet->faction1Spawns->Update();
 	planet->wildSpawns->Update();
 
 
@@ -985,18 +1056,16 @@ void Game::TUpdate()
 		showUI = !showUI;
 	if (showUI && playerAlive)
 	{
-		float timeTillNextWave = secondsBetweenWaves - tTime + lastWave;
 		if (shouldSpawnBoss)
 		{
 			float timeTillNextBoss = 60.0f - tTime + timeStartBossPrep;
-			font.Render(std::to_string(int(timeTillNextWave)) + "." +
-				std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount) + " " +
+			font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1) + " " +
 				std::to_string(int(timeTillNextBoss)) + "." +
 				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f,
 				planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		}
 		else
-			font.Render(std::to_string(int(timeTillNextWave)) + "." + std::to_string(int(timeTillNextWave * 10) - int(timeTillNextWave) * 10) + " - " + std::to_string(waveCount),
+			font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1),
 				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
 		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
 		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));

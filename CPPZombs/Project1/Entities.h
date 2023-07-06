@@ -15,8 +15,11 @@ struct RaycastHit
 {
 	Vec3 pos, norm;
 	float dist;
-	bool chunkOrEntity;
+	bool chunkOrEntity; // false = chunk, true = entity
 	int index;
+
+	RaycastHit(Vec3 pos = vZero, Vec3 norm = vZero, float dist = std::numeric_limits<float>::infinity(), bool chunkOrEntity = false, int index = -1) :
+		pos(pos), norm(norm), dist(dist), chunkOrEntity(chunkOrEntity), index(index) { }
 };
 
 class LightSource;
@@ -148,6 +151,23 @@ public:
 		std::pair<iVec3, iVec3> minMaxPos = Chunk::MinMaxPos(pos, radius);
 		return FindCreateChunkOverlapsMain(minMaxPos.first, minMaxPos.second);
 	}
+
+	void RemoveFromChunksMain(int index, iVec3 minPos, iVec3 maxPos)
+	{
+		for (int i = 0, x = minPos.x; x <= maxPos.x; x++)
+			for (int y = minPos.y; y <= maxPos.y; y++)
+				for (int z = minPos.z; z <= maxPos.z; z++)
+				{
+					Chunk& chunk = chunks[ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH))];
+					chunk.erase(find(chunk.begin(), chunk.end(), index));
+				}
+	}
+
+	void RemoveFromChunks(int index, Vec3 pos, float radius)
+	{
+		std::pair<iVec3, iVec3> minMaxPos = Chunk::MinMaxPos(pos, radius);
+		RemoveFromChunksMain(index, minMaxPos.first, minMaxPos.second);
+	}
 #pragma endregion
 #pragma region Overlap Stuff
 	bool OverlapsTile(Vec3 pos, float radius)
@@ -270,54 +290,84 @@ public:
 		return chunks[index].TileAtPos(ToIV3(pos));
 	}
 
-	RaycastHit Raycast(Vec3 ro, Vec3 rd, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	RaycastHit RaySphere(Vec3 ro, Vec3 rd, glm::vec4 sph, int index)
 	{
+		Vec3 oc = ro - Vec3(sph);
+		float b = glm::dot(oc, rd);
+		float c = glm::dot(oc, oc) - sph.w * sph.w;
+		float h = b * b - c;
+		if (h < 0.0) return RaycastHit();
+		h = sqrt(h);
+		RaycastHit hit;
+		hit.dist = -b - h;
+		hit.pos = ro + rd * hit.dist;
+		hit.norm = glm::normalize(hit.pos - Vec3(sph));
+		hit.chunkOrEntity = true;
+		hit.index = index;
+		return hit;
+	}
+
+	RaycastHit RaycastEnt(Vec3 ro, Vec3 rd, float maxDist, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Raycast can only hit entities
+	{
+		rd.x = rd.x == 0 ? 0.000001f : rd.x;
+		rd.y = rd.y == 0 ? 0.000001f : rd.y;
+		rd.z = rd.z == 0 ? 0.000001f : rd.z;
 		iVec3 pos = iVec3(glm::floor(ro / float(CHUNK_WIDTH))) * CHUNK_WIDTH;
 
 		Vec3 step = glm::sign(rd);
 		Vec3 tDelta = step / rd;
-
-
+		RaycastHit hit = RaycastHit();
+		
 		float tMaxX, tMaxY, tMaxZ;
 
-		Vec3 fr = glm::fract(rd);
+		Vec3 fr = glm::fract(ro / float(CHUNK_WIDTH));
 
 		tMaxX = tDelta.x * ((rd.x > 0) ? (1 - fr.x) : fr.x);
 		tMaxY = tDelta.y * ((rd.y > 0) ? (1 - fr.y) : fr.y);
 		tMaxZ = tDelta.z * ((rd.z > 0) ? (1 - fr.z) : fr.z);
 
-		Vec3 norm;
+		float currentDist = 0;
+		Vec3 step2 = step * float(CHUNK_WIDTH);
+
 		const int maxTrace = 100;
-
-		for (int i = 0; i < maxTrace; i++) {
-			ChunkAtPos(pos);
-
+		for (int i = 0; currentDist < maxDist && i < maxTrace; i++)
+		{
+			int chunk = ChunkAtPos(pos);
+			if (chunk == -1) break;
+			for (int index : chunks[chunk])
+			{
+				if (!func(from, (*this)[index].get())) continue;
+				RaycastHit newHit = RaySphere(ro, rd, glm::vec4((*this)[index]->pos, (*this)[index]->radius), index);
+				if (newHit.dist < hit.dist)
+					hit = newHit;
+			}
 
 			if (tMaxX < tMaxY) {
 				if (tMaxZ < tMaxX) {
 					tMaxZ += tDelta.z;
-					pos.z += step.z;
-					norm = Vec3(0, 0, -step.z);
+					pos.z += step2.z;
+					currentDist = tMaxZ * CHUNK_WIDTH;
 				}
 				else {
 					tMaxX += tDelta.x;
-					pos.x += step.x;
-					norm = Vec3(-step.x, 0, 0);
+					pos.x += step2.x;
+					currentDist = tMaxX * CHUNK_WIDTH;
 				}
 			}
 			else {
 				if (tMaxZ < tMaxY) {
 					tMaxZ += tDelta.z;
-					pos.z += step.z;
-					norm = Vec3(0, 0, -step.z);
+					pos.z += step2.z;
+					currentDist = tMaxZ * CHUNK_WIDTH;
 				}
 				else {
 					tMaxY += tDelta.y;
-					pos.y += step.y;
-					norm = Vec3(0, -step.y, 0);
+					pos.y += step2.y;
+					currentDist = tMaxY * CHUNK_WIDTH;
 				}
 			}
 		}
+		return hit.dist < maxDist ? hit : RaycastHit();
 	}
 #pragma endregion
 #pragma region Damage stuff
@@ -425,7 +475,7 @@ public:
 #pragma endregion
 // Add more overlap functions.
 #pragma endregion
-
+#pragma region Update stuff
 	void SortEntities()
 	{
 		int ncCount = static_cast<int>(size()), collectibleCount = ncCount;
@@ -536,11 +586,13 @@ public:
 			for (int y = minMaxPos.first.y; y <= minMaxPos.second.y; y++)
 				for (int z = minMaxPos.first.z; z <= minMaxPos.second.z; z++)
 				{
-					if (game->camFrustum.BoxInFrustum(Vec3(
+					Vec3 centerPos = Vec3(
 						x * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f,
 						y * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f,
-						z * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f),
-						Vec3(CHUNK_WIDTH * 0.5f)))
+						z * CHUNK_WIDTH + CHUNK_WIDTH * 0.5f);
+					if (glm::distance2(centerPos, game->PlayerPos()) <=
+						CHUNK_WIDTH * CHUNK_WIDTH * game->settings.chunkRenderDist * game->settings.chunkRenderDist &&
+						game->camFrustum.BoxInFrustum(centerPos, Vec3(CHUNK_WIDTH * 0.5f)))
 					{
 						int chunk = ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH));
 						if (chunk != -1)
@@ -608,7 +660,8 @@ public:
 				sortedNCEntities[index]->UIUpdate();
 			}
 	}
-
+#pragma endregion
+#pragma region Destruction stuff
 	void Remove(Entity* entityToRemove)
 	{
 		// Remove from sortedNCEntities or from collectibles.
@@ -617,8 +670,12 @@ public:
 		else
 			collectibles.erase(std::find(collectibles.begin(), collectibles.end(), entityToRemove)); // It's a collectible.
 
-		// Find where it's located in the main vector and replace its value with nullptr (that's what the .reset() does).
-		(*std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; })).reset();
+		// Find where it's located in the main vector.
+		vector<unique_ptr<Entity>>::iterator iter = std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; });
+		// The std::distance stuff finds its index.
+		RemoveFromChunks(std::distance(begin(), iter), entityToRemove->pos, entityToRemove->radius);
+		// Replace its value with nullptr (that's what the .reset() does).
+		iter->reset();
 	}
 
 	void RemoveLight(LightSource* lightSourceToRemove)
@@ -635,7 +692,8 @@ public:
 	{
 		particles.erase(std::find_if(particles.begin(), particles.end(), [particleToRemove](std::unique_ptr<Particle> const& i) { return i.get() == particleToRemove; }));
 	}
-
+#pragma endregion
+#pragma region Helper functions
 	// Returns sum of added velocities
 	Vec3 VacuumBurst(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
 	{
@@ -658,6 +716,7 @@ public:
 	{
 		return VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
 	}
+#pragma endregion
 };
 
 

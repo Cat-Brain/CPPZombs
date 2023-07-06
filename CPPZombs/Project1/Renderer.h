@@ -29,6 +29,12 @@ enum class CHARS
 	SOLDIER, FLICKER, ENGINEER, ORCHID, COUNT
 };
 
+// Having an enum of all seeds will come in handy:
+enum class SEEDINDICES
+{
+	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ_S, COAL, BRICK, CHEESE, TOPAZ, SAPPHIRE, LEAD, QUARTZ_V, COUNT
+};
+
 string settingsLocation = "Settings.txt";
 class Settings
 {
@@ -39,6 +45,7 @@ public:
 	uint chunkRenderDist = 3;
 	float sensitivity = 300;
 	bool maximized = true;
+	bool startSeeds[UnEnum(SEEDINDICES::COUNT)];
 
 	void TryOpen()
 	{
@@ -69,10 +76,23 @@ public:
 					if (result != -1)
 						chunkRenderDist = result;
 				}
+				else if (contents.find("start seeds = ") == 0)
+				{
+					string subStr = contents.substr(14);
+					int i = 0;
+					for (char c : subStr)
+					{
+						if (c == 't' && i < UnEnum(SEEDINDICES::COUNT))
+							startSeeds[i] = true;
+						i++;
+					}
+
+				}
 				else if (contents.find("character = ") == 0)
 					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
 						if (contents == "character = " + to_string(i))
 							character = CHARS(i);
+				
 			}
 			file.close();
 		}
@@ -81,11 +101,16 @@ public:
 
 	void Write()
 	{
+		string startSeedsStr = "\nstart seeds = ";
+		for (bool b : startSeeds)
+			startSeedsStr += b ? "t" : "f";
+
 		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
 			+"\ndisplayFPS = " + string(displayFPS ? "true" : "false") +
 			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
 			"\nmaximized = " + string(maximized ? "true" : "false") +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
+			startSeedsStr + 
 			"\ncharacter = " + to_string(UnEnum(character));
 		std::ofstream file;
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
@@ -401,12 +426,14 @@ public:
 		glBindVertexArray(cube.vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * toDrawCircles.size(), &toDrawCircles[0], GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * toDrawCircles.size(), toDrawCircles.data(), GL_DYNAMIC_DRAW);
 		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
 		glUseProgram(circleShader);
 		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, toDrawCircles.size());
 		toDrawCircles.clear();
 		glEnable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
 	}
 
 	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)

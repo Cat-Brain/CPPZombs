@@ -109,13 +109,34 @@ public:
         glBindVertexArray(0);
     }
 
+#pragma region Text Width stuff
+    int CharAdvance(char character)
+    {
+        return characters[character].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
+    }
+
+    inline float CharAdvanceTrue(char character)
+    {
+        return CharAdvance(character) / (float)minimumSize;
+    }
+    
+    int CharWidth(char character)
+    {
+        return characters[character].size.x; // Doesn't need to be bitshifted.
+    }
+
+    float CharWidthTrue(char character)
+    {
+        return CharWidth(character) / (float)minimumSize;
+    }
+    
     int TextWidth(string text)
     {
         uint result = 0;
 
         for (int i = 0; i < text.size() - 1; i++)
-            result += characters[text[i]].advance >> 6; // bitshift by 6 to get value in pixels (2^6 = 64)
-        result += characters[text[text.size() - 1]].size.x/* >> 6*/;
+            result += CharAdvance(text[i]);
+        result += CharWidth(text[text.size() - 1]);
 
         return result;
     }
@@ -124,6 +145,7 @@ public:
     {
         return TextWidth(text) / (float)minimumSize;
     }
+#pragma endregion
 
     void Render(string text, Vec2 pos, float scale, RGBA color)
     {

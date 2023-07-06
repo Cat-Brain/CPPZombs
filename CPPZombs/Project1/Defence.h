@@ -479,12 +479,6 @@ namespace UIUpdates
 #pragma endregion
 
 #pragma region Plants
-// Having an enum of all seeds will come in handy:
-enum class SEEDINDICES
-{
-	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ_S, COAL, CHEESE, TOPAZ, SAPPHIRE, LEAD, QUARTZ_V
-};
-
 
 namespace Plants
 {
@@ -509,10 +503,10 @@ namespace Plants
 		Shrub shadeShrub = Shrub(&shrubData, Resources::shade.Clone(), ItemInstance(ITEMTYPE::SHADE_SHRUB_SEED), 10, 30, 25, 1.0f, 0.25f, 1.5f, babyShadeShrubColor, shadeShrubColor, deadShadeShrubColor, 0.2f, 3.0f, 0, 10, 10, "Shade shrub");
 	
 		RGBA babyBowlerShrubColor = RGBA(111, 101, 143), bowlerShrubColor = RGBA(21, 0, 89), deadBowlerShrub = RGBA(12, 4, 36);
-		Shrub bowlerShrub = Shrub(&shrubData, Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.5f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 0, 50, 50, "Bowler shrub");
+		Shrub bowlerShrub = Shrub(&shrubData, Resources::bowler.Clone(), ItemInstance(ITEMTYPE::BOWLER_SHRUB_SEED), 1, 50, 50, 16.0f, 0.25f, 2.5f, babyBowlerShrubColor, bowlerShrubColor, deadBowlerShrub, 1, 5, 0, 50, 50, "Bowler shrub");
 	
 		RGBA babyVacuumiumShrubColor = RGBA(242, 239, 148), vacuumiumShrubColor = RGBA(204, 202, 153), deadVacuumiumShrubColor = RGBA(158, 156, 85);
-		Shrub vacuumiumShrub = Shrub(&shrubData, Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 20, 25, 0.5f, 1.5f, 0.25f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 0, 60, 60, "Vacuumium shrub");
+		Shrub vacuumiumShrub = Shrub(&shrubData, Resources::vacuumium.Clone(), ItemInstance(ITEMTYPE::VACUUMIUM_SHRUB_SEED), 10, 20, 25, 0.5f, 0.25f, 1.5f, babyVacuumiumShrubColor, vacuumiumShrubColor, deadVacuumiumShrubColor, 0.2f, 3.0f, 0, 60, 60, "Vacuumium shrub");
 	
 		RGBA babySilverShrubColor = RGBA(209, 157, 157), silverShrubColor = RGBA(171, 171, 171), deadSilverShrubColor = RGBA(87, 99, 74);
 		Shrub silverShrub = Shrub(&shrubData, Resources::silver.Clone(), ItemInstance(ITEMTYPE::SILVER_SHRUB_SEED), 4, 54, 10, 10.f, 0.125f, 1.f, babySilverShrubColor, silverShrubColor, deadSilverShrubColor, 0.5f, 1.f, 0, 30, 30, "Silver shrub");
@@ -522,6 +516,9 @@ namespace Plants
 	
 		RGBA babyCoalShrubColor = RGBA(99, 66, 20), coalShrubColor = RGBA(59, 44, 23), deadCoalShrubColor = RGBA(74, 65, 52);
 		Shrub coalShrub = Shrub(&shrubData, dItem.Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 0, 50, 50, "Coal shrub");
+
+		RGBA babyBrickShrubColor = RGBA(199, 156, 143), brickShrubColor = RGBA(204, 72, 33), deadBrickShrubColor = RGBA(133, 40, 12);
+		Shrub brickShrub = Shrub(&shrubData, Resources::brick.Clone(), ItemInstance(ITEMTYPE::BRICK_SHRUB_SEED ), 10, 20, 25, 3.f, 0.25f, 1.5f, babyBrickShrubColor, brickShrubColor, deadBrickShrubColor, 1, 5, 0, 50, 50, "Brick shrub");
 	}
 
 
@@ -546,6 +543,7 @@ namespace Plants
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.
 	vector<Shrub*> plants{ &Shrubs::copperShrub, &Shrubs::ironShrub, &Shrubs::rubyShrub, &Shrubs::emeraldShrub, &Shrubs::rockShrub,
 		&Shrubs::shadeShrub, &Shrubs::bowlerShrub, &Shrubs::vacuumiumShrub, &Shrubs::silverShrub, &Shrubs::quartzShrub, &Shrubs::coalShrub,
+		&Shrubs::brickShrub,
 		&Vines::cheeseVine, &Vines::topazVine, &Vines::sapphireVine, &Vines::leadVine, &Vines::quartzVine };
 }
 
@@ -563,6 +561,7 @@ namespace Resources::Seeds
 	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
 	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
 	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
+	PlacedOnLanding brickShrubSeed = PlacedOnLanding(ITEMTYPE::BRICK_SHRUB_SEED, &Plants::Shrubs::brickShrub, "Brick shrub seed", "Seed", 4, Plants::Shrubs::brickShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::brickShrub.babyRadius, false, true, true);
 
 	// Vines
 	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
@@ -573,7 +572,8 @@ namespace Resources::Seeds
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
-		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &cheeseVineSeed, &topazVineSeed,
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed,
+		&cheeseVineSeed, &topazVineSeed,
 		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
 	
 }
@@ -592,6 +592,7 @@ namespace Collectibles::Seeds
 	Collectible silverShrubSeed = Collectible(Resources::Seeds::silverShrubSeed.Clone());
 	Collectible quartzShrubSeed = Collectible(Resources::Seeds::quartzShrubSeed.Clone());
 	Collectible coal = Collectible(Resources::Seeds::coal.Clone());
+	Collectible brickShrubSeed = Collectible(Resources::Seeds::brickShrubSeed.Clone());
 
 	// Vines
 	Collectible cheeseVineSeed = Collectible(Resources::Seeds::cheeseVineSeed.Clone());
@@ -602,7 +603,7 @@ namespace Collectibles::Seeds
 
 	// Keep a list of all of the seeds.
 	vector<Collectible*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
-		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &cheeseVineSeed, &topazVineSeed,
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed, &cheeseVineSeed, &topazVineSeed,
 		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
 }
 
@@ -769,6 +770,41 @@ public:
 	}
 };
 
+EntityData laserTurretData = EntityData(UPDATE::LASER_TURRET, VUPDATE::FRICTION, DUPDATE::LASER_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+class LaserTurret : public LightTower
+{
+public:
+	uint damage;
+	float maxDist;
+	float timeTill, timePer;
+	float spinSpeed;
+	RGBA color3; // Used for the color of the barrel.
+
+	RaycastHit lastHit = RaycastHit(); // Stores the last hit from
+
+	LaserTurret(EntityData* data, Recipe recipe, uint damage, float maxDist, float timePer, float spinSpeed,
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
+		int health, string name) :
+		LightTower(data, recipe, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		damage(damage), maxDist(maxDist), timePer(timePer), timeTill(timePer), spinSpeed(spinSpeed), color3(color3)
+	{ }
+
+	LaserTurret(LaserTurret* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
+		LaserTurret(*baseClass)
+	{
+		this->pos = pos;
+		this->dir = dir;
+		this->creator = creator;
+		allegiance = creator->allegiance + PLANTS_A;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
+	{
+		return make_unique<LaserTurret>(this, pos, dir, creator);
+	}
+};
+
 namespace Updates
 {
 	void BasicTurretU(Entity* entity)
@@ -797,6 +833,28 @@ namespace Updates
 			turret->timeTill = turret->timePer;
 		}
 	}
+
+	void LaserTurretU(Entity* entity)
+	{
+		LaserTurret* turret = static_cast<LaserTurret*>(entity);
+			Entity* following;
+			if (turret->lastHit.index != -1 && (following = (*game->entities)[turret->lastHit.index].get()) != nullptr &&
+				glm::distance(turret->pos, following->pos) <
+				turret->maxDist + following->radius)
+				turret->dir = Normalized(following->pos - turret->pos);
+			else
+				turret->dir = glm::rotateZ(Normalized(Vec3(Vec2(turret->dir), 0.5f * sinf(6 * tTime))), turret->spinSpeed * game->dTime);
+
+			turret->lastHit = game->entities->RaycastEnt(turret->pos, turret->dir, turret->maxDist, MaskF::IsNonAlly, turret);
+
+		turret->timeTill -= game->dTime;
+		if (turret->timeTill <= 0)
+		{
+			turret->timeTill += turret->timePer;
+			if (turret->lastHit.dist < turret->maxDist)
+				(*game->entities)[turret->lastHit.index]->ApplyHit(turret->damage, turret);
+		}
+	}
 }
 
 namespace DUpdates
@@ -816,6 +874,13 @@ namespace DUpdates
 		turret->DUpdate(DUPDATE::DTOCOL);
 		for (uint i = 0; i < turret->bulletsPer; i++)
 			game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * glm::rotateZ(turret->dir, 2 * PI_F * i / turret->bulletsPer), turret->color3, turret->radius * 0.25f);
+	}
+
+	void LaserTurretDU(Entity* entity)
+	{
+		LaserTurret* turret = static_cast<LaserTurret*>(entity);
+		turret->DUpdate(DUPDATE::DTOCOL);
+		game->DrawCylinder(turret->pos, turret->pos + turret->dir * min(turret->maxDist, turret->lastHit.dist), turret->color3, turret->radius * 0.25f);
 	}
 }
 
@@ -850,13 +915,17 @@ namespace Defences
 
 		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &Projectiles::circleTurretProjectile, 3, 2.f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");
 
+		LaserTurret laserTurret = LaserTurret(&laserTurretData, { /*Resources::quartz.Clone(25), Resources::lead.Clone(25), Resources::topaz.Clone(25)*/ }, 60, 15, 0.125f, 0.6, JRGB(167, 62, 168), 5, 1.5f, RGBA(84, 8, 150), RGBA(), RGBA(41, 35, 207), 2, 0.25f, 120, 120, "Laser Turret");
+
 #pragma endregion
 
 		vector<Tower*> towers = {
 			&lantern,
 			&pulseTurret, &rockTurret, &sapphireTurret,
 			&droneTurret, &hoverTurret,
-			&circleTurret };
+			&circleTurret,
+			//&laserTurret, // Not very fun, may be reimplemented later on.
+		};
 	}
 }
 

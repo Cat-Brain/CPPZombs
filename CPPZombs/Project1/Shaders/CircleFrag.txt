@@ -35,14 +35,15 @@ float noise(vec3 p){
     return o4.y * d.y + o4.x * (1.0 - d.y);
 }
 
-float Mask(vec3 pos)
+float Mask(vec2 pos)
 {
-	pos *= 2;
-	return noise(pos);
-	pos *= 12;
-	return sin(pos.x + pos.y + pos.z) * 0.5 + 0.5;
-	pos *= 12;
-	return (sin(pos.x) + sin(pos.y) + sin(pos.z)) * 0.16666 + 0.5;
+	//pos *= 2;
+	//return noise(pos);
+	//pos *= 12;
+	//return sin(pos.x + pos.y + pos.z) * 0.5 + 0.5;
+	//pos *= 12;
+	//return (sin(pos.x) + sin(pos.y) + sin(pos.z)) * 0.16666 + 0.5;
+	return (sin(pos.x) + sin(pos.y)) * 0.25 + 0.5;
 }
 
 void main()
@@ -53,17 +54,25 @@ void main()
 	float c = dot(pos, pos) - posScale.w * posScale.w;
 	float d = b * b - c; // Discriminant from quadratic formula.
 
-	if (d <= 0) discard;
+	if (d <= 0)
+	{
+		discard;
+		return;
+	}
 
 	float h = sqrt(d);
-	if (-b + h <= 0 || (color.a != 1. && color.a < Mask(normalize(tPos - posScale.xyz) * posScale.w))) discard;
-	float dstToSphereNear = max(0, (-h - b));
+	if (-b + h <= 0 || (color.a != 1. && color.a < Mask(gl_FragCoord.xy)))
+	{
+		discard;
+		return;
+	}
+	float dstNear = -h - b;
 
 
 	FragColor = color;
 	
-	position = vec4(dir * dstToSphereNear, 1.);
+	position = vec4(dir * max(0, dstNear), 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
-	normal = vec4(normalize(position.xyz - pos), 1.);
+	normal = vec4(normalize(dir * dstNear - pos), 1.);
 	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;
 } 

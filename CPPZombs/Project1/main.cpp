@@ -8,27 +8,28 @@ int main()
 	for (int i = 0; i < Livestock::livestocks.size(); i++)
 		Livestock::livestocks[i]->birthEntity = Livestock::livestockBirths[i];
 
-#pragma region Virtaul functions
+#pragma region Virtual functions
 #pragma region Update functions
 	{
 		using namespace Updates;
 		using namespace Enemies::Updates;
 		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU,
-			FunctionalBlockU, FunctionalBlock2U, VineU, BasicTurretU, CircleTurretU, EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU,
+			FunctionalBlockU, FunctionalBlock2U, VineU, BasicTurretU, CircleTurretU, LaserTurretU, EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU,
 			KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
 	}
 	{
 		using namespace VUpdates;
 		using namespace Enemies::VUpdates;
-		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU };
+		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU, CenticrawlerVU };
 	}
 	{
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, CircleTurretDU, DeceiverDU, ParentDU, ExploderDU,
-			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
+		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, CircleTurretDU,
+			LaserTurretDU, DeceiverDU, ParentDU, ExploderDU,
+			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, LaserTankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
 	{
 		using namespace UIUpdates;
@@ -43,11 +44,11 @@ int main()
 
 	{
 		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, TankMU };
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, BaseTankMU };
 	}
 	{
 		using namespace Enemies::AUpdates;
-		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU };
+		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, LaserTankAU };
 	}
 	{
 		using namespace PMovements;

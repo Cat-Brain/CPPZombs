@@ -10,8 +10,8 @@ class Planet
 {
 public:
 	float friction, gravity, dawnTime, dayTime, duskTime, nightTime, ambientLight, ambientDark;
-	unique_ptr<Enemies::Instance> faction1Spawns, bosses;
-	unique_ptr<Enemies::OvertimeInstance> wildSpawns;
+	unique_ptr<Enemies::Instance> bosses;
+	unique_ptr<Enemies::OvertimeInstance> faction1Spawns, wildSpawns;
 	FastNoiseLite worldNoise, caveNoise;
 	Vec3 sunDir;
 	JRGB color1, color2, fog;
@@ -20,7 +20,7 @@ public:
 
 	float GetBrightness()
 	{
-		float wrappedTime = fmodf(tTime, dawnTime + dayTime + duskTime + nightTime);
+		float wrappedTime = fmodf(tTime2, dawnTime + dayTime + duskTime + nightTime);
 		float ambientDiff = ambientLight - ambientDark;
 		return ambientDark + ambientDiff * ClampF01(min(wrappedTime / dawnTime, (dawnTime + dayTime + duskTime - wrappedTime) / duskTime));
 	}

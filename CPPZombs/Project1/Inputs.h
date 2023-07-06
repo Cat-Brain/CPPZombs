@@ -6,6 +6,13 @@ struct KeyPress
 
 	struct KeyPress(bool pressed = false, bool held = false, bool released = false) :
 		pressed(pressed), held(held), released(released) {}
+
+	void Reset()
+	{
+		pressed = false,
+			held = false,
+			released = false;
+	}
 };
 
 struct Key : public KeyPress

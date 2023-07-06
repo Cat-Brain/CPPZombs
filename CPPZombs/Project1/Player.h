@@ -18,6 +18,7 @@ namespace Resources
 #define NUM_START_ITEMS 3
 
 int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
+int difficultySeedSelectQuantity[] = { 6, 5, 4 };
 
 
 enum class PMOVEMENT
@@ -167,7 +168,8 @@ public:
 			for (Tower* tower : Defences::Towers::towers)
 				if (CanMake(tower->recipe))
 					buildableTowers.push_back(tower);
-			if (buildableTowers.size() == 0) return;
+			if (buildableTowers.size() == 0)
+				return font.Render("Nothing craftable", Vec2(-ScrWidth(), -ScrHeight()), scale * 2, RGBA(255, 255, 255));
 
 			// Show which is currently selected
 			game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), RGBA(),
@@ -175,24 +177,8 @@ public:
 			for (uint i = 0; i < buildableTowers.size(); i++)
 			{
 				font.Render(buildableTowers[i]->name,
-					iVec2(-ScrWidth(), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, buildableTowers[i]->color);
+					Vec2(-ScrWidth(), -ScrHeight() + scale * 2 * i), scale * 2, buildableTowers[i]->color);
 			}
-
-			/*for (int i = 0; i < buildableTowers.size(); i++)
-			{
-				string text = buildableTowers[i]->name;
-				float textWidth = font.TextWidthTrue(text) * scale;
-				Vec2 bottomLeft = Vec2(-ScrWidth() + scale * width, scale * 2 * (i + 1) - ScrHeight());
-				Vec2 mousePos = game->inputs.screenMousePosition * 2.f - Vec2(ScrDim());
-				bool isHover = mousePos.x > bottomLeft.x &&
-					mousePos.x < bottomLeft.x + textWidth * 2 &&
-					mousePos.y > bottomLeft.y &&
-					mousePos.y < bottomLeft.y + scale * 2;
-				game->DrawFBL(bottomLeft, isHover ? RGBA(0, 0, 0, 63) : RGBA(255, 255, 255, 63), Vec2(textWidth, scale));
-				font.Render(text, bottomLeft, scale * 2, buildableTowers[i]->color);
-				if (isHover && game->inputs.keys[KeyCode::PRIMARY].pressed)
-					buildableTowers[i]->TryCreate(this, player->pos, player->dir, player);
-			}*/
 #pragma endregion
 			return;
 		}
@@ -231,7 +217,7 @@ public:
 			game->DrawTextured(spriteSheet, (*this)[i + indexOffset]->intType, tOffset, Vec2(0, tScale * i),
 				i == currentIndex ? RGBA() : (*this)[i + indexOffset]->color, Vec2(tScale));
 			font.Render(" " + (*this)[i + indexOffset]->name + "  " + to_string((*this)[i + indexOffset].count) + "  " + (*this)[i + indexOffset]->typeName,
-				iVec2(static_cast<int>(-ScrWidth() + scale * 2), static_cast<int>(-ScrHeight() + scale * 2 * i)), scale * 2, (*this)[i + indexOffset]->color);
+				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2, (*this)[i + indexOffset]->color);
 		}
 	}
 
@@ -281,7 +267,6 @@ public:
 
 
 
-class Base;
 EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::PLAYER, ONDEATH::PLAYER);
 class Player : public LightBlock
 {
@@ -290,6 +275,7 @@ public:
 	Entity* heldEntity = nullptr, *currentMenuedEntity = nullptr;
 	PlayerInventory items;
 	Items startItems;
+	bool startSeeds[UnEnum(SEEDINDICES::COUNT)];
 	vector<SEEDINDICES> blacklistedSeeds;
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, shootSpeed,
@@ -317,7 +303,7 @@ public:
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
 		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
+		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A + PLANTS_A), vacDist(vacDist),
 		moveSpeed(moveSpeed), holdMoveSpeed(holdMoveSpeed), startItems(startItems), blacklistedSeeds(blacklistedSeeds), vacBoth(vacBoth),
 		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
 		primaryTime(primaryTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), secondary(secondary),
@@ -340,32 +326,24 @@ public:
 
 		items = PlayerInventory(this, 10, 4, startItems);
 
-		vector<int> spawnedIndices(NUM_START_ITEMS + blacklistedSeeds.size(), -1);
-		for (int i = 0; i < blacklistedSeeds.size(); i++)
-			spawnedIndices[size_t(i) + NUM_START_ITEMS] = UnEnum(blacklistedSeeds[i]);
-		for (int i = 0; i < NUM_START_ITEMS;)
-		{
-			int newIndex = rand() % Resources::Seeds::plantSeeds.size();
-			if (find(spawnedIndices.begin(), spawnedIndices.end(), newIndex) != spawnedIndices.end())
-				continue;
-			spawnedIndices[i] = newIndex;
-			items.push_back(Resources::Seeds::plantSeeds[newIndex]->Clone(difficultySeedSpawnQuantity[game->settings.difficulty]));
-			i++;
-		}
+		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+			if (startSeeds[i])
+				items.push_back(Resources::Seeds::plantSeeds[i]->Clone(difficultySeedSpawnQuantity[game->settings.difficulty]));
 		items.currentIndex = 0; // Set active ammo type to the first ammo type in inventory.
 	}
 
-	Player(Player* baseClass, Vec3 pos) :
+	Player(Player* baseClass, bool* startSeeds, Vec3 pos) :
 		Player(*baseClass)
 	{
+		std::copy(startSeeds, startSeeds + sizeof(bool) * UnEnum(SEEDINDICES::COUNT), this->startSeeds);
 		this->pos = pos;
 		this->baseClass = baseClass;
 		Start();
 	}
 
-	virtual unique_ptr<Player> PClone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
+	virtual unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
 	{
-		return make_unique<Player>(this, pos);
+		return make_unique<Player>(this, startSeeds, pos);
 	}
 
 	int ApplyHit(int damage, Entity* damageDealer) override
@@ -430,10 +408,11 @@ public:
 		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
 	{ }
 
-	Engineer(Engineer* baseClass, Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) :
+	Engineer(Engineer* baseClass, bool* startSeeds, Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) :
 		Engineer(*baseClass)
 	{
 		this->baseClass = baseClass;
+		std::copy(startSeeds, startSeeds + sizeof(bool) * UnEnum(SEEDINDICES::COUNT), this->startSeeds);
 		this->pos = pos;
 		this->creator = creator;
 		engMode = ENGMODE::ROVER;
@@ -441,9 +420,9 @@ public:
 		Start();
 	}
 
-	unique_ptr<Player> PClone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
+	unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
 	{
-		return make_unique<Engineer>(this, pos, dir, creator);
+		return make_unique<Engineer>(this, startSeeds, pos, dir, creator);
 	}
 };
 
@@ -516,23 +495,17 @@ Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f,
 
 Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 2, 4, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.5f, 100, 50,
-	"Soldier", Items({ Resources::copper.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(3), Resources::Seeds::cheeseVineSeed.Clone(1),
-		Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::copperShrubSeed.Clone(3), Resources::waveModifier.Clone(1),
-		Resources::Eggs::kiwiEgg.Clone(2)}),
+	"Soldier", Items({ Resources::copper.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 Player flicker = Player(&playerData, false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	0, 100, 50, "Flicker", Items({ Resources::Seeds::coal.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(1),
-		Resources::Seeds::cheeseVineSeed.Clone(3), Resources::Seeds::quartzVineSeed.Clone(2), Resources::Seeds::rockShrubSeed.Clone(3),
-		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2) }),
+	0, 100, 50, "Flicker", Items({ Resources::rock.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
 Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 0, 0, 1, 0, 2, 0, PMOVEMENT::JETPACK,
 	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20, 5,
-	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10), Resources::Seeds::shadeShrubSeed.Clone(2),
-		Resources::Seeds::cheeseVineSeed.Clone(2), Resources::Seeds::quartzShrubSeed.Clone(2), Resources::Seeds::silverShrubSeed.Clone(3),
-		Resources::waveModifier.Clone(1), Resources::Eggs::kiwiEgg.Clone(2)}),
+	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 vector<Player*> characters = { &soldier, &flicker, &engineer };
@@ -574,7 +547,7 @@ public:
 Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
 EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
-class Base : public LightBlock
+class Base : public LightBlock // Convert to BasicTurret
 {
 public:
 	Player* player = nullptr;
@@ -745,16 +718,38 @@ namespace Updates
 
 		player->inputs = game->inputs;
 
+		// A bit of input reading:
 		player->shouldVacuum ^= player->inputs.keys[KeyCode::CROUCH].pressed;
+
+		// Update items:
 		player->items.Update(player->sTime <= 0 && player->shouldScroll);
 
+		// Decrease iTime and sTime:
 		player->iTime = max(0.f, player->iTime - game->dTime);
 		player->sTime = max(0.f, player->sTime - game->dTime);
 
+		// Update player events:
 		for (int i = 0; i < player->events.size(); i++)
 			if (player->events[i].function(player, &player->events[i]))
 				player->events.erase(player->events.begin() + i);
 
+		if (player->items.isBuilding)
+		{
+			if (player->inputs.keys[KeyCode::SECONDARY].pressed)
+			{
+				RaycastHit test = game->entities->RaycastEnt(entity->pos, player->camDir, 30, MaskF::IsAlly, entity);
+				if (test.index != -1)
+				{
+					Entity* hitEntity = (*game->entities)[test.index].get();
+					if (hitEntity != player->base)
+						hitEntity->ApplyHit(100000, player);
+
+				}
+			}
+			player->inputs.keys[KeyCode::SECONDARY].Reset();
+		}
+
+		/*
 		if (player->currentMenuedEntity != nullptr && !player->currentMenuedEntity->Overlaps(player->inputs.mousePosition3 + player->pos, 0))
 		{
 			player->currentMenuedEntity->uiActive = false;
@@ -769,7 +764,7 @@ namespace Updates
 				player->currentMenuedEntity->uiActive = false;
 			player->currentMenuedEntity = hitEntity;
 			player->currentMenuedEntity->uiActive = true;
-		}
+		}*/
 
 		Vec2 mouseOffset = game->inputs.mouseOffset;
 		player->yaw -= mouseOffset.x;
@@ -913,7 +908,17 @@ namespace DUpdates
 {
 	void PlayerDU(Entity* entity)
 	{
-		// Lol used to do something and probably should some day.
+		Player* player = static_cast<Player*>(entity);
+		if (player->items.isBuilding)
+		{
+			RaycastHit test = game->entities->RaycastEnt(entity->pos, player->camDir, 30, MaskF::IsAlly, entity);
+			if (test.index != -1)
+			{
+				Entity* hitEntity = (*game->entities)[test.index].get();
+				game->DrawCircle(hitEntity->pos, RGBA(255, 0, 0, 127), hitEntity->radius + 0.1f);
+				game->DrawCircle(test.pos + test.norm * 0.1f, RGBA(195, 255, 127), 0.1f);
+			}
+		}
 	}
 
 	void TurretDU(Entity* entity)

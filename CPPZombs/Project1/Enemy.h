@@ -21,13 +21,13 @@ namespace Enemies
 	class Enemy;
 	enum class MUPDATE
 	{
-		DEFAULT, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, CENTICRAWLER, POUNCER, CAT, TANK
+		DEFAULT, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, CENTICRAWLER, POUNCER, CAT, BASE_TANK
 	};
 	vector<function<bool(Enemy*)>> mUpdates;
 
 	enum class AUPDATE
 	{
-		DEFAULT, EXPLODER, BOOMCAT, TANK
+		DEFAULT, EXPLODER, BOOMCAT, TANK, LASER_TANK
 	};
 	vector<function<bool(Enemy*)>> aUpdates;
 
@@ -261,7 +261,7 @@ namespace Enemies
 
 		int Cost() override
 		{
-			return points / 5;
+			return points * length;
 		}
 	};
 
@@ -560,7 +560,7 @@ namespace Enemies
 		}
 	};
 
-	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
+	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::CENTICRAWLER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
 	class Centicrawler : public Spider
 	{
 	public:
@@ -710,23 +710,70 @@ namespace Enemies
 		}
 	};
 
-	EnemyData tankData = EnemyData(MUPDATE::TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	class Tank : public Enemy
+	class BaseTank : public Enemy
+	{
+	public:
+		float turnSpeed;
+
+		BaseTank(EntityData* data, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
+			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			Enemy(data, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			turnSpeed(turnSpeed)
+		{ }
+
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
+		{
+			unique_ptr<BaseTank> newEnemy = make_unique<BaseTank>(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->dir = FindDir();
+			newEnemy->Start();
+			return newEnemy;
+		}
+	};
+
+	EnemyData tankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	class Tank : public BaseTank
 	{
 	public:
 		Projectile* projectile;
-		float turnSpeed;
 
 		Tank(EntityData* data, Projectile* projectile, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-			Enemy(data, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
-			projectile(projectile), turnSpeed(turnSpeed)
+			BaseTank(data, turnSpeed, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			projectile(projectile)
 		{ }
 
 		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
 		{
 			unique_ptr<Tank> newEnemy = make_unique<Tank>(*this);
+			newEnemy->baseClass = baseClass;
+			newEnemy->pos = pos;
+			newEnemy->dir = FindDir();
+			newEnemy->Start();
+			return newEnemy;
+		}
+	};
+
+	EnemyData laserTankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::LASER_TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::LASER_TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	class LaserTank : public BaseTank
+	{
+	public:
+		float maxDist;
+		RGBA color3;
+
+		LaserTank(EntityData* data, float maxDist, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
+			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(), RGBA color3 = RGBA(),
+			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
+			BaseTank(data, turnSpeed, allegiance, timePer, moveSpeed, maxSpeed, jumpTime, points, firstWave, damage, radius, color, color2, mass, bounciness, maxHealth, health, name),
+			maxDist(maxDist), color3(color3)
+		{ }
+
+		unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) override
+		{
+			unique_ptr<LaserTank> newEnemy = make_unique<LaserTank>(*this);
 			newEnemy->baseClass = baseClass;
 			newEnemy->pos = pos;
 			newEnemy->dir = FindDir();
@@ -911,6 +958,30 @@ namespace Enemies
 			spider->UpdateLegs();
 			spider->VUpdate(VUPDATE::FRICTION);
 		}
+
+		void CenticrawlerVU(Entity* entity)
+		{
+			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
+
+			if (centicrawler->front == nullptr)
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					Centicrawler* currentFarthest = centicrawler->back;
+					while (currentFarthest)
+					{
+						Entity* front = currentFarthest->front;
+						float dist = glm::distance(front->pos, currentFarthest->pos);
+						Vec3 multiplier = (front->pos - currentFarthest->pos) * (1.01f * (dist - currentFarthest->radius - front->radius) / (dist * (currentFarthest->mass + front->mass)));
+						currentFarthest->SetPos(currentFarthest->pos + multiplier * front->mass);
+						front->SetPos(front->pos - multiplier * currentFarthest->mass);
+
+						currentFarthest = currentFarthest->back;
+					}
+				}
+			}
+			centicrawler->VUpdate(VUPDATE::SPIDER);
+		}
 	}
 
 	namespace DUpdates
@@ -1050,6 +1121,30 @@ namespace Enemies
 			game->DrawCircle(tank->pos - rightDir + forwardDir * 0.33333f, tank->projectile->color, treadRadius);
 
 			game->DrawCylinder(tank->pos, tank->pos + upDir * 1.5f, tank->projectile->color, treadRadius);
+
+			tank->DUpdate(DUPDATE::DTOCOL);
+		}
+
+		void LaserTankDU(Entity* entity)
+		{
+			LaserTank* tank = static_cast<LaserTank*>(entity);
+			Vec3 rightDir = RotateRight(tank->dir) * tank->radius, upDir = tank->dir * tank->radius, forwardDir = tank->dir * tank->radius;
+			float treadRadius = tank->radius * 0.33333f;
+			float drawHeight = tank->radius * sqrtf(0.75f), drawDist = tank->radius * 0.5f;
+			Vec3 dir = glm::normalize(glm::cross(up, tank->dir));
+			//Vec3 a = drawHeight * dir + drawDist * tank->dir;
+			game->DrawCircle(tank->pos + rightDir + forwardDir * -0.33333f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * -0.16666f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos + rightDir, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * 0.16666f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos + rightDir + forwardDir * 0.33333f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * -0.33333f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * -0.16666f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos - rightDir, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * 0.16666f, tank->color3, treadRadius);
+			game->DrawCircle(tank->pos - rightDir + forwardDir * 0.33333f, tank->color3, treadRadius);
+
+			game->DrawCylinder(tank->pos, tank->pos + tank->dir * tank->maxDist, tank->color3, treadRadius);
 
 			tank->DUpdate(DUPDATE::DTOCOL);
 		}
@@ -1217,12 +1312,13 @@ namespace Enemies
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(enemy);
 			if (centicrawler->front == nullptr)
-				centicrawler->MUpdate(MUPDATE::DEFAULT);
-			else
 			{
-				float dist = glm::distance(centicrawler->front->pos, centicrawler->pos);
-				centicrawler->SetPos(centicrawler->pos + (centicrawler->front->pos - centicrawler->pos) / dist * (dist - centicrawler->radius - centicrawler->front->radius));
+				centicrawler->dir = centicrawler->FindDir();
+				centicrawler->ShouldTryJump();
 			}
+			else
+				centicrawler->dir = Normalized(centicrawler->front->pos - centicrawler->pos);
+			centicrawler->MoveDir();
 			return false;
 		}
 
@@ -1241,9 +1337,9 @@ namespace Enemies
 			return true;
 		}
 
-		bool TankMU(Enemy* enemy)
+		bool BaseTankMU(Enemy* enemy)
 		{
-			Tank* tank = static_cast<Tank*>(enemy);
+			BaseTank* tank = static_cast<BaseTank*>(enemy);
 
 			Vec3 dDir = tank->FindDir();
 			tank->dir = Vec3(RotateTowardsNorm2(tank->dir, dDir, tank->turnSpeed * game->dTime), 0);
@@ -1283,68 +1379,16 @@ namespace Enemies
 			game->entities->push_back(tank->projectile->Clone(tank->pos + tank->dir * tank->radius * 1.5f, tank->dir * tank->projectile->range, tank));
 			return true;
 		}
+
+		bool LaserTankAU(Enemy* enemy)
+		{
+			LaserTank* tank = static_cast<LaserTank*>(enemy);
+			RaycastHit hit = game->entities->RaycastEnt(tank->pos, tank->dir, tank->maxDist, MaskF::IsNonAlly, tank);
+			if (hit.dist < tank->maxDist)
+				(*game->entities)[hit.index]->ApplyHit(tank->damage, tank);
+			return true;
+		}
 	}
-#pragma endregion
-
-
-#pragma region Enemies
-#pragma region Wild enemies
-	// Prerequisites
-	LegParticle spiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
-	LegParticle miniSpiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.125f);
-	Centicrawler centicrawler = Centicrawler(&centicrawlerData, 0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
-	Centicrawler miniCenticrawler = Centicrawler(&centicrawlerData, 0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 0, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
-	// Earlies - 1
-	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
-	// Mids - 4
-	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 2, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
-	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
-	// Mid-lates - 6
-	Parent spiderParent = Parent(&parentData, &centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
-	SnakeConnected snake = SnakeConnected(&snakeConnectedData, 15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 0, 300, 300, "Snake");
-	// Lates - 8
-	SnakeConnected bigSnake = SnakeConnected(&snakeConnectedData, 30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 0, 900, 900, "Big Snake");
-	PouncerSnake pouncerSnake = PouncerSnake(&pouncerSnakeData, 3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 60, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 0, 30, 30, "Pouncer Snake");
-	// Very lates - 12
-	Cat cat = Cat(&catData, 1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 0, 18, 18, "Cat");
-	BoomCat boomCat = BoomCat(&boomCatData, 4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 0, 18, 18, "Boom Cat");
-	Spoobderb spoobderb = Spoobderb(&spiderData, &centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 0, 1000, 1000, "Spoobderb - The 30 footed beast");
-#pragma endregion
-#pragma region Faction 1
-	//Predefinitions - Special
-	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
-	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
-	ShotItem gigaTankProjectile = ShotItem(&shotItemData, gigaTankItem.Clone(), "Giga Tank Projectile");
-	Enemy child = Enemy(&enemyData, ENEMY2_A, 1.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 5, 5, "Child");
-	
-	// Earlies - 1
-	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
-	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
-	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 1, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
-
-	// Mids - 4
-	Deceiver deceiver = Deceiver(&deceiverData, ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
-	Exploder exploder = Exploder(&exploderData, 2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 0, 30, 30, "Exploder");
-	Vacuumer vacuumer = Vacuumer(&vacuumerData, 4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 30, 30, "Vacuumer");
-	Vacuumer pusher = Vacuumer(&vacuumerData, 6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 0, 30, 30, "Pusher");
-	
-	// Mid-lates - 6
-	Parent parent = Parent(&parentData, &child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 0, 100, 100, "Parent");
-	Enemy megaTanker = Enemy(&enemyData, ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 0, 480, 480, "Mega Tanker");
-	
-	// Lates - 8
-	ColorCycler hyperSpeedster = ColorCycler(&colorCyclerData, { RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 0, 240, 240, "Hyper Speedster");
-	Exploder gigaExploder = Exploder(&exploderData, 7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 0, 30, 30, "Giga Exploder");
-	
-	// Very lates - 12
-	Tank gigaTank = Tank(&tankData, &gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
-#pragma endregion
-#pragma region Bosses
-	// Bosses - Special
-	Projectile* catProjectile = new Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile* catProjectile2 = new Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Cataclysm* cataclysm = new Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
-#pragma endregion
 #pragma endregion
 
 
@@ -1369,11 +1413,11 @@ namespace Enemies
 		{
 			float time = tTime2 / 60;
 			if (game->settings.difficulty == DIFFICULTY::EASY)
-				return pow(1.25f, time) + time * 2 - 1;
+				return pow(1.2f, time) + time * 2 - 1;
 			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
-				return pow(1.37f, time) + time * 3 - 1;
+				return pow(1.25f, time) + time * 3 + 2;
 			else // difficulty == hard
-				return pow(1.45f, time) + time * 5 + 3;
+				return pow(1.3f, time) + time * 7 + 6;
 		}
 
 		Instance RandomClone();
@@ -1457,7 +1501,8 @@ namespace Enemies
 				if ((*this)[i]->firstWave <= waveCount)
 					currentlySpawnableEnemies[j++] = i;
 			nextSpawnIndex = currentlySpawnableEnemies[rand() % currentlySpawnableEnemies.size()];
-			nextSpawnCount = RandRangeInt(groupSpawnMin, groupSpawnMax);
+			int groupSpawnMax2 = min((float)groupSpawnMax, max(1.f, Types::GetPoints() / (*this)[nextSpawnIndex]->Cost()));
+			nextSpawnCount = RandRangeInt(groupSpawnMin, groupSpawnMax2);
 		}
 
 		void Update()
@@ -1479,6 +1524,31 @@ namespace Enemies
 			result[i] = (*this)[i][rand() % (*this)[i].size()];
 		return result;
 	}
+#pragma endregion
+
+
+#pragma region Enemies
+#pragma region Wild enemies
+	// Prerequisites
+	LegParticle spiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.25f);
+	LegParticle miniSpiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.125f);
+	Centicrawler centicrawler = Centicrawler(&centicrawlerData, 0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
+	Centicrawler miniCenticrawler = Centicrawler(&centicrawlerData, 0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 0, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
+	// Earlies - 1
+	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 2, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
+	// Mids - 4
+	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 2, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
+	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 4, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
+	// Mid-lates - 6
+	Parent spiderParent = Parent(&parentData, &centicrawler, ENEMY1_A, 1, 1, 1, 0.5f, 5, 6, 10, 2.5f, RGBA(140, 35, 70), RGBA(), 5, 0, 100, 100, "Spider Parent");
+	SnakeConnected snake = SnakeConnected(&snakeConnectedData, 15, 0.1f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 8, 6, 10, 0.5f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 2, 0, 300, 300, "Snake");
+	// Lates - 8
+	SnakeConnected bigSnake = SnakeConnected(&snakeConnectedData, 30, 0.3f, 1, ENEMY1_A, 0.5f, 4, 4, 0.5f, 30, 8, 10, 1.f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 5, 0, 900, 900, "Big Snake");
+	PouncerSnake pouncerSnake = PouncerSnake(&pouncerSnakeData, 3.0f, 24.0f, 0.5f, 30, 0.1f, 1, ENEMY1_A, 0.5f, 8.0f, 20, 8, 10, 0.5f, RGBA(0, 0, 255), RGBA(), RGBA(0, 255, 255), RGBA(0, 0, 127), 2, 0, 30, 30, "Pouncer Snake");
+	// Very lates - 12
+	Cat cat = Cat(&catData, 1.5f, 2.0f, 16.0f, 0.5f, ENEMY1_A, 0.25f, 3.0f, 45, 12, 10, 0.5f, RGBA(209, 96, 36), RGBA(), RGBA(186, 118, 82), 1, 0, 18, 18, "Cat");
+	BoomCat boomCat = BoomCat(&boomCatData, 4.5f, 1.5f, 2.0f, 12.0f, 0.5f, ENEMY1_A, 1.0f, 4.0f, 45, 12, 10, 1.5f, RGBA(255, 120, 97), RGBA(), RGBA(158, 104, 95), 9, 0, 18, 18, "Boom Cat");
+	Spoobderb spoobderb = Spoobderb(&spiderData, &centicrawler, spiderLeg, 30, 25.0f, 3.0f, 2.5f, ENEMY1_A, 0.5f, 2, 2, 0.5f, 50, 12, 10, 3.5f, RGBA(77, 14, 35), RGBA(), 50, 0, 1000, 1000, "Spoobderb - The 30 footed beast");
 
 	Types wildSpawns
 	{
@@ -1488,19 +1558,56 @@ namespace Enemies
 		{&bigSnake, &pouncerSnake},
 		{&cat, &boomCat, &spoobderb}
 	};
+#pragma endregion
+#pragma region Faction 1
+	//Predefinitions - Special
+	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
+	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
+	ShotItem gigaTankProjectile = ShotItem(&shotItemData, gigaTankItem.Clone(), "Giga Tank Projectile");
+	Enemy child = Enemy(&enemyData, ENEMY2_A, 2.0f, 12, 12, 0.5f, 0, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 5, 5, "Child");
+	
+	// Earlies - 1
+	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
+	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
+	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 0, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
+
+	// Mids - 4
+	Deceiver deceiver = Deceiver(&deceiverData, ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
+	Exploder exploder = Exploder(&exploderData, 2.5f, ENEMY2_A, 1.0f, 3, 3, 0.5f, 4, 4, 10, 0.5f, RGBA(153, 255, 0), RGBA(), 1, 0, 30, 30, "Exploder");
+	Vacuumer vacuumer = Vacuumer(&vacuumerData, 4, 16, 2, 8, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 30, 30, "Vacuumer");
+	Vacuumer pusher = Vacuumer(&vacuumerData, 6, -32, 2, 2, ENEMY2_A, 0.125f, 8, 8, 0.5f, 3, 4, 0, 0.5f, RGBA(255, 153, 255), RGBA(), 1, 0, 30, 30, "Pusher");
+	
+	// Mid-lates - 6
+	Parent parent = Parent(&parentData, &child, ENEMY2_A, 1, 1, 1, 0.5f, 4, 6, 10, 2.5f, RGBA(127, 0, 127), RGBA(), 1, 0, 100, 100, "Parent");
+	Enemy megaTanker = Enemy(&enemyData, ENEMY2_A, 1, 1, 1, 0.5f, 20, 6, 10, 2.5f, RGBA(174, 0, 255), RGBA(), 10, 0, 480, 480, "Mega Tanker");
+	LaserTank laserTank = LaserTank(&laserTankData, 10, 0.78f, ENEMY2_A, 0.1f, 4, 4, 0.5f, 3, 10, 10, 1.5f, RGBA(168, 145, 50), RGBA(), RGBA(156, 79, 31, 63), 1, 0, 120, 120, "Laser Tank");
+
+	// Lates - 8
+	ColorCycler hyperSpeedster = ColorCycler(&colorCyclerData, { RGBA(255), RGBA(255, 255), RGBA(0, 0, 255) }, 2.0f, ENEMY2_A, 0.5f, 3, 6, 0.5f, 8, 8, 10, 0.5f, RGBA(), 1, 0, 240, 240, "Hyper Speedster");
+	Exploder gigaExploder = Exploder(&exploderData, 7.5f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 8, 8, 10, 1.5f, RGBA(153, 255), RGBA(), 1, 0, 30, 30, "Giga Exploder");
+	
+	// Very lates - 12
+	Tank gigaTank = Tank(&tankData, &gigaTankProjectile, 0.78f, ENEMY2_A, 2, 2, 16, 0.5f, 120, 1, 0, 3, RGBA(201, 193, 119), RGBA(), 15, 0, 600, 600, "Giga Tank");
 
 	Types faction1Spawns
 	{
 		{&walker, &tanker, &tinyTank},
 		{&deceiver, &exploder, &vacuumer, &pusher},
-		{&parent, &megaTanker},
+		{&parent, &megaTanker, &laserTank},
 		{&hyperSpeedster, &gigaExploder},
 		{&gigaTank}
 	};
+#pragma endregion
+#pragma region Bosses
+	// Bosses - Special
+	Projectile* catProjectile = new Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile* catProjectile2 = new Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Cataclysm* cataclysm = new Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, catProjectile, catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
 
 	Types spawnableBosses
 	{
 		{cataclysm}
 	};
+#pragma endregion
 #pragma endregion
 }

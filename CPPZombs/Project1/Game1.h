@@ -2,10 +2,11 @@
 
 class Entity; class Entities; class Player;
 class Base; class Planet;
+enum class SEEDINDICES;
 
 enum UIMODE
 {
-	MAINMENU, SETTINGS, CHARSELECT, INGAME, PAUSED
+	MAINMENU, SETTINGS, CHARSELECT, SEED_SELECT, INGAME, PAUSED
 };
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
@@ -37,10 +38,11 @@ public:
 
 	bool showUI = true;
 	UIMODE uiMode = UIMODE::MAINMENU;
-	float lastWave = 0.0f, secondsBetweenWaves = 60.0f, brightness = 0.0f;
+	float brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
 	float screenShake = 0.0f;
+	float scroll = 0;
 	Vec3 lastPlayerPos = vZero;
 	FastNoiseLite screenShkX, screenShkY, screenShkZ;
 

@@ -102,9 +102,9 @@ namespace OnDeaths {
 
 namespace Shootables
 {
-	DToCol brick = DToCol(&dToColData, vZero, 0.75, RGBA(), RGBA(), 15, 0.2f, 600, 600, "Brick");
+	DToCol brick = DToCol(&dToColData, vZero, 0.75, RGBA(168, 101, 81), RGBA(), 15, 0.2f, 600, 600, "Brick");
 
-	LightBlock cheese = LightBlock(&lightBlockData, JRGB(191, 191, 61), true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(0, 0, 0, 127), 1, 0, 1, 1, "Cheese");
+	LightBlock cheese = LightBlock(&lightBlockData, JRGB(191, 191, 61), true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(), 1, 0, 1, 1, "Cheese");
 	LightBlock shade = LightBlock(&lightBlockData, JRGB(255, 255, 255), false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
 }
 
