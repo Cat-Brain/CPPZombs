@@ -1494,14 +1494,14 @@ namespace Enemies
 		{
 			int currentlySpawnableEnemyCount = 1;
 			for (int i = 1; i < (*this).size(); i++)
-				currentlySpawnableEnemyCount += int((*this)[i]->firstWave <= waveCount);
+				currentlySpawnableEnemyCount += int((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() < usedPoints);
 			vector<uint> currentlySpawnableEnemies(currentlySpawnableEnemyCount);
 			currentlySpawnableEnemies[0] = 0;
 			for (int i = 1, j = 1; j < currentlySpawnableEnemyCount; i++)
-				if ((*this)[i]->firstWave <= waveCount)
+				if ((*this)[i]->firstWave <= waveCount && (*this)[i]->Cost() < usedPoints)
 					currentlySpawnableEnemies[j++] = i;
 			nextSpawnIndex = currentlySpawnableEnemies[rand() % currentlySpawnableEnemies.size()];
-			int groupSpawnMax2 = min((float)groupSpawnMax, max(1.f, Types::GetPoints() / (*this)[nextSpawnIndex]->Cost()));
+			int groupSpawnMax2 = min(int(groupSpawnMax), max(1, usedPoints / (*this)[nextSpawnIndex]->Cost()));
 			nextSpawnCount = RandRangeInt(groupSpawnMin, groupSpawnMax2);
 		}
 

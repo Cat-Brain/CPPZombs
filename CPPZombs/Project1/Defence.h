@@ -147,7 +147,7 @@ namespace DUpdates
 		Shrub* shrub = static_cast<Shrub*>(entity);
 		if (shrub->radius != shrub->maxRadius)
 		{
-			float lerpValue = min(1.f, (shrub->currentLifespan + shrub->timeSince / shrub->timePer) / shrub->cyclesToGrow);
+			float lerpValue = min(1.f, roundf(((shrub->currentLifespan + shrub->timeSince / shrub->timePer) / shrub->cyclesToGrow) * 10) * 0.1f);
 			shrub->SetRadius(shrub->babyRadius + lerpValue * (shrub->maxRadius - shrub->babyRadius));
 			shrub->mass = shrub->babyMass + lerpValue * (shrub->maxMass - shrub->babyMass);
 		}

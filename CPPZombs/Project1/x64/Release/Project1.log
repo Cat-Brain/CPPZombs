@@ -41,11 +41,6 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(365,20): wa
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(619,144): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(676,33): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(918,281): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1504,23): warning C4244: 'initializing': conversion from 'const _Ty' to 'int', possible loss of data
-          with
-          [
-              _Ty=float
-          ]
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1512,23): warning C4018: '<': signed/unsigned mismatch
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(48,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(49,61): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
@@ -66,8 +61,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(744,61): warni
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(986,21): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  2 of 6492 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  4 of 6492 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    61 functions had inline decision re-evaluated but remain unchanged
+    33 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
