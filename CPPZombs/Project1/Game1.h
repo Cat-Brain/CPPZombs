@@ -6,7 +6,7 @@ enum class SEEDINDICES;
 
 enum UIMODE
 {
-	MAINMENU, SETTINGS, CHARSELECT, SEED_SELECT, INGAME, PAUSED
+	MAINMENU, CHARSELECT, SEED_SELECT, INGAME, PAUSED
 };
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
@@ -14,15 +14,32 @@ string difficultyStrs[] = { "Easy", "Medium", "Hard" };
 
 enum class LOGMODE
 {
-	MAIN, CONTROLS, PLANTS, TOWERS
+	// Log book
+	MAIN, CONTROLS, PLANTS, TOWERS,
+	// Settings
+	SETTINGS
 };
 class LogBook
 {
-public:
-	bool isOpen = false;
+protected:
+	bool isLogBook = false;
 	int individualIndex = -1, wrapIndex = 0;
 	float scroll = 0;
 	LOGMODE logMode = LOGMODE::MAIN;
+public:
+	bool isOpen = false;
+
+	void OpenLogBook()
+	{
+		isOpen = true;
+		logMode = LOGMODE::MAIN;
+	}
+
+	void OpenSettings()
+	{
+		isOpen = true;
+		logMode = LOGMODE::SETTINGS;
+	}
 
 	void DUpdate();
 };

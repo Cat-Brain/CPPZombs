@@ -21,7 +21,7 @@ int main()
 	{
 		using namespace VUpdates;
 		using namespace Enemies::VUpdates;
-		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU, CenticrawlerVU };
+		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU, CenticrawlerVU, ThiefVU };
 	}
 	{
 		using namespace DUpdates;
@@ -44,11 +44,11 @@ int main()
 
 	{
 		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, BaseTankMU };
+		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, BaseTankMU, ThiefMU };
 	}
 	{
 		using namespace Enemies::AUpdates;
-		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, LaserTankAU };
+		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, GenericTankAU, LaserTankAU, ThiefAU };
 	}
 	{
 		using namespace PMovements;
@@ -56,7 +56,11 @@ int main()
 	}
 	{
 		using namespace Primaries;
-		primaries = { Slingshot, EngShoot, CircleGun };
+		primaries = { Slingshot, EngShoot };
+	}
+	{
+		using namespace Offhands;
+		offhands = { Slingshot, EngShoot };
 	}
 	{
 		using namespace Secondaries;
@@ -72,7 +76,7 @@ int main()
 		using namespace Enemies::OnDeaths;
 		using namespace Livestock::OnDeaths;
 		onDeaths = { EntityOD, FadeOutGlowOD, ShotItemOD, LightBlockOD, LightTowerOD, EnemyOD, ParentOD, ExploderOD, SnakeOD, PouncerSnakeOD,
-			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, KiwiOD, PlayerOD, BaseOD };
+			SnakeConnectedOD, VacuumerOD, SpiderOD, CenticrawlerOD, ThiefOD, KiwiOD, PlayerOD, BaseOD };
 
 		using namespace ItemUs;
 		itemUs = { ItemU, WaveModifierU };

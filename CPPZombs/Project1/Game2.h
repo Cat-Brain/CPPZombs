@@ -29,8 +29,9 @@ void LogBook::DUpdate()
 		vector<string> renderStrings = {
 			"WASD for movement",
 			"Left click shoots and plants",
-			"Right click and shift attack",
-			"Characters have different attacks",
+			"Right click shoots from offhand",
+			"R and shift do skills",
+			"Skills are character specific"
 			"",
 			"Plants grow best on soil",
 			"Soil is by default brown",
@@ -108,15 +109,78 @@ void LogBook::DUpdate()
 		else
 		{
 			Tower* tower = Defences::Towers::towers[individualIndex];
-			int i = 0;
+			vector<string> renderStrings;
+			vector<RGBA> renderColors;
 			for (ItemInstance itemInst : tower->recipe)
-				font.Render(itemInst->name + " - " + to_string(itemInst.count),
-					iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * (0.5f - i++ * 0.25f))), ScrHeight() / 5.f, itemInst->color);
+			{
+				renderStrings.push_back(to_string(itemInst.count) + " " + itemInst->name);
+				renderColors.push_back(itemInst->color);
+			}
 
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+			split(*tower->description, '\n', renderStrings);
+
+			float scale = ScrHeight() * 0.125f;
+			int rows = renderStrings.size() + 1;
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, rows - 8));
+			float offset = scroll * scale;
+			int i = 0;
+			for (string str : renderStrings)
+				font.Render(str, iVec2(-ScrWidth(), static_cast<int>(offset * 2 + ScrHeight() * (0.5f - i++ * 0.25f))),
+					ScrHeight() * 0.2f, i < renderColors.size() ? renderColors[i] : logBookColors[(i - renderColors.size()) % logBookColors.size()]);
+
+			if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
 				individualIndex = -1;
 		}
 		break;
+	}
+	// Settings:
+	case LOGMODE::SETTINGS:
+	{
+		float scale = ScrHeight() * 0.1f;
+		int i = 1;
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, "Return"))
+			isOpen = false;
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, game->settings.vSync ? "Yes vSync" : "No vSync", game->settings.vSync ? RGBA(0, 255) : RGBA(255),
+			game->settings.vSync ? RGBA(0, 127) : RGBA(127)))
+		{
+			game->settings.vSync ^= true;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
+			game->settings.colorBand ? "Yes color band" : "No color band", game->settings.colorBand ? RGBA(0, 255) : RGBA(255), game->settings.colorBand ? RGBA(0, 127) : RGBA(127)))
+		{
+			game->settings.colorBand ^= true;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
+			game->settings.displayFPS ? "Yes display FPS" : "No display FPS", game->settings.displayFPS ? RGBA(0, 255) : RGBA(255), game->settings.displayFPS ? RGBA(0, 127) : RGBA(127)))
+		{
+			game->settings.displayFPS ^= true;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, game->IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+			game->Fullscreen();
+		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(game->settings.chunkRenderDist)) * scale;
+		font.Render("Chunk Render Dist = " + to_string(game->settings.chunkRenderDist), Vec2(-ScrWidth(), ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
+		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i)), scale,
+			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			game->settings.chunkRenderDist--;
+			game->settings.chunkRenderDist = max(1u, game->settings.chunkRenderDist);
+			game->settings.Write();
+		}
+		horOffset += font.TextWidthTrue("\\/ ") * scale;
+		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i++)), scale,
+			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			game->settings.chunkRenderDist++;
+			game->settings.Write();
+		}
 	}
 	}
 	game->inputs.mouseScrollF = 0;
@@ -582,6 +646,9 @@ void Game::Start()
 	base = static_cast<Base*>(baseUnique.get());
 	player->base = base;
 
+	planet->faction1Spawns->defaultTarget = base;
+	planet->wildSpawns->defaultTarget = player;
+
 	for (int i = 0; i < 100; i++)
 	{
 		if (!entities->OverlapsTile(base->pos, base->radius))
@@ -637,78 +704,30 @@ void Game::Update()
 			scroll = 0;
 			uiMode = UIMODE::CHARSELECT;
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
 			RGBA(0, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::EASY;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
 			RGBA(255, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::MEDIUM;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
 			RGBA(255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 		{
 			settings.difficulty = DIFFICULTY::HARD;
 			settings.Write();
 		}
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, "Settings"))
-			uiMode = UIMODE::SETTINGS;
-		else if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "LogBook"))
-			logBook->isOpen = true;
-	}
-	else if (uiMode == UIMODE::SETTINGS)
-	{
-		float scale = ScrHeight() * 0.1f;
-		int i = 1;
-		currentFramebuffer = 0;
-		UseFramebuffer();
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, "Return"))
-			uiMode = UIMODE::MAINMENU;
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, settings.vSync ? "Yes vSync" : "No vSync", settings.vSync ? RGBA(0, 255) : RGBA(255),
-			settings.vSync ? RGBA(0, 127) : RGBA(127)))
-		{
-			settings.vSync ^= true;
-			settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			settings.colorBand ? "Yes color band" : "No color band", settings.colorBand ? RGBA(0, 255) : RGBA(255), settings.colorBand ? RGBA(0, 127) : RGBA(127)))
-		{
-			settings.colorBand ^= true;
-			settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			settings.displayFPS ? "Yes display FPS" : "No display FPS", settings.displayFPS ? RGBA(0, 255) : RGBA(255), settings.displayFPS ? RGBA(0, 127) : RGBA(127)))
-		{
-			settings.displayFPS ^= true;
-			settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
-			Fullscreen();
-		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(settings.chunkRenderDist)) * scale;
-		font.Render("Chunk Render Dist = " + to_string(settings.chunkRenderDist), Vec2(-ScrWidth(), ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
-		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i)), scale,
-			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
-		{
-			settings.chunkRenderDist--;
-			settings.chunkRenderDist = max(1u, settings.chunkRenderDist);
-			settings.Write();
-		}
-		horOffset += font.TextWidthTrue("\\/ ") * scale;
-		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i++)), scale,
-			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
-		{
-			settings.chunkRenderDist++;
-			settings.Write();
-		}
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, "Settings"))
+			logBook->OpenSettings();
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "LogBook"))
+			logBook->OpenLogBook();
 	}
 	else if (uiMode == UIMODE::CHARSELECT)
 	{
@@ -796,20 +815,22 @@ void Game::Update()
 					logBook->DUpdate();
 				else // Don't render this stuff whenever the logbook's open!
 				{
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Return"))
+					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Return"))
 					{
 						cursorUnlockCount--;
 						uiMode = UIMODE::INGAME;
 					}
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Restart"))
+					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Restart"))
 					{
 						Start();
 						uiMode = UIMODE::INGAME;
 					}
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, "Main Menu"))
+					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, "Main Menu"))
 						uiMode = UIMODE::MAINMENU;
-					if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, "Log Book"))
-						logBook->isOpen = true;
+					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Settings"))
+						logBook->OpenSettings();
+					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Log Book"))
+						logBook->OpenLogBook();
 				}
 			}
 		}
@@ -1036,11 +1057,11 @@ void Game::TUpdate()
 	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
 	glUniform2f(glGetUniformLocation(shadowShader, "screenDim"), float(trueScreenWidth), float(trueScreenHeight));
 
-
-	glClearColor(0, 0, 0, 1);
+	JRGB skyCol = planet->SkyCol();
+	glClearColor(skyCol.r / 255.f, skyCol.g / 255.f, skyCol.b / 255.f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	static const float normalUp[] = { 0, 0, 1, 0 };
-	glClearBufferfv(GL_COLOR, 1, normalUp);
+	static const float normalDef[] = { 0, 0, 0, 0 };
+	glClearBufferfv(GL_COLOR, 1, normalDef);
 	static const float noPosition[] = { 0, 0, 0, 0 };
 	glClearBufferfv(GL_COLOR, 2, noPosition);
 	entities->DUpdate(); // Draws all entities.

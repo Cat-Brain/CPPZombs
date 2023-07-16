@@ -33,6 +33,12 @@ enum class PRIMARY
 };
 vector< std::function<bool(Player* player)>> primaries;
 
+enum class OFFHAND
+{
+	SLINGSHOT, ENG_SHOOT, CIRCLEGUN, CHOMP
+};
+vector< std::function<bool(Player* player)>> offhands;
+
 enum class SECONDARY
 {
 	GRENADE_THROW, TORNADO_SPIN, ENGMODEUSE, VINE_SHOT
@@ -61,7 +67,7 @@ public:
 	vector<std::pair<int, ITEMTYPE>> oldPlacements;
 
 	PlayerInventory(Entity* player = nullptr, uint width = 10, uint height = 4, Items startItems = Items()) :
-		player(player), width(width), height(height), Items(width * height, ItemInstance(ITEMTYPE::DITEM, 0))
+		player(player), width(width), height(height), Items(width * height + 1, ItemInstance(ITEMTYPE::DITEM, 0))
 	{
 		for (int i = 0; i < startItems.size() && i < size(); i++)
 			(*this)[i] = startItems[i];
@@ -73,6 +79,15 @@ public:
 			return bItem.Clone(0);
 		if ((*this)[width * currentRow + currentIndex].count > 0)
 			return (*this)[width * currentRow + currentIndex].Clone(1);
+		return ItemInstance(ITEMTYPE::DITEM, 0);
+	}
+
+	virtual ItemInstance GetCurrentOffhand()
+	{
+		if (isBuilding)
+			return bItem.Clone(0);
+		if ((*this)[size() - 1].count > 0)
+			return (*this)[size() - 1].Clone(1);
 		return ItemInstance(ITEMTYPE::DITEM, 0);
 	}
 
@@ -103,6 +118,20 @@ public:
 			if (TRYTAKE::Failure(clone.TryTake(item)))
 				return false;
 		return true;
+	}
+
+	int CanMakeCount(Recipe cost)
+	{
+		int result = 0;
+		PlayerInventory clone = *this;
+		for (int i = 0; i < 100; i++)
+		{
+			for (ItemInstance item : cost)
+				if (TRYTAKE::Failure(clone.TryTake(item)))
+					return result;
+			result++;
+		}
+		return 0;
 	}
 
 	bool TryMake(Recipe cost) override
@@ -142,6 +171,7 @@ public:
 					oldPlacements.erase(oldPlacements.begin() + i);
 					return;
 				}
+				oldPlacements.erase(oldPlacements.begin() + i);
 				break;
 			}
 		for (int i = 0, j = width * currentRow; i < size(); i++, j = (j + 1) % size())
@@ -173,10 +203,10 @@ public:
 
 			// Show which is currently selected
 			game->DrawFBL(offset + iVec2(0, static_cast<int>(scale * currentIndex * 2)), RGBA(),
-				Vec2(font.TextWidthTrue(buildableTowers[currentIndex]->name) * scale, scale));
+				Vec2(font.TextWidthTrue(buildableTowers[currentIndex]->name + " " + to_string(CanMakeCount(buildableTowers[currentIndex]->recipe))) * scale, scale));
 			for (uint i = 0; i < buildableTowers.size(); i++)
 			{
-				font.Render(buildableTowers[i]->name,
+				font.Render(buildableTowers[i]->name + " " + to_string(CanMakeCount(buildableTowers[i]->recipe)),
 					Vec2(-ScrWidth(), -ScrHeight() + scale * 2 * i), scale * 2, buildableTowers[i]->color);
 			}
 #pragma endregion
@@ -187,6 +217,16 @@ public:
 			game->DrawFBL(offset, RGBA(127, 127, 127, 127), Vec2(scale * height, scale * width));
 			game->DrawFBL(Vec2(offset.x + currentRow * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
 			game->DrawFBL(Vec2(0, currentIndex * scale * 2.f) - Vec2(ScrDim()), RGBA(0, 0, 0, 127), Vec2(scale));
+
+			game->DrawFBL(Vec2(offset.x + height * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale));
+			if ((*this)[size() - 1].count != 0)
+				game->DrawTextured(spriteSheet, (*this)[size() - 1]->intType, tOffset, Vec2(tScale * height, 0),
+					(*this)[size() - 1]->color, Vec2(tScale));
+
+			if (currentSelected != -1)
+				game->DrawTextured(spriteSheet, (*this)[currentSelected]->intType, tOffset, 2.f * game->inputs.screenMousePosition / float(ScrHeight()),
+					(*this)[currentSelected]->color, Vec2(tScale));
+
 			if (isHovering)
 			{
 				iVec2 rPos = game->inputs.screenMousePosition / scale;
@@ -219,22 +259,32 @@ public:
 			font.Render(" " + (*this)[i + indexOffset]->name + "  " + to_string((*this)[i + indexOffset].count) + "  " + (*this)[i + indexOffset]->typeName,
 				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * i), scale * 2, (*this)[i + indexOffset]->color);
 		}
+
+		if ((*this)[size() - 1].count != 0)
+		{
+			game->DrawTextured(spriteSheet, (*this)[size() - 1]->intType, tOffset, Vec2(0, tScale * width),
+				(*this)[size() - 1]->color, Vec2(tScale));
+			font.Render(" " + (*this)[size() - 1]->name + "  " + to_string((*this)[size() - 1].count) + "  " + (*this)[size() - 1]->typeName,
+				Vec2(-ScrWidth() + scale * 2, -ScrHeight() + scale * 2 * width + 1), scale * 2, (*this)[size() - 1]->color);
+		}
 	}
 
-	bool CanUse(float lastUse, float shootSpeed)
+	bool CanUse(Vec3 pos, Vec3 dir, float lastUse, float shootSpeed)
 	{
 		if (isBuilding)
 		{
+			if (tTime - lastUse < bItem.useTime * shootSpeed)
+				return false;
 			for (Tower* tower : Defences::Towers::towers)
 				if (CanMake(tower->recipe))
-					return tTime - lastUse >= bItem.useTime * shootSpeed;
+					return true;
 			return false;
 		}
 		int index = currentIndex + width * currentRow;
 		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
-	bool Use(Vec3 dir) // True means stack is empty* and false means the opposite.
+	bool Use(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
 	{ // *if isBuilding is true then it will return true.
 		if (isBuilding)
 		{
@@ -243,7 +293,7 @@ public:
 				if (CanMake(tower->recipe))
 					buildableTowers.push_back(tower);
 			if (buildableTowers.size() == 0) return true;
-			if (buildableTowers[currentIndex]->TryCreate(this, player->pos, dir, player))
+			if (buildableTowers[currentIndex]->TryCreate(this, pos, dir, player))
 			{
 				// If we created a tower then we should make sure that currentIndex is still a valid value.
 				buildableTowers.clear();
@@ -260,7 +310,73 @@ public:
 		}
 		int index = currentIndex + currentRow * width;
 		ItemInstance& currentItem = (*this)[index];
+		currentItem->Use(currentItem, pos, dir * currentItem->range, player, player->name, nullptr, 0);
+		return RemoveIfEmpty(index);
+	}
+
+	/*TryUse TryUse(float lastUse, float shootSpeed, Vec3 dir)
+	{
+		if (isBuilding)
+		{
+			if (tTime - lastUse < bItem.useTime * shootSpeed)
+				return false;
+			vector<Tower*> buildableTowers;
+			for (Tower* tower : Defences::Towers::towers)
+				if (CanMake(tower->recipe))
+					buildableTowers.push_back(tower);
+					return true;
+			return false;
+			for (Tower* tower : Defences::Towers::towers)
+				if (CanMake(tower->recipe))
+			if (buildableTowers.size() == 0) return true;
+			if (buildableTowers[currentIndex]->TryCreate(this, player->pos, dir, player))
+			{
+				// If we created a tower then we should make sure that currentIndex is still a valid value.
+				buildableTowers.clear();
+				for (Tower* tower : Defences::Towers::towers)
+					if (CanMake(tower->recipe))
+						buildableTowers.push_back(tower);
+
+				if (buildableTowers.size() == 0)
+					currentIndex = 0;
+				else
+					currentIndex = currentIndex % buildableTowers.size();
+			}
+			return true;
+		}
+		int index = currentIndex + width * currentRow;
+		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
+		int index = currentIndex + currentRow * width;
+		ItemInstance& currentItem = (*this)[index];
 		currentItem->Use(currentItem, player->pos, dir * currentItem->range, player, player->name, nullptr, 0);
+		return RemoveIfEmpty(index);
+	}*/
+
+	bool CanUseOffhand(Vec3 pos, Vec3 dir, float lastUse, float shootSpeed)
+	{
+		if (isBuilding)
+			return tTime - lastUse >= bItem.useTime * shootSpeed && game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
+		int index = size() - 1;
+		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
+	}
+
+	bool UseOffhand(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
+	{ // *if isBuilding is true then it will return true.
+		if (isBuilding)
+		{
+			RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
+			if (hit.index != -1)
+			{
+				Entity* hitEntity = (*game->entities)[hit.index].get();
+				if (hitEntity != reinterpret_cast<Entity*>(game->base))
+					hitEntity->ApplyHit(100000, player);
+
+			}
+			return true;
+		}
+		int index = size() - 1;
+		ItemInstance& currentItem = (*this)[index];
+		currentItem->Use(currentItem, pos, dir * currentItem->range, player, player->name, nullptr, 0);
 		return RemoveIfEmpty(index);
 	}
 };
@@ -271,6 +387,7 @@ EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::P
 class Player : public LightBlock
 {
 public:
+#pragma region Variables
 	Base* base = nullptr;
 	Entity* heldEntity = nullptr, *currentMenuedEntity = nullptr;
 	PlayerInventory items;
@@ -279,11 +396,13 @@ public:
 	vector<SEEDINDICES> blacklistedSeeds;
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, shootSpeed,
-		lastPrimary = 0, primaryTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
+		lastPrimary = 0, primaryTime, lastOffhand = 0, offhandTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
 	bool vacBoth, vacCollectibles, shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false,
 		shouldRenderInventory = true;
+	float timeSinceHit = 0, timeTillHeal = 0;
 	PMOVEMENT movement;
 	PRIMARY primary;
+	OFFHAND offhand;
 	SECONDARY secondary;
 	UTILITY utility;
 	vector<TimedEvent> events{};
@@ -294,20 +413,21 @@ public:
 	Vec3 moveDir = vZero; // camDir but without the verticality.
 	Vec3 rightDir = vZero; // moveDir but rotated 90 degrees to the right.
 	Vec3 upDir = vZero; // Perpendicular to rightDir and moveDir.
+#pragma endregion
 
 	Player(EntityData* data, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight =  4, float vacDist = 6, float vacSpeed = 16,
-		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
-		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
+		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1,
+		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT, OFFHAND offhand = OFFHAND::SLINGSHOT,
 		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
 		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
-		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A + PLANTS_A), vacDist(vacDist),
+		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A), vacDist(vacDist),
 		moveSpeed(moveSpeed), holdMoveSpeed(holdMoveSpeed), startItems(startItems), blacklistedSeeds(blacklistedSeeds), vacBoth(vacBoth),
 		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
-		primaryTime(primaryTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), secondary(secondary),
-		utility(utility), maxHoldMoveSpeed(maxHoldMoveSpeed), holdMoveWeight(holdMoveWeight)
+		primaryTime(primaryTime), offhandTime(offhandTime), secondaryTime(secondaryTime), utilityTime(utilityTime), movement(movement), primary(primary), offhand(offhand),
+		secondary(secondary), utility(utility), maxHoldMoveSpeed(maxHoldMoveSpeed), holdMoveWeight(holdMoveWeight)
 	{
 		uiActive = true;
 	}
@@ -352,11 +472,15 @@ public:
 			return LightBlock::ApplyHit(damage, damageDealer);
 		if (iTime <= 0)
 		{
-			game->screenShake += damage * 0.05f;
-			if (damage > 0) iTime++;
+			if (damage > 0)
+			{
+				iTime++;
+				timeSinceHit = 0;
+				game->screenShake += damage * 0.05f;
+			}
 			return LightBlock::ApplyHit(damage, damageDealer);
 		}
-		return -1;
+		return HitResult::LIVED;
 	}
 
 	void UnAttach(Entity* entity) override
@@ -380,10 +504,10 @@ public:
 
 enum class ENGMODE
 {
-	ROVER, DRONE, REMOVE_DRONE, TURRET, COUNT
+	ROVER, DRONE, REMOVE_DRONE, COUNT
 };
 
-string engModeStr[] = {"Rover", "Drone", "Remove Drone", "Turret"};
+string engModeStr[] = {"Rover", "Drone", "Remove Drone"};
 
 class Drone;
 EntityData engineerData = EntityData(UPDATE::ENGINEER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
@@ -396,14 +520,14 @@ public:
 
 	Engineer(EntityData* data, float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
 		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
-		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float secondaryTime = 1,
-		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT,
+		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1,
+		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT, OFFHAND offhand = OFFHAND::SLINGSHOT,
 		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
 		float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
 		Player(data, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
-			maxVacSpeed, shootSpeed, primaryTime, secondaryTime, utilityTime, movement, primary, secondary, utility, color, color2,
+			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, movement, primary, offhand, secondary, utility, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems, blacklistedSeeds),
 		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
 	{ }
@@ -436,7 +560,7 @@ public:
 	
 	Turret(EntityData* data, float timePer,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
 		timePer(timePer), timeTill(timePer)
 	{ }
 
@@ -467,7 +591,7 @@ public:
 
 	Rover(EntityData* data, float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
 		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
 		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
 	{ }
@@ -493,19 +617,19 @@ public:
 Turret turret = Turret(&turretData, 2, JRGB(255), 10, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
 Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 20, 20, "Rover");
 
-Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 2, 4, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.5f, 100, 50,
+Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 0, 2, 4, PMOVEMENT::DEFAULT,
+	PRIMARY::SLINGSHOT, OFFHAND::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
 	"Soldier", Items({ Resources::copper.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
-Player flicker = Player(&playerData, false, true, 0.4f, 32.f, 12.f, 32.f, 8.f, 2.f, 4.f, 256.f, 32.f, 1.f, 0.f, 2.f, 5.f, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	0, 100, 50, "Flicker", Items({ Resources::rock.Clone(10) }),
+Player flicker = Player(&playerData, false, true, 0.4f, 32, 12, 32, 8, 2, 4, 256, 32, 1, 0, 0, 2, 5, PMOVEMENT::DEFAULT,
+	PRIMARY::SLINGSHOT, OFFHAND::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
+	0.25f, 100, 50, "Flicker", Items({ Resources::rock.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
-Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 0, 0, 1, 0, 2, 0, PMOVEMENT::JETPACK,
-	PRIMARY::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20, 5,
-	0, 100, 50, "Engineer", Items({ Resources::silver.Clone(10) }),
+Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 0, 0, 1, 0, 0, 2, 0, PMOVEMENT::JETPACK,
+	PRIMARY::ENG_SHOOT, OFFHAND::ENG_SHOOT, SECONDARY::ENGMODEUSE, UTILITY::ENGMODESWAP, RGBA(255, 0, 255), RGBA(0, 0, 0), JRGB(127, 127, 127), true, 20, 5,
+	0.25f, 100, 50, "Engineer", Items({ Resources::silver.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
 vector<Player*> characters = { &soldier, &flicker, &engineer };
@@ -547,6 +671,7 @@ public:
 Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
 EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
+
 class Base : public LightBlock // Convert to BasicTurret
 {
 public:
@@ -678,7 +803,7 @@ void PlayerInventory::Update(bool shouldScroll)
 
 	int scrHeight = ScrHeight();
 	float scale = scrHeight / (3.f * width), scale2 = scale * 0.2f;
-	if (isOpen && game->inputs.screenMousePosition.x > 0 && game->inputs.screenMousePosition.y > 0 &&
+	if (isOpen && game->inputs.screenMousePosition.x >= 0 && game->inputs.screenMousePosition.y >= 0 &&
 		game->inputs.screenMousePosition.x < scale * height && game->inputs.screenMousePosition.y < scale * width)
 	{
 		isHovering = true;
@@ -687,6 +812,27 @@ void PlayerInventory::Update(bool shouldScroll)
 			iVec2 rPos = game->inputs.screenMousePosition / scale;
 
 			int newSelected = rPos.x * width + rPos.y;
+			if (currentSelected == -1)
+				currentSelected = newSelected;
+			else if (currentSelected == newSelected)
+				currentSelected = -1;
+			else
+			{
+				ItemInstance temp = (*this)[newSelected];
+				(*this)[newSelected] = (*this)[currentSelected];
+				(*this)[currentSelected] = temp;
+				currentSelected = -1;
+			}
+		}
+		game->player->inputs.keys[KeyCode::PRIMARY] = KeyPress(false, false, true);
+	}
+	else if (isOpen && game->inputs.screenMousePosition.x >= scale * height && game->inputs.screenMousePosition.y >= 0 &&
+		game->inputs.screenMousePosition.x < scale * (height + 1) && game->inputs.screenMousePosition.y < scale)
+	{
+		isHovering = true;
+		if (game->inputs.keys[KeyCode::PRIMARY].pressed)
+		{
+			int newSelected = size() - 1;
 			if (currentSelected == -1)
 				currentSelected = newSelected;
 			else if (currentSelected == newSelected)
@@ -728,26 +874,19 @@ namespace Updates
 		player->iTime = max(0.f, player->iTime - game->dTime);
 		player->sTime = max(0.f, player->sTime - game->dTime);
 
+		// Healing:
+		player->timeSinceHit += game->dTime;
+		player->timeTillHeal -= game->dTime * min(1.f, 0.1f * player->timeSinceHit);
+		if (player->timeTillHeal <= 0)
+		{
+			player->timeTillHeal++;
+			player->ApplyHit(-1, player);
+		}
+
 		// Update player events:
 		for (int i = 0; i < player->events.size(); i++)
 			if (player->events[i].function(player, &player->events[i]))
 				player->events.erase(player->events.begin() + i);
-
-		if (player->items.isBuilding)
-		{
-			if (player->inputs.keys[KeyCode::SECONDARY].pressed)
-			{
-				RaycastHit test = game->entities->RaycastEnt(entity->pos, player->camDir, 30, MaskF::IsAlly, entity);
-				if (test.index != -1)
-				{
-					Entity* hitEntity = (*game->entities)[test.index].get();
-					if (hitEntity != player->base)
-						hitEntity->ApplyHit(100000, player);
-
-				}
-			}
-			player->inputs.keys[KeyCode::SECONDARY].Reset();
-		}
 
 		/*
 		if (player->currentMenuedEntity != nullptr && !player->currentMenuedEntity->Overlaps(player->inputs.mousePosition3 + player->pos, 0))
@@ -777,7 +916,7 @@ namespace Updates
 		player->moveDir = glm::normalize(Vec3(Vec2(player->camDir), 0));
 		player->rightDir = glm::normalize(glm::cross(player->camDir, up));
 		player->upDir = glm::normalize(glm::cross(player->rightDir, player->camDir));
-		player->dir = player->moveDir;
+		player->dir = player->camDir;
 
 		if (player->sTime <= 0 && game->uiMode == UIMODE::INGAME)
 		{
@@ -807,6 +946,8 @@ namespace Updates
 			{
 				if (!player->items.isOpen && player->inputs.keys[KeyCode::PRIMARY].held && tTime - player->lastPrimary >= player->primaryTime &&primaries[UnEnum(player->primary)](player))
 					player->lastPrimary = tTime;
+				if (!player->items.isOpen && player->inputs.keys[KeyCode::OFFHAND].held && tTime - player->lastOffhand >= player->offhandTime && offhands[UnEnum(player->offhand)](player))
+					player->lastOffhand = tTime;
 				if (player->inputs.keys[KeyCode::SECONDARY].held && tTime - player->lastSecondary >= player->secondaryTime && secondaries[UnEnum(player->secondary)](player))
 					player->lastSecondary = tTime;
 				if (player->inputs.keys[KeyCode::UTILITY].held && tTime - player->lastUtility >= player->utilityTime && utilities[UnEnum(player->utility)](player))
@@ -954,13 +1095,16 @@ namespace UIUpdates
 		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
 		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
+		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
 		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
 		offset.x -= int(scale * 2);
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / (player->items.GetCurrentItem()->useTime * player->shootSpeed))));
+		game->DrawFBL(offset, RGBA(0, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / (player->items.GetCurrentItem()->useTime * player->shootSpeed))));
+		offset.x -= int(scale * 2);
+		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
+		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastOffhand) / (player->items.GetCurrentOffhand()->useTime * player->shootSpeed))));
 
 		// Reticle:
 		game->DrawTextured(reticleSprite, 0, vZero, -Vec2(1.f / 24),
@@ -1020,30 +1164,51 @@ namespace Primaries
 {
 	bool Slingshot(Player* player)
 	{
-		if (player->items.CanUse(player->lastPrimary, player->shootSpeed))
+		if (player->items.CanUse(player->pos, player->camDir, player->lastPrimary, player->shootSpeed))
 		{
 			player->lastPrimary = tTime + player->primaryTime;
-			player->items.Use(player->camDir);
+			player->items.Use(player->pos, player->camDir);
 		}
 		return false;
 	}
 
 	bool EngShoot(Player* player)
 	{
-		if (!player->items.CanUse(player->lastPrimary, player->shootSpeed))
+		if (!player->items.CanUse(player->pos, player->camDir, player->lastPrimary, player->shootSpeed))
 			return false;
 
 		player->lastPrimary = tTime + player->primaryTime;
-		if (player->items.Use(player->camDir)) return false;
+		if (player->items.Use(player->pos, player->camDir)) return false;
 		Engineer* engineer = static_cast<Engineer*>(player);
 		for (SpringCircle* circle : engineer->drones)
-			if (player->items.Use(player->camDir)) return false;
+			if (player->items.Use(circle->pos, player->camDir)) return false;
+		return false;
+	}
+}
+
+namespace Offhands
+{
+	bool Slingshot(Player* player)
+	{
+		if (player->items.CanUseOffhand(player->pos, player->camDir, player->lastOffhand, player->shootSpeed))
+		{
+			player->lastOffhand = tTime + player->offhandTime;
+			player->items.UseOffhand(player->pos, player->camDir);
+		}
 		return false;
 	}
 
-	bool CircleGun(Player* player)
+	bool EngShoot(Player* player)
 	{
-		return true;
+		if (!player->items.CanUseOffhand(player->pos, player->camDir, player->lastOffhand, player->shootSpeed))
+			return false;
+
+		player->lastOffhand = tTime + player->offhandTime;
+		if (player->items.UseOffhand(player->pos, player->camDir)) return false;
+		Engineer* engineer = static_cast<Engineer*>(player);
+		for (SpringCircle* circle : engineer->drones)
+			if (player->items.UseOffhand(circle->pos, player->camDir)) return false;
+		return false;
 	}
 }
 
@@ -1052,7 +1217,7 @@ namespace Secondaries
 	bool GrenadeThrow(Player* player)
 	{
 #define GRENADE_THROW_SPEED 20.f
-		game->entities->push_back(grenade.Clone(player->pos, player->camDir * GRENADE_THROW_SPEED, player));
+		game->entities->push_back(grenade.Clone(player->pos + player->camDir * player->radius, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
 
@@ -1092,7 +1257,7 @@ namespace Secondaries
 		{
 		case ENGMODE::ROVER:
 		{
-			game->entities->push_back(rover.Clone(engineer->pos, engineer->camDir, engineer));
+			game->entities->push_back(rover.Clone(engineer->pos + engineer->camDir * (engineer->radius + rover.radius), engineer->camDir, engineer));
 			break;
 		}
 		case ENGMODE::DRONE:
@@ -1105,11 +1270,6 @@ namespace Secondaries
 		case ENGMODE::REMOVE_DRONE:
 		{
 			engineer->drones.pop_back();
-			break;
-		}
-		case ENGMODE::TURRET:
-		{
-			game->entities->push_back(turret.Clone(engineer->pos, engineer->camDir, engineer));
 			break;
 		}
 		}

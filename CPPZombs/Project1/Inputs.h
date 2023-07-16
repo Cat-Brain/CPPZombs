@@ -35,7 +35,7 @@ namespace KeyCode
 	enum
 	{
 		UP, LEFT, DOWN, RIGHT,
-		JUMP, PRIMARY, SECONDARY, UTILITY, 
+		JUMP, PRIMARY, OFFHAND, SECONDARY, UTILITY, 
 		BUILD, CROUCH, INVENTORY,
 		ENTER, HIDEUI, ROW_LEFT, ROW_RIGHT, PAUSE,
 		COMMA, PERIOD, SLASH, PHASE
@@ -46,7 +46,7 @@ class Inputs
 {
 public:
 	vector<Key> keys = { Key(GLFW_KEY_W), Key(GLFW_KEY_A), Key(GLFW_KEY_S), Key(GLFW_KEY_D), Key(GLFW_KEY_SPACE), // Movement keys
-		Key(GLFW_MOUSE_BUTTON_LEFT), Key(GLFW_MOUSE_BUTTON_RIGHT), Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
+		Key(GLFW_MOUSE_BUTTON_LEFT), Key(GLFW_MOUSE_BUTTON_RIGHT), Key(GLFW_KEY_R), Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
 		Key(GLFW_KEY_F), Key(GLFW_KEY_Z), Key(GLFW_KEY_TAB), // Player interaction buttons
 		Key(GLFW_KEY_ENTER), Key(GLFW_KEY_C), Key(GLFW_KEY_Q), Key(GLFW_KEY_E), Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
 		Key(GLFW_KEY_COMMA), Key(GLFW_KEY_PERIOD), Key(GLFW_KEY_SLASH), Key(GLFW_KEY_RIGHT_SHIFT) };
@@ -113,7 +113,8 @@ public:
 		UpdateKey(window, keys[KeyCode::RIGHT]);
 		UpdateKey(window, keys[KeyCode::JUMP]);
 
-		// Primary and secondary are bound to mouse buttons and must be handled seperately.
+		// Primary and offhand are bound to mouse buttons and must be handled seperately.
+		UpdateKey(window, keys[KeyCode::SECONDARY]);
 		UpdateKey(window, keys[KeyCode::UTILITY]);
 
 		UpdateKey(window, keys[KeyCode::BUILD]);
@@ -146,7 +147,7 @@ public:
 		mousePosition3 = Vec3(mousePosition, 0);
 		
 		UpdateMouse(window, keys[KeyCode::PRIMARY]);
-		UpdateMouse(window, keys[KeyCode::SECONDARY]);
+		UpdateMouse(window, keys[KeyCode::OFFHAND]);
 	}
 };
 

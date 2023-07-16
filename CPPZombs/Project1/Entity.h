@@ -22,7 +22,7 @@ vector<function<void(Entity*)>> updates;
 
 enum class VUPDATE // Update
 {
-	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED, SPIDER, CENTICRAWLER
+	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED, SPIDER, CENTICRAWLER, THIEF
 };
 
 vector<function<void(Entity*)>> vUpdates;
@@ -53,7 +53,7 @@ vector<function<void(Entity*)>> uiUpdates;
 enum class ONDEATH
 {
 	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, LIGHTTOWER, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
-	CENTICRAWLER, KIWI, PLAYER, BASE
+	CENTICRAWLER, THIEF, KIWI, PLAYER, BASE
 };
 
 vector<function<void(Entity*, Entity*)>> onDeaths;
@@ -71,18 +71,18 @@ public:
 
 enum ALLEGIANCES : byte
 {
-	BARBARIAN_A = 0, PLAYER_A = 1, PLANTS_A = 2, ENEMY1_A = 4, ENEMY2_A = 8
+	BARBARIAN_A = 0, PLAYER_A = 1, ENEMY1_A = 2, ENEMY2_A = 4
 };
 struct Allegiance
 {
-	bool a : 1; // 1 - player
-	bool b : 1; // 2 - plants
-	bool c : 1; // 4 - enemy?
-	bool d : 1; // 8
-	bool e : 1; // 16
-	bool f : 1; // 32
-	bool g : 1; // 64
-	bool h : 1; // 128
+	bool a : 1; //   1 - player
+	bool b : 1; //   2 - enemy1
+	bool c : 1; //   4 - enemy2
+	bool d : 1; //   8 - 
+	bool e : 1; //  16 - 
+	bool f : 1; //  32 - 
+	bool g : 1; //  64 - 
+	bool h : 1; // 128 - 
 
 	Allegiance(byte value = 0)
 	{
@@ -282,6 +282,16 @@ public:
 		for (Entity* entity : observers)
 			entity->UnAttach(this);
 		observers.clear();
+	}
+
+	void AddObserver(Entity* observer)
+	{
+		observers.push_back(observer);
+	}
+
+	void RemoveObserver(Entity* observer)
+	{
+		observers.erase(find(observers.begin(), observers.end(), observer));
 	}
 };
 

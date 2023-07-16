@@ -27,6 +27,13 @@ public:
 
 	JRGB GetAmbient(float brightness)
 	{
-		return JRGB(1, 1, 1) * static_cast<int>(brightness * 255);
+		brightness *= 255;
+		return JRGB(brightness, brightness, brightness);
+	}
+
+	JRGB SkyCol()
+	{
+		float brightness = GetBrightness();
+		return JRGB(brightness * 122, brightness * 250, brightness * 255);
 	}
 };

@@ -617,33 +617,39 @@ public:
 				}
 
 		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->settings.chunkRenderDist * CHUNK_WIDTH, MaskF::IsCorporealNotCollectible, nullptr);
-		// Collectibles
-		for (Entity* entity : toRenderPair.second)
+		if (!game->inputs.keys[KeyCode::COMMA].held)
 		{
-			entity->DUpdate();
-		}
-		// Normal entities
-		for (Entity* entity : toRenderPair.first)
-		{
-			entity->DUpdate();
-		}
-		// Particles
-		for (int i = 0; i < particles.size(); i++)
-		{
-			particles[i]->Update();
-			if (particles[i]->ShouldEnd())
+			// Collectibles
+			for (Entity* entity : toRenderPair.second)
 			{
-				Particle* toDestroyParticle = particles[i].get();
-				particles.erase(particles.begin() + i);
-				i--;
+				entity->DUpdate();
 			}
+			// Normal entities
+			for (Entity* entity : toRenderPair.first)
+			{
+				entity->DUpdate();
+			}
+			// Particles
+			for (int i = 0; i < particles.size(); i++)
+			{
+				particles[i]->Update();
+				if (particles[i]->ShouldEnd())
+				{
+					Particle* toDestroyParticle = particles[i].get();
+					particles.erase(particles.begin() + i);
+					i--;
+				}
+			}
+			game->DrawAllCircles();
 		}
-		game->DrawAllCircles();
 
-		// Chunks:
-		glUseProgram(chunkShader);
-		for (int i : chunkOverlaps)
-			chunks[i].Draw();
+		if (!game->inputs.keys[KeyCode::PERIOD].held)
+		{
+			// Chunks:
+			glUseProgram(chunkShader);
+			for (int i : chunkOverlaps)
+				chunks[i].Draw();
+		}
 	}
 
 	void UIUpdate()
@@ -724,6 +730,13 @@ public:
 
 #pragma region Post Entities functions
 
+namespace HitResult
+{
+	enum
+	{
+		LIVED, DIED, MISSED = -1
+	};
+}
 int Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 {
 	if (damage > 0)
@@ -733,7 +746,7 @@ int Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 =
 			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 
 	health = min(health - damage, maxHealth);
-	return health <= 0 ? 1 : 0;
+	return health <= 0 ? HitResult::DIED : HitResult::LIVED;
 }
 
 void Entity::DestroySelf(Entity* damageDealer)
@@ -1242,11 +1255,11 @@ namespace ItemODs
 	{
 		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item.Type());
 
-		if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
+		/*if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
 		{
 			pOL->OnDeath(ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
 			return;
-		}
+		}*/
 		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, dir, creator);
 		if (pOL->sayCreator)
 			placedEntity->name += " from " + creatorName;

@@ -318,7 +318,7 @@ public:
 namespace Resources
 {
 	Item copper = Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 10);
-	GoneOnLandItem iron = GoneOnLandItem(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 120, 15, 0.5f);
+	Item iron = Item(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 120, 15, 1);
 	Item rock = Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 60, 5);
 	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, false, 25, 5);
 	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, false, 1.f, 1);

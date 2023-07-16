@@ -266,7 +266,7 @@ private:
 		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
-		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
+		shadowMap = make_unique<Framebuffer>(static_cast<uint>(ceilf(trueScreenHeight)), GL_RGB16F, true);
 		framebuffers = { mainScreen.get(), shadowMap.get() };
 
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);

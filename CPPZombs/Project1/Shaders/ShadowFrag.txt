@@ -13,6 +13,11 @@ void main()
 {
 	vec2 screenPos = gl_FragCoord.xy / screenDim;
 	vec3 normal = texture(normalMap, screenPos).xyz;
+	if (normal == vec3(0))
+	{
+		discard;
+		return;
+	}
 	vec3 pos =  texture(positionMap, screenPos).xyz;
 	float distance = length(pos - position);
 	if (colorBand) distance = round(distance); // Rounded for color banding.

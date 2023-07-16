@@ -125,9 +125,8 @@ public:
         ShotItem(*baseClass)
     {
         this->creator = creator;
-        float magnitude = glm::length(direction);
-        this->dir = direction / magnitude;
-        range = fminf(item->range, magnitude);
+        this->dir = Normalized(direction);
+        range = item->range;
         this->pos = pos;
         begin = tTime;
         if (creator != nullptr)
@@ -142,9 +141,8 @@ public:
         ShotItem(*baseClass)
     {
         this->creator = creator;
-        float magnitude = glm::length(direction);
-        this->dir = direction / magnitude;
-        range = fminf(item->range, magnitude);
+        this->dir = Normalized(direction);
+        range = item->range;
         this->pos = pos;
         begin = tTime;
         damage = item->damage;

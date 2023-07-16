@@ -8,8 +8,8 @@ uniform bool colorBand;
 
 void main()
 {
-	vec4 normal = texture(normalMap, screenPos * 0.5 + 0.5);
-	float diff = dot(normal.xyz, -direction) * 0.5 + 0.5;
+	vec3 normal = texture(normalMap, screenPos * 0.5 + 0.5).xyz;
+	float diff = normal == vec3(0) ? 1 : dot(normal, -direction) * 0.5 + 0.5;
 	if (colorBand) diff = 0.2 * round(diff * 5); // Round for color banding.
 	FragColor = vec4(color * diff, 1.);
 } 

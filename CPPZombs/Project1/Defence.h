@@ -23,19 +23,21 @@ public:
 		collectible(collectible), seed(seed), cyclesToGrow(cyclesToGrow), deadStage(deadStage),
 		currentLifespan(0), chanceForSeed(chanceForSeed), adultColor(adultColor), deadColor(deadColor),
 		babyRadius(radius), maxRadius(maxRadius), babyMass(mass), maxMass(maxMass),
-		FunctionalBlock2(data, timePer, vZero, radius, color, mass, bounciness, maxHealth, health, name, PLANTS_A) { }
+		FunctionalBlock2(data, timePer, vZero, radius, color, mass, bounciness, maxHealth, health, name, 0) { }
 
-	Shrub(Shrub* baseClass, Vec3 dir, Vec3 pos) :
+	Shrub(Shrub* baseClass, Vec3 dir, Vec3 pos, Entity* creator) :
 		Shrub(*baseClass)
 	{
 		this->pos = pos;
 		this->baseClass = baseClass;
+		if (creator != nullptr)
+			allegiance = creator->allegiance;
 		Start();
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_unique<Shrub>(this, dir, pos);
+		return make_unique<Shrub>(this, dir, pos, creator);
 	}
 
 	virtual float AreaQuality()
@@ -214,7 +216,7 @@ public:
 		nextSpawnSeed = true;
 	}
 
-	Vine(Vine* baseClass, Vec3 dir, Vec3 pos) :
+	Vine(Vine* baseClass, Vec3 dir, Vec3 pos, Entity* creator) :
 		Vine(*baseClass)
 	{
 		this->pos = pos;
@@ -222,13 +224,15 @@ public:
 		this->dir = glm::normalize(dir);
 		if (IsUnreal(this->dir)) this->dir = RandCircPoint();
 		this->baseClass = baseClass;
+		if (creator != nullptr)
+			allegiance = creator->allegiance;
 		base = this;
 		Start();
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
 	{
-		return make_unique<Vine>(this, dir, pos);
+		return make_unique<Vine>(this, dir, pos, creator);
 	}
 
 	void UnAttach(Entity* entity) override
@@ -553,11 +557,11 @@ namespace Resources::Seeds
 	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius, false, true, true);
 	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
 	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
-	CorruptOnKill rubyShrubSeed = CorruptOnKill(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Corruption Seed", 2, Plants::Shrubs::rubyShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius);
+	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", 2, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
 	CorruptOnKill emeraldShrubSeed = CorruptOnKill(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Corruption Seed", 2, Plants::Shrubs::emeraldShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius);
 	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
-	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
-	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.5f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
+	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
+	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
 	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
 	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
 	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
@@ -619,11 +623,12 @@ class Tower : public DToCol
 {
 public:
 	Recipe recipe;
+	string* description;
 
-	Tower(EntityData* data, Recipe recipe,
+	Tower(EntityData* data, Recipe recipe, string* description,
 		float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A | PLANTS_A),
-		recipe(recipe)
+		DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, 0),
+		recipe(recipe), description(description)
 	{ }
 
 	Tower(Tower* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
@@ -632,7 +637,7 @@ public:
 		this->pos = pos;
 		this->dir = dir;
 		this->creator = creator;
-		allegiance = creator->allegiance + PLANTS_A;
+		allegiance = creator->allegiance;
 		Start();
 	}
 
@@ -659,9 +664,9 @@ public:
 	LightSource* lightSource = nullptr;
 	bool lightOrDark; // If dark then it'll subtract it true then it'll add.
 
-	LightTower(EntityData* data, Recipe recipe, JRGB lightColor, bool lightOrDark, float range = 50, float radius = 0.5f, RGBA color = RGBA(),
+	LightTower(EntityData* data, Recipe recipe, string* description, JRGB lightColor, bool lightOrDark, float range = 50, float radius = 0.5f, RGBA color = RGBA(),
 		RGBA color2 = RGBA(), float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
-		Tower(data, recipe, radius, color, color2, mass, bounciness, maxHealth, health, name), lightColor(lightColor),
+		Tower(data, recipe, description, radius, color, color2, mass, bounciness, maxHealth, health, name), lightColor(lightColor),
 		range(range), lightOrDark(lightOrDark) { }
 
 	void Start() override
@@ -717,10 +722,10 @@ public:
 	float timeTill, timePer;
 	RGBA color3; // Used for the color of the barrel.
 
-	BasicTurret(EntityData* data, Recipe recipe, Projectile* projectile, float timePer,
+	BasicTurret(EntityData* data, Recipe recipe, string* description, Projectile* projectile, float timePer,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
 		int health, string name) :
-		LightTower(data, recipe, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		LightTower(data, recipe, description, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
 		projectile(projectile), timePer(timePer), timeTill(timePer), color3(color3)
 	{ }
 
@@ -730,7 +735,7 @@ public:
 		this->pos = pos;
 		this->dir = dir;
 		this->creator = creator;
-		allegiance = creator->allegiance + PLANTS_A;
+		allegiance = creator->allegiance;
 		Start();
 	}
 
@@ -747,10 +752,10 @@ public:
 	uint bulletsPer;
 	float spinSpeed;
 
-	CircleTurret(EntityData* data, Recipe recipe, Projectile* projectile, uint bulletsPer, float spinSpeed, float timePer,
+	CircleTurret(EntityData* data, Recipe recipe, string* description, Projectile* projectile, uint bulletsPer, float spinSpeed, float timePer,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
 		int health, string name) :
-		BasicTurret(data, recipe, projectile, timePer, lightColor, range, radius, color, color2, color3, mass, bounciness, maxHealth, health, name),
+		BasicTurret(data, recipe, description, projectile, timePer, lightColor, range, radius, color, color2, color3, mass, bounciness, maxHealth, health, name),
 		bulletsPer(bulletsPer), spinSpeed(spinSpeed)
 	{ }
 
@@ -760,7 +765,7 @@ public:
 		this->pos = pos;
 		this->dir = Vec3(Normalized2(dir), 0);
 		this->creator = creator;
-		allegiance = creator->allegiance + PLANTS_A;
+		allegiance = creator->allegiance;
 		Start();
 	}
 
@@ -782,10 +787,10 @@ public:
 
 	RaycastHit lastHit = RaycastHit(); // Stores the last hit from
 
-	LaserTurret(EntityData* data, Recipe recipe, uint damage, float maxDist, float timePer, float spinSpeed,
+	LaserTurret(EntityData* data, Recipe recipe, string* description, uint damage, float maxDist, float timePer, float spinSpeed,
 		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, RGBA color3, float mass, float bounciness, int maxHealth,
 		int health, string name) :
-		LightTower(data, recipe, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
+		LightTower(data, recipe, description, lightColor, true, range, radius, color, color2, mass, bounciness, maxHealth, health, name),
 		damage(damage), maxDist(maxDist), timePer(timePer), timeTill(timePer), spinSpeed(spinSpeed), color3(color3)
 	{ }
 
@@ -795,7 +800,7 @@ public:
 		this->pos = pos;
 		this->dir = dir;
 		this->creator = creator;
-		allegiance = creator->allegiance + PLANTS_A;
+		allegiance = creator->allegiance;
 		Start();
 	}
 
@@ -892,7 +897,7 @@ namespace Defences
 	{
 		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
 		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
-		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
+		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.1f, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
 		
 		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 16, 0.1f, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
 		Projectile hoverTurretProjectile = Projectile(&projectileData, 20, 20, 16, 0.3f, RGBA(255, 127, 127), 0, 0, 0, 0, "Hover Turret Projectile");
@@ -902,25 +907,37 @@ namespace Defences
 
 	namespace Towers
 	{
-#pragma region Turrets
+#pragma region Descriptions
 
-		LightTower lantern = LightTower(&lightTowerData, { Resources::cheese.Clone(10) }, JRGB(255, 255, 255), true, 30, 0.5f, RGBA(255, 255, 127), RGBA(), 1, 0.5f, 60, 60, "Lantern");
-
-		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(63, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
-		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
-		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &Projectiles::sapphireTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 63, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
-		
-		BasicTurret droneTurret = BasicTurret(&hoverTurretData, { Resources::emerald.Clone(5), Resources::silver.Clone(25), }, &Projectiles::droneTurretProjectile, 1.0f, JRGB(255, 255, 255), 5, 0.125f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Drone Turret");
-		BasicTurret hoverTurret = BasicTurret(&hoverTurretData, { Resources::vacuumium.Clone(50), Resources::iron.Clone(50), }, &Projectiles::hoverTurretProjectile, 1.5f, JRGB(255, 127, 127), 5, 0.5f, RGBA(127, 63, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Hover Turret");
-
-		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &Projectiles::circleTurretProjectile, 3, 2.f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");
-
-		LaserTurret laserTurret = LaserTurret(&laserTurretData, { /*Resources::quartz.Clone(25), Resources::lead.Clone(25), Resources::topaz.Clone(25)*/ }, 60, 15, 0.125f, 0.6, JRGB(167, 62, 168), 5, 1.5f, RGBA(84, 8, 150), RGBA(), RGBA(41, 35, 207), 2, 0.25f, 120, 120, "Laser Turret");
+		string lanternDesc = "Glows within a large radius",
+			ironWallDesc = "Fairly large wall",
+			pulseTurretDesc = "The default turret",
+			rockTurretDesc = "Strong but low range",
+			sapphireTurretDesc = "Fast firing but small bullets",
+			droneTurretDesc = "Hovers above the ground\nWeak bullets",
+			hoverTurretDesc = "Hovers above the ground\nSimilar to pulse turret",
+			circleTurretDesc = "Fires 3 bullets per volley",
+			laserTurretDesc = "Currently scrapped\nIF THIS APPEARS TELL ME";
 
 #pragma endregion
 
+		LightTower lantern = LightTower(&lightTowerData, { Resources::cheese.Clone(10) }, &lanternDesc, JRGB(255, 255, 255), true, 30, 0.5f, RGBA(255, 255, 127), RGBA(), 1, 0.5f, 60, 60, "Lantern");
+		Tower ironWall = Tower(&towerData, { Resources::iron.Clone(50) }, &ironWallDesc, 2.5f, RGBA(38, 63, 97), RGBA(), 15, 0.25f, 1200, 1200, "Iron Wall");
+
+		BasicTurret pulseTurret = BasicTurret(&basicTurretData, { Resources::shade.Clone(25), Resources::cheese.Clone(25) }, &pulseTurretDesc, &Projectiles::pulseTurretProjectile, 0.5f, JRGB(127, 255, 255), 5, 0.5f, RGBA(63, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
+		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &rockTurretDesc, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
+		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &sapphireTurretDesc, &Projectiles::sapphireTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 63, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
+		
+		BasicTurret droneTurret = BasicTurret(&hoverTurretData, { Resources::emerald.Clone(5), Resources::silver.Clone(25), }, &droneTurretDesc, &Projectiles::droneTurretProjectile, 1.0f, JRGB(255, 255, 255), 5, 0.125f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Drone Turret");
+		BasicTurret hoverTurret = BasicTurret(&hoverTurretData, { Resources::vacuumium.Clone(50), Resources::iron.Clone(50), }, &hoverTurretDesc, &Projectiles::hoverTurretProjectile, 1.5f, JRGB(255, 127, 127), 5, 0.5f, RGBA(127, 63, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Hover Turret");
+
+		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &circleTurretDesc, &Projectiles::circleTurretProjectile, 3, 2.1f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");
+
+		LaserTurret laserTurret = LaserTurret(&laserTurretData, { /*Resources::quartz.Clone(25), Resources::lead.Clone(25), Resources::topaz.Clone(25)*/ }, &laserTurretDesc, 60, 15, 0.125f, 0.6, JRGB(167, 62, 168), 5, 1.5f, RGBA(84, 8, 150), RGBA(), RGBA(41, 35, 207), 2, 0.25f, 120, 120, "Laser Turret");
+
 		vector<Tower*> towers = {
 			&lantern,
+			&ironWall,
 			&pulseTurret, &rockTurret, &sapphireTurret,
 			&droneTurret, &hoverTurret,
 			&circleTurret,
