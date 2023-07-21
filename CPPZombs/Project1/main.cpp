@@ -16,7 +16,7 @@ int main()
 		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU,
 			FunctionalBlockU, FunctionalBlock2U, VineU, BasicTurretU, CircleTurretU, LaserTurretU, EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU,
-			KiwiU, PlayerU, TurretU, RoverU, EngineerU, GrenadeU };
+			KiwiU, PlayerU, FlareU, EngineerU, GrenadeU, FlameGlobU, FlamePuddleU, TurretU, RoverU, BaseU };
 	}
 	{
 		using namespace VUpdates;
@@ -34,7 +34,7 @@ int main()
 	{
 		using namespace UIUpdates;
 		using namespace Enemies::UIUpdates;
-		uiUpdates = { EntityUIU, ShrubUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, EngineerUIU };
+		uiUpdates = { EntityUIU, ShrubUIU, TreeUIU, VineUIU, EnemyUIU, SnakeConnectedUIU, PlayerUIU, FlareUIU, EngineerUIU };
 	}
 
 	{
@@ -64,11 +64,11 @@ int main()
 	}
 	{
 		using namespace Secondaries;
-		secondaries = { GrenadeThrow, TornadoSpin, EngModeUse };
+		secondaries = { GrenadeThrow, ThrowFlame, EngModeUse };
 	}
 	{
 		using namespace Utilities;
-		utilities = { TacticoolRoll, MightyShove, EngModeSwap };
+		utilities = { TacticoolRoll, FlameThrower, EngModeSwap };
 	}
 	#pragma endregion
 		
@@ -83,7 +83,8 @@ int main()
 
 		using namespace ItemODs;
 		itemODs = { ItemOD, GoneOnLandItemOD, PlacedOnLandingOD, CorruptOnKillOD, PlacedOnLandingBoomOD, ExplodeOnLandingOD,
-			UpExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD };
+			UpExplodeOnLandingOD, ImproveSoilOnLandingOD, SetTileOnLandingOD,
+			FlareFlameOD };
 #pragma endregion
 
 	game = make_unique<Game>();

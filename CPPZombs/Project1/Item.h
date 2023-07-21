@@ -15,7 +15,11 @@ enum class ITEMTYPE : byte
 	// Enemy items:
 	GIGA_TANK_ITEM,
 	// Other:
-	KIWI_EGG, WAVE_MODIFIER, COUNT
+	KIWI_EGG, WAVE_MODIFIER,
+	// Player items:
+	FLARE_FLAME,
+	// Count:
+	COUNT
 };
 class Item;
 vector<Item*> items = vector<Item*>(UnEnum(ITEMTYPE::COUNT), nullptr);
@@ -90,7 +94,8 @@ vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, st
 enum class ITEMOD // Item on-deaths
 {
 	DEFAULT, GONEONLANDITEM, PLACEDONLANDING, CORRUPTONKILL, PLACEDONLANDINGBOOM, EXPLODEONLANDING, UPEXPLODEONLANDING, IMPROVESOILONLANDING,
-	SETTILEONLANDING
+	SETTILEONLANDING,
+	FLARE_FLAME
 };
 
 vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.

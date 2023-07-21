@@ -15,21 +15,25 @@ namespace StatusFuncs
 {
 	typedef void StatFunc(StatusEffect& status);
 
-	StatFunc NoStr, WetStr;
-	StatFunc NoUpd, FireUpd, BleedUpd, WetUpd;
-	StatFunc NoEnd, WetEnd;
+	StatFunc NoStr, WetStr, FlareFireStr;
+	StatFunc NoUpd, FireUpd, BleedUpd, WetUpd, FlareFireUpd;
+	StatFunc NoEnd, WetEnd, FlareFireEnd;
 
-	vector<function<void(StatusEffect& status)>> inflictionStarts{ NoStr, WetStr };
-	vector<function<void(StatusEffect& status)>> inflictionUpdates{ NoUpd, FireUpd, BleedUpd, WetUpd };
-	vector<function<void(StatusEffect& status)>> inflictionEnds{ NoEnd, WetEnd };
+	vector<function<void(StatusEffect& status)>> inflictionStarts{ NoStr, WetStr, FlareFireStr };
+	vector<function<void(StatusEffect& status)>> inflictionUpdates{ NoUpd, FireUpd, BleedUpd, WetUpd, FlareFireUpd };
+	vector<function<void(StatusEffect& status)>> inflictionEnds{ NoEnd, WetEnd, FlareFireEnd };
 }
 
-vector<Infliction> inflictions = {Infliction(0, 1, 0, 0.2f, "Fire"), Infliction(0, 2, 0, 0.2f, "Bleed"), Infliction(1, 3, 1, 0.2f, "Wet") };
+vector<Infliction> inflictions = {Infliction(0, 1, 0, 0.2f, "Fire"), Infliction(0, 2, 0, 0.2f, "Bleed"), Infliction(1, 3, 1, 0.2f, "Wet"),
+	Infliction(2, 4, 2, 0.2f, "Fire")};
 
 enum class STATUS
 {
-	FIRE, BLEED, WET
+	FIRE, BLEED, WET,
+	FLARE_FIRE
 };
+
+#define ARTIFICIALLY_DESTROYED -10
 
 class StatusEffect
 {

@@ -14,8 +14,9 @@ enum class UPDATE // Update
 	BASIC_TURRET, CIRCLE_TURRET, LASER_TURRET,
 	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
 	EGG, KIWI,
-	PLAYER,
-	TURRET, ROVER, ENGINEER, GRENADE
+	PLAYER, FLARE, ENGINEER,
+	GRENADE, FLAME_GLOB, FLAME_PUDDLE, TURRET, ROVER,
+	BASE
 };
 
 vector<function<void(Entity*)>> updates;
@@ -45,7 +46,7 @@ vector<function<void(Entity*)>> dUpdates;
 
 enum class UIUPDATE // User-Interface Update
 {
-	ENTITY, SHRUB, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, ENGINEER
+	ENTITY, SHRUB, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, FLARE, ENGINEER
 };
 
 vector<function<void(Entity*)>> uiUpdates;
@@ -325,6 +326,11 @@ namespace MaskF
 	bool IsNonAlly(Entity* from, Entity* to)
 	{
 		return from != to && to->corporeal && !to->isCollectible && !from->allegiance.Ally(to->allegiance);
+	}
+
+	bool IsNonAllyOrCreator(Entity* from, Entity* to)
+	{
+		return from != to && to->corporeal && !to->isCollectible && (!from->allegiance.Ally(to->allegiance) || from->creator == to);
 	}
 
 	bool IsAlly(Entity* from, Entity* to)

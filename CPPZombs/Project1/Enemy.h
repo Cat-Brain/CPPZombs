@@ -102,6 +102,11 @@ namespace Enemies
 			return pos + dir * radius * 0.2f;
 		}
 
+		virtual Vec3 BitePos2()
+		{
+			return pos + Vec3(Normalized2((Vec2)dir) * radius * 0.2f, 0);
+		}
+
 		virtual float BiteRad()
 		{
 			return radius * 0.9f;
@@ -109,7 +114,7 @@ namespace Enemies
 
 		virtual void ShouldTryJump()
 		{
-			if (tTime - lastJump > jumpTime && game->entities->OverlapsTile(BitePos(), BiteRad()))
+			if (tTime - lastJump > jumpTime && game->entities->OverlapsTile(BitePos2(), BiteRad()))
 			{
 				vel += Vec3(0, 0, 6);
 				lastJump = tTime;
@@ -138,7 +143,7 @@ namespace Enemies
 		Vec3 FindDir()
 		{
 			Entity* entity = NearestFoe(pos, 30.f, this);
-			return Normalized((entity == nullptr ? defaultTarget : entity)->pos - pos);
+			return defaultTarget == nullptr && entity == nullptr ? up : Normalized((entity == nullptr ? defaultTarget : entity)->pos - pos);
 		}
 	};
 
@@ -570,7 +575,11 @@ namespace Enemies
 		{
 			for (int i = 0; i < damage; i++)
 				if ((health - i) % 10 == 0)
-					game->entities->push_back(baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), north, this));
+				{
+					unique_ptr<Entity> spider = baseChild->Clone(pos - Vec3(radius + 1) + Vec3(RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2), RandFloat() * ((radius + 1) * 2)), north, this);
+					((Enemy*)spider.get())->defaultTarget = defaultTarget;
+					game->entities->push_back(std::move(spider));
+				}
 			return Spider::ApplyHit(damage, damageDealer);
 		}
 	};
@@ -1261,10 +1270,18 @@ namespace Enemies
 			parent->OnDeath(ONDEATH::ENEMY, damageDealer);
 
 			float drawHeight = parent->radius * sqrtf(0.75f), drawDist = parent->radius * 0.5f;
-			game->entities->push_back(parent->child->Clone(parent->pos + Vec3(0, drawDist, drawHeight)));
-			game->entities->push_back(parent->child->Clone(parent->pos + Vec3(-drawDist, 0, drawHeight)));
-			game->entities->push_back(parent->child->Clone(parent->pos + Vec3(0, -drawDist, drawHeight)));
-			game->entities->push_back(parent->child->Clone(parent->pos + Vec3(drawDist, 0, drawHeight)));
+			unique_ptr<Entity> child = parent->child->Clone(parent->pos + Vec3(0, drawDist, drawHeight));
+			((Enemy*)child.get())->defaultTarget = parent->defaultTarget;
+			game->entities->push_back(std::move(child));
+			child = parent->child->Clone(parent->pos + Vec3(-drawDist, 0, drawHeight));
+			((Enemy*)child.get())->defaultTarget = parent->defaultTarget;
+			game->entities->push_back(std::move(child));
+			child = parent->child->Clone(parent->pos + Vec3(0, -drawDist, drawHeight));
+			((Enemy*)child.get())->defaultTarget = parent->defaultTarget;
+			game->entities->push_back(std::move(child));
+			child = parent->child->Clone(parent->pos + Vec3(drawDist, 0, drawHeight));
+			((Enemy*)child.get())->defaultTarget = parent->defaultTarget;
+			game->entities->push_back(std::move(child));
 		}
 
 		void ExploderOD(Entity* entity, Entity* damageDealer)
@@ -1669,6 +1686,7 @@ namespace Enemies
 	Centicrawler miniCenticrawler = Centicrawler(&centicrawlerData, 0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 1, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
 	// Earlies - 1
 	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 1, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
+	SnakeConnected babySnake = SnakeConnected(&snakeConnectedData, 5, 0.1f, 1, ENEMY1_A, 0.5f, 3, 3, 0.5f, 2, 1, 10, 0.25f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 0.5f, 0.25f, 120, 120, "Baby Snake");
 	// Mids - 4
 	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 2, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
 	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 0, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
@@ -1685,7 +1703,7 @@ namespace Enemies
 
 	Types wildSpawns
 	{
-		{&spider},
+		{&spider, &babySnake},
 		{&frog, &miniSpiderParent},
 		{&spiderParent, &snake},
 		{&bigSnake, &pouncerSnake},

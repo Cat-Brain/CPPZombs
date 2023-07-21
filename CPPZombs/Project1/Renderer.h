@@ -45,7 +45,7 @@ public:
 	uint chunkRenderDist = 3;
 	float sensitivity = 300;
 	bool maximized = true;
-	bool startSeeds[UnEnum(SEEDINDICES::COUNT)];
+	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 
 	void TryOpen()
 	{
@@ -266,7 +266,7 @@ private:
 		glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 
 		mainScreen = make_unique<DeferredFramebuffer>(trueScreenHeight, GL_RGB, true);
-		shadowMap = make_unique<Framebuffer>(static_cast<uint>(ceilf(trueScreenHeight)), GL_RGB16F, true);
+		shadowMap = make_unique<Framebuffer>(trueScreenHeight, GL_RGB16F, true);
 		framebuffers = { mainScreen.get(), shadowMap.get() };
 
 		Resource defaultFont = Resource(PIXELOID_SANS, FONT_FILE);
@@ -430,7 +430,7 @@ public:
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glUseProgram(circleShader);
-		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, toDrawCircles.size());
+		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(toDrawCircles.size()));
 		toDrawCircles.clear();
 		glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
@@ -559,7 +559,7 @@ public:
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	((Renderer*)game.get())->inputs.mouseScroll += static_cast<int>(yoffset);
-	((Renderer*)game.get())->inputs.mouseScrollF += yoffset;
+	((Renderer*)game.get())->inputs.mouseScrollF += static_cast<float>(yoffset);
 }
 
 void window_maximize_callback(GLFWwindow* window, int maximized)

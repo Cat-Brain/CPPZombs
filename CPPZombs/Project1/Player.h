@@ -15,42 +15,6 @@ namespace Resources
 	UseableItem waveModifier = UseableItem(ITEMTYPE::WAVE_MODIFIER, ITEMU::WAVEMODIFIER, "Wave Modifier", "Special Item", 0, RGBA(194, 99, 21), 1.f);
 }
 
-#define NUM_START_ITEMS 3
-
-int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
-int difficultySeedSelectQuantity[] = { 6, 5, 4 };
-
-
-enum class PMOVEMENT
-{
-	DEFAULT, JETPACK
-};
-vector<std::function<void(Player* player)>> pMovements;
-
-enum class PRIMARY
-{
-	SLINGSHOT, ENG_SHOOT, CIRCLEGUN, CHOMP
-};
-vector< std::function<bool(Player* player)>> primaries;
-
-enum class OFFHAND
-{
-	SLINGSHOT, ENG_SHOOT, CIRCLEGUN, CHOMP
-};
-vector< std::function<bool(Player* player)>> offhands;
-
-enum class SECONDARY
-{
-	GRENADE_THROW, TORNADO_SPIN, ENGMODEUSE, VINE_SHOT
-};
-vector< std::function<bool(Player* player)>> secondaries;
-
-enum class UTILITY
-{
-	TACTICOOL_ROLL, MIGHTY_SHOVE, ENGMODESWAP
-};
-vector< std::function<bool(Player* player)>> utilities;
-
 
 
 class PlayerInventory : public Items
@@ -381,8 +345,43 @@ public:
 	}
 };
 
+#define NUM_START_ITEMS 3
 
+int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
+int difficultySeedSelectQuantity[] = { 6, 5, 4 };
 
+#pragma region Psuedo-Virtuals
+enum class PMOVEMENT
+{
+	DEFAULT, JETPACK
+};
+vector<std::function<void(Player* player)>> pMovements;
+
+enum class PRIMARY
+{
+	SLINGSHOT, ENG_SHOOT, CIRCLEGUN, CHOMP
+};
+vector< std::function<bool(Player* player)>> primaries;
+
+enum class OFFHAND
+{
+	SLINGSHOT, ENG_SHOOT, CIRCLEGUN, CHOMP
+};
+vector< std::function<bool(Player* player)>> offhands;
+
+enum class SECONDARY
+{
+	GRENADE_THROW, FLAME_PUDDLE, ENGMODEUSE, VINE_SHOT
+};
+vector< std::function<bool(Player* player)>> secondaries;
+
+enum class UTILITY
+{
+	TACTICOOL_ROLL, FLAMETHROWER, ENGMODESWAP
+};
+vector< std::function<bool(Player* player)>> utilities;
+#pragma endregion
+#pragma region Player Types
 EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::PLAYER, ONDEATH::PLAYER);
 class Player : public LightBlock
 {
@@ -392,7 +391,7 @@ public:
 	Entity* heldEntity = nullptr, *currentMenuedEntity = nullptr;
 	PlayerInventory items;
 	Items startItems;
-	bool startSeeds[UnEnum(SEEDINDICES::COUNT)];
+	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	vector<SEEDINDICES> blacklistedSeeds;
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, shootSpeed,
@@ -502,11 +501,46 @@ public:
 	}
 };
 
+EntityData flareData = EntityData(UPDATE::FLARE, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::FLARE, ONDEATH::PLAYER);
+class Flare : public Player
+{
+public:
+	float currentFlame, maxFlame;
+
+	Flare(EntityData* data, float maxFlame, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
+		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
+		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1,
+		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT, OFFHAND offhand = OFFHAND::SLINGSHOT,
+		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
+		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
+		float mass = 1, float bounciness = 0,
+		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
+		Player(data, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, movement, primary, offhand, secondary, utility, color, color2,
+			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems, blacklistedSeeds),
+		currentFlame(maxFlame), maxFlame(maxFlame)
+	{ }
+
+	Flare(Flare* baseClass, bool* startSeeds, Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) :
+		Flare(*baseClass)
+	{
+		this->baseClass = baseClass;
+		std::copy(startSeeds, startSeeds + sizeof(bool) * UnEnum(SEEDINDICES::COUNT), this->startSeeds);
+		this->pos = pos;
+		this->creator = creator;
+		Start();
+	}
+
+	unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
+	{
+		return make_unique<Flare>(this, startSeeds, pos, dir, creator);
+	}
+};
+
 enum class ENGMODE
 {
 	ROVER, DRONE, REMOVE_DRONE, COUNT
 };
-
 string engModeStr[] = {"Rover", "Drone", "Remove Drone"};
 
 class Drone;
@@ -549,82 +583,16 @@ public:
 		return make_unique<Engineer>(this, startSeeds, pos, dir, creator);
 	}
 };
-
-EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
-class Turret : public LightBlock
-{
-public:
-	float timeTill, timePer;
-	PlayerInventory* items = nullptr;
-	Engineer* leader = nullptr;
-	
-	Turret(EntityData* data, float timePer,
-		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
-		timePer(timePer), timeTill(timePer)
-	{ }
-
-	Turret(Turret* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
-		Turret(*baseClass)
-	{
-		this->pos = pos;
-		this->dir = dir;
-		this->creator = creator;
-		leader = creator;
-		items = &creator->items;
-		Start();
-	}
-
-	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
-	{
-		return make_unique<Turret>(this, pos, dir, static_cast<Engineer*>(creator));
-	}
-};
-
-EntityData roverData = EntityData(UPDATE::ROVER, VUPDATE::FRICTION, DUPDATE::ROVER, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
-class Rover : public LightBlock
-{
-public:
-	float vacSpeed, maxVacSpeed, vacDist, moveSpeed, maxSpeed, timeTillJump, timePerJump, remainingLifetime, lifetime;
-	Items* items = nullptr;
-	Engineer* leader = nullptr;
-
-	Rover(EntityData* data, float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
-		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
-		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
-		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
-		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
-	{ }
-
-	Rover(Rover* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
-		Rover(*baseClass)
-	{
-		this->pos = pos;
-		this->dir = Normalized(dir);
-		this->creator = creator;
-		leader = creator;
-		items = &creator->items;
-		remainingLifetime = lifetime;
-		Start();
-	}
-
-	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
-	{
-		return make_unique<Rover>(this, pos, dir, static_cast<Engineer*>(creator));
-	}
-};
-
-Turret turret = Turret(&turretData, 2, JRGB(255), 10, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
-Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 20, 20, "Rover");
-
+#pragma endregion
+#pragma region Player Instances
 Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 0, 2, 4, PMOVEMENT::DEFAULT,
 	PRIMARY::SLINGSHOT, OFFHAND::SLINGSHOT, SECONDARY::GRENADE_THROW, UTILITY::TACTICOOL_ROLL, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
 	"Soldier", Items({ Resources::copper.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COPPER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
-Player flicker = Player(&playerData, false, true, 0.4f, 32, 12, 32, 8, 2, 4, 256, 32, 1, 0, 0, 2, 5, PMOVEMENT::DEFAULT,
-	PRIMARY::SLINGSHOT, OFFHAND::SLINGSHOT, SECONDARY::TORNADO_SPIN, UTILITY::MIGHTY_SHOVE, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
-	0.25f, 100, 50, "Flicker", Items({ Resources::rock.Clone(10) }),
+Flare flare = Flare(&flareData, 100, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 256, 32, 1, 0, 0, 2, 0.0625f, PMOVEMENT::DEFAULT,
+	PRIMARY::SLINGSHOT, OFFHAND::SLINGSHOT, SECONDARY::FLAME_PUDDLE, UTILITY::FLAMETHROWER, RGBA(255, 255), RGBA(0, 0, 255), JRGB(127, 127, 127), true, 5.f, 1.5f,
+	0.25f, 100, 50, "Flare", Items({ Resources::rock.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::COAL, SEEDINDICES::ROCK, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_V }));
 
 Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 8, 2, 4, 0, 0, 1, 0, 0, 2, 0, PMOVEMENT::JETPACK,
@@ -632,8 +600,9 @@ Engineer engineer = Engineer(&engineerData, 2, 3, false, true, 0.4f, 32, 8, 32, 
 	0.25f, 100, 50, "Engineer", Items({ Resources::silver.Clone(10) }),
 	vector<SEEDINDICES>({ SEEDINDICES::SILVER, SEEDINDICES::SHADE, SEEDINDICES::CHEESE, SEEDINDICES::QUARTZ_S }));
 
-vector<Player*> characters = { &soldier, &flicker, &engineer };
-
+vector<Player*> characters = { &soldier, &flare, &engineer };
+#pragma endregion
+#pragma region Player Creations
 EntityData grenadeData = EntityData(UPDATE::GRENADE, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Grenade : public LightBlock
 {
@@ -670,13 +639,163 @@ public:
 
 Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
-EntityData baseData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
+EntityData flamePuddleData = EntityData(UPDATE::FLAME_PUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
+class FlamePuddle : public FadeOutGlow
+{
+public:
+	int damage;
+	float timePer;
 
-class Base : public LightBlock // Convert to BasicTurret
+	FlamePuddle(EntityData* data, int damage, float timePer, float range, float totalFadeTime = 1.0f, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
+		FadeOutGlow(data, range, totalFadeTime, pos, radius, color), damage(damage), timePer(timePer)
+	{ }
+
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
+	{
+		unique_ptr<FlamePuddle> puddle = make_unique<FlamePuddle>(data, damage, timePer, startRange, totalFadeTime, pos, radius, color);
+		puddle->creator = creator;
+		puddle->allegiance = creator->allegiance;
+		return std::move(puddle);
+	}
+};
+
+FlamePuddle flamePuddle = FlamePuddle(&flamePuddleData, 10, 0.1f, 5, 2, vZero, 1.5f, RGBA(156, 106, 78, 127));
+
+EntityData flameGlobData = EntityData(UPDATE::FLAME_GLOB, VUPDATE::FRICTION, DUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+class FlameGlob : public LightBlock
+{
+public:
+	Entity* flamePuddle;
+
+	FlameGlob(EntityData* data, Entity* flamePuddle, JRGB lightColor, float range, float radius, RGBA color, float mass, float bounciness, int health, string name) :
+		LightBlock(data, lightColor, true, range, vZero, radius, color, RGBA(), mass, bounciness, health, health, name), flamePuddle(flamePuddle)
+	{
+		corporeal = false;
+	}
+
+	FlameGlob(FlameGlob* baseClass, Vec3 pos, Vec3 dir, Entity* creator) :
+		FlameGlob(*baseClass)
+	{
+		this->baseClass = baseClass;
+		this->pos = pos;
+		this->dir = dir;
+		vel = dir;
+		if (creator != nullptr)
+		{
+			allegiance = creator->allegiance;
+			this->creator = creator;
+		}
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos, Vec3 dir, Entity* creator) override
+	{
+		return make_unique<FlameGlob>(this, pos, dir, creator);
+	}
+};
+
+FlameGlob flameGlob = FlameGlob(&flameGlobData, &flamePuddle, JRGB(255, 127), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
+
+class FlareFlame : public Item
+{
+public:
+	int flameRestore;
+
+	FlareFlame(ITEMTYPE type, int flameRestore, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
+		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
+		flameRestore(flameRestore)
+	{
+		itemOD = ITEMOD::FLARE_FLAME;
+	}
+};
+
+namespace ItemODs
+{
+	void FlareFlameOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	{
+		if (callType != 0 && game->player && game->player->name == "Flare")
+			static_cast<Flare*>(game->player)->currentFlame += static_cast<FlareFlame*>(item.Type())->flameRestore;
+	}
+}
+
+FlareFlame flareFlame = FlareFlame(ITEMTYPE::FLARE_FLAME, 2, "Flare Flame", "Player Creation", 0, RGBA(255, 93, 0), 10, 15, 0.0625f, 18, 1);
+
+EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+class Turret : public LightBlock
+{
+public:
+	float timeTill, timePer;
+	PlayerInventory* items = nullptr;
+	Engineer* leader = nullptr;
+	
+	Turret(EntityData* data, float timePer,
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
+		timePer(timePer), timeTill(timePer)
+	{ }
+
+	Turret(Turret* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
+		Turret(*baseClass)
+	{
+		this->pos = pos;
+		this->dir = dir;
+		this->creator = creator;
+		leader = creator;
+		items = &creator->items;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
+	{
+		return make_unique<Turret>(this, pos, dir, static_cast<Engineer*>(creator));
+	}
+};
+
+Turret turret = Turret(&turretData, 2, JRGB(255), 10, 0.5f, RGBA(255), RGBA(), 0.5f, 0.f, 50, 50, "Turret");
+
+EntityData roverData = EntityData(UPDATE::ROVER, VUPDATE::FRICTION, DUPDATE::ROVER, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+class Rover : public LightBlock
+{
+public:
+	float vacSpeed, maxVacSpeed, vacDist, moveSpeed, maxSpeed, timeTillJump, timePerJump, remainingLifetime, lifetime;
+	Items* items = nullptr;
+	Engineer* leader = nullptr;
+
+	Rover(EntityData* data, float vacSpeed, float maxVacSpeed, float vacDist, float moveSpeed, float maxSpeed, float timePerJump, float lifetime,
+		JRGB lightColor, float range, float radius, RGBA color, RGBA color2, float mass, float bounciness, int maxHealth, int health, string name) :
+		LightBlock(data, lightColor, true, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
+		vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed), vacDist(vacDist), moveSpeed(moveSpeed), maxSpeed(maxSpeed),
+		timeTillJump(0), timePerJump(timePerJump), remainingLifetime(lifetime), lifetime(lifetime)
+	{ }
+
+	Rover(Rover* baseClass, Vec3 pos, Vec3 dir, Engineer* creator) :
+		Rover(*baseClass)
+	{
+		this->pos = pos;
+		this->dir = Normalized(dir);
+		this->creator = creator;
+		leader = creator;
+		items = &creator->items;
+		remainingLifetime = lifetime;
+		Start();
+	}
+
+	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = vZero, Entity* creator = nullptr) override
+	{
+		return make_unique<Rover>(this, pos, dir, static_cast<Engineer*>(creator));
+	}
+};
+
+Rover rover = Rover(&roverData, 32, 8, 4, 4, 4, 2, 10, JRGB(255, 255), 3, 0.25f, RGBA(255, 255), RGBA(), 0.1f, 0, 20, 20, "Rover");
+#pragma endregion
+#pragma region Base Types
+EntityData baseData = EntityData(UPDATE::BASE, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
+class Base : public LightBlock
 {
 public:
 	Player* player = nullptr;
-	int lives = 3;
+	float timeSinceHit = 0, timeTillHeal = 0;
 
 	Base(EntityData* data, JRGB lightColor, bool lightOrDark, float range, float radius, RGBA color, RGBA color2, float mass,
 		float bounciness, int health, string name) :
@@ -695,10 +814,19 @@ public:
 	{
 		return make_unique<Base>(this, pos);
 	}
-};
 
+	int ApplyHit(int damage, Entity* damageDealer) override
+	{
+		if (damage > 0)
+			timeSinceHit = 0;
+		return LightBlock::ApplyHit(damage, damageDealer);
+	}
+};
+#pragma endregion
+#pragma region Base Instances
 Base soldierBase = Base(&baseData, JRGB(127, 127, 255), true, 15, 2.5f, RGBA(127, 127, 255), RGBA(), 10, 0.25f, 360, "base");
 vector<Base*> charBases = { &soldierBase, &soldierBase, &soldierBase };
+#pragma endregion
 
 namespace OnDeaths
 {
@@ -971,6 +1099,77 @@ namespace Updates
 			game->inputs.mouseScroll = 0;
 	}
 
+	void FlareU(Entity* entity)
+	{
+		Flare* flare = static_cast<Flare*>(entity);
+		flare->currentFlame = min(flare->maxFlame, flare->currentFlame - game->dTime * 0.5f);
+		float tempSpeed = flare->maxSpeed;
+		flare->maxSpeed *= flare->currentFlame / flare->maxFlame;
+		flare->maxSpeed = Lerp(flare->maxSpeed, tempSpeed, 0.5f);
+		flare->Update(UPDATE::PLAYER);
+		flare->maxSpeed = tempSpeed;
+	}
+
+	void EngineerU(Entity* entity)
+	{
+		Engineer* engineer = static_cast<Engineer*>(entity);
+		engineer->shouldScroll = !engineer->inputs.keys[KeyCode::UTILITY].held;
+		engineer->shouldPickup = false;
+		engineer->Update(UPDATE::PLAYER);
+
+		float offset = tTime * PI_F * 2 / 5;
+		for (int i = 0; i < engineer->drones.size(); i++)
+		{
+			engineer->drones[i]->startTime = tTime; // Make sure that they never die.
+			engineer->drones[i]->desiredPos = engineer->pos +
+				Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f);
+		}
+	}
+
+	void GrenadeU(Entity* entity)
+	{
+		Grenade* grenade = static_cast<Grenade*>(entity);
+		if (tTime - grenade->startTime > grenade->timeTill)
+		{
+			CreateUpExplosion(grenade->pos, grenade->explosionRadius, grenade->color, grenade->name, 0, grenade->damage, grenade->creator);
+			game->entities->VacuumBurst(grenade->pos, grenade->explosionRadius, -grenade->pushForce, 50.f, true, false);
+			grenade->DestroySelf(nullptr);
+			return;
+		}
+		grenade->range = grenade->baseRange * (0.5f - 0.5f * cosf(6 * PI_F * (tTime - grenade->startTime) / grenade->timeTill));
+		grenade->lightSource->range = grenade->range;
+	}
+
+	void FlameGlobU(Entity* entity)
+	{
+		if (game->entities->OverlapsAny(entity->pos, entity->radius, MaskF::IsCorporealNotCreator, entity))
+		{
+			game->entities->push_back(static_cast<FlameGlob*>(entity)->flamePuddle->Clone(entity->pos, vZero, entity->creator));
+			entity->DestroySelf(entity);
+		}
+	}
+
+	void FlamePuddleU(Entity* entity)
+	{
+		FlamePuddle* puddle = static_cast<FlamePuddle*>(entity);
+		if (int((tTime - puddle->startTime) / puddle->timePer) != int((tTime - puddle->startTime - game->dTime) / puddle->timePer))
+		{
+			vector<Entity*> hitEntities = game->entities->FindOverlaps(puddle->pos, puddle->radius, MaskF::IsNonAllyOrCreator, puddle);
+			Flare* creator = static_cast<Flare*>(puddle->creator);
+			for (Entity* e : hitEntities)
+			{
+				vector<StatusEffect>::iterator itr;
+				if (e == creator && (itr = std::find_if(e->statuses.begin(), e->statuses.end(), [](StatusEffect const& s) { return s.status == STATUS::FLARE_FIRE; })) != e->statuses.end())
+					itr->timeTillRemove = 3;
+				else
+					e->statuses.push_back(StatusEffect(e, STATUS::FLARE_FIRE, e == creator ? 3 : 1));
+
+				creator->currentFlame++;
+			}
+		}
+		puddle->Update(UPDATE::FADEOUT);
+	}
+
 	void TurretU(Entity* entity)
 	{
 		Turret* turret = static_cast<Turret*>(entity);
@@ -1014,34 +1213,18 @@ namespace Updates
 		}
 	}
 
-	void EngineerU(Entity* entity)
+	void BaseU(Entity* entity)
 	{
-		Engineer* engineer = static_cast<Engineer*>(entity);
-		engineer->shouldScroll = !engineer->inputs.keys[KeyCode::UTILITY].held;
-		engineer->shouldPickup = false;
-		engineer->Update(UPDATE::PLAYER);
+		Base* base = static_cast<Base*>(entity);
 
-		float offset = tTime * PI_F * 2 / 5;
-		for (int i = 0; i < engineer->drones.size(); i++)
+		// Healing:
+		base->timeSinceHit += game->dTime;
+		base->timeTillHeal -= game->dTime * min(1.f, 0.1f * base->timeSinceHit);
+		if (base->timeTillHeal <= 0)
 		{
-			engineer->drones[i]->startTime = tTime; // Make sure that they never die.
-			engineer->drones[i]->desiredPos = engineer->pos +
-				Vec3(engineer->radius * 2 * CircPoint2(offset + PI_F * 2 * i / engineer->drones.size()), 0.f);
+			base->timeTillHeal++;
+			base->ApplyHit(-1, base);
 		}
-	}
-
-	void GrenadeU(Entity* entity)
-	{
-		Grenade* grenade = static_cast<Grenade*>(entity);
-		if (tTime - grenade->startTime > grenade->timeTill)
-		{
-			CreateUpExplosion(grenade->pos, grenade->explosionRadius, grenade->color, grenade->name, 0, grenade->damage, grenade->creator);
-			game->entities->VacuumBurst(grenade->pos, grenade->explosionRadius, -grenade->pushForce, 50.f, true, false);
-			grenade->DestroySelf(nullptr);
-			return;
-		}
-		grenade->range = grenade->baseRange * (0.5f - 0.5f * cosf(6 * PI_F * (tTime - grenade->startTime) / grenade->timeTill));
-		grenade->lightSource->range = grenade->range;
 	}
 }
 
@@ -1093,22 +1276,42 @@ namespace UIUpdates
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / 30.f;
 		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
-		offset.x -= int(scale * 2);
+		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
-		offset.x -= int(scale * 2);
+		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
-		offset.x -= int(scale * 2);
+		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(0, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / (player->items.GetCurrentItem()->useTime * player->shootSpeed))));
-		offset.x -= int(scale * 2);
+		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastOffhand) / (player->items.GetCurrentOffhand()->useTime * player->shootSpeed))));
 
 		// Reticle:
 		game->DrawTextured(reticleSprite, 0, vZero, -Vec2(1.f / 24),
 			RGBA(255, 255, 255, 127), Vec2(1.f / 12));
+	}
+
+	void FlareUIU(Entity* entity)
+	{
+		Flare* flare = static_cast<Flare*>(entity);
+		if (!game->showUI) return;
+		flare->UIUpdate(UIUPDATE::PLAYER);
+		float scale = ScrHeight() / 30.f;
+		iVec2 offset = iVec2(ScrWidth() - scale * 8, scale * 2 - ScrHeight());
+		game->DrawFBL(offset, RGBA(18, 156, 163), Vec2(scale * 4, scale));
+		game->DrawFBL(offset, RGBA(163, 71, 18), Vec2(4 * scale * flare->currentFlame / flare->maxFlame, scale));
+		vector<StatusEffect>::iterator itr;
+		if ((itr = std::find_if(flare->statuses.begin(), flare->statuses.end(), [](StatusEffect const& s) { return s.status == STATUS::FLARE_FIRE; })) != flare->statuses.end())
+		{
+			offset.y += scale * 2;
+			float ratio = 0.33333f * itr->timeTillRemove;
+			game->DrawFBL(offset, RGBA(41, 45, 74, ratio * 255), Vec2(scale * 4, scale));
+			game->DrawFBL(offset, RGBA(15, 35, 166).CLerp(RGBA(104, 201, 212), 0.5f + 0.5f * sinf(tTime * PI_F * 3)).CLerp(
+				RGBA(15, 35, 166).CLerp(RGBA(104, 201, 212), 0.5f), 1 - ratio), Vec2(4 * scale * ratio, scale));
+		}
 	}
 
 	void EngineerUIU(Entity* entity)
@@ -1221,32 +1424,9 @@ namespace Secondaries
 		return true;
 	}
 
-#define TORNADO_SPIN_RADIUS 1.f
-	bool TornadoSpinUndo(void* entity, TimedEvent* mEvent)
+	bool ThrowFlame(Player* player)
 	{
-		Player* player = static_cast<Player*>(entity);
-		if (tTime - mEvent->startTime >= 1)
-		{
-			player->frictionMultiplier = 1;
-			return true;
-		}
-		else if (roundf(tTime * 5) != roundf((tTime - game->dTime) * 5))
-		{
-			vector<Entity*> entities = game->entities->FindOverlaps(player->pos, TORNADO_SPIN_RADIUS, MaskF::IsNonAlly, player);
-			for (Entity* e : entities)
-				e->statuses.push_back(StatusEffect(e, STATUS::FIRE, 1));
-		}
-		return false;
-	}
-
-	bool TornadoSpin(Player* player)
-	{
-		player->sTime += 0.5f;
-		player->iTime++;
-		player->frictionMultiplier = 0;
-		player->vel = TryAdd2(player->vel, player->camDir * 5.f, 20.f);
-		player->events.push_back(TimedEvent(TornadoSpinUndo));
-		game->screenShake += 0.25f;
+		game->entities->push_back(flameGlob.Clone(player->pos + player->camDir * player->radius, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
 
@@ -1291,19 +1471,13 @@ namespace Utilities
 		return true;
 	}
 
-	bool MightyShove(Player* player)
+	bool FlameThrower(Player* player)
 	{
-#define MIGHTY_SHOVE_DIST 20.f
-#define MIGHTY_SHOVE_SPEED -200.f
-#define MIGHTY_SHOVE_MAX_SPEED 15.f
-		game->entities->VacuumBurst(player->pos, MIGHTY_SHOVE_DIST, MIGHTY_SHOVE_SPEED, MIGHTY_SHOVE_MAX_SPEED, true);
-		game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, MIGHTY_SHOVE_DIST * 2.f, 2.f, player->pos, MIGHTY_SHOVE_DIST, RGBA(255, 127, 0, 127)));
-		player->iTime++;
-		player->vel.z += 10;
-		// Find all nearby entities to light them ablaze, including the player (that's why nullptr instead of player):
-		vector<Entity*> entities = game->entities->FindOverlaps(player->pos, MIGHTY_SHOVE_DIST, MaskF::IsNonAlly, player);
-		for (Entity* entity : entities)
-			entity->statuses.push_back(StatusEffect(entity, STATUS::FIRE, 1));
+		Flare* flare = static_cast<Flare*>(player);
+		if (flare->currentFlame < 1) return false;
+		flare->currentFlame--;
+		ItemInstance temp = ItemInstance(ITEMTYPE::FLARE_FLAME, 999);
+		flareFlame.Use(temp, flare->pos, flare->dir, flare, flare->name, nullptr, 0);
 		return true;
 	}
 
@@ -1325,6 +1499,16 @@ namespace StatusFuncs
 	{
 		status.entity->frictionMultiplier *= 0.1f;
 	}
+
+#define FLARE_FIRE_SPD 2
+	void FlareFireStr(StatusEffect& status)
+	{
+		if (status.entity == game->player && game->player->name == "Flare")
+		{
+			game->player->moveSpeed *= FLARE_FIRE_SPD;
+			game->player->maxSpeed *= FLARE_FIRE_SPD;
+		}
+	}
 #pragma endregion
 #pragma region Updates
 	void NoUpd(StatusEffect& status) { }
@@ -1332,6 +1516,12 @@ namespace StatusFuncs
 	void FireUpd(StatusEffect& status)
 	{
 		status.entity->ApplyHit(2, status.entity);
+	}
+
+	void FlareFireUpd(StatusEffect& status)
+	{
+		if (status.entity != game->player && game->player->name == "Flare")
+			status.entity->ApplyHit(2, status.entity);
 	}
 
 	void BleedUpd(StatusEffect& status)
@@ -1350,6 +1540,16 @@ namespace StatusFuncs
 	void WetEnd(StatusEffect& status)
 	{
 		status.entity->frictionMultiplier *= 10.f;
+	}
+
+	void FlareFireEnd(StatusEffect& status)
+	{
+		if (status.entity == game->player && game->player->name == "Flare")
+		{
+			game->player->moveSpeed /= FLARE_FIRE_SPD;
+			game->player->maxSpeed /= FLARE_FIRE_SPD;
+			game->player->ApplyHit(10, nullptr);
+		}
 	}
 #pragma endregion
 }

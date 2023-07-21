@@ -147,77 +147,79 @@ public:
 			return;
 		byte sideCount = int(genZ) + int(genY) + int(genNY) + int(genX) + int(genNX);
 		data.resize(data.size() + size_t(sideCount) * 36);
-		int r = tileColors[tiles[x][y][z]].r, g = tileColors[tiles[x][y][z]].g, b = tileColors[tiles[x][y][z]].b;
+
+		JRGB col = JRGB(tileColors[tiles[x][y][z]].r, tileColors[tiles[x][y][z]].g, tileColors[tiles[x][y][z]].b);
+
 		if (genZ)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x, y, z + 1, 0, 0, 1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z + 1, 0, 0, 1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 0, 1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 0, 1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 0, 1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z + 1, 0, 0, 1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z + 1, 0, 0, 1, col);
 			sideCount--;
 		}
 		if (genNZ)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x, y, z, 0, 0, -1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z, 0, 0, -1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y + 1, z, 0, 0, -1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z, 0, 0, -1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 0, -1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 0, -1, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z, 0, 0, -1, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z, 0, 0, -1, col);
 			sideCount--;
 		}
 		if (genY)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x, y + 1, z, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z, 0, 1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z, 0, 1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 0, 1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z + 1, 0, 1, 0, col);
 			sideCount--;
 		}
 		if (genNY)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x, y, z, 0, -1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z, 0, -1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y, z + 1, 0, -1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z + 1, 0, -1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z + 1, 0, -1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z + 1, 0, -1, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z, 0, -1, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z, 0, -1, 0, col);
 			sideCount--;
 		}
 		if (genX)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x + 1, y + 1, z, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z, 1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z, 1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y, z + 1, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y, z + 1, 1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x + 1, y + 1, z + 1, 1, 0, 0, col);
 			sideCount--;
 		}
 		if (genNX)
 		{
 			int posStart = int(data.size()) - sideCount * 36;
-			GenerateVert(data, posStart, x, y + 1, z, -1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z, -1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y + 1, z + 1, -1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y + 1, z + 1, -1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y, z + 1, -1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z + 1, -1, 0, 0, col);
 			posStart += 9;
-			GenerateVert(data, posStart, x, y, z, -1, 0, 0, JRGB(r, g, b));
+			GenerateVert(data, posStart, x, y, z, -1, 0, 0, col);
 		}
 	}
 

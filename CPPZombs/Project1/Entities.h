@@ -312,7 +312,7 @@ public:
 		rd.x = rd.x == 0 ? 0.000001f : rd.x;
 		rd.y = rd.y == 0 ? 0.000001f : rd.y;
 		rd.z = rd.z == 0 ? 0.000001f : rd.z;
-		iVec3 pos = iVec3(glm::floor(ro / float(CHUNK_WIDTH))) * CHUNK_WIDTH;
+		Vec3 pos = Chunk::ToSpace(ro) * CHUNK_WIDTH;
 
 		Vec3 step = glm::sign(rd);
 		Vec3 tDelta = step / rd;
@@ -371,7 +371,7 @@ public:
 	}
 #pragma endregion
 #pragma region Damage stuff
-	int TryDealDamage(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamage(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
 		for (Entity* entity : hitEntities)
@@ -379,7 +379,7 @@ public:
 		return 0;
 	}
 
-	int TryDealDamageAll(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAll(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		int result = 0;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
@@ -388,7 +388,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		int result = 0;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
@@ -398,7 +398,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
 	{
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
@@ -422,7 +422,7 @@ public:
 		return 0;
 	}
 
-	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -447,7 +447,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can hit tiles!!!
+	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -739,11 +739,11 @@ namespace HitResult
 }
 int Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 {
-	if (damage > 0)
-		game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
-			Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - north, RandFloat() * 2 - 1, to_string(damage),
-			RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
-			static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
+	//if (damage > 0)
+	//	game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
+	//		Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - north, RandFloat() * 2 - 1, to_string(damage),
+	//		RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
+	//		static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
 
 	health = min(health - damage, maxHealth);
 	return health <= 0 ? HitResult::DIED : HitResult::LIVED;
@@ -935,7 +935,11 @@ public:
 		FadeOutPuddle(*baseClass) {
 		this->pos = pos;
 		startTime = tTime;
-		this->creator = creator;
+		if (creator != nullptr)
+		{
+			this->creator = creator;
+			allegiance = creator->allegiance;
+		}
 	}
 
 	unique_ptr<Entity> Clone(Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr) override
@@ -949,13 +953,16 @@ class FadeOutGlow : public FadeOut
 {
 public:
 	float startRange;
-	LightSource* lightSource;
+	LightSource* lightSource = nullptr;
 
 	FadeOutGlow(EntityData* data, float range, float totalFadeTime = 1.0f, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA()) :
 		FadeOut(data, totalFadeTime, pos, radius, color), startRange(range)
 	{
-		game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
-		lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
+		if (game && game->entities)
+		{
+			game->entities->lightSources.push_back(make_unique<LightSource>(pos, JRGB(color.r, color.g, color.b), range));
+			lightSource = game->entities->lightSources[game->entities->lightSources.size() - 1].get();
+		}
 	}
 };
 
@@ -1054,7 +1061,7 @@ namespace Updates
 		if (tTime - puddle->lastTime > puddle->timePer)
 		{
 			puddle->lastTime = tTime;
-			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsCorporealNotCreator, puddle);
+			game->entities->TryDealDamageAll(puddle->damage, puddle->pos, puddle->radius, MaskF::IsNonAlly, puddle);
 		}
 		if (tTime - puddle->startTime > puddle->totalFadeTime)
 			puddle->DestroySelf(puddle);
