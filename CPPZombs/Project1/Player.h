@@ -1102,7 +1102,7 @@ namespace Updates
 	void FlareU(Entity* entity)
 	{
 		Flare* flare = static_cast<Flare*>(entity);
-		flare->currentFlame = min(flare->maxFlame, flare->currentFlame - game->dTime * 0.5f);
+		flare->currentFlame = ClampF(flare->currentFlame - game->dTime * 0.5f, 0, flare->maxFlame);
 		float tempSpeed = flare->maxSpeed;
 		flare->maxSpeed *= flare->currentFlame / flare->maxFlame;
 		flare->maxSpeed = Lerp(flare->maxSpeed, tempSpeed, 0.5f);
