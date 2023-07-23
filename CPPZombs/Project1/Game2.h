@@ -841,22 +841,41 @@ void Game::Update()
 				currentFramebuffer = 0;
 				UseFramebuffer();
 			}
+
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), int(ScrHeight() * 0.75f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-			font.Render(deathName + " was killed by :", { -ScrWidth(), int(ScrHeight() * 0.5f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
-			font.Render(deathCauseName, { -ScrWidth(), int(ScrHeight() * 0.25f) }, ScrHeight() / 5.0f, { 255, 255, 255 });
 
-			if (InputHoverSquare(iVec2(0, ScrHeight() / 2), ScrHeight() / 10.0f, "Restart"))
+
+			vector<std::pair<string, RGBA>> startSeedData;
+			for (int j = 0; j < Resources::Seeds::plantSeeds.size(); j++)
+				if (settings.startSeeds[j])
+					startSeedData.push_back({ Resources::Seeds::plantSeeds[j]->name, Resources::Seeds::plantSeeds[j]->color });
+
+			float totalLines = 9 + startSeedData.size() + 0.2f;
+			float scale = float(ScrHeight()) / totalLines, scale2 = scale * 0.8f, scale3 = scale * 2, scale4 = scale2 * 2;
+			float offset = scale * 0.2f, offset2 = offset * 2;
+			int i = 0;
+
+			font.Render(difficultyStrs[settings.difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
+				{ settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
+
+			if (InputHoverSquare(Vec2(0, offset + scale * i++), scale2, "Main menu"))
+				uiMode = UIMODE::MAINMENU;
+			if (InputHoverSquare(iVec2(0, offset + scale * i++), scale2, "Restart"))
 			{
 				Start();
 				uiMode = UIMODE::INGAME;
 			}
-			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, "Main menu"))
-				uiMode = UIMODE::MAINMENU;
 
-			font.Render(difficultyStrs[settings.difficulty], { -ScrWidth(), int(ScrHeight() * -0.5f) }, ScrHeight() / 5.0f,
-				{ settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
+			font.Render(deathCauseName, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+			font.Render(deathName + " was killed by :", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+			font.Render("Lasted " + std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1), {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, {255, 255, 255});
+		
+			for (std::pair<string, RGBA> p : startSeedData)
+				font.Render(p.first, {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, p.second);
+			font.Render(startSeedData.size() ? "Started with:" : "Started seedless", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+			font.Render("Started as " + characters[UnEnum(settings.character)]->name, {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, characters[UnEnum(settings.character)]->color);
 		}
 	}
 }
