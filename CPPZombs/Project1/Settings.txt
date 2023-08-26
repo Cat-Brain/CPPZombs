@@ -1,8 +1,8 @@
 color band = true
-vSync = true
+vSync = false
 displayFPS = true
 difficulty = hard
 maximized = true
 chunk render dist = 3
-start seeds = ftffffftftfftffff
+start seeds = ftffftftfffftffff
 character = 0

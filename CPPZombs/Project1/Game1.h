@@ -62,6 +62,8 @@ public:
 	float scroll = 0;
 	Vec3 lastPlayerPos = vZero;
 	FastNoiseLite screenShkX, screenShkY, screenShkZ;
+	float endTimer = -1;
+	int endWidth = -1, endHeight = -1;
 
 	Game() : entities(nullptr), player(nullptr), base(nullptr), logBook(make_unique<LogBook>()) { }
 
@@ -69,7 +71,7 @@ public:
 
 	void Update() override;
 
-	void End() override;
+	bool End() override;
 
 	void ApplyLighting();
 

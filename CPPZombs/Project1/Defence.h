@@ -277,6 +277,7 @@ namespace Updates
 {
 	void VineU(Entity* entity)
 	{
+		if (entity->health <= 0) return;
 		Vine* vine = static_cast<Vine*>(entity);
 		if (vine->front == nullptr)
 		{
@@ -498,7 +499,7 @@ namespace Plants
 		Shrub rubyShrub = Shrub(&shrubData, Resources::ruby.Clone(), ItemInstance(ITEMTYPE::RUBY_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyRubyShrubColor, rubyShrubColor, deadRubyShrubColor, 0.2f, 3.0f, 0, 10, 10, "Ruby shrub");
 
 		RGBA babyEmeraldShrubColor = RGBA(145, 255, 204), emeraldShrubColor = RGBA(65, 166, 119), deadEmeraldShrubColor = RGBA(61, 97, 80);
-		Shrub emeraldShrub = Shrub(&shrubData, Resources::emerald.Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 4.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 0, 10, 10, "Emerald shrub");
+		Shrub emeraldShrub = Shrub(&shrubData, Resources::emerald.Clone(), ItemInstance(ITEMTYPE::EMERALD_SHRUB_SEED), 5, 15, 50, 6.0f, 0.25f, 1.5f, babyEmeraldShrubColor, emeraldShrubColor, deadEmeraldShrubColor, 0.2f, 3.0f, 0, 10, 10, "Emerald shrub");
 
 		RGBA babyRockShrubColor = RGBA(212, 212, 212), rockShrubColor = RGBA(201, 196, 165), deadRockShrubColor = RGBA(130, 130, 130);
 		Shrub rockShrub = Shrub(&shrubData, Resources::rock.Clone(), ItemInstance(ITEMTYPE::ROCK_SHRUB_SEED), 5, 14, 25, 3.0f, 0.25f, 1.5f, babyRockShrubColor, rockShrubColor, deadRockShrubColor, 0.2f, 3.0f, 0, 10, 10, "Rock shrub");
@@ -558,7 +559,7 @@ namespace Resources::Seeds
 	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
 	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
 	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", 2, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
-	CorruptOnKill emeraldShrubSeed = CorruptOnKill(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Corruption Seed", 2, Plants::Shrubs::emeraldShrubColor, 10, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius);
+	PlacedOnLanding emeraldShrubSeed = PlacedOnLanding(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Seed", 2, Plants::Shrubs::emeraldShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius, false, true, true);
 	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
 	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
 	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);

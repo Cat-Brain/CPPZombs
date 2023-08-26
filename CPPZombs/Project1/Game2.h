@@ -1120,7 +1120,28 @@ void Game::MenuedEntityDied(Entity* entity)
 		player->currentMenuedEntity = nullptr;
 }
 
-void Game::End()
+bool Game::End()
 {
-	// Maybe needed later.
+	if (endTimer == -1)
+	{
+		endTimer = glfwGetTime();
+		glfwGetWindowSize(window, &endWidth, &endHeight);
+		glfwSetWindowTitle(window, "Martionotany - Goodbye!");
+		if (IsFullscreen())
+			glfwSetWindowMonitor(window, nullptr, 100, 100, START_SCR_WIDTH, START_SCR_HEIGHT, 0);
+	}
+	else
+	{
+		float mul = 1 - glfwGetTime() + endTimer;
+		if (mul <= 0) return true;
+		glfwSwapInterval(int(settings.vSync));
+		glClearColor(0, 0, 0, mul);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glfwSetWindowSize(window, endWidth * mul, endHeight * mul);
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	return false;
 }

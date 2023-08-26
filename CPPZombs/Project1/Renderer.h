@@ -303,7 +303,7 @@ private:
 
 	void TEnd()
 	{
-		End();
+		while (!End());
 		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
 			glDeleteProgram(*(std::get<1>(pairPair)));
 		for (Framebuffer* framebuffer : framebuffers)
@@ -346,7 +346,7 @@ public:
 
 	virtual void Start() { }
 	virtual void Update() { }
-	virtual void End() { }
+	virtual bool End() { return true; }
 	
 	void CalcFrustum()
 	{

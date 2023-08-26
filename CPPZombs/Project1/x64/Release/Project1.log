@@ -8,11 +8,11 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Planet.h(37,26): warni
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entity.h(435,31): warning C4244: '=': conversion from 'float' to 'byte', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(619,144): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(682,33): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(936,299): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(937,185): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1662,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(323,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(341,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(963,32): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(323,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(341,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(963,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1165,66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1279,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
@@ -40,17 +40,17 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1309,22): war
               T=int
           ]
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1311,49): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(49,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(49,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(50,61): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
           [
               _Ty=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(66,40): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(66,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(67,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(97,50): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(97,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(98,64): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(123,39): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(123,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(124,62): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
           [
@@ -63,10 +63,14 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(763,61): warni
               _Ty=int
           ]
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1026,21): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1127,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1135,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1141,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1141,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  1 of 6750 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  531 of 6750 functions ( 7.9%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    9 functions had inline decision re-evaluated but remain unchanged
+    13 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe

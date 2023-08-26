@@ -105,7 +105,7 @@ namespace Shootables
 	DToCol brick = DToCol(&dToColData, vZero, 0.75, RGBA(168, 101, 81), RGBA(), 15, 0.2f, 600, 600, "Brick");
 
 	LightBlock cheese = LightBlock(&lightBlockData, JRGB(191, 191, 61), true, 25, vZero, 0.5f, RGBA(235, 178, 56), RGBA(), 1, 0, 1, 1, "Cheese");
-	LightBlock shade = LightBlock(&lightBlockData, JRGB(255, 255, 255), false, 15, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 1, 1, "Shades");
+	LightBlock shade = LightBlock(&lightBlockData, JRGB(255, 255, 255), false, 8, vZero, 0.5f, RGBA(255, 255, 255), RGBA(), 1, 0, 300, 300, "Shades");
 }
 
 namespace Resources
@@ -113,7 +113,7 @@ namespace Resources
 	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 	
 	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
-	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Light", 3, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Wall", 6, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 }
 
 namespace Collectibles
