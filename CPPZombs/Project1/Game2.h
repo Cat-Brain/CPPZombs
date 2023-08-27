@@ -40,8 +40,9 @@ void LogBook::DUpdate()
 			"",
 			"Tab for inventory",
 			"Q and E to switch row",
+			"Row switching is a setting",
 			"",
-			"F to enter build mode",
+			"V to enter build mode",
 			"Left click to place",
 			"Right click to destroy"
 		};
@@ -179,6 +180,18 @@ void LogBook::DUpdate()
 			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
 		{
 			game->settings.chunkRenderDist++;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
+			game->settings.spawnAllTypesInStage ? "Yes spawn all types in stage" : "No spawn all types in stage", game->settings.spawnAllTypesInStage ? RGBA(0, 255) : RGBA(255), game->settings.spawnAllTypesInStage ? RGBA(0, 127) : RGBA(127)))
+		{
+			game->settings.spawnAllTypesInStage ^= true;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
+			game->settings.canChangeRow ? "Yes can change row" : "No cannot change row", game->settings.canChangeRow ? RGBA(0, 255) : RGBA(255), game->settings.canChangeRow ? RGBA(0, 127) : RGBA(127)))
+		{
+			game->settings.canChangeRow ^= true;
 			game->settings.Write();
 		}
 	}
@@ -633,6 +646,10 @@ void Game::Start()
 
 	tTime2 = 0;
 
+	tutorialState = 0;
+
+	specialData.clear();
+
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
 
 	planet = std::make_unique<Planet>();
@@ -680,57 +697,113 @@ void Game::Start()
 	screenShkZ.SetSeed(static_cast<int>(time(NULL) + 1));
 
 	screenShake = 0.0f;
+
+	startCallbacks[UnEnum(startCallback)]();
 }
 	
 void Game::Update()
 {
 	inputs.UpdateMouse(window, settings.sensitivity);
 
-	float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+	updateModes[UnEnum(updateMode)]();
+}
 
-	if (uiMode == UIMODE::MAINMENU)
+namespace StartCallbacks
+{
+	void Default() { }
+
+	void Tutorial1()
 	{
+		// Disable enemy spawns:
+		game->planet->faction1Spawns->speedMul = 0;
+		game->planet->wildSpawns->speedMul = 0;
+		// State that this was in a tutorial in the death message:
+		game->specialData.push_back({ "In Combat Tutorial", RGBA(255, 127) });
+	}
+
+	void Tutorial2()
+	{
+		// Disable enemy spawns:
+		game->planet->faction1Spawns->speedMul = 0;
+		game->planet->wildSpawns->speedMul = 0;
+		// State that this was in a tutorial in the death message:
+		game->specialData.push_back({ "In Farming Tutorial", RGBA(255, 127) });
+	}
+
+	void Tutorial3()
+	{
+		// Disable enemy spawns:
+		game->planet->faction1Spawns->speedMul = 0;
+		game->planet->wildSpawns->speedMul = 0;
+		// State that this was in a tutorial in the death message:
+		game->specialData.push_back({ "In Building Tutorial", RGBA(255, 127) });
+	}
+
+	void Tutorial4()
+	{
+		// Disable enemy spawns:
+		game->planet->faction1Spawns->speedMul = 0;
+		game->planet->wildSpawns->speedMul = 0;
+		// State that this was in a tutorial in the death message:
+		game->specialData.push_back({ "In Inventory Management Tutorial", RGBA(255, 127) });
+	}
+}
+
+namespace UpdateModes
+{
+	void MainMenu()
+	{
+		float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (logBook->isOpen)
-			return logBook->DUpdate();
+		if (game->logBook->isOpen)
+			return game->logBook->DUpdate();
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Character Select",
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Character Select",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
-			scroll = 0;
-			uiMode = UIMODE::CHARSELECT;
+			game->scroll = 0;
+			game->updateMode = UPDATEMODE::CHAR_SELECT;
 		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Exit"))
-			glfwSetWindowShouldClose(window, GL_TRUE);
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.625f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], settings.difficulty == DIFFICULTY::EASY ?
-			RGBA(0, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Exit"))
+			glfwSetWindowShouldClose(game->window, GL_TRUE);
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], game->settings.difficulty == DIFFICULTY::EASY ?
+			RGBA(0, 255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
 		{
-			settings.difficulty = DIFFICULTY::EASY;
-			settings.Write();
+			game->settings.difficulty = DIFFICULTY::EASY;
+			game->settings.Write();
 		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.5f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], settings.difficulty == DIFFICULTY::MEDIUM ?
-			RGBA(255, 255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], game->settings.difficulty == DIFFICULTY::MEDIUM ?
+			RGBA(255, 255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
 		{
-			settings.difficulty = DIFFICULTY::MEDIUM;
-			settings.Write();
+			game->settings.difficulty = DIFFICULTY::MEDIUM;
+			game->settings.Write();
 		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.375f)), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], settings.difficulty == DIFFICULTY::HARD ?
-			RGBA(255) : RGBA(255, 255, 255), settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], game->settings.difficulty == DIFFICULTY::HARD ?
+			RGBA(255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
 		{
-			settings.difficulty = DIFFICULTY::HARD;
-			settings.Write();
+			game->settings.difficulty = DIFFICULTY::HARD;
+			game->settings.Write();
 		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.25f)), ScrHeight() / 10.0f, "Settings"))
-			logBook->OpenSettings();
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.125f)), ScrHeight() / 10.0f, "LogBook"))
-			logBook->OpenLogBook();
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.25f), ScrHeight() / 10.0f, "Settings"))
+			game->logBook->OpenSettings();
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.125f), ScrHeight() / 10.0f, "LogBook"))
+			game->logBook->OpenLogBook();
+		if (InputHoverSquare(vZero, ScrHeight() / 10.0f, "Tutorial Select"))
+		{
+			game->scroll = 0;
+			game->updateMode = UPDATEMODE::TUTORIAL_SELECT;
+		}
 	}
-	else if (uiMode == UIMODE::CHARSELECT)
+
+	void CharSelect()
 	{
+		float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -739,144 +812,443 @@ void Game::Update()
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Seed Select",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
-			scroll = 0;
-			uiMode = UIMODE::SEED_SELECT;
+			game->scroll = 0;
+			game->updateMode = UPDATEMODE::SEED_SELECT;
 		}
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].pressed)
-			uiMode = UIMODE::MAINMENU;
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
+			game->updateMode = UPDATEMODE::MAINMENU;
 
 		for (int i = 0; i < characters.size(); i++)
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
-				UnEnum(settings.character) == i ? characters[i]->color : RGBA(255, 255, 255), UnEnum(settings.character) == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
+				UnEnum(game->settings.character) == i ? characters[i]->color : RGBA(255, 255, 255), UnEnum(game->settings.character) == i ? characters[i]->color / 2 : RGBA(127, 127, 127)))
 			{
-				settings.character = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
-				settings.Write();
+				game->settings.character = static_cast<CHARS>(i); // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+				game->settings.Write();
 			}
 	}
-	else if (uiMode == UIMODE::SEED_SELECT)
+
+	void SeedSelect()
 	{
+		float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+
 		currentFramebuffer = 0;
 		UseFramebuffer();
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 8));
+		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 8));
 		game->inputs.mouseScrollF = 0;
-		float offset = ScrHeight() * 0.125f * scroll;
+		float offset = ScrHeight() * 0.125f * game->scroll;
 
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
-			Start();
-			uiMode = UIMODE::INGAME;
+			game->Start();
+			game->updateMode = UPDATEMODE::IN_GAME;
 		}
-		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Back") || inputs.keys[KeyCode::PAUSE].pressed)
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
 		{
-			scroll = 0;
-			uiMode = UIMODE::CHARSELECT;
+			game->scroll = 0;
+			game->updateMode = UPDATEMODE::CHAR_SELECT;
 		}
 
 		int selectedTotal = 0;
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
-			if (settings.startSeeds[i])
+			if (game->settings.startSeeds[i])
 				selectedTotal++;
 		int allowedTotal = difficultySeedSelectQuantity[game->settings.difficulty];
 		if (selectedTotal > allowedTotal)
 		{
 			for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
-				settings.startSeeds[i] = false;
-			settings.Write();
+				game->settings.startSeeds[i] = false;
+			game->settings.Write();
 		}
-		string strAmountRemaining = std::to_string(allowedTotal - selectedTotal);
-		font.Render(strAmountRemaining, Vec2(ScrWidth() - ScrHeight() * 0.1f, ScrHeight() * 0.9f), ScrHeight() * 0.1f, RGBA(255, 255, 255));
+		string strAmountRemaining = allowedTotal == selectedTotal ? "Complete" : "Choose " + std::to_string(allowedTotal - selectedTotal) + " more";
+		font.Render(strAmountRemaining, Vec2(ScrWidth() - ScrHeight() * 0.1f * font.TextWidthTrue(strAmountRemaining),
+			ScrHeight() * 0.9f), ScrHeight() * 0.1f, RGBA(0, 0, 255).CLerp(RGBA(255, 127), sineLerp));
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
 		{
 			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (0.625f - i * 0.125f)), ScrHeight() / 10.0f, Plants::plants[i]->name,
-				settings.startSeeds[i] ? Plants::plants[i]->color.CLerp(RGBA(), sineLerp) : RGBA(255, 255, 255), settings.startSeeds[i] ? Plants::plants[i]->color / 2 : RGBA(127, 127, 127)) &&
-				(selectedTotal < allowedTotal || settings.startSeeds[i]))
+				game->settings.startSeeds[i] ? Plants::plants[i]->color.CLerp(RGBA(), sineLerp) : RGBA(255, 255, 255), game->settings.startSeeds[i] ? Plants::plants[i]->color / 2 : RGBA(127, 127, 127)) &&
+				(selectedTotal < allowedTotal || game->settings.startSeeds[i]))
 			{
-				settings.startSeeds[i] ^= true; // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
-				settings.Write();
+				game->settings.startSeeds[i] ^= true; // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+				game->settings.Write();
 			}
 		}
 	}
-	else // In game or paused
-	{
-		if (playerAlive)
-		{
-			TUpdate();
-			if (uiMode == UIMODE::PAUSED)
-			{
-				currentFramebuffer = TRUESCREEN;
-				UseFramebuffer();
-				inputs.UpdateKey(window, inputs.keys[KeyCode::PAUSE]);
 
-				if (logBook->isOpen)
-					logBook->DUpdate();
-				else // Don't render this stuff whenever the logbook's open!
-				{
-					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Return"))
-					{
-						cursorUnlockCount--;
-						uiMode = UIMODE::INGAME;
-					}
-					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Restart"))
-					{
-						Start();
-						uiMode = UIMODE::INGAME;
-					}
-					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, "Main Menu"))
-						uiMode = UIMODE::MAINMENU;
-					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Settings"))
-						logBook->OpenSettings();
-					if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Log Book"))
-						logBook->OpenLogBook();
-				}
+	void TutorialSelect()
+	{
+		float sineLerp = sinf(glfwGetTime() * 2 * PI_F) * 0.5f + 0.5f;
+
+		currentFramebuffer = 0;
+		UseFramebuffer();
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, static_cast<int>(tutorialStrs.size() - 9)));
+		game->inputs.mouseScrollF = 0;
+		float offset = ScrHeight() * 0.125f * game->scroll;
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
+		{
+			game->scroll = 0;
+			game->updateMode = UPDATEMODE::MAINMENU;
+		}
+
+		for (int i = 0; i < tutorialStrs.size(); i++)
+		{
+			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (0.75f - i * 0.125f)), ScrHeight() * 0.1f, tutorialStrs[i],
+				RGBA(255, 255, 255), RGBA(127, 127, 127)))
+			{
+				game->startCallback = (STARTCALLBACK)(i + 1);
+				game->preUpdate = (PREUPDATE)(i + 1);
+				game->postUpdate = (POSTUPDATE)(i + 1);
+				game->updateMode = UPDATEMODE::IN_GAME;
+				for (int j = 0; j < UnEnum(SEEDINDICES::COUNT); j++)
+					game->settings.startSeeds[j] = false;
+				game->Start();
 			}
+		}
+	}
+
+	void InGame()
+	{
+		// If the player has died then we should switch to the death screen:
+		if (!playerAlive)
+		{
+			game->updateMode = UPDATEMODE::DEAD;
+			return;
+		}
+		// We're not dead so the update code gets run.
+#pragma region Pre-Update
+		if (game->dTime >= 1.f)
+			return; // Don't run frame if there was a GIGANTIC frame drop.
+		// This is normally off.
+		glEnable(GL_DEPTH_TEST);
+		// Prepare current framebuffer to be used in rendering of the frame.
+		currentFramebuffer = MAINSCREEN;
+		UseFramebuffer();
+		game->inputs.Update(game->window);
+		// In TUpdate such that time doesn't progress whilst paused.
+		if (game->updateMode == UPDATEMODE::IN_GAME)
+		{
+			tTime += game->dTime;
+			tTime2 += game->dTime;
 		}
 		else
 		{
-			if (currentFramebuffer != 0)
-			{
-				currentFramebuffer = 0;
-				UseFramebuffer();
-			}
-
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-			vector<std::pair<string, RGBA>> startSeedData;
-			for (int j = 0; j < Resources::Seeds::plantSeeds.size(); j++)
-				if (settings.startSeeds[j])
-					startSeedData.push_back({ Resources::Seeds::plantSeeds[j]->name, Resources::Seeds::plantSeeds[j]->color });
-
-			float totalLines = 9 + startSeedData.size() + 0.2f;
-			float scale = float(ScrHeight()) / totalLines, scale2 = scale * 0.8f, scale3 = scale * 2, scale4 = scale2 * 2;
-			float offset = scale * 0.2f, offset2 = offset * 2;
-			int i = 0;
-
-			font.Render(difficultyStrs[settings.difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
-				{ settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
-
-			if (InputHoverSquare(Vec2(0, offset + scale * i++), scale2, "Main menu"))
-				uiMode = UIMODE::MAINMENU;
-			if (InputHoverSquare(iVec2(0, offset + scale * i++), scale2, "Restart"))
-			{
-				Start();
-				uiMode = UIMODE::INGAME;
-			}
-
-			font.Render(deathCauseName, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
-			font.Render(deathName + " was killed by :", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
-			font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
-			font.Render("Lasted " + std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1), {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, {255, 255, 255});
-		
-			for (std::pair<string, RGBA> p : startSeedData)
-				font.Render(p.first, {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, p.second);
-			font.Render(startSeedData.size() ? "Started with:" : "Started seedless", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
-			font.Render("Started as " + characters[UnEnum(settings.character)]->name, {-ScrWidth(), -ScrHeight() + offset2 + scale3 * i++}, scale4, characters[UnEnum(settings.character)]->color);
+			game->dTime = 0; // Don't let time pass while paused.
+			game->inputs.mouseOffset = vZero; // Don't let the player do any rotation while paused.
 		}
+
+		if ((game->lastCursorUnlockCount == 0) != (game->cursorUnlockCount == 0))
+		{
+			game->lastCursorUnlockCount = game->cursorUnlockCount;
+			if (game->cursorUnlockCount != 0)
+				game->inputs.mouseOffset = vZero; // If the player just entered something like a menu then ignore the mouse offset.
+		}
+
+		if (playerAlive && game->inputs.keys[KeyCode::PAUSE].pressed)
+		{
+			if (game->updateMode == UPDATEMODE::IN_GAME)
+			{
+				game->updateMode = UPDATEMODE::PAUSED;
+				game->cursorUnlockCount++;
+			}
+			else
+			{
+				game->updateMode = UPDATEMODE::IN_GAME;
+				game->cursorUnlockCount--;
+			}
+		}
+
+		game->screenShake *= powf(0.25f, game->dTime);
+		game->screenOffset = Vec3(game->screenShkX.GetNoise(tTime, 0.f), game->screenShkY.GetNoise(tTime, 0.f), game->screenShkZ.GetNoise(tTime, 0.f)) * game->screenShake;
+
+		game->brightness = game->planet->GetBrightness();
+
+		preUpdates[UnEnum(game->preUpdate)]();
+#pragma endregion
+		
+#pragma region Update Stuff
+		game->entities->Update(); // Updates all entities.
+		// Now that the player has moved mark where it is for rendering:
+		game->camPos = game->screenOffset + game->player->pos;
+
+		game->camera = glm::lookAt(game->camPos, game->camPos + game->player->camDir, up);
+		game->camRot = glm::lookAt(vZero, game->player->camDir, up);
+		game->camForward = game->player->camDir;
+		game->camRight = game->player->rightDir;
+		game->camUp = game->player->upDir;
+
+		game->cameraInv = glm::inverse(game->camera);
+		game->perspective = glm::perspective(game->fov, screenRatio, game->nearDist, game->farDist);
+		game->CalcFrustum();
+
+		game->lastPlayerPos = game->player->pos;
+		glUseProgram(circleShader);
+		glUniformMatrix4fv(glGetUniformLocation(circleShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(circleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(game->cameraInv));
+		glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
+		glUniform3f(glGetUniformLocation(circleShader, "camPos"), game->camPos.x, game->camPos.y, game->camPos.z);
+		glUseProgram(cylinderShader);
+		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
+		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(game->cameraInv));
+		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
+		glUniform3f(glGetUniformLocation(cylinderShader, "camPos"), game->camPos.x, game->camPos.y, game->camPos.z);
+		glUseProgram(capsuleShader);
+		glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
+		glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(game->cameraInv));
+		glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
+		glUniform3f(glGetUniformLocation(capsuleShader, "camPos"), game->camPos.x, game->camPos.y, game->camPos.z);
+		glUseProgram(coneShader);
+		glUniformMatrix4fv(glGetUniformLocation(coneShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(coneShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
+		glUniformMatrix4fv(glGetUniformLocation(coneShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(game->cameraInv));
+		glUniformMatrix4fv(glGetUniformLocation(coneShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
+		glUniform3f(glGetUniformLocation(coneShader, "camPos"), game->camPos.x, game->camPos.y, game->camPos.z);
+		glUseProgram(chunkShader);
+		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
+		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective * game->camera));
+		glUseProgram(shadowShader);
+		glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective * game->camera));
+		glUniform2f(glGetUniformLocation(shadowShader, "screenDim"), float(trueScreenWidth), float(trueScreenHeight));
+
+		JRGB skyCol = game->planet->SkyCol();
+		glClearColor(skyCol.r / 255.f, skyCol.g / 255.f, skyCol.b / 255.f, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		static const float normalDef[] = { 0, 0, 0, 0 };
+		glClearBufferfv(GL_COLOR, 1, normalDef);
+		static const float noPosition[] = { 0, 0, 0, 0 };
+		glClearBufferfv(GL_COLOR, 2, noPosition);
+		game->entities->DUpdate(); // Draws all entities.
+		game->ApplyLighting(); // Apply lighting.
+		glDisable(GL_DEPTH_TEST);
+		game->DrawFramebufferOnto(TRUESCREEN);
+
+		game->entities->UIUpdate(); // Draws UI of uiactive entities.
+#pragma endregion
+
+#pragma region Post Update
+		if (game->inputs.keys[KeyCode::HIDEUI].pressed)
+			game->showUI = !game->showUI;
+		if (game->showUI && playerAlive)
+		{
+			if (game->shouldSpawnBoss)
+			{
+				float timeTillNextBoss = 60.0f - tTime + game->timeStartBossPrep;
+				font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1) + " " +
+					std::to_string(int(timeTillNextBoss)) + "." +
+					std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f,
+					game->planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
+			}
+			else
+				font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1),
+					iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, game->planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
+			font.Render(std::to_string(game->player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
+			font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
+		}
+
+		postUpdates[UnEnum(game->postUpdate)]();
+
+		frameCount++;
+#pragma endregion
+	}
+
+	void Paused()
+	{
+		updateModes[UnEnum(UPDATEMODE::IN_GAME)]();
+
+		if (!playerAlive) return;
+
+		currentFramebuffer = TRUESCREEN;
+		UseFramebuffer();
+		game->inputs.UpdateKey(game->window, game->inputs.keys[KeyCode::PAUSE]);
+
+		if (game->logBook->isOpen)
+			game->logBook->DUpdate();
+		else // Don't render this stuff whenever the logbook's open!
+		{
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Return"))
+			{
+				game->cursorUnlockCount--;
+				game->updateMode = UPDATEMODE::IN_GAME;
+			}
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Restart"))
+			{
+				game->Start();
+				game->updateMode = UPDATEMODE::IN_GAME;
+			}
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, "Main Menu"))
+				game->updateMode = UPDATEMODE::MAINMENU;
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Settings"))
+				game->logBook->OpenSettings();
+			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Log Book"))
+				game->logBook->OpenLogBook();
+		}
+	}
+
+	void Dead()
+	{
+		if (currentFramebuffer != 0)
+		{
+			currentFramebuffer = 0;
+			UseFramebuffer();
+		}
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		vector<std::pair<string, RGBA>> startSeedData;
+		for (int j = 0; j < Resources::Seeds::plantSeeds.size(); j++)
+			if (game->settings.startSeeds[j])
+				startSeedData.push_back({ Resources::Seeds::plantSeeds[j]->name, Resources::Seeds::plantSeeds[j]->color });
+
+		float totalLines = 9 + startSeedData.size() + game->specialData.size() + 0.2f;
+		float scale = float(ScrHeight()) / totalLines, scale2 = scale * 0.8f, scale3 = scale * 2, scale4 = scale2 * 2;
+		float offset = scale * 0.2f, offset2 = offset * 2;
+		int i = 0;
+	
+		font.Render(difficultyStrs[game->settings.difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
+			{ game->settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, game->settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
+
+		for (std::pair<string, RGBA> p : game->specialData)
+			font.Render(p.first, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, p.second);
+	
+		if (InputHoverSquare(Vec2(0, offset + scale * i++), scale2, "Main menu"))
+			game->updateMode = UPDATEMODE::MAINMENU;
+		if (InputHoverSquare(iVec2(0, offset + scale * i++), scale2, "Restart"))
+		{
+			game->Start();
+			game->updateMode = UPDATEMODE::IN_GAME;
+		}
+
+		font.Render(deathCauseName, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+		font.Render(deathName + " was killed by :", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+		font.Render(to_string(totalGamePoints) + " points", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+		font.Render("Lasted " + std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1), { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+
+		for (std::pair<string, RGBA> p : startSeedData)
+			font.Render(p.first, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, p.second);
+		font.Render(startSeedData.size() ? "Started with:" : "Started seedless", { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+		font.Render("Started as " + characters[UnEnum(game->settings.character)]->name, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, characters[UnEnum(game->settings.character)]->color);
+	}
+}
+
+namespace PreUpdates
+{
+	void Default()
+	{
+		// Spawn boss:
+		if (game->inputs.keys[KeyCode::ENTER].pressed && !game->shouldSpawnBoss)
+		{
+			game->shouldSpawnBoss = true;
+			game->timeStartBossPrep = tTime;
+		}
+
+		if (game->shouldSpawnBoss && tTime - game->timeStartBossPrep >= 60.0f)
+		{
+			game->planet->bosses->SpawnOneRandom();
+			game->shouldSpawnBoss = false;
+		}
+		waveCount = tTime2 / 60;
+
+		// Enemy spawn stuff:
+		game->planet->faction1Spawns->Update();
+		game->planet->wildSpawns->Update();
+	}
+
+	void Tutorial1()
+	{
+		Default();
+
+		if (game->tutorialState == 0 && game->inputs.MoveDir() != vZero)
+			game->tutorialState = 1;
+		if (game->tutorialState == 1 && game->player->lastPrimary != -game->player->primaryTime)
+			game->tutorialState = 2;
+		if (game->tutorialState == 2 && game->player->lastUtility != -game->player->utilityTime)
+			game->tutorialState = 3;
+		if (game->tutorialState == 3 && game->player->lastSecondary != -game->player->secondaryTime)
+		{
+			game->tutorialState = 4;
+			// Make enemies spawn:
+			game->planet->faction1Spawns->speedMul = 3;
+			game->planet->wildSpawns->speedMul = 3;
+		}
+		if (game->tutorialState >= 4 && game->tutorialState < 9 && floorf(tTime) != floorf(tTime - game->dTime))
+			game->tutorialState++;
+		if (game->tutorialState >= 9 && game->tutorialState < 14 && floorf(tTime) != floorf(tTime - game->dTime))
+			game->tutorialState++;
+	}
+
+	void Tutorial2()
+	{
+		Default();
+	}
+
+	void Tutorial3()
+	{
+		Default();
+	}
+
+	void Tutorial4()
+	{
+		Default();
+	}
+}
+
+namespace PostUpdates
+{
+	void Default() { }
+
+	void Tutorial1()
+	{
+		Default();
+		vector<string> tutLines;
+		switch (game->tutorialState)
+		{
+		case 0:
+			tutLines = { "WASD to move", "Mouse to look around" };
+			break;
+		case 1:
+			tutLines = { "Left click to shoot", "You shoot whatever is selected", "More info in inventory management" };
+			break;
+		case 2:
+			tutLines = { "Shift to activate utility", "Many characters require you to hold a direction", "Each character has a different utility"};
+			break;
+		case 3:
+			tutLines = { "R to activate secondary", "Each character has a different secondary"};
+			break;
+		default:
+			if (game->tutorialState < 9)
+				tutLines = { "Enemies spawn in waves", "Most enemies belong to factions", "Enemies of seperate factions will fight" };
+			else if (game->tutorialState < 14)
+				tutLines = { "Good luck!" };
+			break;
+		}
+		for (int i = 0; i < tutLines.size(); i++)
+			font.Render(tutLines[i], Vec2(ScrWidth() - ScrHeight() * 0.1f * font.TextWidthTrue(tutLines[i]),
+				ScrHeight() * (0.9f - i * 0.1f)), ScrHeight() * 0.1f, RGBA(127, 127, 127));
+	}
+
+	void Tutorial2()
+	{
+		Default();
+	}
+
+	void Tutorial3()
+	{
+		Default();
+	}
+
+	void Tutorial4()
+	{
+		Default();
 	}
 }
 
@@ -963,157 +1335,6 @@ float Game::BrightnessAtPos(iVec2 pos)
 	return static_cast<float>(ClampF(r + g + b, 0, 765)) / 765.0f; // 765 = 255 * 3 and 255 is max byte and 3 is channel count.
 }
 
-void Game::TUpdate()
-{
-	if (dTime >= 1.f)
-		return; // Don't run frame if there was a GIGANTIC frame drop.
-	// This is normally off.
-	glEnable(GL_DEPTH_TEST);
-	// Prepare current framebuffer to be used in rendering of the frame.
-	currentFramebuffer = MAINSCREEN;
-	UseFramebuffer();
-	// In TUpdate such that time doesn't progress whilst paused.
-	if (game->uiMode == UIMODE::INGAME)
-	{
-		tTime += dTime;
-		tTime2 += dTime;
-		game->inputs.Update(window);
-	}
-	else
-	{
-		dTime = 0; // Don't let time pass while paused.
-		inputs.mouseOffset = vZero; // Don't let the player do any rotation while paused.
-	}
-
-	if ((lastCursorUnlockCount == 0) != (cursorUnlockCount == 0))
-	{
-		lastCursorUnlockCount = cursorUnlockCount;
-		if (cursorUnlockCount != 0)
-			inputs.mouseOffset = vZero; // If the player just entered something like a menu then ignore the mouse offset.
-	}
-
-	if (playerAlive && inputs.keys[KeyCode::PAUSE].pressed)
-	{
-		if (uiMode == INGAME)
-		{
-			uiMode = UIMODE::PAUSED;
-			cursorUnlockCount++;
-		}
-		else
-		{
-			uiMode = UIMODE::INGAME;
-			cursorUnlockCount--;
-		}
-	}
-
-	screenShake *= powf(0.25f, game->dTime);
-	screenOffset = Vec3(screenShkX.GetNoise(tTime, 0.f), screenShkY.GetNoise(tTime, 0.f), screenShkZ.GetNoise(tTime, 0.f)) * screenShake;
-
-	brightness = planet->GetBrightness();
-
-	// Spawn boss:
-	if (inputs.keys[KeyCode::ENTER].pressed && !shouldSpawnBoss)
-	{
-		shouldSpawnBoss = true;
-		timeStartBossPrep = tTime;
-	}
-
-	if (shouldSpawnBoss && tTime - timeStartBossPrep >= 60.0f)
-	{
-		planet->bosses->SpawnOneRandom();
-		shouldSpawnBoss = false;
-	}
-	waveCount = tTime2 / 60;
-
-	// Enemy spawn stuff:
-	planet->faction1Spawns->Update();
-	planet->wildSpawns->Update();
-
-
-	entities->Update(); // Updates all entities.
-	// Now that the player has moved mark where it is for rendering:
-	camPos = screenOffset + player->pos;
-
-	camera = glm::lookAt(camPos, camPos + player->camDir, up);
-	camRot = glm::lookAt(vZero, player->camDir, up);
-	camForward = player->camDir;
-	camRight = player->rightDir;
-	camUp =       player->upDir;
-
-	cameraInv = glm::inverse(camera);
-	perspective = glm::perspective(fov, screenRatio, nearDist, farDist);
-	CalcFrustum();
-
-	lastPlayerPos = player->pos;
-	glUseProgram(circleShader);
-	glUniformMatrix4fv(glGetUniformLocation(circleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
-	glUniformMatrix4fv(glGetUniformLocation(circleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
-	glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-	glUniform3f(glGetUniformLocation(circleShader, "camPos"), camPos.x, camPos.y, camPos.z);
-	glUseProgram(cylinderShader);
-	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
-	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
-	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
-	glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-	glUniform3f(glGetUniformLocation(cylinderShader, "camPos"), camPos.x, camPos.y, camPos.z);
-	glUseProgram(capsuleShader);
-	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
-	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
-	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
-	glUniformMatrix4fv(glGetUniformLocation(capsuleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-	glUniform3f(glGetUniformLocation(capsuleShader, "camPos"), camPos.x, camPos.y, camPos.z);
-	glUseProgram(coneShader);
-	glUniformMatrix4fv(glGetUniformLocation(coneShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
-	glUniformMatrix4fv(glGetUniformLocation(coneShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
-	glUniformMatrix4fv(glGetUniformLocation(coneShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(cameraInv));
-	glUniformMatrix4fv(glGetUniformLocation(coneShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective));
-	glUniform3f(glGetUniformLocation(coneShader, "camPos"), camPos.x, camPos.y, camPos.z);
-	glUseProgram(chunkShader);
-	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camera"), 1, GL_FALSE, glm::value_ptr(camera));
-	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camRot"), 1, GL_FALSE, glm::value_ptr(camRot));
-	glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
-	glUseProgram(shadowShader);
-	glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(perspective * camera));
-	glUniform2f(glGetUniformLocation(shadowShader, "screenDim"), float(trueScreenWidth), float(trueScreenHeight));
-
-	JRGB skyCol = planet->SkyCol();
-	glClearColor(skyCol.r / 255.f, skyCol.g / 255.f, skyCol.b / 255.f, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	static const float normalDef[] = { 0, 0, 0, 0 };
-	glClearBufferfv(GL_COLOR, 1, normalDef);
-	static const float noPosition[] = { 0, 0, 0, 0 };
-	glClearBufferfv(GL_COLOR, 2, noPosition);
-	entities->DUpdate(); // Draws all entities.
-	ApplyLighting(); // Apply lighting.
-	glDisable(GL_DEPTH_TEST);
-	DrawFramebufferOnto(TRUESCREEN);
-
-	entities->UIUpdate(); // Draws UI of uiactive entities.
-	
-
-
-	if (inputs.keys[KeyCode::HIDEUI].pressed)
-		showUI = !showUI;
-	if (showUI && playerAlive)
-	{
-		if (shouldSpawnBoss)
-		{
-			float timeTillNextBoss = 60.0f - tTime + timeStartBossPrep;
-			font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1) + " " +
-				std::to_string(int(timeTillNextBoss)) + "." +
-				std::to_string(int(timeTillNextBoss * 10) - int(timeTillNextBoss) * 10), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f,
-				planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
-		}
-		else
-			font.Render(std::to_string(waveCount) + ":" + ToStringWithPrecision(ModF(tTime2, 60.f), 1),
-				iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.95f)), ScrHeight() / 20.0f, planet->faction1Spawns->superWave ? RGBA(255, 255) : RGBA(0, 255, 255));
-		font.Render(std::to_string(player->health), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.9f)), ScrHeight() / 20.0f, RGBA(63));
-		font.Render(to_string(totalGamePoints), iVec2(-ScrWidth(), static_cast<int>(ScrHeight() * 0.85f)), ScrHeight() / 20.0f, RGBA(63, 63));
-	}
-
-	frameCount++;
-}
-
 void Game::MenuedEntityDied(Entity* entity)
 {
 	if (player->currentMenuedEntity == entity)
@@ -1144,4 +1365,35 @@ bool Game::End()
 		glfwPollEvents();
 	}
 	return false;
+}
+
+void Inputs::Update(GLFWwindow* window)
+{
+	UpdateKey(window, keys[KeyCode::UP]);
+	UpdateKey(window, keys[KeyCode::LEFT]);
+	UpdateKey(window, keys[KeyCode::DOWN]);
+	UpdateKey(window, keys[KeyCode::RIGHT]);
+	UpdateKey(window, keys[KeyCode::JUMP]);
+
+	// Primary and offhand are bound to mouse buttons and must be handled seperately.
+	UpdateKey(window, keys[KeyCode::SECONDARY]);
+	UpdateKey(window, keys[KeyCode::UTILITY]);
+
+	UpdateKey(window, keys[KeyCode::BUILD]);
+	UpdateKey(window, keys[KeyCode::CROUCH]);
+	UpdateKey(window, keys[KeyCode::INVENTORY]);
+
+	UpdateKey(window, keys[KeyCode::ENTER]);
+	UpdateKey(window, keys[KeyCode::HIDEUI]);
+	if (game->settings.canChangeRow)
+	{
+		UpdateKey(window, keys[KeyCode::ROW_LEFT]);
+		UpdateKey(window, keys[KeyCode::ROW_RIGHT]);
+	}
+	UpdateKey(window, keys[KeyCode::PAUSE]);
+
+	UpdateKey(window, keys[KeyCode::COMMA]);
+	UpdateKey(window, keys[KeyCode::PERIOD]);
+	UpdateKey(window, keys[KeyCode::SLASH]);
+	UpdateKey(window, keys[KeyCode::PHASE]);
 }

@@ -4,13 +4,34 @@ class Entity; class Entities; class Player;
 class Base; class Planet;
 enum class SEEDINDICES;
 
-enum UIMODE
+#pragma region Psuedo-Virtuals
+enum class STARTCALLBACK
 {
-	MAINMENU, CHARSELECT, SEED_SELECT, INGAME, PAUSED
+	NONE, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
 };
+vector<function<void()>> startCallbacks;
+
+enum class UPDATEMODE
+{
+	MAINMENU, CHAR_SELECT, SEED_SELECT, TUTORIAL_SELECT, IN_GAME, PAUSED, DEAD
+};
+vector<function<void()>> updateModes;
+
+enum class PREUPDATE
+{
+	DEFAULT, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
+};
+vector<function<void()>> preUpdates;
+
+enum class POSTUPDATE
+{
+	DEFAULT, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
+};
+vector<function<void()>> postUpdates;
+#pragma endregion
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
-
+vector<string> tutorialStrs = { "Basic Combat", "Basic Farming", "Basic Building", "Inventory management" };
 
 enum class LOGMODE
 {
@@ -54,7 +75,14 @@ public:
 	unique_ptr<LogBook> logBook;
 
 	bool showUI = true;
-	UIMODE uiMode = UIMODE::MAINMENU;
+
+	STARTCALLBACK startCallback = STARTCALLBACK::NONE;
+	UPDATEMODE updateMode = UPDATEMODE::MAINMENU;
+	PREUPDATE preUpdate = PREUPDATE::DEFAULT;
+	POSTUPDATE postUpdate = POSTUPDATE::DEFAULT;
+
+	byte tutorialState = 0;
+
 	float brightness = 0.0f;
 	bool shouldSpawnBoss = false;
 	float timeStartBossPrep = 0.0f;
@@ -65,6 +93,8 @@ public:
 	float endTimer = -1;
 	int endWidth = -1, endHeight = -1;
 
+	vector<std::pair<string, RGBA>> specialData;
+
 	Game() : entities(nullptr), player(nullptr), base(nullptr), logBook(make_unique<LogBook>()) { }
 
 	void Start() override;
@@ -74,8 +104,6 @@ public:
 	bool End() override;
 
 	void ApplyLighting();
-
-	void TUpdate();
 
 	void MenuedEntityDied(Entity* entity);
 

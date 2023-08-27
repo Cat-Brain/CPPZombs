@@ -438,9 +438,9 @@ public:
 		iTime = 0;
 		sTime = 0;
 
-		lastPrimary = tTime - primaryTime;
-		lastSecondary = tTime - secondaryTime;
-		lastUtility = tTime - utilityTime;
+		lastPrimary = -primaryTime;
+		lastSecondary = -secondaryTime;
+		lastUtility = -utilityTime;
 		shouldVacuum = true;
 
 		items = PlayerInventory(this, 10, 4, startItems);
@@ -497,7 +497,6 @@ public:
 	virtual bool Grounded()
 	{
 		return game->entities->OverlapsAny(pos + Vec3(0, 0, -radius), radius - 0.01f, MaskF::IsCorporeal, this);
-		//return game->entities->OverlapsTile(pos + Vec3(0, 0, -radius), radius - 0.01f);
 	}
 };
 
@@ -1046,7 +1045,7 @@ namespace Updates
 		player->upDir = glm::normalize(glm::cross(player->rightDir, player->camDir));
 		player->dir = player->camDir;
 
-		if (player->sTime <= 0 && game->uiMode == UIMODE::INGAME)
+		if (player->sTime <= 0 && game->updateMode == UPDATEMODE::IN_GAME)
 		{
 			pMovements[UnEnum(player->movement)](player); // This handles all of the locomotion of the player.
 

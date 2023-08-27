@@ -70,6 +70,23 @@ int main()
 		using namespace Utilities;
 		utilities = { TacticoolRoll, FlameThrower, EngModeSwap };
 	}
+
+	{
+		using namespace StartCallbacks;
+		startCallbacks = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+	}
+	{
+		using namespace UpdateModes;
+		updateModes = { MainMenu, CharSelect, SeedSelect, TutorialSelect, InGame, Paused, Dead };
+	}
+	{
+		using namespace PreUpdates;
+		preUpdates = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+	}
+	{
+		using namespace PostUpdates;
+		postUpdates = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+	}
 	#pragma endregion
 		
 		using namespace OnDeaths;

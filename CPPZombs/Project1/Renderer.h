@@ -46,6 +46,7 @@ public:
 	float sensitivity = 300;
 	bool maximized = true;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
+	bool spawnAllTypesInStage = false, canChangeRow = false;
 
 	void TryOpen()
 	{
@@ -89,9 +90,15 @@ public:
 
 				}
 				else if (contents.find("character = ") == 0)
+				{
 					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
 						if (contents == "character = " + to_string(i))
 							character = CHARS(i);
+				}
+				else if (contents == "spawnAllTypesInStage = true")
+					spawnAllTypesInStage = true;
+				else if (contents == "canChangeRow = true")
+					canChangeRow = true;
 				
 			}
 			file.close();
@@ -111,7 +118,9 @@ public:
 			"\nmaximized = " + string(maximized ? "true" : "false") +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
 			startSeedsStr + 
-			"\ncharacter = " + to_string(UnEnum(character));
+			"\ncharacter = " + to_string(UnEnum(character)) +
+			"\nspawnAllTypesInStage = " + string(spawnAllTypesInStage ? "true" : "false") +
+			"\ncanChangeRow = " + string(canChangeRow ? "true" : "false");
 		std::ofstream file;
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
 		file << contents;

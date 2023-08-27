@@ -1547,22 +1547,22 @@ namespace Enemies
 		static int GetRoundPoints()
 		{
 			if (game->settings.difficulty == DIFFICULTY::EASY)
-				return static_cast<int>(pow(1.25f, waveCount)) + waveCount * 2 - 1;
+				return static_cast<int>(pow(1.2f, waveCount)) + waveCount * 2 - 2;
 			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
-				return static_cast<int>(pow(1.37f, waveCount)) + waveCount * 3 - 1;
+				return static_cast<int>(pow(1.25f, waveCount)) + waveCount * 3 - 2;
 			else // difficulty == hard
-				return static_cast<int>(pow(1.45f, waveCount)) + waveCount * 5 + 3;
+				return static_cast<int>(pow(1.3f, waveCount)) + waveCount * 7 - 2;
 		}
 
 		static float GetPoints(float time)
 		{
 			float time2 = time / 60;
 			if (game->settings.difficulty == DIFFICULTY::EASY)
-				return pow(1.2f, time2) + time2 * 2 - 1;
+				return pow(1.2f, time2) + time2 * 2 - 2;
 			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
-				return pow(1.25f, time2) + time2 * 3 + 2;
+				return pow(1.25f, time2) + time2 * 3 - 2;
 			else // difficulty == hard
-				return pow(1.3f, time2) + time2 * 7 + 2;
+				return pow(1.3f, time2) + time2 * 7 - 2;
 		}
 
 		Instance RandomClone();
@@ -1669,6 +1669,18 @@ namespace Enemies
 
 	Instance Types::RandomClone()
 	{
+		if (game->settings.spawnAllTypesInStage)
+		{
+			int totalSize = 0;
+			for (int i = 0; i < size(); i++)
+				totalSize += (*this)[i].size();
+			Instance result(totalSize);
+
+			for (int x = 0, i = 0; x < size(); x++)
+				for (int y = 0; y < (*this)[x].size(); y++)
+					result[i++] = (*this)[x][y];
+			return result;
+		}
 		Instance result(size());
 		for (int i = 0; i < size(); i++)
 			result[i] = (*this)[i][rand() % (*this)[i].size()];
@@ -1684,9 +1696,9 @@ namespace Enemies
 	LegParticle miniSpiderLeg = LegParticle(vZero, nullptr, RGBA(0, 0, 0, 255), 32.0f, 0.125f);
 	Centicrawler centicrawler = Centicrawler(&centicrawlerData, 0.1f, 1, spiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 0, 0, 10, 0.5f, RGBA(186, 7, 66), RGBA(), 1, 0, 60, 60, "Centicrawler");
 	Centicrawler miniCenticrawler = Centicrawler(&centicrawlerData, 0.1f, 1, miniSpiderLeg, 3, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 2, 4, 0.5f, 1, 0, 10, 0.25f, RGBA(186, 7, 66), RGBA(), 0.5f, 0, 20, 20, "Mini Centicrawler");
-	// Earlies - 1
-	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 1, 1, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
-	SnakeConnected babySnake = SnakeConnected(&snakeConnectedData, 5, 0.1f, 1, ENEMY1_A, 0.5f, 3, 3, 0.5f, 2, 1, 10, 0.25f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 0.5f, 0.25f, 120, 120, "Baby Snake");
+	// Earlies - 0
+	Spider spider = Spider(&spiderData, spiderLeg, 6, 3.0f, 0.25f, 1.0f, ENEMY1_A, 0.5f, 4, 4, 0.5f, 1, 0, 10, 0.5f, RGBA(79, 0, 26), RGBA(), 1, 0, 20, 20, "Spider");
+	SnakeConnected babySnake = SnakeConnected(&snakeConnectedData, 5, 0.1f, 1, ENEMY1_A, 0.5f, 3, 3, 0.5f, 2, 0, 10, 0.25f, RGBA(0, 255), RGBA(), RGBA(255, 255), RGBA(0, 127), 0.5f, 0.25f, 120, 120, "Baby Snake");
 	// Mids - 4
 	Pouncer frog = Pouncer(&pouncerData, 2, 16, 0.5f, ENEMY1_A, 1, 4, 2, 4, 10, 0.5f, RGBA(107, 212, 91), RGBA(), 3, 0.5f, 30, 30, "Frog");
 	Parent miniSpiderParent = Parent(&parentData, &miniCenticrawler, ENEMY1_A, 1, 1, 1, 0.5f, 0, 4, 10, 1, RGBA(140, 35, 70), RGBA(), 3, 0, 30, 30, "Mini Spider Parent");
@@ -1719,9 +1731,9 @@ namespace Enemies
 	Enemy larva = Enemy(&enemyData, ENEMY2_A, 0.5f, 3, 1, 0.5f, 0, 0, 10, 0.25f, RGBA(141, 100, 143), RGBA(), 0.5f, 0, 1, 1, "Larva");
 	
 	// Earlies - 1
-	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 1, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
-	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 1, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
-	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 10, 0, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
+	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 0, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
+	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 0, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
+	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 0, 0, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
 
 	// Mids - 4
 	Deceiver deceiver = Deceiver(&deceiverData, ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
