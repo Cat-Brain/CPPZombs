@@ -73,7 +73,7 @@ int main()
 
 	{
 		using namespace StartCallbacks;
-		startCallbacks = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+		startCallbacks = { Default, Tutorial1, Tutorial2, Tutorial3 };
 	}
 	{
 		using namespace UpdateModes;
@@ -81,11 +81,11 @@ int main()
 	}
 	{
 		using namespace PreUpdates;
-		preUpdates = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+		preUpdates = { Default, Tutorial1, Tutorial2, Tutorial3 };
 	}
 	{
 		using namespace PostUpdates;
-		postUpdates = { Default, Tutorial1, Tutorial2, Tutorial3, Tutorial4 };
+		postUpdates = { Default, Tutorial1, Tutorial2, Tutorial3 };
 	}
 	#pragma endregion
 		

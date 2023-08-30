@@ -25,13 +25,13 @@ vector<function<void()>> preUpdates;
 
 enum class POSTUPDATE
 {
-	DEFAULT, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
+	DEFAULT, TUTORIAL1, TUTORIAL2, TUTORIAL3
 };
 vector<function<void()>> postUpdates;
 #pragma endregion
 
 string difficultyStrs[] = { "Easy", "Medium", "Hard" };
-vector<string> tutorialStrs = { "Basic Combat", "Basic Farming", "Basic Building", "Inventory management" };
+vector<string> tutorialStrs = { "Basic Combat", "Basic Farming and Building", "Inventory management" };
 
 enum class LOGMODE
 {
@@ -92,6 +92,7 @@ public:
 	FastNoiseLite screenShkX, screenShkY, screenShkZ;
 	float endTimer = -1;
 	int endWidth = -1, endHeight = -1;
+	float growthSpeedMul = 1;
 
 	vector<std::pair<string, RGBA>> specialData;
 

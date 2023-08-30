@@ -1,9 +1,9 @@
 color band = true
 vSync = false
 displayFPS = true
-difficulty = hard
+difficulty = easy
 maximized = true
-chunk render dist = 3
+chunk render dist = 5
 start seeds = fffffffffffffffff
 character = 0
 spawnAllTypesInStage = true

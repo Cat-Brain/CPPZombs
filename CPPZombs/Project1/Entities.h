@@ -801,7 +801,7 @@ void Entity::SetRadius(float newRadius)
 void Entity::UpdateChunkCollision()
 {
 	vector<Vec3> hitPositions{};
-	bool overlappedAllPossible = true;
+	//bool overlappedAllPossible = true;
 	vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 	for (int i : chunkOverlaps)
 	{
@@ -813,17 +813,19 @@ void Entity::UpdateChunkCollision()
 				{
 					if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR))
 					{
+						if (ToIV3(pos) == iVec3(x, y, z) + game->entities->chunks[i].pos)
+							return SetPos(pos + up);
 						if (BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
 							hitPositions.push_back(Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f);
 					}
-					else
-						overlappedAllPossible = false;
+					//else
+						//overlappedAllPossible = false;
 				}
 	}
 	if (hitPositions.size() && !game->inputs.keys[KeyCode::PHASE].held)
 	{
-		if (overlappedAllPossible)
-			return SetPos(pos + up);
+		//if (overlappedAllPossible)
+		//	return SetPos(pos + up);
 
 		Vec3 hitPosition = hitPositions[0];
 		float distance = glm::length2(hitPosition - pos), newDistance;

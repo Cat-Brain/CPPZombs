@@ -47,8 +47,8 @@ class Inputs
 public:
 	vector<Key> keys = { Key(GLFW_KEY_W), Key(GLFW_KEY_A), Key(GLFW_KEY_S), Key(GLFW_KEY_D), Key(GLFW_KEY_SPACE), // Movement keys
 		Key(GLFW_MOUSE_BUTTON_LEFT), Key(GLFW_MOUSE_BUTTON_RIGHT), Key(GLFW_KEY_R), Key(GLFW_KEY_LEFT_SHIFT), // Ability keys
-		Key(GLFW_KEY_V), Key(GLFW_KEY_Z), Key(GLFW_KEY_TAB), // Player interaction buttons
-		Key(GLFW_KEY_ENTER), Key(GLFW_KEY_C), Key(GLFW_KEY_Q), Key(GLFW_KEY_E), Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
+		Key(GLFW_KEY_V), Key(GLFW_KEY_LEFT_CONTROL), Key(GLFW_KEY_TAB), // Player interaction buttons
+		Key(GLFW_KEY_ENTER), Key(GLFW_KEY_U), Key(GLFW_KEY_Q), Key(GLFW_KEY_E), Key(GLFW_KEY_ESCAPE), // Technical buttons and dev buttons
 		Key(GLFW_KEY_COMMA), Key(GLFW_KEY_PERIOD), Key(GLFW_KEY_SLASH), Key(GLFW_KEY_RIGHT_SHIFT) };
 	int mouseScroll = 0;
 	float mouseScrollF = 0;

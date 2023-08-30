@@ -43,7 +43,7 @@ public:
 	virtual float AreaQuality()
 	{
 		TILE tile = TILE(game->entities->TileAtPos(pos - Vec3(0, 0, radius + 0.1f)));
-		return game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->settings.difficulty] *
+		return game->BrightnessAtPos(pos) * game->growthSpeedMul * difficultyGrowthModifier[game->settings.difficulty] *
 			(float(tile == TILE::MAX_SOIL) + 0.75f * float(tile == TILE::MID_SOIL) + 0.5f * float(tile == TILE::BAD_SOIL) +
 				RUBY_SOIL_MULTIPLIER * float(tile == TILE::RUBY_SOIL));
 	}

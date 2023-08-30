@@ -44,7 +44,11 @@ void LogBook::DUpdate()
 			"",
 			"V to enter build mode",
 			"Left click to place",
-			"Right click to destroy"
+			"Right click to destroy",
+			"",
+			"U to disable or enable UI",
+			"Left control to enable",
+			"or diable vacuuming"
 		};
 		float scale = ScrHeight() * 0.125f;
 		int rows = renderStrings.size() + 1;
@@ -647,6 +651,7 @@ void Game::Start()
 	tTime2 = 0;
 
 	tutorialState = 0;
+	growthSpeedMul = 1;
 
 	specialData.clear();
 
@@ -726,20 +731,15 @@ namespace StartCallbacks
 		// Disable enemy spawns:
 		game->planet->faction1Spawns->speedMul = 0;
 		game->planet->wildSpawns->speedMul = 0;
+		// Increase plant growth rates:
+		game->growthSpeedMul = 3;
+		// Give correct items:
+		game->player->items.push_back(Resources::Seeds::shadeShrubSeed.Clone(5));
 		// State that this was in a tutorial in the death message:
-		game->specialData.push_back({ "In Farming Tutorial", RGBA(255, 127) });
+		game->specialData.push_back({ "In Farming and building Tutorial", RGBA(255, 127) });
 	}
 
 	void Tutorial3()
-	{
-		// Disable enemy spawns:
-		game->planet->faction1Spawns->speedMul = 0;
-		game->planet->wildSpawns->speedMul = 0;
-		// State that this was in a tutorial in the death message:
-		game->specialData.push_back({ "In Building Tutorial", RGBA(255, 127) });
-	}
-
-	void Tutorial4()
 	{
 		// Disable enemy spawns:
 		game->planet->faction1Spawns->speedMul = 0;
@@ -1189,16 +1189,39 @@ namespace PreUpdates
 	void Tutorial2()
 	{
 		Default();
+
+		if (game->tutorialState == 0)
+			for (Entity* entity : game->entities->sortedNCEntities)
+				if (entity->baseClass == &Plants::Shrubs::shadeShrub)
+				{
+					game->tutorialState++;
+					game->player->items.push_back(Resources::Seeds::cheeseVineSeed.Clone(5));
+				}
+		if (game->tutorialState == 1)
+			for (Entity* entity : game->entities->sortedNCEntities)
+				if (entity->baseClass == &Plants::Vines::cheeseVine)
+					game->tutorialState++;
+		if (game->tutorialState == 2 && game->player->items.CanMake(Defences::Towers::pulseTurret.recipe))
+			game->tutorialState++;
+		if (game->tutorialState >= 3 && game->tutorialState < 33 && floorf(tTime) != floorf(tTime - game->dTime))
+			game->tutorialState++;
+		if (game->tutorialState >= 33 && game->tutorialState < 38 && floorf(tTime) != floorf(tTime - game->dTime))
+		{
+			game->tutorialState++;
+			// Make enemies spawn:
+			game->planet->faction1Spawns->speedMul = 6;
+			game->planet->wildSpawns->speedMul = 6;
+		}
 	}
 
 	void Tutorial3()
 	{
 		Default();
-	}
 
-	void Tutorial4()
-	{
-		Default();
+		if (game->tutorialState == 0 && game->player->items.isOpen)
+			game->tutorialState++;
+		if (game->tutorialState == 1 && game->player->items[game->player->items.size() - 1].count > 0)
+			game->tutorialState++;
 	}
 }
 
@@ -1239,16 +1262,65 @@ namespace PostUpdates
 	void Tutorial2()
 	{
 		Default();
+		vector<string> tutLines;
+		switch (game->tutorialState)
+		{
+		case 0:
+			tutLines = { "You will start a majority of runs with seeds", "Seeds can be planted by shooting them at the ground",
+				"Seeds come in many varieties", "Plants can grow on brown soil", "More on soil in advanced farming",
+				"Plant growth speed has been tripled for this tutorial", "Plant a shade seed to proceed" };
+			break;
+		case 1:
+			tutLines = { "Shrubs grow outwards and are fairly simple", "Vines grow whatever direction they are pointed",
+				"Plant a cheese vine to proceed"};
+			break;
+		case 2:
+			tutLines = { "25 shade + 25 cheese = a pulse turret", "Gather these resources to proceed", "Plants only grow when they are in light",
+				"Cheese is a light source", "10 cheese = lantern", "Lanterns are more powerful cheese"};
+			break;
+		default:
+			if (game->tutorialState < 33)
+				tutLines = { "Press 'V' to access the build menu", "In the build menu left click creates and right click destroys",
+				"Right clicking plants destroys them, do this to dead plants", "It would be wise to create pulse turrets to defend",
+				"Turrets normally attack nearby enemies", "More on farming will be found in advanced farming" };
+			else if (game->tutorialState < 38)
+				tutLines = { "Have fun!" };
+			break;
+		}
+		for (int i = 0; i < tutLines.size(); i++)
+			font.Render(tutLines[i], Vec2(ScrWidth() - ScrHeight() * 0.1f * font.TextWidthTrue(tutLines[i]),
+				ScrHeight() * (0.9f - i * 0.1f)), ScrHeight() * 0.1f, RGBA(127, 127, 127));
 	}
 
 	void Tutorial3()
 	{
 		Default();
-	}
-
-	void Tutorial4()
-	{
-		Default();
+		vector<string> tutLines;
+		switch (game->tutorialState)
+		{
+		case 0:
+			tutLines = { "Press 'tab' to open your inventory" };
+			break;
+		case 1:
+			tutLines = { "You can click 2 items to swap them", "The leftmost slots are your hotbar", "The bottom right slot is the offhand",
+				"The offhand is shot by right click", "Put something in your offhand to proceed"};
+			break;
+		case 2:
+			tutLines = { "I'm not sure quite what else to put in this tutorial. =\\"};
+			break;
+		case 3:
+			tutLines = { "R to activate secondary", "Each character has a different secondary" };
+			break;
+		default:
+			if (game->tutorialState < 9)
+				tutLines = { "Enemies spawn in waves", "Most enemies belong to factions", "Enemies of seperate factions will fight" };
+			else if (game->tutorialState < 14)
+				tutLines = { "Good luck!" };
+			break;
+		}
+		for (int i = 0; i < tutLines.size(); i++)
+			font.Render(tutLines[i], Vec2(ScrWidth() - ScrHeight() * 0.1f * font.TextWidthTrue(tutLines[i]),
+				ScrHeight() * (0.9f - i * 0.1f)), ScrHeight() * 0.1f, RGBA(127, 127, 127));
 	}
 }
 
