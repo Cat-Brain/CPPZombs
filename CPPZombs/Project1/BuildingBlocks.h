@@ -110,10 +110,10 @@ namespace Shootables
 
 namespace Resources
 {
-	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", VUPDATE::GRAVITY, 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 	
-	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
-	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Wall", 6, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", VUPDATE::GRAVITY, 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Wall", VUPDATE::GRAVITY, 6, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 }
 
 namespace Collectibles

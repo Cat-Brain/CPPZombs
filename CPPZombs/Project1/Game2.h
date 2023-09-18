@@ -102,14 +102,12 @@ void LogBook::DUpdate()
 			int rows = Defences::Towers::towers.size() + 1;
 			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
 			float offset = scroll * scale;
-			if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() * 0.1f, "Return"))
+			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() * 0.1f, "Return"))
 				logMode = LOGMODE::MAIN;
 			for (int i = 0; i < Defences::Towers::towers.size(); i++)
-				if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * (0.75f - i * 0.125f))), ScrHeight() * 0.1f, Defences::Towers::towers[i]->name,
+				if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (0.75f - i * 0.125f)), ScrHeight() * 0.1f, Defences::Towers::towers[i]->name,
 					Defences::Towers::towers[i]->color, Defences::Towers::towers[i]->color / 2))
-				{
 					individualIndex = i;
-				}
 		}
 		else
 		{
@@ -148,31 +146,19 @@ void LogBook::DUpdate()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, "Return"))
+		int rows = game->settings.dispBoolSettings.size() + 3;
+		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
+		float offset = scroll * ScrHeight() * 0.125;
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * i++)), scale, "Return"))
 			isOpen = false;
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, game->settings.vSync ? "Yes vSync" : "No vSync", game->settings.vSync ? RGBA(0, 255) : RGBA(255),
-			game->settings.vSync ? RGBA(0, 127) : RGBA(127)))
-		{
-			game->settings.vSync ^= true;
-			game->settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			game->settings.colorBand ? "Yes color band" : "No color band", game->settings.colorBand ? RGBA(0, 255) : RGBA(255), game->settings.colorBand ? RGBA(0, 127) : RGBA(127)))
-		{
-			game->settings.colorBand ^= true;
-			game->settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			game->settings.displayFPS ? "Yes display FPS" : "No display FPS", game->settings.displayFPS ? RGBA(0, 255) : RGBA(255), game->settings.displayFPS ? RGBA(0, 127) : RGBA(127)))
-		{
-			game->settings.displayFPS ^= true;
-			game->settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale, game->IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125 * i++)), scale, game->IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			game->Fullscreen();
+
 		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(game->settings.chunkRenderDist)) * scale;
-		font.Render("Chunk Render Dist = " + to_string(game->settings.chunkRenderDist), Vec2(-ScrWidth(), ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
-		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i)), scale,
+		font.Render("Chunk Render Dist = " + to_string(game->settings.chunkRenderDist), Vec2(-ScrWidth(), offset * 2 + ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
+		if (InputHoverSquare(Vec2(horOffset, offset + ScrHeight() * (1 - 0.125 * i)), scale,
 			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
 		{
 			game->settings.chunkRenderDist--;
@@ -180,24 +166,20 @@ void LogBook::DUpdate()
 			game->settings.Write();
 		}
 		horOffset += font.TextWidthTrue("\\/ ") * scale;
-		if (InputHoverSquare(Vec2(horOffset, ScrHeight() * (1 - 0.125 * i++)), scale,
+		if (InputHoverSquare(Vec2(horOffset, offset + ScrHeight() * (1 - 0.125 * i++)), scale,
 			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
 		{
 			game->settings.chunkRenderDist++;
 			game->settings.Write();
 		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			game->settings.spawnAllTypesInStage ? "Yes spawn all types in stage" : "No spawn all types in stage", game->settings.spawnAllTypesInStage ? RGBA(0, 255) : RGBA(255), game->settings.spawnAllTypesInStage ? RGBA(0, 127) : RGBA(127)))
-		{
-			game->settings.spawnAllTypesInStage ^= true;
-			game->settings.Write();
-		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * (1 - 0.125 * i++)), scale,
-			game->settings.canChangeRow ? "Yes can change row" : "No cannot change row", game->settings.canChangeRow ? RGBA(0, 255) : RGBA(255), game->settings.canChangeRow ? RGBA(0, 127) : RGBA(127)))
-		{
-			game->settings.canChangeRow ^= true;
-			game->settings.Write();
-		}
+
+		for (std::pair<bool*, string> boolSetting : game->settings.dispBoolSettings)
+			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * i++)), ScrHeight() * 0.1f, boolSetting.second + " = " + ToStringBool(*boolSetting.first),
+				*boolSetting.first ? RGBA(127, 255, 127) : RGBA(255, 127, 127), *boolSetting.first ? RGBA(63, 127, 63) : RGBA(127, 63, 63)))
+			{
+				*boolSetting.first ^= true;
+				game->settings.Write();
+			}
 	}
 	}
 	game->inputs.mouseScrollF = 0;
@@ -715,7 +697,11 @@ void Game::Update()
 
 namespace StartCallbacks
 {
-	void Default() { }
+	void Default()
+	{
+		game->planet->wildSpawns->waitTime = 15;
+		game->planet->faction1Spawns->waitTime = 15;
+	}
 
 	void Tutorial1()
 	{
@@ -843,8 +829,11 @@ namespace UpdateModes
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
-			game->Start();
+			game->startCallback = STARTCALLBACK::NONE;
+			game->preUpdate = PREUPDATE::DEFAULT;
+			game->postUpdate = POSTUPDATE::DEFAULT;
 			game->updateMode = UPDATEMODE::IN_GAME;
+			game->Start();
 		}
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
 		{

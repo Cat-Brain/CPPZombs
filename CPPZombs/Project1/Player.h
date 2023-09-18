@@ -4,7 +4,7 @@ class UseableItem : public Item
 {
 public:
 	UseableItem(ITEMTYPE type, ITEMU useFunction, string name = "NULL NAME", string typeName = "NULL TYPE NAME", int intType = 0, RGBA color = RGBA(), float useTime = 0) :
-		Item(type, name, typeName, intType, color, 0, 0, useTime)
+		Item(type, name, typeName, VUPDATE::ENTITY, intType, color, 0, 0, useTime)
 	{
 		itemU = useFunction;
 	}
@@ -22,6 +22,7 @@ class PlayerInventory : public Items
 private:
 	bool isHovering = false;
 public:
+	int currentIndex2 = 0;
 	uint width; // How many per vertical slice. The amount shown when the inventory is closed.
 	uint height; // How many per horizontal slice.
 	int currentSelected = -1; // Currently selected item for item place swapping. -1 means nothing selected.
@@ -187,10 +188,6 @@ public:
 				game->DrawTextured(spriteSheet, (*this)[size() - 1]->intType, tOffset, Vec2(tScale * height, 0),
 					(*this)[size() - 1]->color, Vec2(tScale));
 
-			if (currentSelected != -1)
-				game->DrawTextured(spriteSheet, (*this)[currentSelected]->intType, tOffset, 2.f * game->inputs.screenMousePosition / float(ScrHeight()),
-					(*this)[currentSelected]->color, Vec2(tScale));
-
 			if (isHovering)
 			{
 				iVec2 rPos = game->inputs.screenMousePosition / scale;
@@ -210,6 +207,10 @@ public:
 					game->DrawTextured(spriteSheet, (*this)[i]->intType, tOffset, Vec2(tScale * y, tScale * x),
 						(*this)[i]->color, Vec2(tScale));
 				}
+
+			if (currentSelected != -1)
+				game->DrawTextured(spriteSheet, (*this)[currentSelected]->intType, tOffset, 2.f * game->inputs.screenMousePosition / float(ScrHeight()),
+					(*this)[currentSelected]->color, Vec2(tScale));
 			return;
 		}
 		int indexOffset = width * currentRow;
@@ -582,6 +583,41 @@ public:
 		return make_unique<Engineer>(this, startSeeds, pos, dir, creator);
 	}
 };
+/*EntityData engineerData = EntityData(UPDATE::ENGINEER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
+class Engineer : public Player
+{
+public:
+	float currentJetpackFuel = 0, jetpackFuel, jetpackForce;
+
+	Engineer(EntityData* data, float jetpackFuel, float jetpackForce, bool vacBoth = false, bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8,
+		float holdMoveSpeed = 32, float maxHoldMoveSpeed = 8, float holdMoveWeight = 4, float vacDist = 6, float vacSpeed = 16,
+		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1,
+		float utilityTime = 1, PMOVEMENT movement = PMOVEMENT::DEFAULT, PRIMARY primary = PRIMARY::SLINGSHOT, OFFHAND offhand = OFFHAND::SLINGSHOT,
+		SECONDARY secondary = SECONDARY::GRENADE_THROW, UTILITY utility = UTILITY::TACTICOOL_ROLL,
+		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10,
+		float mass = 1, float bounciness = 0,
+		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}, vector<SEEDINDICES> blacklistedSeeds = {}) :
+		Player(data, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, holdMoveSpeed, maxHoldMoveSpeed, holdMoveWeight, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, movement, primary, offhand, secondary, utility, color, color2,
+			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems, blacklistedSeeds),
+		jetpackFuel(jetpackFuel), jetpackForce(jetpackForce)
+	{ }
+
+	Engineer(Engineer* baseClass, bool* startSeeds, Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) :
+		Engineer(*baseClass)
+	{
+		this->baseClass = baseClass;
+		std::copy(startSeeds, startSeeds + sizeof(bool) * UnEnum(SEEDINDICES::COUNT), this->startSeeds);
+		this->pos = pos;
+		this->creator = creator;
+		Start();
+	}
+
+	unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
+	{
+		return make_unique<Engineer>(this, startSeeds, pos, dir, creator);
+	}
+};*/
 #pragma endregion
 #pragma region Player Instances
 Player soldier = Player(&playerData, false, true, 0.4f, 32, 8, 32, 8, 4, 6, 256, 32, 1, 0, 0, 2, 4, PMOVEMENT::DEFAULT,
@@ -700,9 +736,9 @@ class FlareFlame : public Item
 public:
 	int flameRestore;
 
-	FlareFlame(ITEMTYPE type, int flameRestore, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
+	FlareFlame(ITEMTYPE type, int flameRestore, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(), int damage = 1,
 		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
-		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
+		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		flameRestore(flameRestore)
 	{
 		itemOD = ITEMOD::FLARE_FLAME;
@@ -718,7 +754,7 @@ namespace ItemODs
 	}
 }
 
-FlareFlame flareFlame = FlareFlame(ITEMTYPE::FLARE_FLAME, 2, "Flare Flame", "Player Creation", 0, RGBA(255, 93, 0), 10, 15, 0.0625f, 18, 1);
+FlareFlame flareFlame = FlareFlame(ITEMTYPE::FLARE_FLAME, 2, "Flare Flame", "Player Creation", VUPDATE::ENTITY, 0, RGBA(255, 93, 0), 10, 15, 0.0625f, 18, 1);
 
 EntityData turretData = EntityData(UPDATE::TURRET, VUPDATE::FRICTION, DUPDATE::TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
 class Turret : public LightBlock
@@ -883,6 +919,11 @@ void PlayerInventory::Update(bool shouldScroll)
 			int buildCount = 0;
 			for (int i = 0; i < Defences::Towers::towers.size(); i++)
 				if (CanMake(Defences::Towers::towers[i]->recipe)) buildCount++;
+
+			int tempCurrentIndex = currentIndex2;
+			currentIndex2 = currentIndex;
+			currentIndex = tempCurrentIndex;
+
 			if (buildCount == 0)
 				currentIndex = 0;
 			else
@@ -892,7 +933,10 @@ void PlayerInventory::Update(bool shouldScroll)
 	}
 	else if (game->inputs.keys[KeyCode::BUILD].pressed || game->inputs.keys[KeyCode::INVENTORY].pressed)
 	{
-		isBuilding = false;
+		isBuilding = false;	
+		int tempCurrentIndex = currentIndex2;
+		currentIndex2 = currentIndex;
+		currentIndex = tempCurrentIndex;
 	}
 	else if (shouldScroll)
 	{

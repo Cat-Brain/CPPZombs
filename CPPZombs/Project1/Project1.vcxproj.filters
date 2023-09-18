@@ -116,6 +116,9 @@
     <ClInclude Include="StatusEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PsuedoVirtuals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Project1.rc">

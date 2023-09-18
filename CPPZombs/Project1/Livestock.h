@@ -227,5 +227,5 @@ namespace Livestock
 
 namespace Resources::Eggs
 {
-	PlacedOnLanding kiwiEgg = PlacedOnLanding(ITEMTYPE::KIWI_EGG, &Livestock::kiwiEgg, "Kiwi Egg", "Egg", 0, Livestock::kiwiEgg.color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg.radius);
+	PlacedOnLanding kiwiEgg = PlacedOnLanding(ITEMTYPE::KIWI_EGG, &Livestock::kiwiEgg, "Kiwi Egg", "Egg", VUPDATE::GRAVITY, 0, Livestock::kiwiEgg.color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg.radius);
 }

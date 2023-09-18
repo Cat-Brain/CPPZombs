@@ -100,12 +100,6 @@ enum class ITEMOD // Item on-deaths
 
 vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 
-enum class PROJMOVE // The movements of projectile
-{
-	DEFAULT, HOMING
-};
-
-
 
 class Item
 {
@@ -127,11 +121,14 @@ public:
 	bool collideTerrain;
 	float mass;
 	int health;
+	VUPDATE vUpdate;
 
-	Item(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
-		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
-		type(type), itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), name(name), typeName(typeName), intType(intType), color(color), damage(damage),
-		range(range), useTime(useTime), speed(speed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide), collideTerrain(collideTerrain), mass(mass), health(health)
+	Item(ITEMTYPE type, string name, string typeName, VUPDATE vUpdate, int intType = 0, RGBA color = RGBA(), int damage = 1,
+		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true,
+		bool collideTerrain = false, float mass = 1, int health = 1) :
+		type(type), itemU(ITEMU::DEFAULT), itemOD(ITEMOD::DEFAULT), maxStack(99999), name(name), typeName(typeName), vUpdate(vUpdate), intType(intType),
+		color(color), damage(damage), range(range), useTime(useTime), speed(speed), radius(radius), corporeal(corporeal), shouldCollide(shouldCollide),
+		collideTerrain(collideTerrain), mass(mass), health(health)
 	{
 		items[UnEnum(type)] = this;
 	}
@@ -177,16 +174,16 @@ public:
 	}
 };
 
-Item dItem = Item(ITEMTYPE::DITEM, "NULL", "NULL TYPE", 0, RGBA(), 0);
-Item bItem = Item(ITEMTYPE::BITEM, "BUILD", "NULL TYPE", 0, RGBA(), 0);
+Item dItem = Item(ITEMTYPE::DITEM, "NULL", "NULL TYPE", VUPDATE::ENTITY, 0, RGBA(), 0);
+Item bItem = Item(ITEMTYPE::BITEM, "BUILD", "NULL TYPE", VUPDATE::ENTITY, 0, RGBA(), 0);
 
 
 class GoneOnLandItem : public Item
 {
 public:
-	GoneOnLandItem(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", int intType = 0, RGBA color = RGBA(), int damage = 1,
+	GoneOnLandItem(ITEMTYPE type, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(), int damage = 1,
 		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
-		Item(type, name, typeName, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
+		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
 	{
 		itemOD = ITEMOD::GONEONLANDITEM;
 	}
@@ -322,9 +319,9 @@ public:
 
 namespace Resources
 {
-	Item copper = Item(ITEMTYPE::COPPER, "Copper", "Ammo", 1, RGBA(232, 107, 5), 10);
-	Item iron = Item(ITEMTYPE::IRON, "Iron", "Ammo", 1, RGBA(111, 123, 128), 120, 15, 1);
-	Item rock = Item(ITEMTYPE::ROCK, "Rock", "Ammo", 1, RGBA(145, 141, 118), 60, 5);
-	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, false, 25, 5);
-	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, false, 1.f, 1);
+	Item copper = Item(ITEMTYPE::COPPER, "Copper", "Ammo", VUPDATE::ENTITY, 1, RGBA(232, 107, 5), 10);
+	Item iron = Item(ITEMTYPE::IRON, "Iron", "Ammo", VUPDATE::ENTITY, 1, RGBA(111, 123, 128), 120, 15, 1);
+	Item rock = Item(ITEMTYPE::ROCK, "Rock", "Ammo", VUPDATE::ENTITY, 1, RGBA(145, 141, 118), 60, 5);
+	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", VUPDATE::ENTITY, 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 12.f, 2.5f, true, false, false, 25, 5);
+	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", VUPDATE::ENTITY, 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f, false, true, false, 1.f, 1);
 }

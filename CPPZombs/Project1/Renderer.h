@@ -23,6 +23,7 @@ enum DIFFICULTY
 {
 	EASY, MEDIUM, HARD
 };
+string difficultyStrs[] = { "Easy", "Medium", "Hard" };
 
 enum class CHARS
 {
@@ -39,14 +40,17 @@ string settingsLocation = "Settings.txt";
 class Settings
 {
 public:
-	bool colorBand = true, vSync = true, displayFPS = true;
-	DIFFICULTY difficulty = DIFFICULTY::MEDIUM;
+	DIFFICULTY difficulty = DIFFICULTY::EASY;
 	CHARS character = CHARS::SOLDIER;
 	uint chunkRenderDist = 3;
 	float sensitivity = 300;
-	bool maximized = true;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
-	bool spawnAllTypesInStage = false, canChangeRow = false;
+	bool colorBand = true, vSync = true, displayFPS = true, maximized = true,
+		spawnAllTypesInTier = false, canChangeRow = false; // <- to be removed probably
+	vector<std::pair<bool*, string>> dispBoolSettings = { {&colorBand, "color band"}, {&vSync, "vSync"},
+		{&displayFPS, "display FPS"},
+		{&spawnAllTypesInTier, "spawn all types in tier"}, {&canChangeRow, "can change row"} };
+	vector<std::pair<bool*, string>> hidBoolSettings = { {&maximized, "maximized"} };
 
 	void TryOpen()
 	{
@@ -59,18 +63,12 @@ public:
 				string contents;
 				std::getline(file, contents);
 				std::cout << contents << '\n';
-				if (contents == "color band = false")
-					colorBand = false;
-				else if (contents == "vSync = false")
-					vSync = false;
-				else if (contents == "displayFPS = false")
-					displayFPS = false;
-				else if (contents == "difficulty = easy")
-					difficulty = DIFFICULTY::EASY;
-				else if (contents == "difficulty = hard")
-					difficulty = DIFFICULTY::HARD;
-				else if (contents == "maximized = false")
-					maximized = false;
+				for (int i = 0; i < difficultyStrs->size(); i++)
+					if (contents == "difficulty = " + difficultyStrs[i])
+					{
+						difficulty = (DIFFICULTY)i;
+						continue;
+					}
 				else if (contents.find("chunk render dist = ") == 0)
 				{
 					int result = std::stoi(contents.substr(20));
@@ -95,11 +93,32 @@ public:
 						if (contents == "character = " + to_string(i))
 							character = CHARS(i);
 				}
-				else if (contents == "spawnAllTypesInStage = true")
-					spawnAllTypesInStage = true;
-				else if (contents == "canChangeRow = true")
-					canChangeRow = true;
-				
+				for (std::pair<bool*, string> boolSetting : dispBoolSettings)
+				{
+					if (contents == boolSetting.second + " = false")
+					{
+						*boolSetting.first = false;
+						continue;
+					}
+					else if (contents == boolSetting.second + " = true")
+					{
+						*boolSetting.first = true;
+						continue;
+					}
+				}
+				for (std::pair<bool*, string> boolSetting : hidBoolSettings)
+				{
+					if (contents == boolSetting.second + " = false")
+					{
+						*boolSetting.first = false;
+						continue;
+					}
+					else if (contents == boolSetting.second + " = true")
+					{
+						*boolSetting.first = true;
+						continue;
+					}
+				}
 			}
 			file.close();
 		}
@@ -112,15 +131,15 @@ public:
 		for (bool b : startSeeds)
 			startSeedsStr += b ? "t" : "f";
 
-		string contents = "color band = " + string(colorBand ? "true" : "false") + "\nvSync = " + string(vSync ? "true" : "false") +
-			+"\ndisplayFPS = " + string(displayFPS ? "true" : "false") +
-			"\ndifficulty = " + string(difficulty == DIFFICULTY::EASY ? "easy" : difficulty == DIFFICULTY::MEDIUM ? "medium" : "hard") +
-			"\nmaximized = " + string(maximized ? "true" : "false") +
+		string contents =
+			"\ndifficulty = " + difficultyStrs[difficulty] +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
-			startSeedsStr + 
-			"\ncharacter = " + to_string(UnEnum(character)) +
-			"\nspawnAllTypesInStage = " + string(spawnAllTypesInStage ? "true" : "false") +
-			"\ncanChangeRow = " + string(canChangeRow ? "true" : "false");
+			startSeedsStr +
+			"\ncharacter = " + to_string(UnEnum(character));
+		for (std::pair<bool*, string> boolSetting : dispBoolSettings)
+			contents += '\n' + boolSetting.second + " = " + ToStringBool(*boolSetting.first);
+		for (std::pair<bool*, string> boolSetting : hidBoolSettings)
+			contents += '\n' + boolSetting.second + " = " + ToStringBool(*boolSetting.first);
 		std::ofstream file;
 		file.open(settingsLocation, std::ios::out | std::ios::trunc);
 		file << contents;

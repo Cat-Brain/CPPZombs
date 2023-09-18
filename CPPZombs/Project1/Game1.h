@@ -30,7 +30,6 @@ enum class POSTUPDATE
 vector<function<void()>> postUpdates;
 #pragma endregion
 
-string difficultyStrs[] = { "Easy", "Medium", "Hard" };
 vector<string> tutorialStrs = { "Basic Combat", "Basic Farming and Building", "Inventory management" };
 
 enum class LOGMODE

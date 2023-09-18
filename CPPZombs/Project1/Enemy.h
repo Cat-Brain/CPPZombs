@@ -3,20 +3,6 @@
 namespace Enemies
 {
 #pragma region Enemy types
-	Entity* NearestFoe(Vec3 pos, float farDist, Entity* entity)
-	{
-		Entity* result = nullptr;
-		vector<Entity*> nearbyFoes = game->entities->FindOverlaps(pos, farDist, MaskF::IsNonAlly, entity);
-		float dist = farDist * farDist, newDist;
-		for (Entity* nEntity : nearbyFoes)
-			if ((newDist = glm::distance2(entity->pos, nEntity->pos) - nEntity->radius * nEntity->radius) < dist)
-			{
-				dist = newDist;
-				result = nEntity;
-			}
-		return result;
-	}
-
 	// The base class of all enemies.
 	class Enemy;
 	enum class MUPDATE
@@ -27,7 +13,7 @@ namespace Enemies
 
 	enum class AUPDATE
 	{
-		DEFAULT, EXPLODER, BOOMCAT, TANK, GENERIC_TANK, LASER_TANK, THIEF
+		DEFAULT, EXPLODER, BOOMCAT, TANK, MORTAR_TANK, GENERIC_TANK, LASER_TANK, THIEF
 	};
 	vector<function<bool(Enemy*)>> aUpdates;
 
@@ -44,11 +30,13 @@ namespace Enemies
 			mUpdate(mUpdate), aUpdate(aUpdate) {}
 	};
 
+#define ENEMY_SIGHT_DIST 30.f
+
 	EnemyData enemyData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Enemy : public DToCol
 	{
 	public:
-		Entity* defaultTarget = nullptr;
+		Entity* defaultTarget = nullptr, *currentTarget = nullptr;
 		float timePer, lastTime, speed, maxSpeed, timePerMove, lastMove, jumpTime, lastJump;
 
 		int points, firstWave;
@@ -142,8 +130,10 @@ namespace Enemies
 
 		Vec3 FindDir()
 		{
-			Entity* entity = NearestFoe(pos, 30.f, this);
-			return defaultTarget == nullptr && entity == nullptr ? up : Normalized((entity == nullptr ? defaultTarget : entity)->pos - pos);
+			std::pair<Entity*, float> result = game->entities->ExtremestOverlap(pos, ENEMY_SIGHT_DIST, MaskF::IsNonAlly, ExtrF::DistMin, this);
+			if (defaultTarget == nullptr && result.first == nullptr) return up;
+			currentTarget = result.first == nullptr ? defaultTarget : result.first;
+			return Normalized(currentTarget->pos - pos);
 		}
 	};
 
@@ -737,7 +727,7 @@ namespace Enemies
 	class BaseTank : public Enemy
 	{
 	public:
-		float turnSpeed, treadRot = 0;
+		float turnSpeed, treadRot = 0, foeDist = 0;
 
 		BaseTank(EntityData* data, float turnSpeed, Allegiance allegiance = 0, float timePer = 0.5f, float moveSpeed = 0.5f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1,
 			int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
@@ -758,6 +748,7 @@ namespace Enemies
 	};
 
 	EnemyData tankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData mortarTankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::MORTAR_TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Tank : public BaseTank
 	{
 	public:
@@ -1453,6 +1444,8 @@ namespace Enemies
 				tank->MoveDir();
 			tank->ShouldTryJump();
 
+			tank->foeDist = glm::distance(tank->pos, tank->currentTarget->pos);
+
 			tank->treadRot += glm::dot(tank->vel * game->dTime, tank->dir);
 			return false;
 		}
@@ -1502,6 +1495,19 @@ namespace Enemies
 		{
 			Tank* tank = static_cast<Tank*>(enemy);
 			game->entities->push_back(tank->projectile->Clone(tank->pos + tank->dir * (tank->radius + tank->projectile->radius), tank->dir * tank->projectile->range, tank));
+			return true;
+		}
+
+		bool MortarTankAU(Enemy* enemy)
+		{
+			Tank* tank = static_cast<Tank*>(enemy);
+			if (tank->foeDist > tank->projectile->range || (tank->dir.x == 0 && tank->dir.y == 0)) return false;
+			unique_ptr<Entity> projectile = tank->projectile->Clone(tank->pos + tank->dir * (tank->radius + tank->projectile->radius), tank->dir * tank->projectile->range, tank);
+			Vec2 disp = Vec2(glm::length((Vec2)tank->dir) * tank->foeDist, tank->dir.z * tank->foeDist);
+			projectile->vel = Vec3(glm::normalize((Vec2)tank->dir) * tank->projectile->speed,
+				disp.y * tank->projectile->speed / disp.x + game->planet->gravity * 0.5f * disp.x / tank->projectile->speed);
+			printf("(%f, %f, %f)\n", projectile->vel.x, projectile->vel.y, projectile->vel.z);
+			game->entities->push_back(std::move(projectile));
 			return true;
 		}
 
@@ -1558,11 +1564,11 @@ namespace Enemies
 		{
 			float time2 = time / 60;
 			if (game->settings.difficulty == DIFFICULTY::EASY)
-				return pow(1.2f, time2) + time2 * 2 - 2;
+				return pow(1.2f, time2) + time2 * 2 + 2;
 			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
-				return pow(1.25f, time2) + time2 * 3 - 2;
+				return pow(1.25f, time2) + time2 * 3 + 2;
 			else // difficulty == hard
-				return pow(1.3f, time2) + time2 * 7 - 2;
+				return pow(1.3f, time2) + time2 * 7 + 2;
 		}
 
 		Instance RandomClone();
@@ -1638,6 +1644,7 @@ namespace Enemies
 		uint nextSpawnIndex = 0, nextSpawnCount = 1;
 		uint groupSpawnMin = 3, groupSpawnMax = 10;
 		float aggro = 0, speedMul = 1;
+		float waitTime = 0;
 
 		void Randomize()
 		{
@@ -1656,6 +1663,11 @@ namespace Enemies
 
 		void Update()
 		{
+			if (waitTime > 0)
+			{
+				waitTime = max(0.f, waitTime - game->dTime);
+				return;
+			}
 			aggro += game->dTime * speedMul;
 			if (Types::GetPoints(aggro) - usedPoints > (*this)[nextSpawnIndex]->Cost() * nextSpawnCount)
 			{
@@ -1669,7 +1681,7 @@ namespace Enemies
 
 	Instance Types::RandomClone()
 	{
-		if (game->settings.spawnAllTypesInStage)
+		if (game->settings.spawnAllTypesInTier)
 		{
 			int totalSize = 0;
 			for (int i = 0; i < size(); i++)
@@ -1724,8 +1736,8 @@ namespace Enemies
 #pragma endregion
 #pragma region Faction 1
 	//Predefinitions - Special
-	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
-	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
+	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, VUPDATE::GRAVITY_TRUE, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
+	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", VUPDATE::ENTITY, 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
 	ShotItem gigaTankProjectile = ShotItem(&shotItemData, gigaTankItem.Clone(), "Giga Tank Projectile");
 	Enemy child = Enemy(&enemyData, ENEMY2_A, 2.0f, 12, 12, 0.5f, 1, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 1, 1, "Child");
 	Enemy larva = Enemy(&enemyData, ENEMY2_A, 0.5f, 3, 1, 0.5f, 0, 0, 10, 0.25f, RGBA(141, 100, 143), RGBA(), 0.5f, 0, 1, 1, "Larva");
@@ -1733,7 +1745,7 @@ namespace Enemies
 	// Earlies - 1
 	Enemy walker = Enemy(&enemyData, ENEMY2_A, 0.75f, 2, 2, 0.5f, 1, 0, 10, 0.5f, RGBA(0, 255, 255), RGBA(), 1, 0, 30, 30, "Walker");
 	Enemy tanker = Enemy(&enemyData, ENEMY2_A, 1.0f, 1.5f, 1.5f, 0.5f, 2, 0, 10, 1.5f, RGBA(255), RGBA(), 5, 0, 120, 120, "Tanker");
-	Tank tinyTank = Tank(&tankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 3, 0, 0, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
+	Tank tinyTank = Tank(&mortarTankData, &tinyTankProjectile, 0.78f, ENEMY2_A, 1.0f, 4, 4, 0.5f, 1, 0, 0, 0.5f, RGBA(127, 127), RGBA(), 1, 0, 30, 30, "Tiny Tank");
 
 	// Mids - 4
 	Deceiver deceiver = Deceiver(&deceiverData, ENEMY2_A, 0.5f, 4, 4, 0.5f, 4, 4, 10, 0.5f, RGBA(255, 255, 255), RGBA(), RGBA(192, 192, 192, 153), 1, 0, 30, 30, "Deceiver");
@@ -1767,8 +1779,8 @@ namespace Enemies
 #pragma endregion
 #pragma region Bosses
 	// Bosses - Special
-	Projectile catProjectile = Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile catProjectile2 = Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile catProjectile = Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, VUPDATE::ENTITY, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile catProjectile2 = Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, VUPDATE::ENTITY, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
 	Cataclysm cataclysm = Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, &catProjectile, &catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
 
 	Types spawnableBosses

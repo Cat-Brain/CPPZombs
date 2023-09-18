@@ -1,6 +1,6 @@
 #include "Entities.h"
 
-EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE);
+EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::PROJECTILE);
 class Projectile : public Entity
 {
 public:
@@ -11,11 +11,12 @@ public:
     int callType = 0; // Internal value for what type of death this projectile had.
     bool shouldCollide; // Should this collide with objects.
     bool collideTerrain;
+    VUPDATE vUpdate; // Runs instead of described by data.
 
-    Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, RGBA color = RGBA(),
+    Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, VUPDATE vUpdate = VUPDATE::ENTITY, RGBA color = RGBA(),
         float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
         Entity(data, vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
-        range(range), damage(damage), speed(speed), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
+        range(range), damage(damage), speed(speed), vUpdate(vUpdate), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
     {
         sortLayer = 1;
         this->corporeal = corporeal;
@@ -95,6 +96,14 @@ namespace Updates
     }
 }
 
+namespace VUpdates
+{
+    void ProjectileVU(Entity* entity)
+    {
+        entity->VUpdate(static_cast<Projectile*>(entity)->vUpdate);
+    }
+}
+
 namespace DUpdates
 {
     void ProjectileDU(Entity* entity)
@@ -108,7 +117,7 @@ namespace DUpdates
     }
 }
 
-EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::ENTITY, DUPDATE::PROJECTILE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
+EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::PROJECTILE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
 class ShotItem : public Projectile
 {
 public:
@@ -116,7 +125,7 @@ public:
     string creatorName;
 
     ShotItem(EntityData* data, ItemInstance item, string name) :
-        Projectile(data, item->range, item->damage, item->speed, item->radius, item->color, item->mass, 0, item->health, item->health, name, item->corporeal, item->shouldCollide, item->collideTerrain), item(item)
+        Projectile(data, item->range, item->damage, item->speed, item->radius, item->vUpdate, item->color, item->mass, 0, item->health, item->health, name, item->corporeal, item->shouldCollide, item->collideTerrain), item(item)
     {
         Start();
     }
@@ -140,6 +149,7 @@ public:
     ShotItem(ShotItem* baseClass, ItemInstance item, Vec3 pos, Vec3 direction, Entity* creator) :
         ShotItem(*baseClass)
     {
+        vUpdate = item->vUpdate;
         this->creator = creator;
         this->dir = Normalized(direction);
         range = item->range;
@@ -192,8 +202,6 @@ namespace ItemUs
     {
         game->entities->push_back(basicShotItem->Clone(item.Clone(1),
             pos, dir, creator));
-        /*game->entities->push_back(basicShotItem->Clone(item.Clone(1),
-            pos + Vec3(0, 0, 0.1f + item->radius - creator->radius), dir, creator));*/
         item.count--;
     }
 }

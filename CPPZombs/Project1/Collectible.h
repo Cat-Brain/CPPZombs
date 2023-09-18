@@ -1,6 +1,6 @@
 #include "Particles.h"
 
-EntityData collectibleData = EntityData(UPDATE::COLLECTIBLE, VUPDATE::FRICTION);
+EntityData collectibleData = EntityData(UPDATE::COLLECTIBLE, VUPDATE::FRICTION, DUPDATE::COLLECTIBLE);
 class Collectible : public Entity
 {
 public:
@@ -46,4 +46,23 @@ namespace Collectibles
 	Collectible* rock = new Collectible(Resources::rock.Clone());
 	Collectible* bowler = new Collectible(Resources::bowler.Clone());
 	Collectible* silver = new Collectible(Resources::silver.Clone());
+}
+
+namespace DUpdates
+{
+	#define COLLECTIBLE_TRANSPARENT_DIST 5.f
+
+	void CollectibleDU(Entity* entity)
+	{
+		if (glm::distance2(game->PlayerPos(), entity->pos) < entity->radius * entity->radius +
+			COLLECTIBLE_TRANSPARENT_DIST * COLLECTIBLE_TRANSPARENT_DIST)
+		{
+			byte alpha = entity->color.a;
+			entity->color.a = entity->color.a * (glm::distance(game->PlayerPos(), entity->pos) / (COLLECTIBLE_TRANSPARENT_DIST + entity->radius));
+			entity->DUpdate(DUPDATE::ENTITY);
+			entity->color.a = alpha;
+			return;
+		}
+		entity->DUpdate(DUPDATE::ENTITY);
+	}
 }

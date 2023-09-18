@@ -21,13 +21,13 @@ int main()
 	{
 		using namespace VUpdates;
 		using namespace Enemies::VUpdates;
-		vUpdates = { EntityVU, AirResistanceVU, FrictionVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU, CenticrawlerVU, ThiefVU };
+		vUpdates = { EntityVU, AirResistanceVU, GravityVU, GravityTrueVU, FrictionVU, ProjectileVU, VineVU, SnakeVU, SnakeConnectedVU, SpiderVU, CenticrawlerVU, ThiefVU };
 	}
 	{
 		using namespace DUpdates;
 		using namespace Enemies::DUpdates;
 		using namespace Livestock::DUpdates;
-		dUpdates = { EntityDU, FadeOutDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, CircleTurretDU,
+		dUpdates = { EntityDU, FadeOutDU, CollectibleDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, CircleTurretDU,
 			LaserTurretDU, DeceiverDU, ParentDU, ExploderDU,
 			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, LaserTankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
 	}
@@ -48,7 +48,7 @@ int main()
 	}
 	{
 		using namespace Enemies::AUpdates;
-		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, GenericTankAU, LaserTankAU, ThiefAU };
+		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, MortarTankAU, GenericTankAU, LaserTankAU, ThiefAU };
 	}
 	{
 		using namespace PMovements;

@@ -3,63 +3,6 @@
 #define COMMON_TEXT_SCALE trueScreenHeight / 20
 #define COMMON_BOARDER_WIDTH trueScreenHeight / 80
 
-#pragma region Psuedo-virtual functions
-enum class UPDATE // Update
-{
-	ENTITY,
-	FADEOUT, COLLECTIBLE, EXPLODENEXTFRAME, UPEXPLODENEXTFRAME, FADEOUTPUDDLE, VACUUMFOR,
-	PROJECTILE,
-	FUNCTIONALBLOCK, FUNCTIONALBLOCK2,
-	VINE,
-	BASIC_TURRET, CIRCLE_TURRET, LASER_TURRET,
-	ENEMY, VACUUMER, SPIDER, CENTICRAWLER, POUNCER, CAT, CATACLYSM,
-	EGG, KIWI,
-	PLAYER, FLARE, ENGINEER,
-	GRENADE, FLAME_GLOB, FLAME_PUDDLE, TURRET, ROVER,
-	BASE
-};
-
-vector<function<void(Entity*)>> updates;
-
-enum class VUPDATE // Update
-{
-	ENTITY, AIR_RESISTANCE, FRICTION, VINE, SNAKE, SNAKECONNECTED, SPIDER, CENTICRAWLER, THIEF
-};
-
-vector<function<void(Entity*)>> vUpdates;
-
-enum class DUPDATE // Draw Update
-{
-	ENTITY,
-	FADEOUT, FADEOUTPUDDLE, FADEOUTGLOW,
-	PROJECTILE,
-	DTOCOL,
-	SHRUB, TREE,
-	BASIC_TURRET, CIRCLE_TURRET, LASER_TURRET,
-	DECEIVER, PARENT, EXPLODER, SNAKECONNECTED, COLORCYCLER, POUNCER, CAT, CATACLYSM, TANK, LASER_TANK,
-	KIWI,
-	PLAYER,
-	TURRET, ROVER
-};
-
-vector<function<void(Entity*)>> dUpdates;
-
-enum class UIUPDATE // User-Interface Update
-{
-	ENTITY, SHRUB, TREE, VINE, ENEMY, SNAKECONNECTED, PLAYER, FLARE, ENGINEER
-};
-
-vector<function<void(Entity*)>> uiUpdates;
-
-enum class ONDEATH
-{
-	ENTITY, FADEOUTGLOW, SHOTITEM, LIGHTBLOCK, LIGHTTOWER, ENEMY, PARENT, EXPLODER, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, SPIDER,
-	CENTICRAWLER, THIEF, KIWI, PLAYER, BASE
-};
-
-vector<function<void(Entity*, Entity*)>> onDeaths;
-#pragma endregion
-
 class TimedEvent
 {
 public:
@@ -301,6 +244,8 @@ public:
 
 #pragma region Other Entity funcitons
 
+typedef function<float(Entity* from, Entity* to)> EntityMaskFun;
+
 namespace MaskF
 {
 	bool IsCollectible(Entity* from, Entity* to)
@@ -341,6 +286,21 @@ namespace MaskF
 	bool IsSameType(Entity* from, Entity* to)
 	{
 		return to->baseClass == from->baseClass && from != to && to->corporeal;
+	}
+}
+
+typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
+
+namespace ExtrF
+{
+	float SqrDist(Entity* from, Entity* to)
+	{
+		return glm::distance2(from->pos, to->pos);
+	}
+
+	float DistMin(Entity* from, Entity* to)
+	{
+		return glm::distance(from->pos, to->pos) - from->radius - to->radius;
 	}
 }
 
@@ -410,6 +370,20 @@ namespace VUpdates
 		entity->lastPos = entity->pos;
 		entity->SetPos(entity->pos + entity->vel * game->dTime);
 		entity->vel = FromTo(entity->vel, vZero, game->dTime * game->planet->friction * entity->frictionMultiplier);
+	}
+
+	void GravityVU(Entity* entity)
+	{
+		entity->lastPos = entity->pos;
+		entity->SetPos(entity->pos + entity->vel * game->dTime);
+		entity->vel = Vec3((Vec2)entity->vel, (entity->vel.z - game->planet->gravity * game->dTime) * powf(0.75f, game->dTime));
+	}
+
+	void GravityTrueVU(Entity* entity)
+	{
+		entity->lastPos = entity->pos;
+		entity->SetPos(entity->pos + entity->vel * game->dTime);
+		entity->vel.z -= game->planet->gravity * game->dTime;
 	}
 
 	void FrictionVU(Entity* entity)

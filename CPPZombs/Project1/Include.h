@@ -140,6 +140,11 @@ std::string ToStringWithPrecision(const T a_value, const int n = 6)
 	return out.str();
 }
 
+string ToStringBool(bool b)
+{
+	return b ? "true" : "false";
+}
+
 std::vector<std::string>& split(const std::string& s, char delim, std::vector<std::string>& elems) {
 	std::stringstream ss(s);
 	std::string item;
