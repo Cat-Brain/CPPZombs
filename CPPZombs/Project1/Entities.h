@@ -1276,54 +1276,50 @@ public:
 
 namespace ItemODs
 {
-	void ItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		game->entities->push_back(make_unique<Collectible>(item.Clone(), pos));
+		unique_ptr<Collectible> collectible = make_unique<Collectible>(item.Clone(), pos);
+		game->entities->push_back(std::move(collectible));
 	}
 
-	void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item.Type());
 
-		/*if (((Entity*)game->player)->Overlaps(pos, pOL->radius))
-		{
-			pOL->OnDeath(ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
-			return;
-		}*/
 		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, dir, creator);
 		if (pOL->sayCreator)
 			placedEntity->name += " from " + creatorName;
 		game->entities->push_back(std::move(placedEntity));
 	}
 
-	void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, item, pos, dir, creator, creatorName, callReason, callType);
+		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
-	void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		PlacedOnLandingBoom* explosion = static_cast<PlacedOnLandingBoom*>(item.Type());
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
-		explosion->OnDeath(ITEMOD::PLACEDONLANDING, item, pos, dir, creator, creatorName, callReason, callType);
+		explosion->OnDeath(ITEMOD::PLACEDONLANDING, item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
-	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
 	}
 
-	void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
 		CreateUpExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
 	}
 
-	void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item.Type());
 
@@ -1340,7 +1336,7 @@ namespace ItemODs
 				}
 	}
 
-	void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item.Type());
 

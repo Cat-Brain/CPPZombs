@@ -637,33 +637,12 @@ void Game::Start()
 
 	specialData.clear();
 
+	difficulty = settings.difficulty;
+
+	for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+		startSeeds[i] = settings.startSeeds[i];
+
 	srand(static_cast<uint>(time(NULL) % UINT_MAX));
-
-	planet = std::make_unique<Planet>();
-	logBook = make_unique<LogBook>();
-
-	entities = make_unique<Entities>();
-	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone(settings.startSeeds);
-	player = playerUnique.get();
-
-	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
-	base = static_cast<Base*>(baseUnique.get());
-	player->base = base;
-
-	planet->faction1Spawns->defaultTarget = base;
-	planet->wildSpawns->defaultTarget = player;
-
-	for (int i = 0; i < 100; i++)
-	{
-		if (!entities->OverlapsTile(base->pos, base->radius))
-			break;
-		else
-			base->pos.z++;
-	}
-	player->pos = base->pos + up * (base->radius + player->radius);
-
-	entities->push_back(std::move(playerUnique));
-	entities->push_back(std::move(baseUnique));
 
 	playerAlive = true;
 	totalGamePoints = 0;
@@ -685,7 +664,35 @@ void Game::Start()
 
 	screenShake = 0.0f;
 
+	planet = std::make_unique<Planet>();
+	logBook = make_unique<LogBook>();
+
+	entities = make_unique<Entities>();
+
 	startCallbacks[UnEnum(startCallback)]();
+
+
+	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone(startSeeds);
+	player = playerUnique.get();
+
+	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
+	base = static_cast<Base*>(baseUnique.get());
+	player->base = base;
+
+	planet->faction1Spawns->defaultTarget = base;
+	planet->wildSpawns->defaultTarget = player;
+
+	for (int i = 0; i < 100; i++)
+	{
+		if (!entities->OverlapsTile(base->pos, base->radius))
+			break;
+		else
+			base->pos.z++;
+	}
+	player->pos = base->pos + up * (base->radius + player->radius);
+
+	entities->push_back(std::move(playerUnique));
+	entities->push_back(std::move(baseUnique));
 }
 	
 void Game::Update()
@@ -699,8 +706,15 @@ namespace StartCallbacks
 {
 	void Default()
 	{
-		game->planet->wildSpawns->waitTime = 15;
-		game->planet->faction1Spawns->waitTime = 15;
+		game->planet->wildSpawns->waitTime = 30;
+		game->planet->faction1Spawns->waitTime = 30;
+	}
+
+	void ResetToTut() // <- Helper func
+	{
+		game->difficulty = DIFFICULTY::MEDIUM;
+		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+			game->startSeeds[i] = false;
 	}
 
 	void Tutorial1()
@@ -708,6 +722,8 @@ namespace StartCallbacks
 		// Disable enemy spawns:
 		game->planet->faction1Spawns->speedMul = 0;
 		game->planet->wildSpawns->speedMul = 0;
+		// Reset tutorial properly.
+		ResetToTut();
 		// State that this was in a tutorial in the death message:
 		game->specialData.push_back({ "In Combat Tutorial", RGBA(255, 127) });
 	}
@@ -719,8 +735,10 @@ namespace StartCallbacks
 		game->planet->wildSpawns->speedMul = 0;
 		// Increase plant growth rates:
 		game->growthSpeedMul = 3;
+		// Reset tutorial properly.
+		ResetToTut();
 		// Give correct items:
-		game->player->items.push_back(Resources::Seeds::shadeShrubSeed.Clone(5));
+		game->startSeeds[UnEnum(SEEDINDICES::SHADE)] = true;
 		// State that this was in a tutorial in the death message:
 		game->specialData.push_back({ "In Farming and building Tutorial", RGBA(255, 127) });
 	}
@@ -730,6 +748,11 @@ namespace StartCallbacks
 		// Disable enemy spawns:
 		game->planet->faction1Spawns->speedMul = 0;
 		game->planet->wildSpawns->speedMul = 0;
+		// Reset tutorial properly.
+		ResetToTut();
+		// Give players all seeds for funsies:
+		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+			game->startSeeds[i] = true;
 		// State that this was in a tutorial in the death message:
 		game->specialData.push_back({ "In Inventory Management Tutorial", RGBA(255, 127) });
 	}
@@ -894,8 +917,6 @@ namespace UpdateModes
 				game->preUpdate = (PREUPDATE)(i + 1);
 				game->postUpdate = (POSTUPDATE)(i + 1);
 				game->updateMode = UPDATEMODE::IN_GAME;
-				for (int j = 0; j < UnEnum(SEEDINDICES::COUNT); j++)
-					game->settings.startSeeds[j] = false;
 				game->Start();
 			}
 		}
@@ -1103,8 +1124,8 @@ namespace UpdateModes
 		float offset = scale * 0.2f, offset2 = offset * 2;
 		int i = 0;
 	
-		font.Render(difficultyStrs[game->settings.difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
-			{ game->settings.difficulty == DIFFICULTY::EASY ? 0u : 255u, game->settings.difficulty == DIFFICULTY::HARD ? 0u : 255u });
+		font.Render(difficultyStrs[game->difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
+			{ game->difficulty == DIFFICULTY::EASY ? 0u : 255u, game->difficulty == DIFFICULTY::HARD ? 0u : 255u });
 
 		for (std::pair<string, RGBA> p : game->specialData)
 			font.Render(p.first, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, p.second);

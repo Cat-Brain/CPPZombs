@@ -73,6 +73,8 @@ public:
 	unique_ptr<Planet> planet;
 	unique_ptr<LogBook> logBook;
 
+
+
 	bool showUI = true;
 
 	STARTCALLBACK startCallback = STARTCALLBACK::NONE;
@@ -94,6 +96,9 @@ public:
 	float growthSpeedMul = 1;
 
 	vector<std::pair<string, RGBA>> specialData;
+
+	DIFFICULTY difficulty = DIFFICULTY::EASY;
+	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 
 	Game() : entities(nullptr), player(nullptr), base(nullptr), logBook(make_unique<LogBook>()) { }
 

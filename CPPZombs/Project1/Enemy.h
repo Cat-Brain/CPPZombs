@@ -712,7 +712,7 @@ namespace Enemies
 
 		int ApplyHit(int damage, Entity* damageDealer) override
 		{
-			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->settings.difficulty])
+			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->difficulty])
 			{
 				if (damage > 0)
 				{
@@ -931,7 +931,7 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 
-			/*if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
+			/*if (tTime - cat->lastShoot > cat->timePerShot && tTime - cat->lastStartedCircle >= cat->circleTime && tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
 			{
 				game->entities->push_back(cat->projectile2->Clone(cat->pos, glm::rotateZ(cat->FindDir() * cat->projectile2->range +
 					Vec3(0, 0, cat->projectile2->radius), PI_F * 0.125f), cat));
@@ -1182,7 +1182,7 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
-			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->settings.difficulty])
+			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
 				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CAT);
 			cat->color = tempColor;
@@ -1552,9 +1552,9 @@ namespace Enemies
 
 		static int GetRoundPoints()
 		{
-			if (game->settings.difficulty == DIFFICULTY::EASY)
+			if (game->difficulty == DIFFICULTY::EASY)
 				return static_cast<int>(pow(1.2f, waveCount)) + waveCount * 2 - 2;
-			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
+			else if (game->difficulty == DIFFICULTY::MEDIUM)
 				return static_cast<int>(pow(1.25f, waveCount)) + waveCount * 3 - 2;
 			else // difficulty == hard
 				return static_cast<int>(pow(1.3f, waveCount)) + waveCount * 7 - 2;
@@ -1563,9 +1563,9 @@ namespace Enemies
 		static float GetPoints(float time)
 		{
 			float time2 = time / 60;
-			if (game->settings.difficulty == DIFFICULTY::EASY)
+			if (game->difficulty == DIFFICULTY::EASY)
 				return pow(1.2f, time2) + time2 * 2 + 2;
-			else if (game->settings.difficulty == DIFFICULTY::MEDIUM)
+			else if (game->difficulty == DIFFICULTY::MEDIUM)
 				return pow(1.25f, time2) + time2 * 3 + 2;
 			else // difficulty == hard
 				return pow(1.3f, time2) + time2 * 7 + 2;
@@ -1596,7 +1596,7 @@ namespace Enemies
 		{
 			((Entity*)game->player)->ApplyHit(-3, nullptr);
 			if (superWave)
-				waveCount += superWaveModifiers[game->settings.difficulty];
+				waveCount += superWaveModifiers[game->difficulty];
 
 			SpawnRandomEnemiesCost(static_cast<int>(multiplier * Types::GetRoundPoints()));
 
@@ -1604,8 +1604,8 @@ namespace Enemies
 
 			if (superWave)
 			{
-				waveCount -= superWaveModifiers[game->settings.difficulty];
-				for (int i = 0; i < difficultySeedSuperWaveCount[game->settings.difficulty]; i++)
+				waveCount -= superWaveModifiers[game->difficulty];
+				for (int i = 0; i < difficultySeedSuperWaveCount[game->difficulty]; i++)
 					game->entities->push_back(Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(game->PlayerPos()));
 				superWave = false;
 			}

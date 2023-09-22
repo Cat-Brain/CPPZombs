@@ -46,7 +46,7 @@ public:
 	float sensitivity = 300;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	bool colorBand = true, vSync = true, displayFPS = true, maximized = true,
-		spawnAllTypesInTier = false, canChangeRow = false; // <- to be removed probably
+		spawnAllTypesInTier = true, canChangeRow = false; // <- to be removed probably
 	vector<std::pair<bool*, string>> dispBoolSettings = { {&colorBand, "color band"}, {&vSync, "vSync"},
 		{&displayFPS, "display FPS"},
 		{&spawnAllTypesInTier, "spawn all types in tier"}, {&canChangeRow, "can change row"} };

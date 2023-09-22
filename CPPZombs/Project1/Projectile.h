@@ -190,7 +190,7 @@ namespace OnDeaths
     void ShotItemOD(Entity* entity, Entity* damageDealer)
     {
         ShotItem* shot = static_cast<ShotItem*>(entity);
-        shot->item->OnDeath(shot->item, shot->pos, shot->dir, shot->creator, shot->creatorName, damageDealer, shot->callType);
+        shot->item->OnDeath(shot->item, shot->pos, shot->dir, shot->vel, shot->creator, shot->creatorName, damageDealer, shot->callType);
     }
 }
 

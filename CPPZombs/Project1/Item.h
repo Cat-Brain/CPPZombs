@@ -98,7 +98,7 @@ enum class ITEMOD // Item on-deaths
 	FLARE_FLAME
 };
 
-vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
+vector<function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)>> itemODs; // All item on-death effects.
 
 
 class Item
@@ -153,14 +153,14 @@ public:
 		return typeName[0] < b.typeName[0];
 	}
 
-	void OnDeath(ITEMOD itemOD, ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ITEMOD itemOD, ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		itemODs[UnEnum(itemOD)](item, pos, dir, creator, creatorName, callReason, callType);
+		itemODs[UnEnum(itemOD)](item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
-	void OnDeath(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void OnDeath(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		OnDeath(itemOD, item, pos, dir, creator, creatorName, callReason, callType);
+		OnDeath(itemOD, item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
 	void Use(ITEMU itemU, ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
@@ -191,7 +191,7 @@ public:
 
 namespace ItemODs
 {
-	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType) { }
+	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType) { }
 }
 
 typedef vector<ItemInstance> Recipe;

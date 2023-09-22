@@ -43,7 +43,7 @@ public:
 	virtual float AreaQuality()
 	{
 		TILE tile = TILE(game->entities->TileAtPos(pos - Vec3(0, 0, radius + 0.1f)));
-		return game->BrightnessAtPos(pos) * game->growthSpeedMul * difficultyGrowthModifier[game->settings.difficulty] *
+		return game->BrightnessAtPos(pos) * game->growthSpeedMul * difficultyGrowthModifier[game->difficulty] *
 			(float(tile == TILE::MAX_SOIL) + 0.75f * float(tile == TILE::MID_SOIL) + 0.5f * float(tile == TILE::BAD_SOIL) +
 				RUBY_SOIL_MULTIPLIER * float(tile == TILE::RUBY_SOIL));
 	}
@@ -131,7 +131,7 @@ public:
 	virtual float AreaQuality()
 	{
 		TILE tile = TILE(game->entities->TileAtPos(pos - Vec3(0, 0, radius + 0.1f)));
-		return game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->settings.difficulty] *
+		return game->BrightnessAtPos(pos) * difficultyGrowthModifier[game->difficulty] *
 			(float(tile == TILE::MAX_SOIL) + 0.75f * float(tile == TILE::MID_SOIL) + 0.5f * float(tile == TILE::BAD_SOIL) +
 				RUBY_SOIL_MULTIPLIER * float(tile == TILE::RUBY_SOIL));
 	}
@@ -558,8 +558,8 @@ namespace Resources::Seeds
 	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius, false, true, true);
 	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
 	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
-	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", VUPDATE::GRAVITY, 2, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
-	PlacedOnLanding emeraldShrubSeed = PlacedOnLanding(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Seed", VUPDATE::GRAVITY, 2, Plants::Shrubs::emeraldShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius, false, true, true);
+	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
+	PlacedOnLanding emeraldShrubSeed = PlacedOnLanding(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::emeraldShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius, false, true, true);
 	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
 	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
 	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
@@ -900,7 +900,7 @@ namespace Defences
 		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, VUPDATE::ENTITY, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
 		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.1f, VUPDATE::ENTITY, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
 		
-		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 16, 0.1f, VUPDATE::ENTITY, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
+		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 4, 0.1f, VUPDATE::ENTITY, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
 		Projectile hoverTurretProjectile = Projectile(&projectileData, 20, 20, 16, 0.3f, VUPDATE::ENTITY, RGBA(255, 127, 127), 0, 0, 0, 0, "Hover Turret Projectile");
 
 		Projectile circleTurretProjectile = Projectile(&projectileData, 10, 10, 2, 0.4f, VUPDATE::ENTITY, RGBA(255, 193, 127), 0, 0, 0, 0, "Circle Turret Projectile");
@@ -915,7 +915,7 @@ namespace Defences
 			pulseTurretDesc = "The default turret",
 			rockTurretDesc = "Strong but low range",
 			sapphireTurretDesc = "Fast firing but small bullets",
-			droneTurretDesc = "Hovers above the ground\nWeak bullets",
+			droneTurretDesc = "Hovers above the ground\Slow bullets\nFast firing\nHigh DPS",
 			hoverTurretDesc = "Hovers above the ground\nSimilar to pulse turret",
 			circleTurretDesc = "Fires 3 bullets per volley",
 			laserTurretDesc = "Currently scrapped\nIF THIS APPEARS TELL ME";
@@ -929,7 +929,7 @@ namespace Defences
 		BasicTurret rockTurret = BasicTurret(&basicTurretData, { Resources::rock.Clone(50) }, &rockTurretDesc, &Projectiles::rockTurretProjectile, 0.5f, JRGB(255, 255, 255), 5, 0.5f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Rock Turret");
 		BasicTurret sapphireTurret = BasicTurret(&basicTurretData, { Resources::sapphire.Clone(100) }, &sapphireTurretDesc, &Projectiles::sapphireTurretProjectile, 0.125f, JRGB(255, 127, 255), 5, 0.5f, RGBA(127, 63, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Sapphire Turret");
 		
-		BasicTurret droneTurret = BasicTurret(&hoverTurretData, { Resources::emerald.Clone(5), Resources::silver.Clone(25), }, &droneTurretDesc, &Projectiles::droneTurretProjectile, 1.0f, JRGB(255, 255, 255), 5, 0.125f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Drone Turret");
+		BasicTurret droneTurret = BasicTurret(&hoverTurretData, { Resources::emerald.Clone(5), Resources::silver.Clone(25), }, &droneTurretDesc, &Projectiles::droneTurretProjectile, 0.25f, JRGB(255, 255, 255), 5, 0.125f, RGBA(127, 127, 127), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Drone Turret");
 		BasicTurret hoverTurret = BasicTurret(&hoverTurretData, { Resources::vacuumium.Clone(50), Resources::iron.Clone(50), }, &hoverTurretDesc, &Projectiles::hoverTurretProjectile, 1.5f, JRGB(255, 127, 127), 5, 0.5f, RGBA(127, 63, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Hover Turret");
 
 		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &circleTurretDesc, &Projectiles::circleTurretProjectile, 3, 2.1f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");

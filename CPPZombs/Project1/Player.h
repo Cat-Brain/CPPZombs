@@ -349,7 +349,7 @@ public:
 #define NUM_START_ITEMS 3
 
 int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
-int difficultySeedSelectQuantity[] = { 6, 5, 4 };
+int difficultySeedSelectQuantity[] = { 4, 5, 6 };
 
 #pragma region Psuedo-Virtuals
 enum class PMOVEMENT
@@ -448,7 +448,7 @@ public:
 
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
 			if (startSeeds[i])
-				items.push_back(Resources::Seeds::plantSeeds[i]->Clone(difficultySeedSpawnQuantity[game->settings.difficulty]));
+				items.push_back(Resources::Seeds::plantSeeds[i]->Clone(difficultySeedSpawnQuantity[game->difficulty]));
 		items.currentIndex = 0; // Set active ammo type to the first ammo type in inventory.
 	}
 
@@ -747,7 +747,7 @@ public:
 
 namespace ItemODs
 {
-	void FlareFlameOD(ItemInstance item, Vec2 pos, Vec2 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void FlareFlameOD(ItemInstance item, Vec2 pos, Vec2 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		if (callType != 0 && game->player && game->player->name == "Flare")
 			static_cast<Flare*>(game->player)->currentFlame += static_cast<FlareFlame*>(item.Type())->flameRestore;

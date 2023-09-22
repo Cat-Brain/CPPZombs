@@ -13,6 +13,7 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Collectible.h(61,38): 
           ]
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(640,144): warning C4244: 'argument': conversion from 'uint' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(703,33): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(918,22): warning C4129: 'S': unrecognized character escape sequence
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Defence.h(937,185): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1674,23): warning C4018: '<': signed/unsigned mismatch
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1688,33): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
@@ -65,25 +66,25 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(127,62): warni
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(149,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(150,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(151,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(742,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(791,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(818,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(825,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(765,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(814,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(841,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(848,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
           [
               _Ty=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(872,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(879,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(895,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(902,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
           [
               _Ty=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1148,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1409,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1417,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1423,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1423,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1169,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1430,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1438,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1444,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1444,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include\utility(247,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data
           with
           [
@@ -102,8 +103,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(296,38): me
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(296,38): message : see the first reference to 'std::pair<Entity *,float>::pair' in 'Entities::ExtremestOverlap'
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  546 of 6988 functions ( 7.8%) were compiled, the rest were copied from previous compilation.
+  540 of 7066 functions ( 7.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    26 functions had inline decision re-evaluated but remain unchanged
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
