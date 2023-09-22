@@ -1,4 +1,4 @@
-Martionatany is a farming twin-stick shooter set on alien infested planets.
+Martionatany is a farming tower defence FPS game set on alien planets.
 
 Fight off an infinite onslought of aliens with resources harvested from many wacky plants.
 
