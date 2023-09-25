@@ -772,13 +772,13 @@ namespace UpdateModes
 		if (game->logBook->isOpen)
 			return game->logBook->DUpdate();
 
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Character Select",
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin(Character Select)",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
 			game->scroll = 0;
 			game->updateMode = UPDATEMODE::CHAR_SELECT;
 		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Exit"))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Close Game"))
 			glfwSetWindowShouldClose(game->window, GL_TRUE);
 		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], game->settings.difficulty == DIFFICULTY::EASY ?
 			RGBA(0, 255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
@@ -818,7 +818,7 @@ namespace UpdateModes
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Seed Select",
+		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.875f)), ScrHeight() / 10.0f, "Begin(Seed Select)",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
 			game->scroll = 0;
@@ -849,7 +849,7 @@ namespace UpdateModes
 		game->inputs.mouseScrollF = 0;
 		float offset = ScrHeight() * 0.125f * game->scroll;
 
-		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin",
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin!",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
 			game->startCallback = STARTCALLBACK::NONE;
@@ -969,6 +969,7 @@ namespace UpdateModes
 			else
 			{
 				game->updateMode = UPDATEMODE::IN_GAME;
+				game->logBook->isOpen = false;
 				game->cursorUnlockCount--;
 			}
 		}
@@ -1155,11 +1156,11 @@ namespace PreUpdates
 	void Default()
 	{
 		// Spawn boss:
-		if (game->inputs.keys[KeyCode::ENTER].pressed && !game->shouldSpawnBoss)
+		/*if (game->inputs.keys[KeyCode::ENTER].pressed && !game->shouldSpawnBoss)
 		{
 			game->shouldSpawnBoss = true;
 			game->timeStartBossPrep = tTime;
-		}
+		}*/
 
 		if (game->shouldSpawnBoss && tTime - game->timeStartBossPrep >= 60.0f)
 		{
@@ -1190,9 +1191,9 @@ namespace PreUpdates
 			game->planet->faction1Spawns->speedMul = 3;
 			game->planet->wildSpawns->speedMul = 3;
 		}
-		if (game->tutorialState >= 4 && game->tutorialState < 9 && floorf(tTime) != floorf(tTime - game->dTime))
+		if (game->tutorialState >= 4 && game->tutorialState < 43 && floorf(tTime) != floorf(tTime - game->dTime))
 			game->tutorialState++;
-		if (game->tutorialState >= 9 && game->tutorialState < 14 && floorf(tTime) != floorf(tTime - game->dTime))
+		if (game->tutorialState >= 43 && game->tutorialState < 48 && floorf(tTime) != floorf(tTime - game->dTime))
 			game->tutorialState++;
 	}
 
@@ -1249,7 +1250,7 @@ namespace PostUpdates
 			tutLines = { "WASD to move", "Mouse to look around" };
 			break;
 		case 1:
-			tutLines = { "Left click to shoot", "You shoot whatever is selected", "More info in inventory management" };
+			tutLines = { "Left click to shoot", "You shoot whatever is selected", "Scroll wheel to switch slot", "More info in inventory management"};
 			break;
 		case 2:
 			tutLines = { "Shift to activate utility", "Many characters require you to hold a direction", "Each character has a different utility"};
@@ -1258,9 +1259,9 @@ namespace PostUpdates
 			tutLines = { "R to activate secondary", "Each character has a different secondary"};
 			break;
 		default:
-			if (game->tutorialState < 9)
+			if (game->tutorialState < 43)
 				tutLines = { "Enemies spawn in waves", "Most enemies belong to factions", "Enemies of seperate factions will fight" };
-			else if (game->tutorialState < 14)
+			else if (game->tutorialState < 48)
 				tutLines = { "Good luck!" };
 			break;
 		}

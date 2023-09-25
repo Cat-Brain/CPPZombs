@@ -314,6 +314,26 @@ public:
 	RaycastHit RaySphere(Vec3 ro, Vec3 rd, glm::vec4 sph, int index)
 	{
 		Vec3 oc = ro - Vec3(sph);
+		float b = 2 * glm::dot(oc, rd);
+		float c = glm::length2(oc) - sph.w * sph.w;
+		float h = b * b - 4 * c;
+		if (h < 0.0) return RaycastHit();
+		RaycastHit hit;
+		if (h == 0) hit.dist = -0.5 * b;
+		else
+		{
+			float q = (b > 0) ?
+				-0.5 * (b + sqrt(h)) :
+				-0.5 * (b - sqrt(h));
+			hit.dist = min(q, c / q);
+		}
+		hit.pos = ro + rd * hit.dist;
+		hit.norm = glm::normalize(hit.pos - Vec3(sph));
+		hit.chunkOrEntity = true;
+		hit.index = index;
+		return hit;
+		// Old:
+		/*Vec3 oc = ro - Vec3(sph);
 		float b = glm::dot(oc, rd);
 		float c = glm::dot(oc, oc) - sph.w * sph.w;
 		float h = b * b - c;
@@ -325,7 +345,7 @@ public:
 		hit.norm = glm::normalize(hit.pos - Vec3(sph));
 		hit.chunkOrEntity = true;
 		hit.index = index;
-		return hit;
+		return hit;*/
 	}
 
 	RaycastHit RaycastEnt(Vec3 ro, Vec3 rd, float maxDist, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Raycast can only hit entities
@@ -353,7 +373,7 @@ public:
 		const int maxTrace = 100;
 		for (int i = 0; currentDist < maxDist && i < maxTrace; i++)
 		{
-			int chunk = ChunkAtPos(pos);
+			int chunk = ChunkAtPos(ToIV3(pos));
 			if (chunk == -1) break;
 			for (int index : chunks[chunk])
 			{
@@ -389,6 +409,19 @@ public:
 			}
 		}
 		return hit.dist < maxDist ? hit : RaycastHit();
+	}
+
+	RaycastHit StepCastChunk(Vec3 ro, Vec3 step, float maxDist)
+	{
+		iVec3 iPos = ToIV3(ro);
+		iVec3 chunkPos = iPos / CHUNK_WIDTH;
+		int chunkIndex = ChunkAtPos(chunkPos);
+		iVec3 pos = iPos;
+		float dist = 0;
+		while (dist < maxDist)
+		{
+
+		}
 	}
 #pragma endregion
 #pragma region Damage stuff

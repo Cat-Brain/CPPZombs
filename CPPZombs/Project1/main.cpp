@@ -50,26 +50,6 @@ int main()
 		using namespace Enemies::AUpdates;
 		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, MortarTankAU, GenericTankAU, LaserTankAU, ThiefAU };
 	}
-	{
-		using namespace PMovements;
-		pMovements = { Default, Jetpack };
-	}
-	{
-		using namespace Primaries;
-		primaries = { Slingshot, EngShoot };
-	}
-	{
-		using namespace Offhands;
-		offhands = { Slingshot, EngShoot };
-	}
-	{
-		using namespace Secondaries;
-		secondaries = { GrenadeThrow, ThrowFlame, EngModeUse };
-	}
-	{
-		using namespace Utilities;
-		utilities = { TacticoolRoll, FlameThrower, EngModeSwap };
-	}
 
 	{
 		using namespace StartCallbacks;
