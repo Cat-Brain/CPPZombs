@@ -1,8 +1,8 @@
 
-difficulty = Easy
+difficulty = Hard
 chunk render dist = 5
 start seeds = tfffffffftfftftff
-character = 0
+character = 2
 color band = true
 vSync = false
 display FPS = true

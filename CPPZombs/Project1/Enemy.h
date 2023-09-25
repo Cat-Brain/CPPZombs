@@ -1671,7 +1671,7 @@ namespace Enemies
 			aggro += game->dTime * speedMul;
 			if (Types::GetPoints(aggro) - usedPoints > (*this)[nextSpawnIndex]->Cost() * nextSpawnCount)
 			{
-				for (int i = 0; i < nextSpawnCount; i++)
+				for (uint i = 0; i < nextSpawnCount; i++)
 					SpawnEnemy(nextSpawnIndex);
 				usedPoints += (*this)[nextSpawnIndex]->Cost() * nextSpawnCount;
 				Randomize();

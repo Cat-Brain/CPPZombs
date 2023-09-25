@@ -674,6 +674,7 @@ void Game::Start()
 
 	unique_ptr<Player> playerUnique = characters[UnEnum(settings.character)]->PClone(startSeeds);
 	player = playerUnique.get();
+	playerE = player;
 
 	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
 	base = static_cast<Base*>(baseUnique.get());
@@ -1317,16 +1318,7 @@ namespace PostUpdates
 				"The offhand is shot by right click", "Put something in your offhand to proceed"};
 			break;
 		case 2:
-			tutLines = { "I'm not sure quite what else to put in this tutorial. =\\"};
-			break;
-		case 3:
-			tutLines = { "R to activate secondary", "Each character has a different secondary" };
-			break;
-		default:
-			if (game->tutorialState < 9)
-				tutLines = { "Enemies spawn in waves", "Most enemies belong to factions", "Enemies of seperate factions will fight" };
-			else if (game->tutorialState < 14)
-				tutLines = { "Good luck!" };
+			tutLines = { "I'm not sure quite what else to put in this tutorial. =\\", "Press esc and click exit to leave the tutorial"};
 			break;
 		}
 		for (int i = 0; i < tutLines.size(); i++)

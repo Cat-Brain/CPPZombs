@@ -16,7 +16,7 @@ int main()
 		using namespace Livestock::Updates;
 		updates = { EntityU, FadeOutU, CollectibleU, ExplodeNextFrameU, UpExplodeNextFrameU, FadeOutPuddleU, VacuumeForU, ProjectileU,
 			FunctionalBlockU, FunctionalBlock2U, VineU, BasicTurretU, CircleTurretU, LaserTurretU, EnemyU, VacuumerU, SpiderU, CenticrawlerU, PouncerU, CatU, CataclysmU, EggU,
-			KiwiU, PlayerU, FlareU, EngineerU, GrenadeU, FlameGlobU, FlamePuddleU, TurretU, RoverU, BaseU };
+			KiwiU, PlayerU, FlareU, GrenadeU, FlameGlobU, FlamePuddleU, EngTurretU, BaseU };
 	}
 	{
 		using namespace VUpdates;
@@ -29,7 +29,7 @@ int main()
 		using namespace Livestock::DUpdates;
 		dUpdates = { EntityDU, FadeOutDU, CollectibleDU, FadeOutPuddleDU, FadeOutGlowDU, ProjectileDU, DToColDU, ShrubDU, TreeDU, BasicTurretDU, CircleTurretDU,
 			LaserTurretDU, DeceiverDU, ParentDU, ExploderDU,
-			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, LaserTankDU, KiwiDU, PlayerDU, TurretDU, RoverDU };
+			SnakeConnectedDU, ColorCyclerDU, PouncerDU, CatDU, CataclysmDU, TankDU, LaserTankDU, KiwiDU, PlayerDU, EngTurretDU };
 	}
 	{
 		using namespace UIUpdates;

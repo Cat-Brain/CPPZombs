@@ -928,7 +928,7 @@ namespace Defences
 			pulseTurretDesc = "The default turret",
 			rockTurretDesc = "Strong but low range",
 			sapphireTurretDesc = "Fast firing but small bullets",
-			droneTurretDesc = "Hovers above the ground\Slow bullets\nFast firing\nHigh DPS",
+			droneTurretDesc = "Hovers above the ground\nSlow bullets\nFast firing\nHigh DPS",
 			hoverTurretDesc = "Hovers above the ground\nSimilar to pulse turret",
 			circleTurretDesc = "Fires 3 bullets per volley",
 			laserTurretDesc = "Currently scrapped\nIF THIS APPEARS TELL ME";
@@ -947,7 +947,7 @@ namespace Defences
 
 		CircleTurret circleTurret = CircleTurret(&circleTurretData, { Resources::copper.Clone(25) }, &circleTurretDesc, &Projectiles::circleTurretProjectile, 3, 2.1f, 0.5f, JRGB(255, 193, 127), 5, 0.5f, RGBA(127, 95, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Circle Turret");
 
-		LaserTurret laserTurret = LaserTurret(&laserTurretData, { /*Resources::quartz.Clone(25), Resources::lead.Clone(25), Resources::topaz.Clone(25)*/ }, &laserTurretDesc, 60, 15, 0.125f, 0.6, JRGB(167, 62, 168), 5, 1.5f, RGBA(84, 8, 150), RGBA(), RGBA(41, 35, 207), 2, 0.25f, 120, 120, "Laser Turret");
+		LaserTurret laserTurret = LaserTurret(&laserTurretData, { /*Resources::quartz.Clone(25), Resources::lead.Clone(25), Resources::topaz.Clone(25)*/ }, &laserTurretDesc, 60, 15, 0.125f, 0.6f, JRGB(167, 62, 168), 5, 1.5f, RGBA(84, 8, 150), RGBA(), RGBA(41, 35, 207), 2, 0.25f, 120, 120, "Laser Turret");
 
 		vector<Tower*> towers = {
 			&lantern,

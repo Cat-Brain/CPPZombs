@@ -319,12 +319,12 @@ public:
 		float h = b * b - 4 * c;
 		if (h < 0.0) return RaycastHit();
 		RaycastHit hit;
-		if (h == 0) hit.dist = -0.5 * b;
+		if (h == 0) hit.dist = -0.5f * b;
 		else
 		{
 			float q = (b > 0) ?
-				-0.5 * (b + sqrt(h)) :
-				-0.5 * (b - sqrt(h));
+				-0.5f * (b + sqrt(h)) :
+				-0.5f * (b - sqrt(h));
 			hit.dist = min(q, c / q);
 		}
 		hit.pos = ro + rd * hit.dist;
@@ -670,7 +670,7 @@ public:
 					}
 				}
 
-		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), game->settings.chunkRenderDist * CHUNK_WIDTH, MaskF::IsCorporealNotCollectible, nullptr);
+		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), static_cast<float>(game->settings.chunkRenderDist * CHUNK_WIDTH), MaskF::IsCorporealNotCollectible, nullptr);
 		if (!game->inputs.keys[KeyCode::COMMA].held)
 		{
 			// Collectibles
@@ -733,7 +733,7 @@ public:
 		// Find where it's located in the main vector.
 		vector<unique_ptr<Entity>>::iterator iter = std::find_if(begin(), end(), [entityToRemove](std::unique_ptr<Entity> const& i) { return i.get() == entityToRemove; });
 		// The std::distance stuff finds its index.
-		RemoveFromChunks(std::distance(begin(), iter), entityToRemove->pos, entityToRemove->radius);
+		RemoveFromChunks(static_cast<int>(std::distance(begin(), iter)), entityToRemove->pos, entityToRemove->radius);
 		// Replace its value with nullptr (that's what the .reset() does).
 		iter->reset();
 	}

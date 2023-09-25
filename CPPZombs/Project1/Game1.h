@@ -69,6 +69,7 @@ class Game : public Renderer
 public:
 	unique_ptr<Entities> entities;
 	Player* player;
+	Entity* playerE; // Same as player but as an enity*
 	Base* base;
 	unique_ptr<Planet> planet;
 	unique_ptr<LogBook> logBook;

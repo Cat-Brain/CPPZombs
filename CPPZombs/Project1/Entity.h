@@ -406,7 +406,7 @@ namespace DUpdates
 	{
 		FadeOut* fade = static_cast<FadeOut*>(entity);
 		uint a = fade->color.a;
-		fade->color.a = (a / 255.f) * (255 - static_cast<uint8_t>((tTime - fade->startTime) * 255 / fade->totalFadeTime));
+		fade->color.a = static_cast<byte>((a / 255.f) * (255 - static_cast<uint8_t>((tTime - fade->startTime) * 255 / fade->totalFadeTime)));
 		fade->DUpdate(DUPDATE::ENTITY);
 		fade->color.a = a;
 	}

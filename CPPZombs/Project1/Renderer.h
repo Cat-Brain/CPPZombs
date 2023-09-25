@@ -23,7 +23,7 @@ enum DIFFICULTY
 {
 	EASY, MEDIUM, HARD
 };
-string difficultyStrs[] = { "Easy", "Medium", "Hard" };
+vector<string> difficultyStrs = { "Easy", "Medium", "Hard" };
 
 enum class CHARS
 {
@@ -54,6 +54,7 @@ public:
 
 	void TryOpen()
 	{
+		std::cout << difficultyStrs.size() << '\n';
 		std::ifstream file;
 		file.open(settingsLocation, std::ios::in);
 		if (file.is_open())
@@ -63,7 +64,7 @@ public:
 				string contents;
 				std::getline(file, contents);
 				std::cout << contents << '\n';
-				for (int i = 0; i < difficultyStrs->size(); i++)
+				for (int i = 0; i < difficultyStrs.size(); i++)
 					if (contents == "difficulty = " + difficultyStrs[i])
 					{
 						difficulty = (DIFFICULTY)i;
