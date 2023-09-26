@@ -472,6 +472,26 @@ public:
 	{
 		return game->entities->OverlapsAny(pos + Vec3(0, 0, -radius), radius - 0.01f, MaskF::IsCorporeal, this);
 	}
+
+	virtual float PrimaryFill()
+	{
+		return min(1.f, (tTime - lastPrimary) / (items.GetCurrentItem()->useTime * shootSpeed));
+	}
+
+	virtual float OffhandFill()
+	{
+		return min(1.f, (tTime - lastOffhand) / (items.GetCurrentOffhand()->useTime * shootSpeed));
+	}
+
+	virtual float SecondaryFill()
+	{
+		return min(1.f, (tTime - lastSecondary) / secondaryTime);
+	}
+
+	virtual float UtilityFill()
+	{
+		return min(1.f, (tTime - lastUtility) / utilityTime);
+	}
 };
 
 EntityData flareData = EntityData(UPDATE::FLARE, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::FLARE, ONDEATH::PLAYER);
@@ -543,6 +563,11 @@ public:
 	unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
 	{
 		return make_unique<Engineer>(this, startSeeds, pos, dir, creator);
+	}
+
+	float OffhandFill() override
+	{
+		return min(1.f, (tTime - lastOffhand) / (offhandTime));
 	}
 };
 #pragma endregion
@@ -1309,16 +1334,16 @@ namespace UIUpdates
 		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
 		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastUtility) / player->utilityTime)));
+		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * player->UtilityFill()));
 		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastSecondary) / player->secondaryTime)));
+		game->DrawFBL(offset, RGBA(255, 255, 0), Vec2(scale, scale * player->SecondaryFill()));
 		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(0, 255, 0), Vec2(scale, scale * min(1.f, (tTime - player->lastPrimary) / (player->items.GetCurrentItem()->useTime * player->shootSpeed))));
+		game->DrawFBL(offset, RGBA(0, 255, 0), Vec2(scale, scale * player->PrimaryFill()));
 		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
-		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * min(1.f, (tTime - player->lastOffhand) / (player->items.GetCurrentOffhand()->useTime * player->shootSpeed))));
+		game->DrawFBL(offset, RGBA(0, 0, 255), Vec2(scale, scale * player->OffhandFill()));
 
 		// Reticle:
 		game->DrawTextured(reticleSprite, 0, vZero, -Vec2(1.f / 24),

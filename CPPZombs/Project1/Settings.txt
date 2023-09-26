@@ -1,9 +1,9 @@
 
-difficulty = Hard
+difficulty = Medium
 chunk render dist = 5
-start seeds = tfffffffftfftftff
+start seeds = fffffffffffffffff
 character = 2
-color band = true
+color band = false
 vSync = false
 display FPS = true
 spawn all types in tier = true
