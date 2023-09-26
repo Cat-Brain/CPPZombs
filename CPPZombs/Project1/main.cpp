@@ -43,15 +43,6 @@ int main()
 	}
 
 	{
-		using namespace Enemies::MUpdates;
-		Enemies::mUpdates = { DefaultMU, SnakeMU, PouncerSnakeMU, SnakeConnectedMU, VacuumerMU, CenticrawlerMU, PouncerMU, CatMU, BaseTankMU, ThiefMU };
-	}
-	{
-		using namespace Enemies::AUpdates;
-		Enemies::aUpdates = { DefaultAU, ExploderAU, BoomcatAU, TankAU, MortarTankAU, GenericTankAU, LaserTankAU, ThiefAU };
-	}
-
-	{
 		using namespace StartCallbacks;
 		startCallbacks = { Default, Tutorial1, Tutorial2, Tutorial3 };
 	}

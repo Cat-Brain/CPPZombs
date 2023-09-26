@@ -3,27 +3,18 @@
 namespace Enemies
 {
 #pragma region Enemy types
+#pragma region Type Definitions
 	// The base class of all enemies.
 	class Enemy;
-	enum class MUPDATE
-	{
-		DEFAULT, SNAKE, POUNCERSNAKE, SNAKECONNECTED, VACUUMER, CENTICRAWLER, POUNCER, CAT, BASE_TANK, THIEF
-	};
-	vector<function<bool(Enemy*)>> mUpdates;
-
-	enum class AUPDATE
-	{
-		DEFAULT, EXPLODER, BOOMCAT, TANK, MORTAR_TANK, GENERIC_TANK, LASER_TANK, THIEF
-	};
-	vector<function<bool(Enemy*)>> aUpdates;
+	typedef function<bool(Enemy*)> MUpdate, AUpdate;
 
 	class EnemyData : public EntityData
 	{
 	public:
-		MUPDATE mUpdate;
-		AUPDATE aUpdate;
+		MUpdate mUpdate;
+		AUpdate aUpdate;
 
-		EnemyData(MUPDATE mUpdate = MUPDATE::DEFAULT, AUPDATE aUpdate = AUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY,
+		EnemyData(MUpdate mUpdate, AUpdate aUpdate, UPDATE update = UPDATE::ENTITY,
 			VUPDATE vUpdate = VUPDATE::FRICTION, DUPDATE dUpdate = DUPDATE::ENTITY,
 			UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
 			EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
@@ -31,8 +22,6 @@ namespace Enemies
 	};
 
 #define ENEMY_SIGHT_DIST 30.f
-
-	EnemyData enemyData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Enemy : public DToCol
 	{
 	public:
@@ -62,22 +51,22 @@ namespace Enemies
 			return make_unique<Enemy>(this, pos);
 		}
 
-		inline bool MUpdate()
+		inline bool MUpd()
 		{
-			return MUpdate(static_cast<EnemyData*>(data)->mUpdate);
+			return static_cast<EnemyData*>(data)->mUpdate(this);
 		}
-		bool MUpdate(MUPDATE tempMUpdate)
+		bool MUpd(MUpdate tempMUpdate)
 		{
-			return mUpdates[UnEnum(tempMUpdate)](this);
+			return tempMUpdate(this);
 		}
 
-		inline bool AUpdate()
+		inline bool AUpd()
 		{
-			return AUpdate(static_cast<EnemyData*>(data)->aUpdate);
+			return static_cast<EnemyData*>(data)->aUpdate(this);
 		}
-		bool AUpdate(AUPDATE tempAUpdate)
+		bool AUpd(AUpdate tempAUpdate)
 		{
-			return aUpdates[UnEnum(tempAUpdate)](this);
+			return tempAUpdate(this);
 		}
 
 		virtual int Cost()
@@ -138,7 +127,6 @@ namespace Enemies
 	};
 
 
-	EnemyData deceiverData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Deceiver : public Enemy
 	{
 	public:
@@ -161,7 +149,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData parentData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, UIUPDATE::ENEMY, ONDEATH::PARENT);
 	class Parent : public Enemy
 	{
 	public:
@@ -188,7 +175,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData exploderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::EXPLODER, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
 	class Exploder : public Enemy
 	{
 	public:
@@ -215,7 +201,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData snakeData = EnemyData(MUPDATE::SNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SNAKE);
 	class Snake : public Enemy
 	{
 	public:
@@ -275,7 +260,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData pouncerSnakeData = EnemyData(MUPDATE::POUNCERSNAKE, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
 	class PouncerSnake : public Snake
 	{
 	public:
@@ -331,7 +315,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData snakeConnectedData = EnemyData(MUPDATE::SNAKECONNECTED, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
 	class SnakeConnected : public Enemy
 	{
 	public:
@@ -417,7 +400,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData colorCyclerData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class ColorCycler : public Enemy
 	{
 	public:
@@ -447,7 +429,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData vacuumerData = EnemyData(MUPDATE::VACUUMER, AUPDATE::DEFAULT, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
 	class Vacuumer : public Enemy
 	{
 	public:
@@ -472,7 +453,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData spiderData = EnemyData(MUPDATE::DEFAULT, AUPDATE::DEFAULT, UPDATE::SPIDER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SPIDER);
 	class Spider : public Enemy
 	{
 	public:
@@ -574,7 +554,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData centicrawlerData = EnemyData(MUPDATE::CENTICRAWLER, AUPDATE::DEFAULT, UPDATE::CENTICRAWLER, VUPDATE::CENTICRAWLER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
 	class Centicrawler : public Spider
 	{
 	public:
@@ -602,7 +581,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData pouncerData = EnemyData(MUPDATE::POUNCER, AUPDATE::DEFAULT, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Pouncer : public Enemy
 	{
 	public:
@@ -628,7 +606,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData catData = EnemyData(MUPDATE::CAT, AUPDATE::DEFAULT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cat : public Pouncer
 	{
 	public:
@@ -658,7 +635,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData boomCatData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class BoomCat : public Cat
 	{
 	public:
@@ -682,7 +658,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData cataclysmData = EnemyData(MUPDATE::CAT, AUPDATE::BOOMCAT, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Cataclysm : public BoomCat
 	{
 	public:
@@ -747,8 +722,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData tankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData mortarTankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::MORTAR_TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class Tank : public BaseTank
 	{
 	public:
@@ -772,7 +745,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData genericTankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::GENERIC_TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class GenericTank : public BaseTank
 	{
 	public:
@@ -797,7 +769,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData laserTankData = EnemyData(MUPDATE::BASE_TANK, AUPDATE::LASER_TANK, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::LASER_TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
 	class LaserTank : public BaseTank
 	{
 	public:
@@ -822,7 +793,6 @@ namespace Enemies
 		}
 	};
 
-	EnemyData thiefData = EnemyData(MUPDATE::THIEF, AUPDATE::THIEF, UPDATE::ENEMY, VUPDATE::THIEF, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::THIEF);
 	class Thief : public Enemy
 	{
 	public:
@@ -849,20 +819,19 @@ namespace Enemies
 				grabbed = nullptr;
 		}
 	};
-
-
-
+#pragma endregion
+#pragma region Update Functions
 	namespace Updates
 	{
 		void EnemyU(Entity* entity)
 		{
 			Enemy* enemy = static_cast<Enemy*>(entity);
 			if (tTime - enemy->lastMove >= enemy->timePerMove)
-				if (enemy->MUpdate())
+				if (enemy->MUpd())
 					enemy->lastMove = tTime;
 
 			if (tTime - enemy->lastTime >= enemy->timePer)
-				if (enemy->AUpdate())
+				if (enemy->AUpd())
 					enemy->lastTime = tTime;
 		}
 
@@ -1540,6 +1509,29 @@ namespace Enemies
 			return false;
 		}
 	}
+#pragma endregion
+#pragma region Enemy Datas
+	EnemyData enemyData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData deceiverData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData parentData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, UIUPDATE::ENEMY, ONDEATH::PARENT);
+	EnemyData exploderData = EnemyData(MUpdates::DefaultMU, AUpdates::ExploderAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
+	EnemyData snakeData = EnemyData(MUpdates::SnakeMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SNAKE);
+	EnemyData pouncerSnakeData = EnemyData(MUpdates::PouncerSnakeMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
+	EnemyData snakeConnectedData = EnemyData(MUpdates::SnakeConnectedMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
+	EnemyData colorCyclerData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData vacuumerData = EnemyData(MUpdates::VacuumerMU, AUpdates::DefaultAU, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
+	EnemyData spiderData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::SPIDER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SPIDER);
+	EnemyData centicrawlerData = EnemyData(MUpdates::CenticrawlerMU, AUpdates::DefaultAU, UPDATE::CENTICRAWLER, VUPDATE::CENTICRAWLER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
+	EnemyData pouncerData = EnemyData(MUpdates::PouncerMU, AUpdates::DefaultAU, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData catData = EnemyData(MUpdates::CatMU, AUpdates::DefaultAU, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData boomCatData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData cataclysmData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData tankData = EnemyData(MUpdates::BaseTankMU, AUpdates::TankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData mortarTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::MortarTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData genericTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::GenericTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData laserTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::LaserTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::LASER_TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
+	EnemyData thiefData = EnemyData(MUpdates::ThiefMU, AUpdates::ThiefAU, UPDATE::ENEMY, VUPDATE::THIEF, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::THIEF);
+#pragma endregion
 #pragma endregion
 
 

@@ -567,7 +567,7 @@ public:
 
 	float OffhandFill() override
 	{
-		return min(1.f, (tTime - lastOffhand) / (offhandTime));
+		return items.isBuilding ? Player::OffhandFill() : min(1.f, (tTime - lastOffhand) / (offhandTime));
 	}
 };
 #pragma endregion
@@ -794,6 +794,7 @@ namespace Offhands
 
 	bool MakeTurret(Player* player)
 	{
+		if (player->items.isBuilding) return DualWield(player);
 		Engineer* engineer = static_cast<Engineer*>(player);
 		ItemInstance currentItem = engineer->items[engineer->items.size() - 1];
 		if (currentItem.count <= 0) return false;

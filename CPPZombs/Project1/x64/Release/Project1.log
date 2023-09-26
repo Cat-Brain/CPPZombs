@@ -1,35 +1,35 @@
 ﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1688,33): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1680,33): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(328,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(346,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1086,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1251,66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1335,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1087,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1252,66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1336,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1338,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1339,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1341,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1342,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1344,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1345,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1365,22): warning C4244: '+=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1366,22): warning C4244: '+=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1367,49): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1368,49): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(54,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(55,61): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
@@ -86,8 +86,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(296,38): me
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(296,38): message : see the first reference to 'std::pair<Entity *,float>::pair' in 'Entities::ExtremestOverlap'
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  549 of 6776 functions ( 8.1%) were compiled, the rest were copied from previous compilation.
-    5 functions were new in current compilation
-    73 functions had inline decision re-evaluated but remain unchanged
+  1 of 6745 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
