@@ -103,6 +103,16 @@ public:
 
 	Game() : entities(nullptr), player(nullptr), base(nullptr), logBook(make_unique<LogBook>()) { }
 
+	void EndRun()
+	{
+		updateMode = UPDATEMODE::DEAD;
+		if (startCallback == STARTCALLBACK::NONE && preUpdate == PREUPDATE::DEFAULT && postUpdate == POSTUPDATE::DEFAULT)
+		{
+			settings.highScores[difficulty] = totalGamePoints;
+			settings.Write();
+		}
+	}
+
 	void Start() override;
 
 	void Update() override;

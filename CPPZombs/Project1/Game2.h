@@ -146,7 +146,7 @@ void LogBook::DUpdate()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		int rows = game->settings.dispBoolSettings.size() + 3;
+		int rows = game->settings.dispBoolSettings.size() + 6;
 		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
 		float offset = scroll * ScrHeight() * 0.125;
 
@@ -155,6 +155,25 @@ void LogBook::DUpdate()
 
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125 * i++)), scale, game->IsFullscreen() ? "Unfullscreen" : "Fullscreen"))
 			game->Fullscreen();
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125 * i++)), scale, "Clear " + difficultyStrs[DIFFICULTY::EASY] + " highscore",
+			difficultyCols[DIFFICULTY::EASY], difficultyCols2[DIFFICULTY::EASY]))
+		{
+			game->settings.highScores[DIFFICULTY::EASY] = 0;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125 * i++)), scale, "Clear " + difficultyStrs[DIFFICULTY::MEDIUM] + " highscore",
+			difficultyCols[DIFFICULTY::MEDIUM], difficultyCols2[DIFFICULTY::MEDIUM]))
+		{
+			game->settings.highScores[DIFFICULTY::MEDIUM] = 0;
+			game->settings.Write();
+		}
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125 * i++)), scale, "Clear " + difficultyStrs[DIFFICULTY::HARD] + " highscore",
+			difficultyCols[DIFFICULTY::HARD], difficultyCols2[DIFFICULTY::HARD]))
+		{
+			game->settings.highScores[DIFFICULTY::HARD] = 0;
+			game->settings.Write();
+		}
 
 		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(game->settings.chunkRenderDist)) * scale;
 		font.Render("Chunk Render Dist = " + to_string(game->settings.chunkRenderDist), Vec2(-ScrWidth(), offset * 2 + ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
@@ -781,20 +800,23 @@ namespace UpdateModes
 		}
 		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Close Game"))
 			glfwSetWindowShouldClose(game->window, GL_TRUE);
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY], game->settings.difficulty == DIFFICULTY::EASY ?
-			RGBA(0, 255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::EASY ? RGBA(0, 127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::EASY] + " - " +
+			to_string(game->settings.highScores[DIFFICULTY::EASY]), game->settings.difficulty == DIFFICULTY::EASY ?
+			difficultyCols[DIFFICULTY::EASY] : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::EASY ? RGBA(63, 127, 63) : RGBA(127, 127, 127)))
 		{
 			game->settings.difficulty = DIFFICULTY::EASY;
 			game->settings.Write();
 		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM], game->settings.difficulty == DIFFICULTY::MEDIUM ?
-			RGBA(255, 255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::MEDIUM] + " - " +
+			to_string(game->settings.highScores[DIFFICULTY::MEDIUM]), game->settings.difficulty == DIFFICULTY::MEDIUM ?
+			difficultyCols[DIFFICULTY::MEDIUM] : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::MEDIUM ? RGBA(127, 127, 63) : RGBA(127, 127, 127)))
 		{
 			game->settings.difficulty = DIFFICULTY::MEDIUM;
 			game->settings.Write();
 		}
-		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD], game->settings.difficulty == DIFFICULTY::HARD ?
-			RGBA(255) : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::HARD ? RGBA(127) : RGBA(127, 127, 127)))
+		if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, difficultyStrs[DIFFICULTY::HARD] + " - " +
+			to_string(game->settings.highScores[DIFFICULTY::HARD]), game->settings.difficulty == DIFFICULTY::HARD ?
+			difficultyCols[DIFFICULTY::HARD] : RGBA(255, 255, 255), game->settings.difficulty == DIFFICULTY::HARD ? RGBA(127, 63, 63) : RGBA(127, 127, 127)))
 		{
 			game->settings.difficulty = DIFFICULTY::HARD;
 			game->settings.Write();
@@ -846,7 +868,7 @@ namespace UpdateModes
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 8));
+		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 6));
 		game->inputs.mouseScrollF = 0;
 		float offset = ScrHeight() * 0.125f * game->scroll;
 
@@ -928,7 +950,7 @@ namespace UpdateModes
 		// If the player has died then we should switch to the death screen:
 		if (!playerAlive)
 		{
-			game->updateMode = UPDATEMODE::DEAD;
+			game->EndRun();
 			return;
 		}
 		// We're not dead so the update code gets run.
@@ -1096,7 +1118,10 @@ namespace UpdateModes
 				game->updateMode = UPDATEMODE::IN_GAME;
 			}
 			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, "Main Menu"))
+			{
+				game->EndRun();
 				game->updateMode = UPDATEMODE::MAINMENU;
+			}
 			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Settings"))
 				game->logBook->OpenSettings();
 			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.375f), ScrHeight() / 10.0f, "Log Book"))
@@ -1118,14 +1143,16 @@ namespace UpdateModes
 
 		vector<std::pair<string, RGBA>> startSeedData;
 		for (int j = 0; j < Resources::Seeds::plantSeeds.size(); j++)
-			if (game->settings.startSeeds[j])
+			if (game->startSeeds[j])
 				startSeedData.push_back({ Resources::Seeds::plantSeeds[j]->name, Resources::Seeds::plantSeeds[j]->color });
 
-		float totalLines = 9 + startSeedData.size() + game->specialData.size() + 0.2f;
+		float totalLines = 10 + startSeedData.size() + game->specialData.size() + 0.2f;
 		float scale = float(ScrHeight()) / totalLines, scale2 = scale * 0.8f, scale3 = scale * 2, scale4 = scale2 * 2;
 		float offset = scale * 0.2f, offset2 = offset * 2;
 		int i = 0;
-	
+
+		font.Render(game->version, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, { 255, 255, 255 });
+
 		font.Render(difficultyStrs[game->difficulty], { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4,
 			{ game->difficulty == DIFFICULTY::EASY ? 0u : 255u, game->difficulty == DIFFICULTY::HARD ? 0u : 255u });
 

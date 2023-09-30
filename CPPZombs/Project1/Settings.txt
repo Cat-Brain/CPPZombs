@@ -1,11 +1,12 @@
 
-difficulty = Medium
-chunk render dist = 5
-start seeds = fffffffffffffffff
-character = 2
+difficulty = Hard
+chunk render dist = 3
+start seeds = ftftffftttfftfff
+character = 1
+high scores = 0,0,31744
 color band = false
-vSync = false
-display FPS = true
+vSync = true
+display FPS = false
 spawn all types in tier = true
 can change row = false
 maximized = true

@@ -24,6 +24,8 @@ enum DIFFICULTY
 	EASY, MEDIUM, HARD
 };
 vector<string> difficultyStrs = { "Easy", "Medium", "Hard" };
+vector<RGBA> difficultyCols = { RGBA(127, 255, 127), RGBA(255, 255, 127), RGBA(255, 127, 127) };
+vector<RGBA> difficultyCols2 = { RGBA(63, 127, 63), RGBA(127, 127, 63), RGBA(127, 63, 63) };
 
 enum class CHARS
 {
@@ -33,7 +35,7 @@ enum class CHARS
 // Having an enum of all seeds will come in handy:
 enum class SEEDINDICES
 {
-	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ_S, COAL, BRICK, CHEESE, TOPAZ, SAPPHIRE, LEAD, QUARTZ_V, COUNT
+	COPPER, IRON, RUBY, EMERALD, ROCK, SHADE, BOWLER, VACUUMIUM, SILVER, QUARTZ, COAL, BRICK, CHEESE, TOPAZ, SAPPHIRE, LEAD, COUNT
 };
 
 string settingsLocation = "Settings.txt";
@@ -51,6 +53,7 @@ public:
 		{&displayFPS, "display FPS"},
 		{&spawnAllTypesInTier, "spawn all types in tier"}, {&canChangeRow, "can change row"} };
 	vector<std::pair<bool*, string>> hidBoolSettings = { {&maximized, "maximized"} };
+	int highScores[3] = { 0 };
 
 	void TryOpen()
 	{
@@ -78,7 +81,7 @@ public:
 				}
 				else if (contents.find("start seeds = ") == 0)
 				{
-					string subStr = contents.substr(14);
+					string subStr = contents.substr(string("start seeds = ").size());
 					int i = 0;
 					for (char c : subStr)
 					{
@@ -93,6 +96,28 @@ public:
 					for (int i = 0; i < UnEnum(CHARS::COUNT); i++)
 						if (contents == "character = " + to_string(i))
 							character = CHARS(i);
+				}
+				else if (contents.find("high scores = ") == 0)
+				{
+					string subStr = contents.substr(string("high scores = ").size());
+					string easy = "";
+					for (char c : subStr)
+					{
+						if (c == ',') break;
+						easy += c;
+					}
+					subStr = subStr.substr(easy.size() + 1);
+					string medium = "";
+					for (char c : subStr)
+					{
+						if (c == ',') break;
+						medium += c;
+					}
+					string hard = subStr.substr(medium.size() + 1);
+
+					highScores[0] = std::stoi(easy);
+					highScores[1] = std::stoi(medium);
+					highScores[2] = std::stoi(hard);
 				}
 				for (std::pair<bool*, string> boolSetting : dispBoolSettings)
 				{
@@ -136,7 +161,8 @@ public:
 			"\ndifficulty = " + difficultyStrs[difficulty] +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
 			startSeedsStr +
-			"\ncharacter = " + to_string(UnEnum(character));
+			"\ncharacter = " + to_string(UnEnum(character)) +
+			"\nhigh scores = " + to_string(highScores[0]) + ',' + to_string(highScores[1]) + ',' + to_string(highScores[2]);
 		for (std::pair<bool*, string> boolSetting : dispBoolSettings)
 			contents += '\n' + boolSetting.second + " = " + ToStringBool(*boolSetting.first);
 		for (std::pair<bool*, string> boolSetting : hidBoolSettings)
@@ -358,6 +384,7 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
+	string version = "v0.7.2.2-alpha";
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
 	uint instanceVBO = 0;

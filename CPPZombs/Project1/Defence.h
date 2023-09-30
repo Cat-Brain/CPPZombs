@@ -553,16 +553,13 @@ namespace Plants
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
 		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 5, 100, 100, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
-		
-		RGBA babyQuartzVineColor = RGBA(202, 188, 224), quartzVineColor = RGBA(161, 153, 173), deadQuartzColor = RGBA(127, 70, 212);
-		Vine quartzVine = Vine(&vineData, Resources::quartz.Clone(), ItemInstance(ITEMTYPE::QUARTZ_VINE_SEED), 1.6f, 3, 5, 10, 10, 25, 0.25f, 0.25f, 0.5f, babyQuartzVineColor, quartzVineColor, deadQuartzColor, 1, 0, 10, 10, "Quarts vine");
 	}
 
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.
 	vector<Shrub*> plants{ &Shrubs::copperShrub, &Shrubs::ironShrub, &Shrubs::rubyShrub, &Shrubs::emeraldShrub, &Shrubs::rockShrub,
 		&Shrubs::shadeShrub, &Shrubs::bowlerShrub, &Shrubs::vacuumiumShrub, &Shrubs::silverShrub, &Shrubs::quartzShrub, &Shrubs::coalShrub,
 		&Shrubs::brickShrub,
-		&Vines::cheeseVine, &Vines::topazVine, &Vines::sapphireVine, &Vines::leadVine, &Vines::quartzVine };
+		&Vines::cheeseVine, &Vines::topazVine, &Vines::sapphireVine, &Vines::leadVine };
 }
 
 namespace Resources::Seeds
@@ -586,13 +583,12 @@ namespace Resources::Seeds
 	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius, false, true, true);
 	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", VUPDATE::ENTITY, 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
 	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius, false, true, true);
-	PlacedOnLanding quartzVineSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_VINE_SEED, &Plants::Vines::quartzVine, "Quartz vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::quartzVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::quartzVine.babyRadius, false, true, true);
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
 		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed,
 		&cheeseVineSeed, &topazVineSeed,
-		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
+		&sapphireVineSeed, &leadVineSeed };
 	
 }
 
@@ -617,12 +613,11 @@ namespace Collectibles::Seeds
 	Collectible topazVineSeed = Collectible(Resources::Seeds::topazVineSeed.Clone());
 	Collectible sapphireVineSeed = Collectible(Resources::Seeds::sapphireVineSeed.Clone());
 	Collectible leadVineSeed = Collectible(Resources::Seeds::leadVineSeed.Clone());
-	Collectible quartzVineSeed = Collectible(Resources::Seeds::quartzVineSeed.Clone());
 
 	// Keep a list of all of the seeds.
 	vector<Collectible*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
 		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed, &cheeseVineSeed, &topazVineSeed,
-		&sapphireVineSeed, &leadVineSeed, &quartzVineSeed };
+		&sapphireVineSeed, &leadVineSeed };
 }
 
 #pragma endregion
