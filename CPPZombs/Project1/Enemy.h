@@ -504,7 +504,7 @@ namespace Enemies
 		Vec3 LegPos(int index)
 		{
 			float rotation = (float(index) / legCount + legRotation) * 2 * PI_F;
-			return pos + Vec3(CircPoint2(rotation), 0) * legLength;
+			return pos + down * radius + Vec3(CircPoint2(rotation), 0) * legLength;
 		}
 
 		void UpdateLegs()
@@ -1475,7 +1475,6 @@ namespace Enemies
 			Vec2 disp = Vec2(glm::length((Vec2)tank->dir) * tank->foeDist, tank->dir.z * tank->foeDist);
 			projectile->vel = Vec3(glm::normalize((Vec2)tank->dir) * tank->projectile->speed,
 				disp.y * tank->projectile->speed / disp.x + game->planet->gravity * 0.5f * disp.x / tank->projectile->speed);
-			printf("(%f, %f, %f)\n", projectile->vel.x, projectile->vel.y, projectile->vel.z);
 			game->entities->push_back(std::move(projectile));
 			return true;
 		}

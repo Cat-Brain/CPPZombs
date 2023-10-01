@@ -108,7 +108,7 @@ public:
 		updateMode = UPDATEMODE::DEAD;
 		if (startCallback == STARTCALLBACK::NONE && preUpdate == PREUPDATE::DEFAULT && postUpdate == POSTUPDATE::DEFAULT)
 		{
-			settings.highScores[difficulty] = totalGamePoints;
+			settings.highScores[difficulty] = max(settings.highScores[difficulty], totalGamePoints);
 			settings.Write();
 		}
 	}

@@ -868,11 +868,13 @@ namespace UpdateModes
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 6));
+		game->scroll = ClampF(game->scroll - game->inputs.mouseScrollF, 0, max(0, UnEnum(SEEDINDICES::COUNT) - 4));
 		game->inputs.mouseScrollF = 0;
 		float offset = ScrHeight() * 0.125f * game->scroll;
+		int i = 0;
 
-		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Begin!",
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, "Begin!",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
 			game->startCallback = STARTCALLBACK::NONE;
@@ -881,17 +883,43 @@ namespace UpdateModes
 			game->updateMode = UPDATEMODE::IN_GAME;
 			game->Start();
 		}
-		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.75f), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
 		{
 			game->scroll = 0;
 			game->updateMode = UPDATEMODE::CHAR_SELECT;
 		}
 
+		int allowedTotal = difficultySeedSelectQuantity[game->settings.difficulty];
 		int selectedTotal = 0;
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
 			if (game->settings.startSeeds[i])
 				selectedTotal++;
-		int allowedTotal = difficultySeedSelectQuantity[game->settings.difficulty];
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, "Randomize remaining"))
+			while (selectedTotal < allowedTotal)
+			{
+				int randInt = rand() % (UnEnum(SEEDINDICES::COUNT) - selectedTotal);
+				for (int i = 0, j = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+					if (!game->settings.startSeeds[i])
+					{
+						if (j == randInt)
+						{
+							game->settings.startSeeds[i] = true;
+							game->settings.Write();
+							break;
+						}
+						j++;
+					}
+				selectedTotal++;
+			}
+
+		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, "Deselect all"))
+		{
+			for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+				game->settings.startSeeds[i] = false;
+			game->settings.Write();
+		}
+
 		if (selectedTotal > allowedTotal)
 		{
 			for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
@@ -901,13 +929,13 @@ namespace UpdateModes
 		string strAmountRemaining = allowedTotal == selectedTotal ? "Complete" : "Choose " + std::to_string(allowedTotal - selectedTotal) + " more";
 		font.Render(strAmountRemaining, Vec2(ScrWidth() - ScrHeight() * 0.1f * font.TextWidthTrue(strAmountRemaining),
 			ScrHeight() * 0.9f), ScrHeight() * 0.1f, RGBA(0, 0, 255).CLerp(RGBA(255, 127), sineLerp));
-		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
+		for (int j = 0; j < UnEnum(SEEDINDICES::COUNT); j++)
 		{
-			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (0.625f - i * 0.125f)), ScrHeight() / 10.0f, Plants::plants[i]->name,
-				game->settings.startSeeds[i] ? Plants::plants[i]->color.CLerp(RGBA(), sineLerp) : RGBA(255, 255, 255), game->settings.startSeeds[i] ? Plants::plants[i]->color / 2 : RGBA(127, 127, 127)) &&
-				(selectedTotal < allowedTotal || game->settings.startSeeds[i]))
+			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, Plants::plants[j]->name,
+				game->settings.startSeeds[j] ? Plants::plants[j]->color.CLerp(RGBA(), sineLerp) : RGBA(255, 255, 255), game->settings.startSeeds[j] ? Plants::plants[j]->color / 2 : RGBA(127, 127, 127)) &&
+				(selectedTotal < allowedTotal || game->settings.startSeeds[j]))
 			{
-				game->settings.startSeeds[i] ^= true; // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
+				game->settings.startSeeds[j] ^= true; // Doesn't break so that it renders the rest as InputHoverSquare does rendering.
 				game->settings.Write();
 			}
 		}

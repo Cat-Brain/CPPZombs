@@ -972,17 +972,17 @@ public:
 	}
 };
 
-EntityData fadeOutPuddleData = EntityData(UPDATE::FADEOUTPUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUTPUDDLE);
-class FadeOutPuddle : public Entity
+EntityData fadeOutPuddleData = EntityData(UPDATE::FADEOUTPUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUT);
+class FadeOutPuddle : public FadeOut
 {
 public:
 	int damage;
-	float startTime, totalFadeTime, timePer, lastTime;
+	float timePer, lastTime;
 
 	FadeOutPuddle(EntityData* data, float totalFadeTime = 1.0f, int damage = 1, float timePer = 1.0f, Vec3 pos = vZero,
 		float radius = 0.5f, RGBA color = RGBA()) :
-		Entity(data, pos, radius, color, 1, 0, 1, 1, "Puddle"),
-		totalFadeTime(totalFadeTime), damage(damage), startTime(tTime), timePer(timePer), lastTime(tTime)
+		FadeOut(data, totalFadeTime, pos, radius, color),
+		damage(damage), timePer(timePer), lastTime(tTime)
 	{
 		corporeal = false;
 	}
@@ -1139,15 +1139,6 @@ namespace Updates
 
 namespace DUpdates
 {
-	void FadeOutPuddleDU(Entity* entity)
-	{
-		FadeOutPuddle* puddle = static_cast<FadeOutPuddle*>(entity);
-		uint a = puddle->color.a;
-		puddle->color.a *= static_cast<uint8_t>((tTime - puddle->startTime) * 255 / puddle->totalFadeTime);
-		puddle->DUpdate(DUPDATE::ENTITY);
-		puddle->color.a = a;
-	}
-
 	void FadeOutGlowDU(Entity* entity)
 	{
 		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
@@ -1167,7 +1158,7 @@ namespace OnDeaths
 #pragma endregion
 
 #pragma region Post entities definition items
-
+#pragma region Types
 class PlacedOnLanding : public Item
 {
 public:
@@ -1306,7 +1297,8 @@ public:
 		itemOD = ITEMOD::SETTILEONLANDING;
 	}
 };
-
+#pragma endregion
+#pragma region Instances
 namespace ItemODs
 {
 	void ItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
@@ -1381,7 +1373,7 @@ namespace ItemODs
 
 namespace Hazards
 {
-	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 3.0f, 10, 0.2f, vZero, 1.5f, RGBA(80, 43, 92));
+	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 30.0f, 1, 0.1f, vZero, 5, RGBA(80, 43, 92, 127));
 	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, false, true, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
 }
 
@@ -1391,7 +1383,7 @@ namespace Resources
 	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", VUPDATE::ENTITY, 1, RGBA(65, 224, 150), 0, 15, 0.25f, 12, 0.4f, false, true, true);
 	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", VUPDATE::ENTITY, 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f, false, true, true);
 	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", VUPDATE::ENTITY, 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
-	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", VUPDATE::ENTITY, 1, RGBA(80, 43, 92), 0, 15.0f, true, 0.25f, 12, 0.4f, false, true, true);
+	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", VUPDATE::GRAVITY, 1, RGBA(80, 43, 92), 0, 15.0f, true, 3, 12, 0.4f, false, true, true);
 	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", VUPDATE::ENTITY, 1, RGBA(255, 255, 255), 0, 15, false, 0.25f, 12, 0.1f, false, true, true);
 	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", VUPDATE::ENTITY, 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
 }
@@ -1406,5 +1398,5 @@ namespace Collectibles
 	Collectible* vacuumium = new Collectible(Resources::vacuumium.Clone());
 	Collectible* quartz = new Collectible(Resources::quartz.Clone());
 }
-
+#pragma endregion
 #pragma endregion
