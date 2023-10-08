@@ -1,9 +1,9 @@
 
-difficulty = Hard
+difficulty = Easy
 chunk render dist = 3
-start seeds = fffffftffffttttt
-character = 2
-high scores = 0,0,339
+start seeds = ffftfftffttfffff
+character = 0
+high scores = 9,1795,339
 color band = false
 vSync = false
 display FPS = false

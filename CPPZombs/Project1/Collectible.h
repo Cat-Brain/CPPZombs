@@ -54,16 +54,17 @@ namespace DUpdates
 
 	void CollectibleDU(Entity* entity)
 	{
-		if (glm::distance2(game->PlayerPos(), entity->pos) < entity->radius * entity->radius + game->playerE->radius * game->playerE->radius +
-			COLLECTIBLE_TRANSPARENT_DIST * COLLECTIBLE_TRANSPARENT_DIST)
+		if (glm::distance2(game->PlayerPos(), entity->pos) < (COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius) *
+			(COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius))
 		{
 			byte alpha = entity->color.a;
-			entity->color.a = static_cast<byte>(entity->color.a * (glm::distance(game->PlayerPos(), entity->pos) /
-				(COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius)));
+			entity->color.a = static_cast<byte>(entity->color.a * ClampF01((glm::distance(game->PlayerPos(), entity->pos) -
+				entity->radius - game->playerE->radius) /
+				COLLECTIBLE_TRANSPARENT_DIST));
 			entity->DUpdate(DUPDATE::ENTITY);
 			entity->color.a = alpha;
 			return;
 		}
-		entity->DUpdate(DUPDATE::ENTITY);
+		entity->DUpdate(DUPDATE::ENTITY); // dist < ctd + rad + rad2
 	}
 }

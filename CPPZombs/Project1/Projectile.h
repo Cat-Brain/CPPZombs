@@ -1,6 +1,6 @@
 #include "Entities.h"
 
-EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::PROJECTILE);
+EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::COLLECTIBLE);
 class Projectile : public Entity
 {
 public:
@@ -20,6 +20,7 @@ public:
     {
         sortLayer = 1;
         this->corporeal = corporeal;
+        colOverlapFun = MaskF::IsCorporealNotCreator;
         Start();
     }
 
@@ -59,7 +60,6 @@ namespace Updates
 
         if (!projectile->shouldCollide)
             return projectile->MovePos();
-
         int result;
         if (projectile->collideTerrain)
         {
@@ -122,7 +122,7 @@ namespace DUpdates
     }
 }
 
-EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::PROJECTILE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
+EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::COLLECTIBLE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
 class ShotItem : public Projectile
 {
 public:

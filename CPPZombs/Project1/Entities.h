@@ -187,7 +187,7 @@ public:
 		return false;
 	}
 
-	bool CubeDoesOverlap(vector<int> chunkOverlaps, Vec3 pos, Vec3 dim, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	bool CubeDoesOverlap(vector<int> chunkOverlaps, Vec3 pos, Vec3 dim, EntityMaskFun func, Entity* from = nullptr)
 	{
 		for (int chunk : chunkOverlaps)
 			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
@@ -195,60 +195,76 @@ public:
 		return false;
 	}
 
-	inline bool CubeDoesOverlap(iVec3 minPos, iVec3 maxPos, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline bool CubeDoesOverlap(iVec3 minPos, iVec3 maxPos, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return CubeDoesOverlap(FindCreateChunkOverlapsMain(Chunk::ToSpace(minPos), Chunk::ToSpace(maxPos)),
 			Vec3(maxPos + minPos + 1) * 0.5f, Vec3(maxPos - minPos + 1) * 0.5f, func, from);
 	}
 
-	bool DoesOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	bool DoesOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
+		Entity* tempEnt;
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active && func(from, (*this)[*iter].get())) return true;
+			for (int i : chunks[chunk])
+			{
+				tempEnt = (*this)[i].get();
+				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt)) return true;
+			}
 		return false;
 	}
 
-	inline bool DoesOverlap(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline bool DoesOverlap(Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return DoesOverlap(FindCreateChunkOverlaps(pos, radius), pos, radius, func, from);
 	}
 
-	Entity* FirstOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	Entity* FirstOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
+		Entity* tempEnt;
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active && func(from, (*this)[*iter].get())) return (*this)[*iter].get();
+			for (int i : chunks[chunk])
+			{
+				tempEnt = (*this)[i].get();
+				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt)) return tempEnt;
+			}
 		return nullptr;
 	}
 
-	inline Entity* FirstOverlap(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline Entity* FirstOverlap(Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return FirstOverlap(FindCreateChunkOverlaps(pos, radius), pos, radius, func, from);
 	}
 
-	vector<Entity*> FindOverlaps(vector<int> chunkOverlaps, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	vector<Entity*> FindOverlaps(vector<int> chunkOverlaps, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
+		Entity* tempEnt;
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active && func(from, (*this)[*iter].get()) &&
-					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
+			for (int i : chunks[chunk])
+			{
+				tempEnt = (*this)[i].get();
+				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt) &&
+					find(overlaps.begin(), overlaps.end(), tempEnt) == overlaps.end()) overlaps.push_back(tempEnt);
+			}
 		return overlaps;
 	}
 
-	inline vector<Entity*> FindOverlaps(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline vector<Entity*> FindOverlaps(Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return FindOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius, func, from);
 	}
 
 	vector<Entity*> FindAllOverlaps(vector<int> chunkOverlaps, Vec3 pos, float radius)
 	{
+		Entity* tempEnt;
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
-					find(overlaps.begin(), overlaps.end(), (*this)[*iter].get()) == overlaps.end()) overlaps.push_back((*this)[*iter].get());
+			for (int i : chunks[chunk])
+			{
+				tempEnt = (*this)[i].get();
+				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active &&
+					find(overlaps.begin(), overlaps.end(), tempEnt) == overlaps.end()) overlaps.push_back(tempEnt);
+			}
 		return overlaps;
 	}
 
@@ -257,29 +273,33 @@ public:
 		return FindAllOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius);
 	}
 
-	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Returns {successful, unsuccessful}
+	std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(vector<int> chunkOverlaps, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Returns {successful, unsuccessful}
 	{
+		Entity* tempEnt;
 		vector<Entity*> successful{}, unsuccessful{};
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
-				if ((*this)[*iter] && (*this)[*iter]->Overlaps(pos, radius) && (*this)[*iter]->active &&
-					((func(from, (*this)[*iter].get()) && find(successful.begin(), successful.end(), (*this)[*iter].get()) == successful.end()) ||
-						(!func(from, (*this)[*iter].get()) && find(unsuccessful.begin(), unsuccessful.end(), (*this)[*iter].get()) == unsuccessful.end())))
+			for (int i : chunks[chunk])
+			{
+				tempEnt = (*this)[i].get();
+				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && ((func(from, tempEnt) &&
+					find(successful.begin(), successful.end(), tempEnt) == successful.end()) ||
+						(!func(from, tempEnt) && find(unsuccessful.begin(), unsuccessful.end(), tempEnt) == unsuccessful.end())))
 				{
-					if ((*this)[*iter]->corporeal)
-						successful.push_back((*this)[*iter].get());
+					if (tempEnt->corporeal)
+						successful.push_back(tempEnt);
 					else
-						unsuccessful.push_back((*this)[*iter].get());
+						unsuccessful.push_back(tempEnt);
 				}
+			}
 		return { successful, unsuccessful };
 	}
 
-	inline std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline std::pair<vector<Entity*>, vector<Entity*>> FindPairOverlaps(Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return FindPairOverlaps(FindCreateChunkOverlaps(pos, radius), pos, radius, func, from);
 	}
 
-	inline bool OverlapsAny(Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	inline bool OverlapsAny(Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		return OverlapsTile(pos, radius) || DoesOverlap(pos, radius, func, from);
 	}
@@ -348,7 +368,7 @@ public:
 		return hit;*/
 	}
 
-	RaycastHit RaycastEnt(Vec3 ro, Vec3 rd, float maxDist, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Raycast can only hit entities
+	RaycastHit RaycastEnt(Vec3 ro, Vec3 rd, float maxDist, EntityMaskFun func, Entity* from = nullptr) // Raycast can only hit entities
 	{
 		rd.x = rd.x == 0 ? 0.000001f : rd.x;
 		rd.y = rd.y == 0 ? 0.000001f : rd.y;
@@ -411,6 +431,7 @@ public:
 		return hit.dist < maxDist ? hit : RaycastHit();
 	}
 
+	// UNFINISHED
 	RaycastHit StepCastChunk(Vec3 ro, Vec3 step, float maxDist)
 	{
 		iVec3 iPos = ToIV3(ro);
@@ -425,7 +446,7 @@ public:
 	}
 #pragma endregion
 #pragma region Damage stuff
-	int TryDealDamage(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
+	int TryDealDamage(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
 		for (Entity* entity : hitEntities)
@@ -433,7 +454,7 @@ public:
 		return 0;
 	}
 
-	int TryDealDamageAll(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
+	int TryDealDamageAll(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		int result = 0;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
@@ -442,7 +463,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr) // Can't hit tiles!!!
+	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		int result = 0;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
@@ -452,7 +473,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	int TryDealDamageTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
@@ -476,7 +497,7 @@ public:
 		return 0;
 	}
 
-	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -501,7 +522,7 @@ public:
 		return result;
 	}
 
-	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, function<bool(Entity* from, Entity* to)> func, Entity* from = nullptr)
+	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		int result = 0;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
@@ -755,26 +776,26 @@ public:
 #pragma endregion
 #pragma region Helper functions
 	// Returns sum of added velocities
-	Vec3 VacuumBurst(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	Vec3 VacuumBurst(Vec3 pos, float vacDist, float speed, float maxSpeed, EntityMaskFun mask, Entity* entity)
 	{
 		Vec3 result = vZero;
-		for (unique_ptr<Entity>& entity : *this)
+		for (unique_ptr<Entity>& entity2 : *this)
 		{
 			float distance;
-			if (entity && (vacBoth || entity->isCollectible == vacCollectibles) && (entity->isCollectible || entity->corporeal) && entity->active &&
-				(distance = glm::distance(pos, entity->pos)) > 0 && distance <= vacDist + entity->radius)
+			if (entity2 && entity2->active && mask(entity, entity2.get()) &&
+				(distance = glm::distance(pos, entity2->pos)) > 0 && distance <= vacDist + entity2->radius)
 			{
-				Vec3 oldVel = entity->vel;
-				entity->vel = TryAdd2(entity->vel, Normalized(pos - entity->pos) * (speed / entity->mass), maxSpeed);
-				result += entity->vel - oldVel;
+				Vec3 oldVel = entity2->vel;
+				entity2->vel = TryAdd2(entity2->vel, Normalized(pos - entity2->pos) * (speed / entity2->mass), maxSpeed);
+				result += entity2->vel - oldVel;
 			}
 		}
 		return result;
 	}
 
-	inline Vec3 Vacuum(Vec3 pos, float vacDist, float speed, float maxSpeed, bool vacBoth = false, bool vacCollectibles = true)
+	inline Vec3 Vacuum(Vec3 pos, float vacDist, float speed, float maxSpeed, EntityMaskFun mask, Entity* entity)
 	{
-		return VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, vacBoth, vacCollectibles);
+		return VacuumBurst(pos, vacDist, speed * game->dTime, maxSpeed, mask, entity);
 	}
 #pragma endregion
 };
@@ -912,7 +933,7 @@ void Entity::UpdateCollision()
 {
 	UpdateChunkCollision();
 
-	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::IsCorporealNotCollectible, this);
+	vector<Entity*> entities = game->entities->FindOverlaps(pos, radius, MaskF::CanCollide, this);
 	for (Entity* entity : entities)
 		OverlapRes::CircleOR(this, entity);
 }
@@ -1026,12 +1047,12 @@ EntityData vacuumForData = EntityData(UPDATE::VACUUMFOR);
 class VacuumFor : public FadeOut
 {
 public:
-	bool vacBoth, vacCollectibles;
+	EntityMaskFun maskFun;
 	float vacDist, vacSpeed, maxVacSpeed;
 
-	VacuumFor(EntityData* data, Vec3 pos, bool vacBoth, bool vacCollectibles, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
+	VacuumFor(EntityData* data, Vec3 pos, EntityMaskFun maskFun, float timeTill, float vacDist, float vacSpeed, float maxVacSpeed, RGBA color) :
 		FadeOut(data, timeTill, pos, vacDist, color),
-		vacBoth(vacBoth), vacCollectibles(vacCollectibles), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
+		maskFun(maskFun), vacDist(vacDist), vacSpeed(vacSpeed), maxVacSpeed(maxVacSpeed)
 	{
 		corporeal = false;
 	}
@@ -1133,7 +1154,7 @@ namespace Updates
 			return;
 		}
 
-		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, vac->maxVacSpeed, vac->vacBoth, vac->vacCollectibles);
+		game->entities->Vacuum(vac->pos, vac->vacDist, vac->vacSpeed, vac->maxVacSpeed, vac->maskFun, vac);
 	}
 }
 
@@ -1374,7 +1395,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 30.0f, 1, 0.1f, vZero, 5, RGBA(80, 43, 92, 127));
-	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, false, true, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
+	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCollectible, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
 }
 
 namespace Resources

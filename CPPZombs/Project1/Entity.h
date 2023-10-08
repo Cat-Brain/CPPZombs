@@ -85,6 +85,9 @@ public:
 	}
 };
 
+typedef function<bool (Entity* from, Entity* to)> EntityMaskFun;
+typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
+
 class Entity
 {
 public:
@@ -104,13 +107,10 @@ public:
 	float foodValue = 0; // If 0 then is not food.
 	bool isCollectible = false, corporeal = true;
 	Allegiance allegiance;
+	EntityMaskFun colOverlapFun;
 
 	Entity(EntityData* data, Vec3 pos = vZero, float radius = 0.5f, RGBA color = RGBA(),
-		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = BARBARIAN_A) :
-		data(data), pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color), allegiance(allegiance),
-		mass(mass), bounciness(bounciness), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr)
-	{
-	}
+		float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Allegiance allegiance = BARBARIAN_A);
 
 	Entity(Entity* baseClass, Vec3 pos):
 		Entity(*baseClass)
@@ -241,13 +241,19 @@ public:
 
 
 
-
 #pragma region Other Entity funcitons
-
-typedef function<float(Entity* from, Entity* to)> EntityMaskFun;
-
 namespace MaskF
 {
+	bool CanCollide(Entity* from, Entity* to)
+	{
+		return from->colOverlapFun(from, to) && to->colOverlapFun(to, from);
+	}
+
+	bool IsDifferent(Entity* from, Entity* to)
+	{
+		return from != to;
+	}
+
 	bool IsCollectible(Entity* from, Entity* to)
 	{
 		return from != to && to->isCollectible;
@@ -288,9 +294,6 @@ namespace MaskF
 		return to->baseClass == from->baseClass && from != to && to->corporeal;
 	}
 }
-
-typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
-
 namespace ExtrF
 {
 	float SqrDist(Entity* from, Entity* to)
@@ -303,6 +306,13 @@ namespace ExtrF
 		return glm::distance(from->pos, to->pos) - from->radius - to->radius;
 	}
 }
+
+Entity::Entity(EntityData* data, Vec3 pos, float radius, RGBA color,
+	float mass, float bounciness, int maxHealth, int health, string name, Allegiance allegiance) :
+	data(data), pos(pos), lastPos(pos), vel(0), dir(0), radius(radius), color(color), allegiance(allegiance),
+	mass(mass), bounciness(bounciness), maxHealth(maxHealth), health(health), name(name), baseClass(this), creator(nullptr),
+	colOverlapFun(MaskF::IsCorporealNotCollectible)
+{ }
 
 bool BoxCircleOverlap(Vec3 cPos, float radius, Vec3 bPos, Vec3 bDim)
 {

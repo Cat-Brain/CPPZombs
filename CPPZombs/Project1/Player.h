@@ -372,9 +372,10 @@ public:
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, shootSpeed,
 		lastPrimary = 0, primaryTime, lastOffhand = 0, offhandTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
-	bool vacBoth, vacCollectibles, shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false,
+	bool shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false,
 		shouldRenderInventory = true;
 	float timeSinceHit = 0, timeTillHeal = 0;
+	EntityMaskFun vacMaskFun;
 	PMovement movement;
 	Primary primary;
 	Offhand offhand;
@@ -390,17 +391,16 @@ public:
 	Vec3 upDir = vZero; // Perpendicular to rightDir and moveDir.
 #pragma endregion
 
-	Player(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility, bool vacBoth = false,
-		bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
+	Player(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility, EntityMaskFun vacMaskFun,
+		float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1,
 		float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}) :
 		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
 		movement(movement), primary(primary), offhand(offhand), secondary(secondary), utility(utility), vacDist(vacDist),
-		moveSpeed(moveSpeed), startItems(startItems), vacBoth(vacBoth),
-		vacCollectibles(vacCollectibles), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed), shootSpeed(shootSpeed),
-		primaryTime(primaryTime), offhandTime(offhandTime), secondaryTime(secondaryTime), utilityTime(utilityTime)
+		moveSpeed(moveSpeed), startItems(startItems), vacMaskFun(vacMaskFun), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed),
+		shootSpeed(shootSpeed), primaryTime(primaryTime), offhandTime(offhandTime), secondaryTime(secondaryTime), utilityTime(utilityTime)
 	{
 		uiActive = true;
 	}
@@ -470,7 +470,7 @@ public:
 
 	virtual bool Grounded()
 	{
-		return game->entities->OverlapsAny(pos + Vec3(0, 0, -radius), radius - 0.01f, MaskF::IsCorporeal, this);
+		return game->entities->OverlapsAny(pos + Vec3(0, 0, -radius), radius - 0.01f, MaskF::CanCollide, this);
 	}
 
 	virtual float PrimaryFill()
@@ -500,12 +500,12 @@ class Flare : public Player
 public:
 	float currentFlame, maxFlame;
 
-	Flare(EntityData* data, float maxFlame, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility, bool vacBoth = false,
-		bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
+	Flare(EntityData* data, float maxFlame, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1,
 		float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}) :
-		Player(data, movement, primary, offhand, secondary, utility, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color,
 			color2, lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems),
 		currentFlame(maxFlame), maxFlame(maxFlame)
@@ -538,13 +538,13 @@ public:
 	float rollAccel, rollSpeed, turretedShootSpeed;
 	EngState engState = EngState::DEFAULT;
 
-	Engineer(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility, bool vacBoth = false,
-		bool vacCollectibles = true, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccel = 8, float rollSpeed = 16,
+	Engineer(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccel = 8, float rollSpeed = 16,
 		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float turretedShootSpeed = 2, float primaryTime = 1, float offhandTime = 1,
 		float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1,
 		string name = "NULL NAME", Items startItems = {}) :
-		Player(data, movement, primary, offhand, secondary, utility, vacBoth, vacCollectibles, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems),
 		rollAccel(rollAccel), rollSpeed(rollSpeed), turretedShootSpeed(turretedShootSpeed)
@@ -883,15 +883,15 @@ namespace Utilities
 #pragma endregion
 #pragma region Player Instances
 Player soldier = Player(&playerData, PMovements::Default, Primaries::Pistol, Offhands::DualWield, Secondaries::GrenadeThrow,
-	Utilities::TacticoolRoll, false, true, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 4, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
+	Utilities::TacticoolRoll, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 4, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
 	"Soldier", Items({ Resources::iron.Clone(10) }));
 
 Flare flare = Flare(&flareData, 100, PMovements::Default, Primaries::Pistol, Offhands::DualWield, Secondaries::ThrowFlame,
-	Utilities::FlameThrower, false, true, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 0.0625f, RGBA(255, 255), RGBA(0, 0, 255),
+	Utilities::FlameThrower, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 0.0625f, RGBA(255, 255), RGBA(0, 0, 255),
 	JRGB(127, 127, 127), true, 5.f, 1.5f, 0.25f, 100, 50, "Flare", Items({ Resources::rock.Clone(10) }));
 
 Engineer engineer = Engineer(&engineerData, PMovements::EngineerPM, Primaries::EngineerPr, Offhands::MakeTurret, Secondaries::Turretify,
-	Utilities::Rollify, false, true, 0.4f, 32, 8, 32, 16, 6, 256, 32, 1, 0.25f, 0, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
+	Utilities::Rollify, MaskF::IsCollectible, 0.4f, 32, 8, 32, 16, 6, 256, 32, 1, 0.25f, 0, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
 	true, 20, 5, 0.25f, 100, 50, "Engineer", Items({ Resources::copper.Clone(30) }));
 
 vector<Player*> characters = { &soldier, &flare, &engineer };
@@ -1186,7 +1186,7 @@ namespace Updates
 				player->lastUtility = tTime;
 			
 			 if (player->shouldVacuum)
-				 game->entities->Vacuum(player->pos, player->vacDist, player->vacSpeed, player->maxVacSpeed, player->vacBoth, player->vacCollectibles);
+				 game->entities->Vacuum(player->pos, player->vacDist, player->vacSpeed, player->maxVacSpeed, player->vacMaskFun, player);
 		}
 
 		if (player->shouldPickup)
@@ -1219,7 +1219,7 @@ namespace Updates
 		if (tTime - grenade->startTime > grenade->timeTill)
 		{
 			CreateUpExplosion(grenade->pos, grenade->explosionRadius, grenade->color, grenade->name, 0, grenade->damage, grenade->creator);
-			game->entities->VacuumBurst(grenade->pos, grenade->explosionRadius, -grenade->pushForce, 50.f, true, false);
+			game->entities->VacuumBurst(grenade->pos, grenade->explosionRadius, -grenade->pushForce, 50.f, MaskF::IsDifferent, grenade);
 			grenade->DestroySelf(nullptr);
 			return;
 		}

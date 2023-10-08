@@ -575,7 +575,7 @@ namespace Resources::Seeds
 	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
 	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
 	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
-	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 30, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", VUPDATE::GRAVITY, 4, Plants::Shrubs::coalShrubColor, 20, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
+	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 40, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", VUPDATE::GRAVITY, 4, Plants::Shrubs::coalShrubColor, 0, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
 	PlacedOnLanding brickShrubSeed = PlacedOnLanding(ITEMTYPE::BRICK_SHRUB_SEED, &Plants::Shrubs::brickShrub, "Brick shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::brickShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::brickShrub.babyRadius, false, true, true);
 
 	// Vines

@@ -840,7 +840,7 @@ namespace Enemies
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
 			vacuumer->Update(UPDATE::ENEMY);
 
-			vacuumer->vel -= game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, true) / vacuumer->mass;
+			vacuumer->vel -= game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, MaskF::IsDifferent, vacuumer) / vacuumer->mass;
 
 			vector<Entity*> collectibles = EntitiesOverlaps(vacuumer->pos, vacuumer->radius, game->entities->collectibles);
 			for (Entity* collectible : collectibles)
