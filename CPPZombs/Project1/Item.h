@@ -322,6 +322,6 @@ namespace Resources
 	Item copper = Item(ITEMTYPE::COPPER, "Copper", "Ammo", VUPDATE::ENTITY, 1, RGBA(232, 107, 5), 10);
 	Item iron = Item(ITEMTYPE::IRON, "Iron", "Ammo", VUPDATE::ENTITY, 1, RGBA(111, 123, 128), 120, 15, 1);
 	Item rock = Item(ITEMTYPE::ROCK, "Rock", "Ammo", VUPDATE::ENTITY, 1, RGBA(145, 141, 118), 60, 5);
-	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", VUPDATE::GRAVITY, 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 6.f, 2.5f, true, false, false, 25, 50);
+	Item bowler = Item(ITEMTYPE::BOWLER, "Bowler", "Push Ammo", VUPDATE::GRAVITY, 1, RGBA(36, 15, 110), 0, 15.f, 0.5f, 6.f, 2.5f, true, false, false, 25, 600);
 	Item silver = Item(ITEMTYPE::SILVER, "Silver", "Ammo", VUPDATE::ENTITY, 1, RGBA(197, 191, 214), 30, 15.f, 0.25f, 24.f, 0.2f);
 }
