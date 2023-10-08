@@ -20,7 +20,7 @@ public:
     {
         sortLayer = 1;
         this->corporeal = corporeal;
-        colOverlapFun = MaskF::IsCorporealNotCreator;
+        colOverlapFun = MaskF::IsCorporealNotCreatorNorSameType;
         Start();
     }
 

@@ -274,6 +274,11 @@ namespace MaskF
 		return from != to && from->creator != to && to->corporeal && !to->isCollectible;
 	}
 
+	bool IsCorporealNotCreatorNorSameType(Entity* from, Entity* to)
+	{
+		return from != to && from->creator != to && to->corporeal && !to->isCollectible && from->baseClass != to->baseClass;
+	}
+
 	bool IsNonAlly(Entity* from, Entity* to)
 	{
 		return from != to && to->corporeal && !to->isCollectible && !from->allegiance.Ally(to->allegiance);
@@ -291,7 +296,7 @@ namespace MaskF
 
 	bool IsSameType(Entity* from, Entity* to)
 	{
-		return to->baseClass == from->baseClass && from != to && to->corporeal;
+		return from->baseClass == to->baseClass && from != to && to->corporeal;
 	}
 }
 namespace ExtrF
