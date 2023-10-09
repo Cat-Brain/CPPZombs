@@ -170,6 +170,7 @@ public:
         collideTerrain = item->collideTerrain;
         radius = item->radius;
         health = item->health;
+        maxHealth = item->health;
         name = item->name;
         if (creator != nullptr)
         {
