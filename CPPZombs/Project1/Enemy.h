@@ -1,4 +1,4 @@
-#include "Defence.h"
+#include "BuildingBlocks.h"
 
 namespace Enemies
 {
@@ -687,14 +687,6 @@ namespace Enemies
 
 		int ApplyHit(int damage, Entity* damageDealer) override
 		{
-			if (tTime - lastStartedCircle > circleTime / difficultyGrowthModifier[game->difficulty])
-			{
-				if (damage > 0)
-				{
-					lastStartedCircle = tTime;
-				}
-				return Cat::ApplyHit(damage, damageDealer);
-			}
 			return 0;
 		}
 	};
@@ -1151,8 +1143,6 @@ namespace Enemies
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
-			if (tTime - cat->lastStartedCircle < cat->circleTime / difficultyGrowthModifier[game->difficulty])
-				cat->color = cat->color4.CLerp(cat->color, sinf(tTime * 4 * PI_F) * 0.5f + 0.5f);
 			cat->DUpdate(DUPDATE::CAT);
 			cat->color = tempColor;
 		}
@@ -1590,16 +1580,6 @@ namespace Enemies
 				waveCount += superWaveModifiers[game->difficulty];
 
 			SpawnRandomEnemiesCost(static_cast<int>(multiplier * Types::GetRoundPoints()));
-
-
-
-			if (superWave)
-			{
-				waveCount -= superWaveModifiers[game->difficulty];
-				for (int i = 0; i < difficultySeedSuperWaveCount[game->difficulty]; i++)
-					game->entities->push_back(Collectibles::Seeds::plantSeeds[rand() % Collectibles::Seeds::plantSeeds.size()]->Clone(game->PlayerPos()));
-				superWave = false;
-			}
 		}
 
 		void SpawnOneRandom()
@@ -1768,6 +1748,9 @@ namespace Enemies
 		{&gigaTank, &larvaTank}
 	};
 #pragma endregion
+#pragma region Player
+	Enemy grub = Enemy(&enemyData, PLAYER_A, 0.5f, 3, 1, 0.5f, 0, 0, 10, 1.5f, RGBA(161, 85, 35), RGBA(), 3.5f, 0, 60, 60, "Grub");
+#pragma endregion
 #pragma region Bosses
 	// Bosses - Special
 	Projectile catProjectile = Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, VUPDATE::ENTITY, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
@@ -1780,4 +1763,9 @@ namespace Enemies
 	};
 #pragma endregion
 #pragma endregion
+}
+
+namespace Resources
+{
+	PlacedOnLanding grubium = PlacedOnLanding(ITEMTYPE::GRUBIUM, &Enemies::grub, "Grubium", "Summon Ammo", VUPDATE::GRAVITY, 1, RGBA(161, 85, 35), 0, 15.0f, true, 0.5f, 12, 0.4f, false, true, true);
 }

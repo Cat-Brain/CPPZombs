@@ -1,4 +1,4 @@
-#include "BuildingBlocks.h"
+#include "Enemy.h"
 
 #pragma region Plantlife
 
@@ -536,7 +536,10 @@ namespace Plants
 		Shrub coalShrub = Shrub(&shrubData, dItem.Clone(), ItemInstance(ITEMTYPE::COAL), 10, 15, 25, 100, 3.f, 0.25f, 1.5f, babyCoalShrubColor, coalShrubColor, deadCoalShrubColor, 1, 5, 0, 50, 50, "Coal shrub");
 
 		RGBA babyBrickShrubColor = RGBA(199, 156, 143), brickShrubColor = RGBA(204, 72, 33), deadBrickShrubColor = RGBA(133, 40, 12);
-		Shrub brickShrub = Shrub(&shrubData, Resources::brick.Clone(), ItemInstance(ITEMTYPE::BRICK_SHRUB_SEED ), 10, 20, 30, 25, 3.f, 0.25f, 1.5f, babyBrickShrubColor, brickShrubColor, deadBrickShrubColor, 1, 5, 0, 50, 50, "Brick shrub");
+		Shrub brickShrub = Shrub(&shrubData, Resources::brick.Clone(), ItemInstance(ITEMTYPE::BRICK_SHRUB_SEED), 10, 20, 30, 25, 3.f, 0.25f, 1.5f, babyBrickShrubColor, brickShrubColor, deadBrickShrubColor, 1, 5, 0, 50, 50, "Brick shrub");
+
+		RGBA babyGrubiumShrubColor = RGBA(176, 140, 116), grubiumShrubColor = RGBA(219, 135, 79), deadGrubiumShrubColor = RGBA(74, 39, 16);
+		Shrub grubiumShrub = Shrub(&shrubData, Resources::grubium.Clone(), ItemInstance(ITEMTYPE::GRUBIUM_SHRUB_SEED), 1, 10, 13, 25, 16.0f, 0.25f, 2.5f, babyGrubiumShrubColor, grubiumShrubColor, deadGrubiumShrubColor, 1, 5, 0, 50, 50, "Grubium shrub");
 	}
 
 
@@ -558,7 +561,7 @@ namespace Plants
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.
 	vector<Shrub*> plants{ &Shrubs::copperShrub, &Shrubs::ironShrub, &Shrubs::rubyShrub, &Shrubs::emeraldShrub, &Shrubs::rockShrub,
 		&Shrubs::shadeShrub, &Shrubs::bowlerShrub, &Shrubs::vacuumiumShrub, &Shrubs::silverShrub, &Shrubs::quartzShrub, &Shrubs::coalShrub,
-		&Shrubs::brickShrub,
+		&Shrubs::brickShrub, &Shrubs::grubiumShrub,
 		&Vines::cheeseVine, &Vines::topazVine, &Vines::sapphireVine, &Vines::leadVine };
 }
 
@@ -577,6 +580,7 @@ namespace Resources::Seeds
 	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
 	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 40, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", VUPDATE::GRAVITY, 4, Plants::Shrubs::coalShrubColor, 0, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
 	PlacedOnLanding brickShrubSeed = PlacedOnLanding(ITEMTYPE::BRICK_SHRUB_SEED, &Plants::Shrubs::brickShrub, "Brick shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::brickShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::brickShrub.babyRadius, false, true, true);
+	PlacedOnLanding grubiumShrubSeed = PlacedOnLanding(ITEMTYPE::GRUBIUM_SHRUB_SEED, &Plants::Shrubs::grubiumShrub, "Grubium shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::grubiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::grubiumShrub.babyRadius, false, true, true);
 
 	// Vines
 	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
@@ -586,7 +590,7 @@ namespace Resources::Seeds
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
-		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed,
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed, &grubiumShrubSeed,
 		&cheeseVineSeed, &topazVineSeed,
 		&sapphireVineSeed, &leadVineSeed };
 	
@@ -607,6 +611,7 @@ namespace Collectibles::Seeds
 	Collectible quartzShrubSeed = Collectible(Resources::Seeds::quartzShrubSeed.Clone());
 	Collectible coal = Collectible(Resources::Seeds::coal.Clone());
 	Collectible brickShrubSeed = Collectible(Resources::Seeds::brickShrubSeed.Clone());
+	Collectible grubiumShrubSeed = Collectible(Resources::Seeds::grubiumShrubSeed.Clone());
 
 	// Vines
 	Collectible cheeseVineSeed = Collectible(Resources::Seeds::cheeseVineSeed.Clone());
@@ -616,8 +621,8 @@ namespace Collectibles::Seeds
 
 	// Keep a list of all of the seeds.
 	vector<Collectible*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
-		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed, &cheeseVineSeed, &topazVineSeed,
-		&sapphireVineSeed, &leadVineSeed };
+		&bowlerShrubSeed, &vacuumiumShrubSeed, &silverShrubSeed, &quartzShrubSeed, &coal, &brickShrubSeed, &grubiumShrubSeed,
+		&cheeseVineSeed, &topazVineSeed, &sapphireVineSeed, &leadVineSeed };
 }
 
 #pragma endregion

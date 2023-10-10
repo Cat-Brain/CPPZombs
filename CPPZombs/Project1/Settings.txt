@@ -1,7 +1,7 @@
 
-difficulty = Easy
+difficulty = Hard
 chunk render dist = 3
-start seeds = ffftfftffttfffff
+start seeds = ftffftftftffttfff
 character = 0
 high scores = 9,1795,339
 color band = false
