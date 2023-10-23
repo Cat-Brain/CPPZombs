@@ -1,0 +1,17 @@
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNorm;
+
+uniform mat4 transformation;
+uniform mat4 camera, camRot;
+uniform mat4 perspective;
+
+out vec3 pos, norm;
+
+void main()
+{
+	norm = vec3(camRot * vec4(aNorm, 1.));
+	pos = vec3(transformation * vec4(aPos, 1.));
+	gl_Position = perspective * vec4(pos, 1.);
+	pos = vec3(camera * vec4(pos, 1.));
+} 

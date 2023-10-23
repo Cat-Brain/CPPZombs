@@ -3,19 +3,12 @@
 class UseableItem : public Item
 {
 public:
-	UseableItem(ITEMTYPE type, ITEMU useFunction, string name = "NULL NAME", string typeName = "NULL TYPE NAME", int intType = 0, RGBA color = RGBA(), float useTime = 0) :
-		Item(type, name, typeName, VUPDATE::ENTITY, intType, color, 0, 0, useTime)
+	UseableItem(ITEMTYPE type, ItemU useFunction, string name = "NULL NAME", string typeName = "NULL TYPE NAME", int intType = 0, RGBA color = RGBA(), float useTime = 0) :
+		Item(type, name, typeName, VUpdates::EntityVU, intType, color, 0, 0, useTime)
 	{
 		itemU = useFunction;
 	}
 };
-
-namespace Resources
-{
-	UseableItem waveModifier = UseableItem(ITEMTYPE::WAVE_MODIFIER, ITEMU::WAVEMODIFIER, "Wave Modifier", "Special Item", 0, RGBA(194, 99, 21), 1.f);
-}
-
-
 
 class PlayerInventory : public Items
 {
@@ -187,20 +180,19 @@ public:
 			game->DrawFBL(Vec2(offset.x + currentRow * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale, scale * width));
 			game->DrawFBL(Vec2(0, currentIndex * scale * 2.f) - Vec2(ScrDim()), RGBA(0, 0, 0, 127), Vec2(scale));
 
-			game->DrawFBL(Vec2(offset.x + height * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale));
-			if ((*this)[size() - 1].count != 0)
-				game->DrawTextured(spriteSheet, (*this)[size() - 1]->intType, tOffset, Vec2(tScale * height, 0),
-					(*this)[size() - 1]->color, Vec2(tScale));
+			int currentHovered = -1;
 
 			if (isHovering)
 			{
 				iVec2 rPos = game->inputs.screenMousePosition / scale;
 				game->DrawFBL(Vec2(rPos) * scale * 2.f - Vec2(ScrDim()), RGBA(), Vec2(scale));
-				int currentHovered = rPos.x * width + rPos.y;
-				if ((*this)[currentHovered].count != 0)
-					font.Render((*this)[currentHovered]->name + "  " + to_string((*this)[currentHovered].count) + "  " + (*this)[currentHovered]->typeName,
-						iVec2(game->inputs.screenMousePosition * 2.f) - ScrDim(), scale * 2, (*this)[currentHovered]->color);
+				currentHovered = rPos.x * width + rPos.y;
 			}
+
+			game->DrawFBL(Vec2(offset.x + height * scale * 2, offset.y), RGBA(127, 127, 127, 127), Vec2(scale));
+			if ((*this)[size() - 1].count != 0)
+				game->DrawTextured(spriteSheet, (*this)[size() - 1]->intType, tOffset, Vec2(tScale * height, 0),
+					(*this)[size() - 1]->color, Vec2(tScale));
 			if (currentSelected != -1)
 				game->DrawFBL(offset + ToIV2(Vec2(currentSelected / width, currentSelected % width) * (scale * 2)), (*this)[currentSelected]->color, Vec2(scale));
 			for (uint y = 0, i = 0; y < height; y++)
@@ -212,8 +204,16 @@ public:
 						(*this)[i]->color, Vec2(tScale));
 				}
 
-			if (currentSelected != -1)
-				game->DrawTextured(spriteSheet, (*this)[currentSelected]->intType, tOffset, 2.f * game->inputs.screenMousePosition / float(ScrHeight()),
+			bool shouldDisplayCurrentlySelected = (currentSelected != -1 && (*this)[currentSelected].count != 0);
+			if (shouldDisplayCurrentlySelected || (currentHovered != -1 && (*this)[currentHovered].count != 0))
+			{
+				int index = shouldDisplayCurrentlySelected ? currentSelected : currentHovered;
+				font.Render((*this)[index]->name + "  " + to_string((*this)[index].count) + "  " + (*this)[index]->typeName,
+					iVec2(game->inputs.screenMousePosition * 2.f) - ScrDim(), scale * 2, (*this)[index]->color);
+			}
+			if (shouldDisplayCurrentlySelected)
+				game->DrawTextured(spriteSheet, (*this)[currentSelected]->intType, tOffset,
+					2.f * game->inputs.screenMousePosition / float(ScrHeight()) + Vec2(0, -tScale),
 					(*this)[currentSelected]->color, Vec2(tScale));
 			return;
 		}
@@ -279,7 +279,7 @@ public:
 		}
 		int index = currentIndex + currentRow * width;
 		ItemInstance& currentItem = (*this)[index];
-		currentItem->Use(currentItem, pos, dir, player, player->name, nullptr, 0);
+		currentItem->itemU(currentItem, pos, dir, player, player->name, nullptr, 0);
 		return RemoveIfEmpty(index);
 	}
 
@@ -345,7 +345,7 @@ public:
 		}
 		int index = size() - 1;
 		ItemInstance& currentItem = (*this)[index];
-		currentItem->Use(currentItem, pos, dir * currentItem->range, player, player->name, nullptr, 0);
+		currentItem->itemU(currentItem, pos, dir, player, player->name, nullptr, 0);
 		return RemoveIfEmpty(index);
 	}
 };
@@ -359,7 +359,10 @@ int difficultySeedSelectQuantity[] = { 4, 5, 6 };
 typedef std::function<void(Player* player)> PMovement;
 typedef std::function<bool(Player* player)> Primary, Offhand, Secondary, Utility;
 
-EntityData playerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::PLAYER, ONDEATH::PLAYER);
+namespace Updates { void PlayerU(Entity* entity); void FlareU(Entity* entity); } namespace DUpdates { void PlayerDU(Entity* entity); }
+namespace UIUpdates { void PlayerUIU(Entity* entity); void FlareUIU(Entity* entity); void EngineerUIU(Entity* entity); }
+namespace OnDeaths { void PlayerOD(Entity* entity, Entity* damageDealer); }
+EntityData playerData = EntityData(Updates::PlayerU, VUpdates::FrictionVU, DUpdates::PlayerDU, UIUpdates::PlayerUIU, OnDeaths::PlayerOD);
 class Player : public LightBlock
 {
 public:
@@ -372,7 +375,7 @@ public:
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, shootSpeed,
 		lastPrimary = 0, primaryTime, lastOffhand = 0, offhandTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
-	bool shouldVacuum = true, shouldPickup = true, shouldScroll = true, invOpen = false,
+	bool shouldVacuum = true, shouldPickup = true, shouldScroll = true,
 		shouldRenderInventory = true;
 	float timeSinceHit = 0, timeTillHeal = 0;
 	EntityMaskFun vacMaskFun;
@@ -494,7 +497,7 @@ public:
 	}
 };
 
-EntityData flareData = EntityData(UPDATE::FLARE, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::FLARE, ONDEATH::PLAYER);
+EntityData flareData = EntityData(Updates::FlareU, VUpdates::FrictionVU, DUpdates::PlayerDU, UIUpdates::FlareUIU, OnDeaths::PlayerOD);
 class Flare : public Player
 {
 public:
@@ -531,7 +534,7 @@ enum class EngState
 {
 	DEFAULT, ROLLING, TURRETED
 };
-EntityData engineerData = EntityData(UPDATE::PLAYER, VUPDATE::FRICTION, DUPDATE::PLAYER, UIUPDATE::ENGINEER, ONDEATH::PLAYER);
+EntityData engineerData = EntityData(Updates::PlayerU, VUpdates::FrictionVU, DUpdates::PlayerDU, UIUpdates::EngineerUIU, OnDeaths::PlayerOD);
 class Engineer : public Player
 {
 public:
@@ -572,7 +575,8 @@ public:
 };
 #pragma endregion
 #pragma region Player Creation Types
-EntityData grenadeData = EntityData(UPDATE::GRENADE, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+namespace Updates { void GrenadeU(Entity* entity); void FlamePuddleU(Entity* entity); void FlameGlobU(Entity* entity); void EngTurretU(Entity* entity); }
+EntityData grenadeData = EntityData(Updates::GrenadeU, VUpdates::FrictionVU, DUpdates::DToColDU, UIUpdates::EntityUIU, OnDeaths::LightBlockOD);
 class Grenade : public LightBlock
 {
 public:
@@ -608,7 +612,7 @@ public:
 
 Grenade grenade = Grenade(&grenadeData, 60, 100, 5, 3, JRGB(255, 255), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
-EntityData flamePuddleData = EntityData(UPDATE::FLAME_PUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
+EntityData flamePuddleData = EntityData(Updates::FlamePuddleU, VUpdates::EntityVU, DUpdates::FadeOutGlowDU, UIUpdates::EntityUIU, OnDeaths::FadeOutGlowOD);
 class FlamePuddle : public FadeOutGlow
 {
 public:
@@ -630,7 +634,7 @@ public:
 
 FlamePuddle flamePuddle = FlamePuddle(&flamePuddleData, 10, 0.1f, 5, 2, vZero, 1.5f, RGBA(156, 106, 78, 127));
 
-EntityData flameGlobData = EntityData(UPDATE::FLAME_GLOB, VUPDATE::FRICTION, DUPDATE::ENTITY, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData flameGlobData = EntityData(Updates::FlameGlobU, VUpdates::FrictionVU, DUpdates::EntityDU, UIUpdates::EntityUIU, OnDeaths::LightBlockOD);
 class FlameGlob : public LightBlock
 {
 public:
@@ -665,21 +669,23 @@ public:
 
 FlameGlob flameGlob = FlameGlob(&flameGlobData, &flamePuddle, JRGB(255, 127), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
+namespace ItemODs { void FlareFlameOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class FlareFlame : public Item
 {
 public:
 	int flameRestore;
 
-	FlareFlame(ITEMTYPE type, int flameRestore, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(), int damage = 1,
+	FlareFlame(ITEMTYPE type, int flameRestore, string name = "NULL", string typeName = "NULL TYPE", VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, RGBA color = RGBA(), int damage = 1,
 		float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		flameRestore(flameRestore)
 	{
-		itemOD = ITEMOD::FLARE_FLAME;
+		itemOD = ItemODs::FlareFlameOD;
 	}
 };
 
-EntityData engTurretData = EntityData(UPDATE::ENG_TURRET, VUPDATE::FRICTION, DUPDATE::ENG_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+namespace DUpdates { void EngTurretDU(Entity* entity); }
+EntityData engTurretData = EntityData(Updates::EngTurretU, VUpdates::FrictionVU, DUpdates::EngTurretDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
 class EngTurret : public LightTower
 {
 public:
@@ -713,7 +719,7 @@ public:
 };
 #pragma endregion
 #pragma region Player Creation Instances
-FlareFlame flareFlame = FlareFlame(ITEMTYPE::FLARE_FLAME, 2, "Flare Flame", "Player Creation", VUPDATE::ENTITY, 0, RGBA(255, 93, 0), 10, 15, 0.0625f, 18, 1);
+FlareFlame flareFlame = FlareFlame(ITEMTYPE::FLARE_FLAME, 2, "Flare Flame", "Player Creation", VUpdates::EntityVU, 0, RGBA(255, 93, 0), 10, 15, 0.0625f, 18, 1);
 
 string engTurretStr = "Silly little goober\nIF THIS APPEARS TELL ME";
 EngTurret engTurret = EngTurret(&engTurretData, &engTurretStr, 0.5f, JRGB(255, 127, 127), 5, 0.5f, RGBA(127, 63, 63), RGBA(), RGBA(127, 127, 127), 1, 0.25f, 60, 60, "Pulse Turret");
@@ -859,7 +865,7 @@ namespace Utilities
 		if (flare->currentFlame < 1) return false;
 		flare->currentFlame--;
 		ItemInstance temp = ItemInstance(ITEMTYPE::FLARE_FLAME, 999);
-		flareFlame.Use(temp, flare->pos, flare->dir, flare, flare->name, nullptr, 0);
+		temp->itemU(temp, flare->pos, flare->dir, flare, flare->name, nullptr, 0);
 		return true;
 	}
 
@@ -897,7 +903,8 @@ Engineer engineer = Engineer(&engineerData, PMovements::EngineerPM, Primaries::E
 vector<Player*> characters = { &soldier, &flare, &engineer };
 #pragma endregion
 #pragma region Base Types
-EntityData baseData = EntityData(UPDATE::BASE, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::BASE);
+namespace Updates { void BaseU(Entity* entity); } namespace OnDeaths { void BaseOD(Entity* entity, Entity* damageDealer); }
+EntityData baseData = EntityData(Updates::BaseU, VUpdates::FrictionVU, DUpdates::DToColDU, UIUpdates::EntityUIU, OnDeaths::BaseOD);
 class Base : public LightBlock
 {
 public:
@@ -943,8 +950,8 @@ namespace OnDeaths
 
 		game->cursorUnlockCount = 1;
 
-		player->base->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
-		player->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
+		LightBlockOD(player->base, damageDealer);
+		LightBlockOD(player, damageDealer);
 		playerAlive = false;
 		deathName = player->name;
 		if (damageDealer != nullptr)
@@ -959,8 +966,8 @@ namespace OnDeaths
 
 		game->cursorUnlockCount = 1;
 
-		base->player->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
-		base->OnDeath(ONDEATH::LIGHTBLOCK, damageDealer);
+		LightBlockOD(base->player, damageDealer);
+		LightBlockOD(base, damageDealer);
 		playerAlive = false;
 		deathName = base->player->name + "'s base";
 		if (damageDealer != nullptr)
@@ -970,19 +977,9 @@ namespace OnDeaths
 	}
 }
 
-namespace ItemUs
-{
-	void WaveModifierU(ItemInstance item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
-	{
-		game->planet->faction1Spawns->superWave ^= true;
-		game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, 8.f, 3.f, pos, 4.f, item->color));
-		game->screenShake++;
-	}
-}
-
 namespace ItemODs
 {
-	void FlareFlameOD(ItemInstance item, Vec2 pos, Vec2 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void FlareFlameOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		if (callType != 0 && game->player && game->player->name == "Flare")
 			static_cast<Flare*>(game->player)->currentFlame += static_cast<FlareFlame*>(item.Type())->flameRestore;
@@ -1140,30 +1137,15 @@ namespace Updates
 			if (player->events[i].function(player, &player->events[i]))
 				player->events.erase(player->events.begin() + i);
 
-		/*
-		if (player->currentMenuedEntity != nullptr && !player->currentMenuedEntity->Overlaps(player->inputs.mousePosition3 + player->pos, 0))
-		{
-			player->currentMenuedEntity->uiActive = false;
-			player->currentMenuedEntity = nullptr;
-		}
-
-		Entity* hitEntity = nullptr;
-		if (player->currentMenuedEntity == nullptr &&
-			(hitEntity = game->entities->FirstOverlap(player->inputs.mousePosition3 + player->pos, 0, MaskF::IsCorporeal, player)) != nullptr)
-		{
-			if (player->currentMenuedEntity != nullptr)
-				player->currentMenuedEntity->uiActive = false;
-			player->currentMenuedEntity = hitEntity;
-			player->currentMenuedEntity->uiActive = true;
-		}*/
-
-		Vec2 mouseOffset = game->inputs.mouseOffset;
+		// Mouse movement stuff:
+		Vec2 mouseOffset = player->items.isOpen ? vZero : game->inputs.mouseOffset;
 		player->yaw -= mouseOffset.x;
 		player->pitch = ClampF(player->pitch + mouseOffset.y, -89, 89);
-
-		player->camDir.x = cos(glm::radians(player->yaw)) * cos(glm::radians(player->pitch));
-		player->camDir.y = sin(glm::radians(player->yaw)) * cos(glm::radians(player->pitch));
-		player->camDir.z = sin(glm::radians(player->pitch));
+		// Refind the directions for the player:
+		player->camDir = Vec3(
+			cos(glm::radians(player->yaw)) * cos(glm::radians(player->pitch)),
+			sin(glm::radians(player->yaw)) * cos(glm::radians(player->pitch)),
+			sin(glm::radians(player->pitch)));
 		player->camDir = glm::normalize(player->camDir);
 		player->moveDir = glm::normalize(Vec3(Vec2(player->camDir), 0));
 		player->rightDir = glm::normalize(glm::cross(player->camDir, up));
@@ -1209,7 +1191,7 @@ namespace Updates
 		float tempSpeed = flare->maxSpeed;
 		flare->maxSpeed *= flare->currentFlame / flare->maxFlame;
 		flare->maxSpeed = Lerp(flare->maxSpeed, tempSpeed, 0.5f);
-		flare->Update(UPDATE::PLAYER);
+		PlayerU(entity);
 		flare->maxSpeed = tempSpeed;
 	}
 
@@ -1254,7 +1236,7 @@ namespace Updates
 				creator->currentFlame++;
 			}
 		}
-		puddle->Update(UPDATE::FADEOUT);
+		FadeOutU(entity);
 	}
 
 	void EngTurretU(Entity* entity)
@@ -1266,7 +1248,7 @@ namespace Updates
 			game->entities->ExtremestOverlap(turret->pos, turret->projectiles->range, MaskF::IsNonAlly, ExtrF::SqrDist, turret).first) != nullptr)
 		{
 			turret->dir = Normalized(hitEntity->pos - turret->pos);
-			turret->projectiles->Use(turret->projectiles, turret->pos, turret->dir, turret->creator, turret->name, nullptr, 0);
+			turret->projectiles->itemU(turret->projectiles, turret->pos, turret->dir, turret->creator, turret->name, nullptr, 0);
 			if (turret->projectiles.count <= 0)
 				return turret->DestroySelf(nullptr);
 			turret->timeTill = turret->timePer * turret->projectiles->useTime;
@@ -1313,7 +1295,7 @@ namespace DUpdates
 		game->DrawCylinder(turret->pos, turret->pos + turret->radius * (1 + 0.1f * turret->projectiles.count) * up, turret->projectiles->color,
 			turret->radius * 0.25f);
 
-		turret->DUpdate(DUPDATE::DTOCOL);
+		DToColDU(entity);
 	}
 }
 
@@ -1355,7 +1337,7 @@ namespace UIUpdates
 	{
 		Flare* flare = static_cast<Flare*>(entity);
 		if (!game->showUI) return;
-		flare->UIUpdate(UIUPDATE::PLAYER);
+		PlayerUIU(entity);
 		float scale = ScrHeight() / 30.f;
 		iVec2 offset = iVec2(ScrWidth() - scale * 8, scale * 2 - ScrHeight());
 		game->DrawFBL(offset, RGBA(18, 156, 163), Vec2(scale * 4, scale));
@@ -1375,7 +1357,7 @@ namespace UIUpdates
 	{
 		Engineer* engineer = static_cast<Engineer*>(entity);
 		if (!game->showUI) return;
-		engineer->UIUpdate(UIUPDATE::PLAYER);
+		PlayerUIU(entity);
 		float scale = ScrHeight() / 30.f;
 		iVec2 offset = iVec2(ScrWidth() - scale * 8, scale * 2 - ScrHeight());
 		switch (engineer->engState)

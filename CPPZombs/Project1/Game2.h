@@ -1076,6 +1076,10 @@ namespace UpdateModes
 		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
 		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
 		glUniformMatrix4fv(glGetUniformLocation(chunkShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective * game->camera));
+		glUseProgram(modelShader);
+		glUniformMatrix4fv(glGetUniformLocation(modelShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
+		glUniformMatrix4fv(glGetUniformLocation(modelShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));
+		glUniformMatrix4fv(glGetUniformLocation(modelShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective * game->camera));
 		glUseProgram(shadowShader);
 		glUniformMatrix4fv(glGetUniformLocation(shadowShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective * game->camera));
 		glUniform2f(glGetUniformLocation(shadowShader, "screenDim"), float(trueScreenWidth), float(trueScreenHeight));

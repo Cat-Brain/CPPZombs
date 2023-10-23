@@ -66,27 +66,7 @@ struct Allegiance
 
 
 class Entities;
-
-class EntityData
-{
-public:
-	UPDATE update;
-	VUPDATE vUpdate;
-	DUPDATE dUpdate;
-	UIUPDATE uiUpdate;
-	ONDEATH onDeath;
-
-	EntityData(UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::ENTITY, DUPDATE dUpdate = DUPDATE::ENTITY,
-		UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY):
-		update(update), vUpdate(vUpdate), dUpdate(dUpdate),
-		uiUpdate(uiUpdate), onDeath(onDeath)
-	{
-
-	}
-};
-
-typedef function<bool (Entity* from, Entity* to)> EntityMaskFun;
-typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
+class EntityData;
 
 class Entity
 {
@@ -134,53 +114,6 @@ public:
 		DUpdate();
 		this->pos = tempPos;
 	}
-
-#pragma region Psuedo-virtual functions
-	void Update() // Normally doesn't draw.
-	{
-		updates[UnEnum(data->update)](this);
-	}
-	void Update(UPDATE tempUpdate) // Normally doesn't draw.
-	{
-		updates[UnEnum(tempUpdate)](this);
-	}
-
-	void VUpdate() // Normally just increases position by velocity and modifies velocity.
-	{
-		vUpdates[UnEnum(data->vUpdate)](this);
-	}
-	void VUpdate(VUPDATE tempVUpdate) // Normally just increases position by velocity and modifies velocity.
-	{
-		vUpdates[UnEnum(tempVUpdate)](this);
-	}
-
-	void DUpdate() // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
-	{
-		dUpdates[UnEnum(data->dUpdate)](this);
-	}
-	void DUpdate(DUPDATE tempDUpdate) // Normally only draws. ALSO, this only calls the function, it is not the actual DUpdate function, for that look in the global DUpdate namespace.
-	{
-		dUpdates[UnEnum(tempDUpdate)](this);
-	}
-
-	void UIUpdate() // Draws when uiActive is true.
-	{
-		uiUpdates[UnEnum(data->uiUpdate)](this);
-	}
-	void UIUpdate(UIUPDATE tempUIUpdate) // Draws when uiActive is true.
-	{
-		uiUpdates[UnEnum(tempUIUpdate)](this);
-	}
-
-	void OnDeath(Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
-	{
-		onDeaths[UnEnum(data->onDeath)](this, damageDealer);
-	}
-	void OnDeath(ONDEATH tempOnDeath, Entity* damageDealer) // Called whenever an entity has died, damage dealer is often nullptr.
-	{
-		onDeaths[UnEnum(tempOnDeath)](this, damageDealer);
-	}
-#pragma endregion
 
 	Vec2 BottomLeft() // Not always accurate.
 	{
@@ -342,8 +275,6 @@ vector<Entity*> EntitiesOverlaps(Vec3 pos, float radius, vector<Entity*> entitie
 #pragma endregion
 
 
-EntityData fadeOutData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUT);
-
 class FadeOut : public Entity
 {
 public:
@@ -422,7 +353,7 @@ namespace DUpdates
 		FadeOut* fade = static_cast<FadeOut*>(entity);
 		uint a = fade->color.a;
 		fade->color.a = static_cast<byte>((a / 255.f) * (255 - static_cast<uint8_t>((tTime - fade->startTime) * 255 / fade->totalFadeTime)));
-		fade->DUpdate(DUPDATE::ENTITY);
+		EntityDU(entity);
 		fade->color.a = a;
 	}
 }
@@ -472,3 +403,20 @@ namespace OverlapRes
 		b->SetPos(b->pos - multiplier * a->mass);
 	}
 }
+
+class EntityData
+{
+public:
+	Update update;
+	VUpdate vUpdate;
+	DUpdate dUpdate;
+	UIUpdate uiUpdate;
+	OnDeath onDeath;
+
+	EntityData(Update update = Updates::EntityU, VUpdate vUpdate = VUpdates::EntityVU, DUpdate dUpdate = DUpdates::EntityDU,
+		UIUpdate uiUpdate = UIUpdates::EntityUIU, OnDeath onDeath = OnDeaths::EntityOD) :
+		update(update), vUpdate(vUpdate), dUpdate(dUpdate),
+		uiUpdate(uiUpdate), onDeath(onDeath) { }
+};
+
+EntityData fadeOutData = EntityData(Updates::FadeOutU, VUpdates::EntityVU , DUpdates::FadeOutDU);

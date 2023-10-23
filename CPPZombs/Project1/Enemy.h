@@ -14,9 +14,8 @@ namespace Enemies
 		MUpdate mUpdate;
 		AUpdate aUpdate;
 
-		EnemyData(MUpdate mUpdate, AUpdate aUpdate, UPDATE update = UPDATE::ENTITY,
-			VUPDATE vUpdate = VUPDATE::FRICTION, DUPDATE dUpdate = DUPDATE::ENTITY,
-			UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
+		EnemyData(MUpdate mUpdate, AUpdate aUpdate, Update update = ::Updates::EntityU, VUpdate vUpdate = ::VUpdates::EntityVU,
+			DUpdate dUpdate = ::DUpdates::EntityDU, UIUpdate uiUpdate = ::UIUpdates::EntityUIU, OnDeath onDeath = ::OnDeaths::EntityOD) :
 			EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
 			mUpdate(mUpdate), aUpdate(aUpdate) {}
 	};
@@ -830,7 +829,7 @@ namespace Enemies
 		void VacuumerU(Entity* entity)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
-			vacuumer->Update(UPDATE::ENEMY);
+			EnemyU(entity);
 
 			vacuumer->vel -= game->entities->Vacuum(vacuumer->pos, vacuumer->vacDist, vacuumer->vacSpeed, vacuumer->maxVacSpeed, MaskF::IsDifferent, vacuumer) / vacuumer->mass;
 
@@ -845,15 +844,14 @@ namespace Enemies
 		void SpiderU(Entity* entity)
 		{
 			Spider* spider = static_cast<Spider*>(entity);
-
-			spider->Update(UPDATE::ENEMY);
+			EnemyU(entity);
 		}
 
 		void CenticrawlerU(Entity* entity)
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
+			SpiderU(entity);
 
-			centicrawler->Update(UPDATE::SPIDER);
 			if (centicrawler->front == nullptr)
 			{
 				Centicrawler* farthestBack = centicrawler;
@@ -874,7 +872,7 @@ namespace Enemies
 		{
 			Pouncer* pouncer = static_cast<Pouncer*>(entity);
 
-			pouncer->Update(UPDATE::ENEMY);
+			EnemyU(entity);
 			pouncer->ShouldTryJump();
 		}
 
@@ -885,7 +883,7 @@ namespace Enemies
 			cat->dir = RotateTowardsNorm(cat->dir, cat->FindDir(), game->dTime * cat->homeSpeed);
 			cat->MoveDir();
 
-			cat->Update(UPDATE::POUNCER);
+			PouncerU(entity);
 		}
 
 		void CataclysmU(Entity* entity)
@@ -928,7 +926,7 @@ namespace Enemies
 				cat->dir = Normalized(game->PlayerPos() - cat->pos);
 				cat->vel = cat->dir * cat->speed;
 			}
-			else */cat->Update(UPDATE::CAT);
+			else */CatU(entity);
 		}
 	}
 
@@ -956,7 +954,7 @@ namespace Enemies
 					}
 				}
 			}
-			snake->VUpdate(VUPDATE::FRICTION);
+			::VUpdates::FrictionVU(entity);
 		}
 
 		void SnakeConnectedVU(Entity* entity)
@@ -980,14 +978,14 @@ namespace Enemies
 					}
 				}
 			}
-			snake->VUpdate(VUPDATE::FRICTION);
+			::VUpdates::FrictionVU(entity);
 		}
 
 		void SpiderVU(Entity* entity)
 		{
 			Spider* spider = static_cast<Spider*>(entity);
 			spider->UpdateLegs();
-			spider->VUpdate(VUPDATE::FRICTION);
+			::VUpdates::FrictionVU(entity);
 		}
 
 		void CenticrawlerVU(Entity* entity)
@@ -1011,7 +1009,7 @@ namespace Enemies
 					}
 				}
 			}
-			centicrawler->VUpdate(VUPDATE::SPIDER);
+			::VUpdates::FrictionVU(entity);
 		}
 
 		void ThiefVU(Entity* entity)
@@ -1028,7 +1026,7 @@ namespace Enemies
 				thief->grabbed->SetPos(thief->grabbed->pos - multiplier * thief->mass);
 
 			}
-			thief->VUpdate(VUPDATE::FRICTION);
+			::VUpdates::FrictionVU(entity);
 		}
 	}
 
@@ -1038,7 +1036,7 @@ namespace Enemies
 		{
 			Deceiver* deceiver = static_cast<Deceiver*>(entity);
 
-			deceiver->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 
 			RGBA tempColor = deceiver->color;
 			Vec3 tempPos = deceiver->pos;
@@ -1050,11 +1048,11 @@ namespace Enemies
 			
 			Vec3 playerPos = game->PlayerPos();
 			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
-			deceiver->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
-			deceiver->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 			deceiver->pos = playerPos + glm::rotateZ(deceiver->pos - playerPos, glm::radians(90.f));
-			deceiver->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 
 			deceiver->color = tempColor;
 			deceiver->pos = tempPos;
@@ -1063,7 +1061,7 @@ namespace Enemies
 		void ParentDU(Entity* entity)
 		{
 			Parent* parent = static_cast<Parent*>(entity);
-			parent->DUpdate(DUPDATE::DTOCOL); // Modify to actually draw now that rendering's been changed.
+			::DUpdates::DToColDU(entity);
 			float drawHeight = parent->radius * sqrtf(0.75f), drawDist = parent->radius * 0.5f;
 			parent->child->Draw(parent->pos + Vec3(0, drawDist, drawHeight));
 			parent->child->Draw(parent->pos + Vec3(-drawDist, 0, drawHeight));
@@ -1080,11 +1078,11 @@ namespace Enemies
 			exploder->radius = exploder->explosionRadius;
 			byte tempAlpha = exploder->color.a;
 			exploder->color.a /= 5;
-			exploder->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 			exploder->pos = tempPos;
 			exploder->radius = tempRadius;
 			exploder->color.a = tempAlpha;
-			exploder->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 
 		void SnakeConnectedDU(Entity* entity)
@@ -1092,7 +1090,7 @@ namespace Enemies
 			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
 			int tempHealth = snake->health;
 			snake->health = snake->front->health;
-			snake->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 			snake->health = tempHealth;
 		}
 
@@ -1103,8 +1101,7 @@ namespace Enemies
 			int intCurrentPlace = static_cast<int>(currentPlace);
 			colorCycler->color = colorCycler->colorsToCycle[intCurrentPlace % colorCycler->colorsToCycle.size()].CLerp(
 				colorCycler->colorsToCycle[(static_cast<size_t>(intCurrentPlace) + 1) % colorCycler->colorsToCycle.size()], currentPlace - floorf(currentPlace));
-
-			colorCycler->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 
 		void PouncerDU(Entity* entity)
@@ -1114,8 +1111,7 @@ namespace Enemies
 			float ratio = pouncer->radius / SQRTTWO_F;
 			game->DrawCone(pouncer->pos + pouncer->dir * ratio,
 				pouncer->pos + pouncer->dir * (ratio * 2), pouncer->Color(), ratio);
-
-			pouncer->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 
 		void CatDU(Entity* entity)
@@ -1131,19 +1127,19 @@ namespace Enemies
 			for (int i = 1; i < count; i++)
 			{
 				cat->pos = Vec3(glm::rotate(Vec2(cat->pos) - Vec2(game->PlayerPos()), PI_F * 2 / count) + Vec2(game->PlayerPos()), cat->pos.z);
-				cat->DUpdate(DUPDATE::ENTITY);
+				::DUpdates::DToColDU(entity);
 			}
 
 			cat->color = tempColor;
 			cat->pos = tempPos;
-			cat->DUpdate(DUPDATE::POUNCER);
+			::DUpdates::DToColDU(entity);
 		}
 
 		void CataclysmDU(Entity* entity)
 		{
 			Cataclysm* cat = static_cast<Cataclysm*>(entity);
 			RGBA tempColor = cat->color;
-			cat->DUpdate(DUPDATE::CAT);
+			::DUpdates::DToColDU(entity);
 			cat->color = tempColor;
 		}
 
@@ -1163,7 +1159,7 @@ namespace Enemies
 			baseTreadPos.x *= -1;
 			for (int i = 0; i < 6; i++)
 				game->DrawCircle(tank->pos + glm::rotateZ(glm::rotateX(baseTreadPos, (i - tank->treadRot) * mul), rotation), tank->projectile->color, treadRadius);
-			tank->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 
 		void LaserTankDU(Entity* entity)
@@ -1182,7 +1178,7 @@ namespace Enemies
 			baseTreadPos.x *= -1;
 			for (int i = 0; i < 6; i++)
 				game->DrawCircle(tank->pos + glm::rotateZ(glm::rotateX(baseTreadPos, (i - tank->treadRot) * mul), rotation), tank->color3, treadRadius);
-			tank->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 	}
 
@@ -1200,7 +1196,7 @@ namespace Enemies
 		{
 			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
 			snake->health = snake->front->health;
-			snake->UIUpdate(UIUPDATE::ENEMY);
+			EnemyUIU(entity);
 		}
 	}
 
@@ -1217,7 +1213,7 @@ namespace Enemies
 		void ParentOD(Entity* entity, Entity* damageDealer)
 		{
 			Parent* parent = static_cast<Parent*>(entity);
-			parent->OnDeath(ONDEATH::ENEMY, damageDealer);
+			EnemyOD(entity, damageDealer);
 
 			float drawHeight = parent->radius * sqrtf(0.75f), drawDist = parent->radius * 0.5f;
 			unique_ptr<Entity> child = parent->child->Clone(parent->pos + Vec3(0, drawDist, drawHeight));
@@ -1237,15 +1233,15 @@ namespace Enemies
 		void ExploderOD(Entity* entity, Entity* damageDealer)
 		{
 			Exploder* exploder = static_cast<Exploder*>(entity);
-			exploder->OnDeath(ONDEATH::ENEMY, damageDealer);
-			// Will break tiles downwards.
+			EnemyOD(entity, damageDealer);
 			CreateExplosion(exploder->pos, exploder->explosionRadius, exploder->color, exploder->name, 0, exploder->damage, exploder);
 		}
 
 		void SnakeOD(Entity* entity, Entity* damageDealer)
 		{
 			Snake* snake = static_cast<Snake*>(entity);
-			snake->OnDeath(ONDEATH::ENEMY, damageDealer);
+			EnemyOD(entity, damageDealer);
+
 			if (snake->back != nullptr)
 			{
 				snake->back->front = nullptr;
@@ -1258,7 +1254,8 @@ namespace Enemies
 		void PouncerSnakeOD(Entity* entity, Entity* damageDealer)
 		{
 			PouncerSnake* pSnake = static_cast<PouncerSnake*>(entity);
-			pSnake->OnDeath(ONDEATH::SNAKE, damageDealer);
+			EnemyOD(entity, damageDealer);
+
 			if (pSnake->back != nullptr)
 				((PouncerSnake*)pSnake->back)->dir = pSnake->dir;
 		}
@@ -1267,13 +1264,13 @@ namespace Enemies
 		{
 			SnakeConnected* snake = static_cast<SnakeConnected*>(entity);
 			if (snake->next == nullptr)
-				snake->OnDeath(ONDEATH::ENEMY, damageDealer);
+				EnemyOD(entity, damageDealer);
 		}
 
 		void VacuumerOD(Entity* entity, Entity* damageDealer)
 		{
 			Vacuumer* vacuumer = static_cast<Vacuumer*>(entity);
-			vacuumer->OnDeath(ONDEATH::ENEMY, damageDealer);
+			EnemyOD(entity, damageDealer);
 			for (ItemInstance item : vacuumer->items)
 			{
 				game->entities->push_back(make_unique<Collectible>(item, vacuumer->pos));
@@ -1283,7 +1280,7 @@ namespace Enemies
 		void SpiderOD(Entity* entity, Entity* damageDealer)
 		{
 			Spider* spider = static_cast<Spider*>(entity);
-			spider->OnDeath(ONDEATH::ENEMY, damageDealer);
+			EnemyOD(entity, damageDealer);
 			for (LegParticle* leg : spider->legs)
 				leg->parent = nullptr;
 		}
@@ -1291,7 +1288,7 @@ namespace Enemies
 		void CenticrawlerOD(Entity* entity, Entity* damageDealer)
 		{
 			Centicrawler* centicrawler = static_cast<Centicrawler*>(entity);
-			centicrawler->OnDeath(ONDEATH::SPIDER, damageDealer);
+			SpiderOD(entity, damageDealer);
 			if (centicrawler->back != nullptr)
 				centicrawler->back->front = nullptr;
 			if (centicrawler->front != nullptr)
@@ -1500,26 +1497,26 @@ namespace Enemies
 	}
 #pragma endregion
 #pragma region Enemy Datas
-	EnemyData enemyData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData deceiverData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::DECEIVER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData parentData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::PARENT, UIUPDATE::ENEMY, ONDEATH::PARENT);
-	EnemyData exploderData = EnemyData(MUpdates::DefaultMU, AUpdates::ExploderAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::EXPLODER, UIUPDATE::ENEMY, ONDEATH::EXPLODER);
-	EnemyData snakeData = EnemyData(MUpdates::SnakeMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SNAKE);
-	EnemyData pouncerSnakeData = EnemyData(MUpdates::PouncerSnakeMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKE, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::POUNCERSNAKE);
-	EnemyData snakeConnectedData = EnemyData(MUpdates::SnakeConnectedMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::SNAKECONNECTED, DUPDATE::SNAKECONNECTED, UIUPDATE::SNAKECONNECTED, ONDEATH::SNAKECONNECTED);
-	EnemyData colorCyclerData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::COLORCYCLER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData vacuumerData = EnemyData(MUpdates::VacuumerMU, AUpdates::DefaultAU, UPDATE::VACUUMER, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::VACUUMER);
-	EnemyData spiderData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, UPDATE::SPIDER, VUPDATE::SPIDER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::SPIDER);
-	EnemyData centicrawlerData = EnemyData(MUpdates::CenticrawlerMU, AUpdates::DefaultAU, UPDATE::CENTICRAWLER, VUPDATE::CENTICRAWLER, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::CENTICRAWLER);
-	EnemyData pouncerData = EnemyData(MUpdates::PouncerMU, AUpdates::DefaultAU, UPDATE::POUNCER, VUPDATE::FRICTION, DUPDATE::POUNCER, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData catData = EnemyData(MUpdates::CatMU, AUpdates::DefaultAU, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData boomCatData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, UPDATE::CAT, VUPDATE::FRICTION, DUPDATE::CAT, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData cataclysmData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, UPDATE::CATACLYSM, VUPDATE::FRICTION, DUPDATE::CATACLYSM, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData tankData = EnemyData(MUpdates::BaseTankMU, AUpdates::TankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData mortarTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::MortarTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData genericTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::GenericTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData laserTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::LaserTankAU, UPDATE::ENEMY, VUPDATE::FRICTION, DUPDATE::LASER_TANK, UIUPDATE::ENEMY, ONDEATH::ENEMY);
-	EnemyData thiefData = EnemyData(MUpdates::ThiefMU, AUpdates::ThiefAU, UPDATE::ENEMY, VUPDATE::THIEF, DUPDATE::DTOCOL, UIUPDATE::ENEMY, ONDEATH::THIEF);
+	EnemyData enemyData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, Updates::EnemyU, ::VUpdates::FrictionVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData deceiverData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::DeceiverDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData parentData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::ParentDU, UIUpdates::EnemyUIU, OnDeaths::ParentOD);
+	EnemyData exploderData = EnemyData(MUpdates::DefaultMU, AUpdates::ExploderAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::ExploderDU, UIUpdates::EnemyUIU, OnDeaths::ExploderOD);
+	EnemyData snakeData = EnemyData(MUpdates::SnakeMU, AUpdates::DefaultAU, Updates::EnemyU, VUpdates::SnakeVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::SnakeOD);
+	EnemyData pouncerSnakeData = EnemyData(MUpdates::PouncerSnakeMU, AUpdates::DefaultAU, Updates::EnemyU, VUpdates::SnakeVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::PouncerSnakeOD);
+	EnemyData snakeConnectedData = EnemyData(MUpdates::SnakeConnectedMU, AUpdates::DefaultAU, Updates::EnemyU, VUpdates::SnakeConnectedVU, DUpdates::SnakeConnectedDU, UIUpdates::SnakeConnectedUIU, OnDeaths::SnakeConnectedOD);
+	EnemyData colorCyclerData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::ColorCyclerDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData vacuumerData = EnemyData(MUpdates::VacuumerMU, AUpdates::DefaultAU, Updates::VacuumerU, ::VUpdates::FrictionVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::VacuumerOD);
+	EnemyData spiderData = EnemyData(MUpdates::DefaultMU, AUpdates::DefaultAU, Updates::SpiderU, VUpdates::SpiderVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::SpiderOD);
+	EnemyData centicrawlerData = EnemyData(MUpdates::CenticrawlerMU, AUpdates::DefaultAU, Updates::CenticrawlerU, VUpdates::CenticrawlerVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::CenticrawlerOD);
+	EnemyData pouncerData = EnemyData(MUpdates::PouncerMU, AUpdates::DefaultAU, Updates::PouncerU, ::VUpdates::FrictionVU, DUpdates::PouncerDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData catData = EnemyData(MUpdates::CatMU, AUpdates::DefaultAU, Updates::CatU, ::VUpdates::FrictionVU, DUpdates::CatDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData boomCatData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, Updates::CatU, ::VUpdates::FrictionVU, DUpdates::CatDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData cataclysmData = EnemyData(MUpdates::CatMU, AUpdates::BoomcatAU, Updates::CataclysmU, ::VUpdates::FrictionVU, DUpdates::CataclysmDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData tankData = EnemyData(MUpdates::BaseTankMU, AUpdates::TankAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::TankDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData mortarTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::MortarTankAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::TankDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData genericTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::GenericTankAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::TankDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData laserTankData = EnemyData(MUpdates::BaseTankMU, AUpdates::LaserTankAU, Updates::EnemyU, ::VUpdates::FrictionVU, DUpdates::LaserTankDU, UIUpdates::EnemyUIU, OnDeaths::EnemyOD);
+	EnemyData thiefData = EnemyData(MUpdates::ThiefMU, AUpdates::ThiefAU, Updates::EnemyU, VUpdates::ThiefVU, ::DUpdates::DToColDU, UIUpdates::EnemyUIU, OnDeaths::ThiefOD);
 #pragma endregion
 #pragma endregion
 
@@ -1707,8 +1704,8 @@ namespace Enemies
 #pragma endregion
 #pragma region Faction 1
 	//Predefinitions - Special
-	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, VUPDATE::GRAVITY_TRUE, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
-	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", VUPDATE::ENTITY, 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
+	Projectile tinyTankProjectile = Projectile(&projectileData, 15.0f, 10, 8.0f, 0.5f, ::VUpdates::GravityTrueVU, RGBA(51, 51, 51), 1, 0, 1, 1, "Tiny Tank Projectile");
+	ExplodeOnLanding gigaTankItem = ExplodeOnLanding(ITEMTYPE::GIGA_TANK_ITEM, 7.5f, 10, "Giga Tank Item", "Ammo", ::VUpdates::EntityVU, 1, RGBA(65, 224, 150), 0, 30, 0.25f, 30.f, 0.4f);
 	ShotItem gigaTankProjectile = ShotItem(&shotItemData, gigaTankItem.Clone(), "Giga Tank Projectile");
 	Enemy child = Enemy(&enemyData, ENEMY2_A, 2.0f, 12, 12, 0.5f, 1, 0, 10, 0.5f, RGBA(255, 0, 255), RGBA(), 1, 0, 1, 1, "Child");
 	Enemy larva = Enemy(&enemyData, ENEMY2_A, 0.5f, 3, 1, 0.5f, 0, 0, 10, 0.25f, RGBA(141, 100, 143), RGBA(), 0.5f, 0, 1, 1, "Larva");
@@ -1753,8 +1750,8 @@ namespace Enemies
 #pragma endregion
 #pragma region Bosses
 	// Bosses - Special
-	Projectile catProjectile = Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, VUPDATE::ENTITY, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
-	Projectile catProjectile2 = Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, VUPDATE::ENTITY, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile catProjectile = Projectile(&projectileData, 25.0f, 10, cat.speed, 0.4f, ::VUpdates::EntityVU, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
+	Projectile catProjectile2 = Projectile(&projectileData, 25.0f, 10, cat.speed * 2, 0.4f, ::VUpdates::EntityVU, cat.color, 1, 0, 1, 1, "Cataclysmic Bullet", false, true);
 	Cataclysm cataclysm = Cataclysm(&cataclysmData, 10.0f, 25.0f, PI_F / 5, &catProjectile, &catProjectile2, 0.0625f, 6.5f, 0.5f, 4.0f, 12.0f, 0.5f, ENEMY1_A, 0.5f, 5.0f, 1000, 0, 10, 3.5f, RGBA(), RGBA(), RGBA(158, 104, 95), RGBA(127), 50, 0, 9, 9, "Cataclysm - The nine lived feind");
 
 	Types spawnableBosses
@@ -1767,5 +1764,5 @@ namespace Enemies
 
 namespace Resources
 {
-	PlacedOnLanding grubium = PlacedOnLanding(ITEMTYPE::GRUBIUM, &Enemies::grub, "Grubium", "Summon Ammo", VUPDATE::GRAVITY, 1, RGBA(161, 85, 35), 0, 15.0f, true, 0.5f, 12, 0.4f, false, true, true);
+	PlacedOnLanding grubium = PlacedOnLanding(ITEMTYPE::GRUBIUM, &Enemies::grub, "Grubium", "Summon Ammo", VUpdates::GravityVU, 1, RGBA(161, 85, 35), 0, 15.0f, true, 0.5f, 12, 0.4f, false, true, true);
 }

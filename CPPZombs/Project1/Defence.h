@@ -6,7 +6,8 @@
 
 float difficultyGrowthModifier[] = { 1.5f, 1.0f, 0.7f };
 
-FunctionalBlockData shrubData = FunctionalBlockData(TUPDATE::SHRUB, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION, DUPDATE::SHRUB, UIUPDATE::SHRUB);
+namespace TUpdates { bool ShrubTU(Entity* entity); bool VineTU(Entity* entity); } namespace DUpdates { void ShrubDU(Entity* entity); }
+FunctionalBlockData shrubData = FunctionalBlockData(TUpdates::ShrubTU, Updates::FunctionalBlock2U, VUpdates::FrictionVU, DUpdates::ShrubDU);
 class Shrub : public FunctionalBlock2
 {
 public:
@@ -164,7 +165,7 @@ namespace DUpdates
 			game->DrawCircle(shrub->pos + (shrub->radius + collectibleRadius) * shrub->nextPlacementPos, collectible->color, collectibleRadius);
 			shrub->color = shrub->adultColor;
 		}
-		shrub->DUpdate(DUPDATE::ENTITY);
+		game->DrawMesh(&::shrub, PosScaleMat(shrub->pos, Vec3(shrub->radius)), shrub->color);
 	}
 
 	void TreeDU(Entity* entity)
@@ -186,12 +187,13 @@ namespace DUpdates
 			game->DrawCircle(tree->pos + (tree->radius + collectibleRadius) * tree->nextPlacementPos, collectible->color, collectibleRadius);
 			tree->color = tree->adultColor;
 		}
-		tree->DUpdate(DUPDATE::ENTITY);*/
+		tree->DUpdate(DUpdates::EntityDU);*/
 	}
 }
 
 
-FunctionalBlockData vineData = FunctionalBlockData(TUPDATE::VINE, UPDATE::VINE, VUPDATE::VINE, DUPDATE::SHRUB, UIUPDATE::SHRUB, ONDEATH::ENTITY);
+namespace Updates { void VineU(Entity* entity); } namespace VUpdates { void VineVU(Entity* entity); }
+FunctionalBlockData vineData = FunctionalBlockData(TUpdates::VineTU, Updates::VineU, VUpdates::VineVU, DUpdates::ShrubDU);
 class Vine : public Shrub
 {
 public:
@@ -290,7 +292,7 @@ namespace Updates
 		}
 		else
 			vine->nextPlacementPos = glm::rotateZ(vine->dir, vine->nextSide * PI_F * 0.5f);
-		vine->Update(UPDATE::FUNCTIONALBLOCK2);
+		Updates::FunctionalBlock2U(entity);
 	}
 }
 
@@ -319,7 +321,7 @@ namespace VUpdates
 				}
 			}
 		}
-		vine->VUpdate(VUPDATE::FRICTION);
+		VUpdates::FrictionVU(entity);
 	}
 }
 
@@ -568,25 +570,25 @@ namespace Plants
 namespace Resources::Seeds
 {
 	// Shrubs
-	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius, false, true, true);
-	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
-	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
-	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
-	PlacedOnLanding emeraldShrubSeed = PlacedOnLanding(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::emeraldShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius, false, true, true);
-	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
-	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
-	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
-	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
-	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
-	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 40, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", VUPDATE::GRAVITY, 4, Plants::Shrubs::coalShrubColor, 0, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
-	PlacedOnLanding brickShrubSeed = PlacedOnLanding(ITEMTYPE::BRICK_SHRUB_SEED, &Plants::Shrubs::brickShrub, "Brick shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::brickShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::brickShrub.babyRadius, false, true, true);
-	PlacedOnLanding grubiumShrubSeed = PlacedOnLanding(ITEMTYPE::GRUBIUM_SHRUB_SEED, &Plants::Shrubs::grubiumShrub, "Grubium shrub seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Shrubs::grubiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::grubiumShrub.babyRadius, false, true, true);
+	PlacedOnLanding copperShrubSeed = PlacedOnLanding(ITEMTYPE::COPPER_SHRUB_SEED, &Plants::Shrubs::copperShrub, "Copper shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::copperShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::copperShrub.babyRadius, false, true, true);
+	PlacedOnLanding ironShrubSeed = PlacedOnLanding(ITEMTYPE::IRON_SHRUB_SEED, &Plants::Shrubs::ironShrub, "Iron shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::ironShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::ironShrub.babyRadius, false, true, true);
+	PlacedOnLanding rockShrubSeed = PlacedOnLanding(ITEMTYPE::ROCK_SHRUB_SEED, &Plants::Shrubs::rockShrub, "Rock shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::rockShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rockShrub.babyRadius, false, true, true);
+	PlacedOnLanding rubyShrubSeed = PlacedOnLanding(ITEMTYPE::RUBY_SHRUB_SEED, &Plants::Shrubs::rubyShrub, "Ruby shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::rubyShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::rubyShrub.babyRadius, false, true, true);
+	PlacedOnLanding emeraldShrubSeed = PlacedOnLanding(ITEMTYPE::EMERALD_SHRUB_SEED, &Plants::Shrubs::emeraldShrub, "Emerald shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::emeraldShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::emeraldShrub.babyRadius, false, true, true);
+	PlacedOnLanding shadeShrubSeed = PlacedOnLanding(ITEMTYPE::SHADE_SHRUB_SEED, &Plants::Shrubs::shadeShrub, "Shade shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::shadeShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::shadeShrub.babyRadius, false, true, true);
+	PlacedOnLanding bowlerShrubSeed = PlacedOnLanding(ITEMTYPE::BOWLER_SHRUB_SEED, &Plants::Shrubs::bowlerShrub, "Bowler shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::bowlerShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::bowlerShrub.babyRadius, false, true, true);
+	PlacedOnLanding vacuumiumShrubSeed = PlacedOnLanding(ITEMTYPE::VACUUMIUM_SHRUB_SEED, &Plants::Shrubs::vacuumiumShrub, "Vacuumium shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::vacuumiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::vacuumiumShrub.babyRadius, false, true, true);
+	PlacedOnLanding silverShrubSeed = PlacedOnLanding(ITEMTYPE::SILVER_SHRUB_SEED, &Plants::Shrubs::silverShrub, "Silver shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::silverShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::silverShrub.babyRadius, false, true, true);
+	PlacedOnLanding quartzShrubSeed = PlacedOnLanding(ITEMTYPE::QUARTZ_SHRUB_SEED, &Plants::Shrubs::quartzShrub, "Quartz shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::quartzShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::quartzShrub.babyRadius, false, true, true);
+	PlacedOnLandingBoom coal = PlacedOnLandingBoom(ITEMTYPE::COAL, 6.f, 40, &Plants::Shrubs::coalShrub, "Coal shrub seed", "Seed Ammo", VUpdates::GravityVU, 4, Plants::Shrubs::coalShrubColor, 0, 10.f, false, 0.25f, 24.f, Plants::Shrubs::coalShrub.babyRadius, false, true, true);
+	PlacedOnLanding brickShrubSeed = PlacedOnLanding(ITEMTYPE::BRICK_SHRUB_SEED, &Plants::Shrubs::brickShrub, "Brick shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::brickShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::brickShrub.babyRadius, false, true, true);
+	PlacedOnLanding grubiumShrubSeed = PlacedOnLanding(ITEMTYPE::GRUBIUM_SHRUB_SEED, &Plants::Shrubs::grubiumShrub, "Grubium shrub seed", "Seed", VUpdates::GravityVU, 4, Plants::Shrubs::grubiumShrubColor, 0, 15, false, 0.25f, 12.f, Plants::Shrubs::grubiumShrub.babyRadius, false, true, true);
 
 	// Vines
-	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
-	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius, false, true, true);
-	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", VUPDATE::ENTITY, 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
-	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", VUPDATE::GRAVITY, 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius, false, true, true);
+	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
+	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius, false, true, true);
+	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", VUpdates::GravityVU, 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
+	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius, false, true, true);
 
 	// Keep a list of all of the seeds.
 	vector<Item*> plantSeeds{ &copperShrubSeed, &ironShrubSeed, &rubyShrubSeed, &emeraldShrubSeed, &rockShrubSeed, &shadeShrubSeed,
@@ -632,7 +634,7 @@ namespace Collectibles::Seeds
 
 #pragma region Tower defense
 
-EntityData towerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL);
+EntityData towerData = EntityData(Updates::EntityU, VUpdates::FrictionVU, DUpdates::DToColDU);
 class Tower : public DToCol
 {
 public:
@@ -669,7 +671,6 @@ public:
 	}
 };
 
-EntityData lightTowerData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class LightTower : public Tower
 {
 public:
@@ -727,8 +728,8 @@ namespace OnDeaths
 	}
 }
 
-EntityData basicTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::FRICTION, DUPDATE::BASIC_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
-EntityData hoverTurretData = EntityData(UPDATE::BASIC_TURRET, VUPDATE::AIR_RESISTANCE, DUPDATE::BASIC_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
+EntityData lightTowerData = EntityData(Updates::EntityU, VUpdates::FrictionVU, DUpdates::DToColDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
+
 class BasicTurret : public LightTower
 {
 public:
@@ -759,7 +760,6 @@ public:
 	}
 };
 
-EntityData circleTurretData = EntityData(UPDATE::CIRCLE_TURRET, VUPDATE::FRICTION, DUPDATE::CIRCLE_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class CircleTurret : public BasicTurret
 {
 public:
@@ -789,7 +789,6 @@ public:
 	}
 };
 
-EntityData laserTurretData = EntityData(UPDATE::LASER_TURRET, VUPDATE::FRICTION, DUPDATE::LASER_TURRET, UIUPDATE::ENTITY, ONDEATH::LIGHTTOWER);
 class LaserTurret : public LightTower
 {
 public:
@@ -881,16 +880,14 @@ namespace DUpdates
 	void BasicTurretDU(Entity* entity)
 	{
 		BasicTurret* turret = static_cast<BasicTurret*>(entity);
-
-		turret->DUpdate(DUPDATE::DTOCOL);
+		DUpdates::DToColDU(entity);
 		game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * turret->dir, turret->color3, turret->radius * 0.25f);
 	}
 
 	void CircleTurretDU(Entity* entity)
 	{
 		CircleTurret* turret = static_cast<CircleTurret*>(entity);
-
-		turret->DUpdate(DUPDATE::DTOCOL);
+		DUpdates::DToColDU(entity);
 		for (uint i = 0; i < turret->bulletsPer; i++)
 			game->DrawCylinder(turret->pos, turret->pos + turret->radius * 2 * glm::rotateZ(turret->dir, 2 * PI_F * i / turret->bulletsPer), turret->color3, turret->radius * 0.25f);
 	}
@@ -898,25 +895,29 @@ namespace DUpdates
 	void LaserTurretDU(Entity* entity)
 	{
 		LaserTurret* turret = static_cast<LaserTurret*>(entity);
-		turret->DUpdate(DUPDATE::DTOCOL);
+		DUpdates::DToColDU(entity);
 		game->DrawCylinder(turret->pos, turret->pos + turret->dir * min(turret->maxDist, turret->lastHit.dist), turret->color3, turret->radius * 0.25f);
 	}
 }
 
+EntityData laserTurretData = EntityData(Updates::LaserTurretU, VUpdates::FrictionVU, DUpdates::LaserTurretDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
+EntityData circleTurretData = EntityData(Updates::CircleTurretU, VUpdates::FrictionVU, DUpdates::CircleTurretDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
+EntityData basicTurretData = EntityData(Updates::BasicTurretU, VUpdates::FrictionVU, DUpdates::BasicTurretDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
+EntityData hoverTurretData = EntityData(Updates::BasicTurretU, VUpdates::AirResistanceVU, DUpdates::BasicTurretDU, UIUpdates::EntityUIU, OnDeaths::LightTowerOD);
 
 
 namespace Defences
 {
 	namespace Projectiles
 	{
-		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, VUPDATE::ENTITY, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
-		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, VUPDATE::ENTITY, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
-		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.1f, VUPDATE::ENTITY, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
+		Projectile pulseTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.4f, VUpdates::EntityVU, RGBA(127, 255, 255), 0, 0, 0, 0, "Pulse Turret Projectile");
+		Projectile rockTurretProjectile = Projectile(&projectileData, 5, 30, 8, 0.4f, VUpdates::EntityVU, RGBA(255, 255, 255), 0, 0, 0, 0, "Rock Turret Projectile");
+		Projectile sapphireTurretProjectile = Projectile(&projectileData, 10, 10, 8, 0.1f, VUpdates::EntityVU, RGBA(255, 127, 255), 0, 0, 0, 0, "Sapphire Turret Projectile");
 		
-		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 4, 0.1f, VUPDATE::ENTITY, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
-		Projectile hoverTurretProjectile = Projectile(&projectileData, 20, 20, 16, 0.3f, VUPDATE::ENTITY, RGBA(255, 127, 127), 0, 0, 0, 0, "Hover Turret Projectile");
+		Projectile droneTurretProjectile = Projectile(&projectileData, 10, 10, 4, 0.1f, VUpdates::EntityVU, RGBA(255, 127, 127), 0, 0, 0, 0, "Drone Turret Projectile");
+		Projectile hoverTurretProjectile = Projectile(&projectileData, 20, 20, 16, 0.3f, VUpdates::EntityVU, RGBA(255, 127, 127), 0, 0, 0, 0, "Hover Turret Projectile");
 
-		Projectile circleTurretProjectile = Projectile(&projectileData, 10, 10, 2, 0.4f, VUPDATE::ENTITY, RGBA(255, 193, 127), 0, 0, 0, 0, "Circle Turret Projectile");
+		Projectile circleTurretProjectile = Projectile(&projectileData, 10, 10, 2, 0.4f, VUpdates::EntityVU, RGBA(255, 193, 127), 0, 0, 0, 0, "Circle Turret Projectile");
 	}
 
 	namespace Towers

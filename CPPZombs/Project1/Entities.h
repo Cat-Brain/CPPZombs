@@ -603,9 +603,7 @@ public:
 
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
-			{
-				collectibles[i]->Update();
-			}
+				collectibles[i]->data->update(collectibles[i]);
 
 		if (addedEntity)
 			SortEntities();
@@ -614,7 +612,7 @@ public:
 			if (sortedNCEntities[index]->active)
 			{
 				Entity* entity = sortedNCEntities[index];
-				entity->Update();
+				entity->data->update(entity);
 			}
 
 		for (int i = 0; i < toDelEntities.size(); i++)
@@ -623,7 +621,7 @@ public:
 
 		for (int i = 0; i < size(); i++)
 			if ((*this)[i] && (*this)[i]->active)
-				(*this)[i]->VUpdate();
+				(*this)[i]->data->vUpdate((*this)[i].get());
 
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->active && collectibles[index]->corporeal)
@@ -696,14 +694,10 @@ public:
 		{
 			// Collectibles
 			for (Entity* entity : toRenderPair.second)
-			{
-				entity->DUpdate();
-			}
+				entity->data->dUpdate(entity);
 			// Normal entities
 			for (Entity* entity : toRenderPair.first)
-			{
-				entity->DUpdate();
-			}
+				entity->data->dUpdate(entity);
 			// Particles
 			for (int i = 0; i < particles.size(); i++)
 			{
@@ -731,15 +725,11 @@ public:
 	{
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->uiActive)
-			{
-				collectibles[index]->UIUpdate();
-			}
+				collectibles[index]->data->uiUpdate(collectibles[index]);
 
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->uiActive)
-			{
-				sortedNCEntities[index]->UIUpdate();
-			}
+				sortedNCEntities[index]->data->uiUpdate(sortedNCEntities[index]);
 	}
 #pragma endregion
 #pragma region Destruction stuff
@@ -828,7 +818,7 @@ void Entity::DestroySelf(Entity* damageDealer)
 {
 	if (uiActive)
 		game->MenuedEntityDied(this);
-	OnDeath(damageDealer);
+	data->onDeath(this, damageDealer);
 	DetachObservers();
 	game->entities->Remove(this);
 }
@@ -959,7 +949,8 @@ bool TileData::Damage(int damage)
 #define EXPLOSION_PARTICLE_COUNT 25
 #define EXPLOSION_PARTICLE_SPEED 16.0f
 #define EXPLOSION_PARTICLE_DURATION 0.5f
-EntityData explodeNextFrameData = EntityData(UPDATE::EXPLODENEXTFRAME);
+namespace Updates { void ExplodeNextFrameU(Entity* entity); void UpExplodeNextFrameU(Entity* entity); }
+EntityData explodeNextFrameData = EntityData(Updates::ExplodeNextFrameU);
 class ExplodeNextFrame : public Entity
 {
 public:
@@ -976,7 +967,7 @@ public:
 	}
 };
 
-EntityData upExplodeNextFrameData = EntityData(UPDATE::UPEXPLODENEXTFRAME);
+EntityData upExplodeNextFrameData = EntityData(Updates::UpExplodeNextFrameU);
 class UpExplodeNextFrame : public Entity
 {
 public:
@@ -993,7 +984,7 @@ public:
 	}
 };
 
-EntityData fadeOutPuddleData = EntityData(UPDATE::FADEOUTPUDDLE, VUPDATE::ENTITY, DUPDATE::FADEOUT);
+EntityData fadeOutPuddleData = EntityData(Updates::FadeOutU, VUpdates::EntityVU, DUpdates::FadeOutDU);
 class FadeOutPuddle : public FadeOut
 {
 public:
@@ -1025,7 +1016,11 @@ public:
 	}
 };
 
-EntityData fadeOutGlowData = EntityData(UPDATE::FADEOUT, VUPDATE::ENTITY, DUPDATE::FADEOUTGLOW, UIUPDATE::ENTITY, ONDEATH::FADEOUTGLOW);
+namespace DUpdates { void FadeOutGlowDU(Entity* entity);
+void FadeOutGlowDistDU(Entity* entity); }
+namespace OnDeaths { void FadeOutGlowOD(Entity* entity, Entity* damageDealer); }
+EntityData fadeOutGlowData = EntityData(Updates::FadeOutU, VUpdates::EntityVU, DUpdates::FadeOutGlowDU, UIUpdates::EntityUIU, OnDeaths::FadeOutGlowOD);
+EntityData fadeOutGlowDistData = EntityData(Updates::FadeOutU, VUpdates::EntityVU, DUpdates::FadeOutGlowDistDU, UIUpdates::EntityUIU, OnDeaths::FadeOutGlowOD);
 class FadeOutGlow : public FadeOut
 {
 public:
@@ -1043,7 +1038,8 @@ public:
 	}
 };
 
-EntityData vacuumForData = EntityData(UPDATE::VACUUMFOR);
+namespace Updates { void VacuumForU(Entity* entity); }
+EntityData vacuumForData = EntityData(Updates::VacuumForU);
 class VacuumFor : public FadeOut
 {
 public:
@@ -1144,7 +1140,7 @@ namespace Updates
 			puddle->DestroySelf(puddle);
 	}
 
-	void VacuumeForU(Entity* entity)
+	void VacuumForU(Entity* entity)
 	{
 		VacuumFor* vac = static_cast<VacuumFor*>(entity);
 
@@ -1164,7 +1160,16 @@ namespace DUpdates
 	{
 		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
 		glow->lightSource->range = glow->startRange * glow->Opacity();
-		glow->DUpdate(DUPDATE::FADEOUT);
+		FadeOutDU(entity);
+	}
+
+	void FadeOutGlowDistDU(Entity* entity)
+	{
+		FadeOutGlow* glow = static_cast<FadeOutGlow*>(entity);
+		byte alpha = glow->color.a;
+		glow->color.a = static_cast<byte>(glow->color.a * max(0.25f, TransparencyDistanceLerp(glow, game->playerE)));
+		FadeOutGlowDU(entity);
+		glow->color.a = alpha;
 	}
 }
 
@@ -1176,10 +1181,23 @@ namespace OnDeaths
 	}
 }
 
+inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
+{
+	game->entities->push_back(make_unique<ExplodeNextFrame>(&explodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowDistData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
+}
+
+inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
+{
+	game->entities->push_back(make_unique<UpExplodeNextFrame>(&upExplodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
+	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowDistData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
+}
+
 #pragma endregion
 
 #pragma region Post entities definition items
 #pragma region Types
+namespace ItemODs { void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class PlacedOnLanding : public Item
 {
 public:
@@ -1187,142 +1205,136 @@ public:
 	Entity* entityToPlace;
 	string creatorName;
 
-	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
 		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, entityToPlace->name, typeName, vUpdate, intType, entityToPlace->color, damage, range, useTime, speed, radius,
 			corporeal, shouldCollide, collideTerrain, mass, health), entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
-		itemOD = ITEMOD::PLACEDONLANDING;
+		itemOD = ItemODs::PlacedOnLandingOD;
 	}
 
-	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(),
+	PlacedOnLanding(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, RGBA color = RGBA(),
 		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		entityToPlace(entityToPlace), sayCreator(sayCreator)
 	{
-		itemOD = ITEMOD::PLACEDONLANDING;
+		itemOD = ItemODs::PlacedOnLandingOD;
 	}
 };
 
+namespace ItemODs { void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class CorruptOnKill : public PlacedOnLanding
 {
 public:
-	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
 		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		PlacedOnLanding(type, entityToPlace, typeName, vUpdate, intType, damage, range, sayCreator,
 			useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
 	{
-		itemOD = ITEMOD::CORRUPTONKILL;
+		itemOD = ItemODs::CorruptOnKillOD;
 	}
 
-	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(),
+	CorruptOnKill(ITEMTYPE type, Entity* entityToPlace, string name, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, RGBA color = RGBA(),
 		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		PlacedOnLanding(type, entityToPlace, name, typeName, vUpdate, intType, color, damage, range, sayCreator, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
 	{
-		itemOD = ITEMOD::CORRUPTONKILL;
+		itemOD = ItemODs::CorruptOnKillOD;
 	}
 };
 
+namespace ItemODs { void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class PlacedOnLandingBoom : public PlacedOnLanding
 {
 public:
 	float explosionRadius;
 	int explosionDamage;
 
-	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
+	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, int damage = 0, float range = 15.0f, bool sayCreator = false,
 		float useTime = 0.25f, float speed = 12, float radius = 0.4f, bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		PlacedOnLanding(type, entityToPlace, typeName, vUpdate, intType, damage, range, sayCreator,
 			useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health), explosionRadius(explosionRadius), explosionDamage(explosionDamage)
 	{
-		itemOD = ITEMOD::PLACEDONLANDINGBOOM;
+		itemOD = ItemODs::PlacedOnLandingBoomOD;
 	}
 
-	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string name, string typeName, VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0, RGBA color = RGBA(),
+	PlacedOnLandingBoom(ITEMTYPE type, float explosionRadius, int explosionDamage, Entity* entityToPlace, string name, string typeName, VUpdate vUpdate = VUpdates::EntityVU, int intType = 0, RGBA color = RGBA(),
 		int damage = 1, float range = 15.0f, bool sayCreator = false, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		PlacedOnLanding(type, entityToPlace, name, typeName, vUpdate, intType, color, damage, range, sayCreator, useTime, speed, radius,
 			corporeal, shouldCollide, collideTerrain, mass, health), explosionRadius(explosionRadius), explosionDamage(explosionDamage)
 	{
-		itemOD = ITEMOD::PLACEDONLANDINGBOOM;
+		itemOD = ItemODs::PlacedOnLandingBoomOD;
 	}
 };
 
-inline void CreateExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
-{
-	game->entities->push_back(make_unique<ExplodeNextFrame>(&explodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
-}
-
-inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, string name, int damage, int explosionDamage, Entity* creator)
-{
-	game->entities->push_back(make_unique<UpExplodeNextFrame>(&upExplodeNextFrameData, explosionDamage, explosionRadius, color, pos, name, creator));
-	game->entities->push_back(make_unique<FadeOutGlow>(&fadeOutGlowData, explosionRadius * 2.0f, 2.f, pos, explosionRadius, color));
-}
-
+namespace ItemODs { void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class ExplodeOnLanding : public Item
 {
 public:
 	int explosionDamage;
 	float explosionRadius;
 
-	ExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0,
+	ExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", VUpdate vUpdate = VUpdates::EntityVU, int intType = 0,
 		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		explosionRadius(explosionRadius), explosionDamage(explosionDamage)
 	{
-		itemOD = ITEMOD::EXPLODEONLANDING;
+		itemOD = ItemODs::ExplodeOnLandingOD;
 	}
 };
 
+namespace ItemODs { void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class UpExplodeOnLanding : public ExplodeOnLanding
 {
 public:
-	UpExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0,
+	UpExplodeOnLanding(ITEMTYPE type, float explosionRadius = 0.5f, int explosionDamage = 1, string name = "NULL", string typeName = "NULL TYPE", VUpdate vUpdate = VUpdates::EntityVU, int intType = 0,
 		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		ExplodeOnLanding(type, explosionRadius, explosionDamage, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health)
 	{
-		itemOD = ITEMOD::UPEXPLODEONLANDING;
+		itemOD = ItemODs::UpExplodeOnLandingOD;
 	}
 };
 
+namespace ItemODs { void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class ImproveSoilOnLanding : public Item
 {
 public:
 	int improveRadius; // Used like a square's radius.
-	ImproveSoilOnLanding(ITEMTYPE type, int improveRadius, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0,
+	ImproveSoilOnLanding(ITEMTYPE type, int improveRadius, string name = "NULL", string typeName = "NULL TYPE", VUpdate vUpdate = VUpdates::EntityVU, int intType = 0,
 		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		improveRadius(improveRadius)
 	{
-		itemOD = ITEMOD::IMPROVESOILONLANDING;
+		itemOD = ItemODs::ImproveSoilOnLandingOD;
 	}
 };
 
+namespace ItemODs { void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
 class SetTileOnLanding : public Item
 {
 public:
 	int zOffset;
 	TILE tile;
 
-	SetTileOnLanding(ITEMTYPE type, TILE tile, int zOffset, string name = "NULL", string typeName = "NULL TYPE", VUPDATE vUpdate = VUPDATE::ENTITY, int intType = 0,
+	SetTileOnLanding(ITEMTYPE type, TILE tile, int zOffset, string name = "NULL", string typeName = "NULL TYPE", VUpdate vUpdate = VUpdates::EntityVU, int intType = 0,
 		RGBA color = RGBA(), int damage = 1, float range = 15.0f, float useTime = 0.25f, float speed = 12, float radius = 0.4f,
 		bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, float mass = 1, int health = 1) :
 		Item(type, name, typeName, vUpdate, intType, color, damage, range, useTime, speed, radius, corporeal, shouldCollide, collideTerrain, mass, health),
 		tile(tile), zOffset(zOffset)
 	{
-		itemOD = ITEMOD::SETTILEONLANDING;
+		itemOD = ItemODs::SetTileOnLandingOD;
 	}
 };
 #pragma endregion
 #pragma region Instances
 namespace ItemODs
 {
-	void ItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void DefaultOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
 		unique_ptr<Collectible> collectible = make_unique<Collectible>(item.Clone(), pos);
 		game->entities->push_back(std::move(collectible));
@@ -1340,7 +1352,8 @@ namespace ItemODs
 
 	void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
 	{
-		item->OnDeath(callType == 2 ? ITEMOD::PLACEDONLANDING : ITEMOD::DEFAULT, item, pos, dir, vel, creator, creatorName, callReason, callType);
+		if (callType == 2) return PlacedOnLandingOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
+		return DefaultOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
 	void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
@@ -1348,7 +1361,7 @@ namespace ItemODs
 		PlacedOnLandingBoom* explosion = static_cast<PlacedOnLandingBoom*>(item.Type());
 		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
 			explosion->damage, explosion->explosionDamage, creator);
-		explosion->OnDeath(ITEMOD::PLACEDONLANDING, item, pos, dir, vel, creator, creatorName, callReason, callType);
+		PlacedOnLandingOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
 	}
 
 	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
@@ -1400,13 +1413,13 @@ namespace Hazards
 
 namespace Resources
 {
-	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", VUPDATE::ENTITY, 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, true, true);
-	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", VUPDATE::ENTITY, 1, RGBA(65, 224, 150), 0, 15, 0.25f, 12, 0.4f, false, true, true);
-	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", VUPDATE::ENTITY, 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 12, 1.5f, false, true, true);
-	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", VUPDATE::ENTITY, 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
-	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", VUPDATE::GRAVITY, 1, RGBA(80, 43, 92), 0, 15.0f, true, 3, 12, 0.4f, false, true, true);
-	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", VUPDATE::ENTITY, 1, RGBA(255, 255, 255), 0, 15, false, 0.25f, 12, 0.1f, false, true, true);
-	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", VUPDATE::ENTITY, 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
+	SetTileOnLanding ruby = SetTileOnLanding(ITEMTYPE::RUBY, TILE::RUBY_SOIL, -1, "Ruby", "Tile", VUpdates::EntityVU, 5, RGBA(168, 50, 100), 0, 15.f, 0.25f, 12.f, 0.5f, false, true, true);
+	ExplodeOnLanding emerald = ExplodeOnLanding(ITEMTYPE::EMERALD, 7.5f, 60, "Emerald", "Ammo", VUpdates::EntityVU, 1, RGBA(65, 224, 150), 0, 15, 0.25f, 12, 0.4f, false, true, true);
+	ExplodeOnLanding topaz = ExplodeOnLanding(ITEMTYPE::TOPAZ, 3.5f, 30, "Topaz", "Ammo", VUpdates::GravityVU, 1, RGBA(255, 200, 0), 0, 15.0f, 0.25f, 6, 1.5f, true, false, false, 25, 300);
+	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", VUpdates::EntityVU, 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
+	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", VUpdates::GravityVU, 1, RGBA(80, 43, 92), 0, 15.0f, true, 3, 12, 0.4f, false, true, true);
+	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", VUpdates::EntityVU, 1, RGBA(255, 255, 255), 0, 15, false, 0.25f, 12, 0.1f, false, true, true);
+	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", VUpdates::EntityVU, 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
 }
 
 namespace Collectibles

@@ -43,6 +43,49 @@ public:
 	}
 };
 
-Mesh quad, screenSpaceQuad, line, dot, rightTriangle, lineThick, cube;
+class Mesh2
+{
+public:
+	uint vbo, vao;
+	vector<float> data;
+	GLenum mode;
 
-vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line, &dot, &lineThick }; // Destroys them at the end.
+	Mesh2() : vbo(0), vao(0), data{}, mode(GL_TRIANGLES) { }
+
+	Mesh2(vector<float> data, GLenum mode = GL_TRIANGLES, GLenum drawMode = GL_STATIC_DRAW, uint dimension = 3) :
+		data(data), mode(mode)
+	{
+		glGenVertexArrays(1, &vao);
+		glGenBuffers(1, &vbo);
+
+		glBindVertexArray(vao);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], drawMode);
+
+		glVertexAttribPointer(0, dimension, GL_FLOAT, GL_FALSE, dimension * sizeof(float) * 2, (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, dimension, GL_FLOAT, GL_FALSE, dimension * sizeof(float) * 2, (void*)(sizeof(float) * dimension));
+		glEnableVertexAttribArray(1);
+	}
+
+	void Draw()
+	{
+		glBindVertexArray(vao);
+		glDrawArrays(mode, 0, data.size());
+	}
+
+	void Destroy()
+	{
+		glDeleteBuffers(1, &vbo);
+		glDeleteVertexArrays(1, &vao);
+	}
+};
+
+Mesh quad, screenSpaceQuad, line, dot, rightTriangle, lineThick, cube;
+Mesh2 shrub;
+
+vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line, &dot, &lineThick, &cube, // Destroys them at the end.
+	};
+vector<Mesh2*> mesh2s{ &shrub }; // Destroys them at the end.

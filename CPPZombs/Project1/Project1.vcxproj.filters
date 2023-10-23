@@ -116,7 +116,7 @@
     <ClInclude Include="StatusEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PsuedoVirtuals.h">
+    <ClInclude Include="fast_obj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -58,10 +58,18 @@
 #define CHUNK_VERT 123
 #define CHUNK_FRAG 124
 
+#define MODEL_VERT 125
+#define MODEL_FRAG 126
+
 
 #define PNG_FILE 200
 
 #define SPRITE_SHEET 201
 #define RETICLE_SPRITE 202
+
+
+#define OBJ_FILE 300
+
+#define SHRUB_MODEL 301
 
 // KEEP EXTRA EMPTY LINE OR WON'T COMPILE!!!

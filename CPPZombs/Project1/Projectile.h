@@ -1,6 +1,7 @@
 #include "Entities.h"
 
-EntityData projectileData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::COLLECTIBLE);
+namespace Updates { void ProjectileU(Entity* entity); } namespace VUpdates { void ProjectileVU(Entity* entity); }
+EntityData projectileData = EntityData(Updates::ProjectileU, VUpdates::ProjectileVU, DUpdates::CollectibleDU);
 class Projectile : public Entity
 {
 public:
@@ -11,9 +12,9 @@ public:
     int callType = 0; // Internal value for what type of death this projectile had.
     bool shouldCollide; // Should this collide with objects.
     bool collideTerrain;
-    VUPDATE vUpdate; // Runs instead of described by data.
+    VUpdate vUpdate; // Runs instead of described by data.
 
-    Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, VUPDATE vUpdate = VUPDATE::ENTITY, RGBA color = RGBA(),
+    Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, VUpdate vUpdate = VUpdates::EntityVU, RGBA color = RGBA(),
         float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
         Entity(data, vZero, radius, color, mass, bounciness, maxHealth, health, name, allegiance),
         range(range), damage(damage), speed(speed), vUpdate(vUpdate), begin(tTime), shouldCollide(shouldCollide), collideTerrain(collideTerrain)
@@ -100,29 +101,12 @@ namespace VUpdates
 {
     void ProjectileVU(Entity* entity)
     {
-        entity->VUpdate(static_cast<Projectile*>(entity)->vUpdate);
+        static_cast<Projectile*>(entity)->vUpdate(entity);
     }
 }
 
-namespace DUpdates
-{
-    void ProjectileDU(Entity* entity)
-    {
-        if (glm::distance2(game->PlayerPos(), entity->pos) < entity->radius * entity->radius + game->playerE->radius * game->playerE->radius +
-            COLLECTIBLE_TRANSPARENT_DIST * COLLECTIBLE_TRANSPARENT_DIST)
-        {
-            byte alpha = entity->color.a;
-            entity->color.a = static_cast<byte>(entity->color.a * (glm::distance(game->PlayerPos(), entity->pos) /
-                (COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius)));
-            entity->DUpdate(DUPDATE::ENTITY);
-            entity->color.a = alpha;
-            return;
-        }
-        entity->DUpdate(DUPDATE::ENTITY);
-    }
-}
-
-EntityData shotItemData = EntityData(UPDATE::PROJECTILE, VUPDATE::PROJECTILE, DUPDATE::COLLECTIBLE, UIUPDATE::ENTITY, ONDEATH::SHOTITEM);
+namespace OnDeaths { void ShotItemOD(Entity* entity, Entity* damageDealer); }
+EntityData shotItemData = EntityData(Updates::ProjectileU, VUpdates::ProjectileVU, DUpdates::CollectibleDU, UIUpdates::EntityUIU, OnDeaths::ShotItemOD);
 class ShotItem : public Projectile
 {
 public:
@@ -196,7 +180,7 @@ namespace OnDeaths
     void ShotItemOD(Entity* entity, Entity* damageDealer)
     {
         ShotItem* shot = static_cast<ShotItem*>(entity);
-        shot->item->OnDeath(shot->item, shot->pos, shot->dir, shot->vel, shot->creator, shot->creatorName, damageDealer, shot->callType);
+        shot->item->itemOD(shot->item, shot->pos, shot->dir, shot->vel, shot->creator, shot->creatorName, damageDealer, shot->callType);
     }
 }
 
@@ -204,7 +188,7 @@ ShotItem* basicShotItem = new ShotItem(&shotItemData, Resources::copper.Clone(),
 
 namespace ItemUs
 {
-    void ItemU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+    void DefaultU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
     {
         game->entities->push_back(basicShotItem->Clone(item.Clone(1),
             pos, dir, creator));

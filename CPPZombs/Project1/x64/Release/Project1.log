@@ -1,35 +1,36 @@
-﻿  main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1659,33): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  main.cpp
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1656,33): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(328,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(346,13): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1087,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1252,66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1336,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1084,20): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1234,66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1318,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1339,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1321,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1342,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1324,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1345,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1327,21): warning C4244: '-=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1366,22): warning C4244: '+=': conversion from 'float' to 'T', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1348,22): warning C4244: '+=': conversion from 'float' to 'T', possible loss of data
           with
           [
               T=int
           ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1368,49): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Player.h(1350,49): warning C4244: 'argument': conversion from 'float' to 'byte', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(54,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(55,61): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
           with
@@ -86,8 +87,8 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(316,38): me
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(316,38): message : see the first reference to 'std::pair<Entity *,float>::pair' in 'Entities::ExtremestOverlap'
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  1 of 6748 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    12 functions had inline decision re-evaluated but remain unchanged
+  611 of 6551 functions ( 9.3%) were compiled, the rest were copied from previous compilation.
+    24 functions were new in current compilation
+    233 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Project1.exe
+  Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Martionotany.exe

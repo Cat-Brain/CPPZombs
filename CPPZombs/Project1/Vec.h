@@ -332,4 +332,12 @@ inline Vec3 TryAdd2(Vec3 original, Vec3 additional, float maxMagnitude)
 	}
 	return original;
 }
+
+glm::mat4 PosScaleMat(Vec3 pos, Vec3 scale = vOne)
+{
+	glm::mat4 result = glm::mat4(1.0f);
+	result = glm::translate(result, pos);
+	result = glm::scale(result, scale);
+	return result;
+}
 #pragma endregion

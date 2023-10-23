@@ -3,7 +3,8 @@
 
 namespace Livestock
 {
-	EntityData eggData = EntityData(UPDATE::EGG, VUPDATE::FRICTION, DUPDATE::DTOCOL);
+	namespace Updates { void EggU(Entity* entity); }
+	EntityData eggData = EntityData(Updates::EggU, VUpdates::FrictionVU, ::DUpdates::DToColDU);
 	class Egg : public DToCol
 	{
 	public:
@@ -40,8 +41,7 @@ namespace Livestock
 
 		using DToCol::DToCol;
 	};
-
-	EntityData kiwiData = EntityData(UPDATE::KIWI, VUPDATE::FRICTION, DUPDATE::KIWI, UIUPDATE::ENTITY, ONDEATH::KIWI);
+	
 	class Kiwi : public Livestock
 	{
 	public:
@@ -203,7 +203,7 @@ namespace Livestock
 			game->DrawCone(kiwi->pos + kiwi->dir * ratio,
 				kiwi->pos + kiwi->dir * (ratio * 2), kiwi->color, ratio);
 
-			kiwi->DUpdate(DUPDATE::DTOCOL);
+			::DUpdates::DToColDU(entity);
 		}
 	}
 
@@ -218,6 +218,8 @@ namespace Livestock
 		}
 	}
 
+	EntityData kiwiData = EntityData(Updates::KiwiU, VUpdates::FrictionVU, DUpdates::KiwiDU, UIUpdates::EntityUIU, OnDeaths::KiwiOD);
+
 	Kiwi kiwi = Kiwi(&kiwiData, 10, 45.f, 1.f, 5.f, PI_F, 15.f, 0.f, 2.f, 4.f, 5.f, 0.3f, 0.1f, 5, 0.25f, RGBA(168, 109, 61), RGBA(45, 89, 26), 0.0625f, 0, 30, 30, "Kiwi");
 	Egg kiwiEgg = Egg(&eggData, &kiwi, 30.f, 0.125f, RGBA(217, 200, 158), RGBA(), 0.25f, 0, 50, 50, "Kiwi Egg");
 
@@ -227,5 +229,5 @@ namespace Livestock
 
 namespace Resources::Eggs
 {
-	PlacedOnLanding kiwiEgg = PlacedOnLanding(ITEMTYPE::KIWI_EGG, &Livestock::kiwiEgg, "Kiwi Egg", "Egg", VUPDATE::GRAVITY, 0, Livestock::kiwiEgg.color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg.radius);
+	PlacedOnLanding kiwiEgg = PlacedOnLanding(ITEMTYPE::KIWI_EGG, &Livestock::kiwiEgg, "Kiwi Egg", "Egg", VUpdates::GravityVU, 0, Livestock::kiwiEgg.color, 0, 15.f, false, 0.25f, 12.f, Livestock::kiwiEgg.radius);
 }

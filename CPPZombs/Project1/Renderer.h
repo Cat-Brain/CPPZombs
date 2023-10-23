@@ -48,11 +48,14 @@ public:
 	float sensitivity = 300;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	bool colorBand = true, vSync = true, displayFPS = true, maximized = true,
-		spawnAllTypesInTier = true, canChangeRow = false; // <- to be removed probably
-	vector<std::pair<bool*, string>> dispBoolSettings = { {&colorBand, "color band"}, {&vSync, "vSync"},
+		spawnAllTypesInTier = true, canChangeRow = false, hasLoadedModels = false; // <- to be removed probably
+
+	vector<std::pair<bool*, string>> dispBoolSettings = {
+		{&colorBand, "color band"}, {&vSync, "vSync"},
 		{&displayFPS, "display FPS"},
 		{&spawnAllTypesInTier, "spawn all types in tier"}, {&canChangeRow, "can change row"} };
-	vector<std::pair<bool*, string>> hidBoolSettings = { {&maximized, "maximized"} };
+	vector<std::pair<bool*, string>> hidBoolSettings = {
+		{&maximized, "maximized"}, {&hasLoadedModels, "Has Loaded Models"} };
 	int highScores[3] = { 0 };
 
 	void TryOpen()
@@ -309,6 +312,63 @@ private:
 			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7,  0, 4, 6, 0, 6, 2},
 			GL_TRIANGLES, GL_STATIC_DRAW, 3);
 
+		if (!settings.hasLoadedModels)
+		{
+			Resource shrubResource = Resource(SHRUB_MODEL, OBJ_FILE);
+			std::ofstream shrubStream;
+			shrubStream.open("Shrub.obj");
+			shrubStream.write(static_cast<const char*>(shrubResource.ptr), shrubResource.size);
+			settings.hasLoadedModels = true;
+			settings.Write();
+		}
+		fastObjMesh* shrubMesh = fast_obj_read("Shrub.obj");
+
+		vector<float> positions;
+		for (int i = 3; i < shrubMesh->position_count * 3; i++)
+			positions.push_back(shrubMesh->positions[i]);
+		vector<float> normals;
+		for (int i = 3; i < shrubMesh->normal_count * 3; i++)
+			normals.push_back(shrubMesh->normals[i]);
+
+		vector<uint> indices;
+		for (int i = 0; i * 3 < shrubMesh->index_count; i++)
+		{
+			indices.push_back(shrubMesh->indices[i * 3 + 2].p - 1);
+			indices.push_back(shrubMesh->indices[i * 3 + 1].p - 1);
+			indices.push_back(shrubMesh->indices[i * 3].p - 1);
+			indices.push_back(shrubMesh->indices[i * 3 + 2].n - 1);
+			indices.push_back(shrubMesh->indices[i * 3 + 1].n - 1);
+			indices.push_back(shrubMesh->indices[i * 3].n - 1);
+		}
+
+		vector<float> data;
+		for (int i = 0; i * 6 < indices.size(); i++)
+		{
+			data.push_back(positions[indices[i * 6    ] * 3]);
+			data.push_back(positions[indices[i * 6    ] * 3 + 1]);
+			data.push_back(positions[indices[i * 6    ] * 3 + 2]);
+			data.push_back(normals  [indices[i * 6 + 3] * 3]);
+			data.push_back(normals  [indices[i * 6 + 3] * 3 + 1]);
+			data.push_back(normals  [indices[i * 6 + 3] * 3 + 2]);
+
+			data.push_back(positions[indices[i * 6 + 1] * 3]);
+			data.push_back(positions[indices[i * 6 + 1] * 3 + 1]);
+			data.push_back(positions[indices[i * 6 + 1] * 3 + 2]);
+			data.push_back(normals  [indices[i * 6 + 4] * 3]);
+			data.push_back(normals  [indices[i * 6 + 4] * 3 + 1]);
+			data.push_back(normals  [indices[i * 6 + 4] * 3 + 2]);
+
+			data.push_back(positions[indices[i * 6 + 2] * 3]);
+			data.push_back(positions[indices[i * 6 + 2] * 3 + 1]);
+			data.push_back(positions[indices[i * 6 + 2] * 3 + 2]);
+			data.push_back(normals  [indices[i * 6 + 5] * 3]);
+			data.push_back(normals  [indices[i * 6 + 5] * 3 + 1]);
+			data.push_back(normals  [indices[i * 6 + 5] * 3 + 2]);
+		}
+		shrub = Mesh2(data, GL_TRIANGLES, GL_STATIC_DRAW, 3);
+
+		fast_obj_destroy(shrubMesh);
+
 		glGenBuffers(1, &instanceVBO);
 		glBindVertexArray(cube.vao);
 		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
@@ -376,7 +436,7 @@ public:
 	bool shouldRun = true;
 	Settings settings;
 	uint fpsCount = 0;
-	string name = "Martionatany";
+	string name = "Martionotany";
 	Inputs inputs;
 	Vec3 screenOffset = vZero;
 	float fov = glm::radians(90.f), nearDist = 0.1f, farDist = 100;
@@ -384,7 +444,7 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
-	string version = "v0.7.3.0-alpha";
+	string version = "v0.7.4.0-alpha";
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
 	uint instanceVBO = 0;
@@ -492,7 +552,17 @@ public:
 		glEnable(GL_CULL_FACE);
 	}
 
-	inline void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
+	void DrawMesh(Mesh2* mesh, glm::mat4 transformation, RGBA color)
+	{
+		glUseProgram(modelShader);
+		glUniformMatrix4fv(glGetUniformLocation(modelShader, "transformation"), 1, GL_FALSE, glm::value_ptr(transformation));
+
+		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
+		glUniform4f(glGetUniformLocation(modelShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		mesh->Draw();
+	}
+
+	void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
 	{
 		glUseProgram(coneShader);
 		glUniform3f(glGetUniformLocation(coneShader, "a"), a.x, a.y, a.z);

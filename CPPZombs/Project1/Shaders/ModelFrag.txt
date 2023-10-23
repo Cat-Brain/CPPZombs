@@ -1,0 +1,25 @@
+#version 330 core
+
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 normal;
+layout (location = 2) out vec4 position;
+
+in vec3 pos, norm;
+uniform vec4 color;
+
+float Mask(vec2 pos)
+{
+	return (sin(pos.x) + sin(pos.y)) * 0.25 + 0.5;
+}
+
+void main()
+{
+	if (color.a != 1. && color.a < Mask(gl_FragCoord.xy))
+	{
+		discard;
+		return;
+	}
+	FragColor = color;
+	normal = vec4(norm, 1.);
+	position = vec4(pos, 1.);
+} 

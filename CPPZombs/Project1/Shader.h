@@ -42,20 +42,21 @@ uint CreateShader(char* vertexShaderSource, char* fragmentShaderSource, string s
 }
 
 uint defaultShader, framebufferShader, cylinderShader, capsuleShader, textShader, rotatedTextShader, shadowShader, shadingShader,
-texturedShader, circleShader, sunShader, coneShader, chunkShader;
+texturedShader, circleShader, sunShader, coneShader, chunkShader, modelShader;
 
 vector<std::tuple<std::pair<int, int>, uint*, string>> shaders{
-	{{DEFAULT_VERT, DEFAULT_FRAG}, &defaultShader, "Default Shader"},
-	{{FRAMEBUFFER_VERT, FRAMEBUFFER_FRAG}, &framebufferShader, "Framebuffer Shader"},
-	{{LINE_VERT, CYLINDER_FRAG}, &cylinderShader, "Cylinder Shader"},
-	{{LINE_VERT, CAPSULE_FRAG}, &capsuleShader, "Capsule Shader"},
-	{{TEXT_VERT, TEXT_FRAG}, &textShader, "Text Shader"},
-	{{ROTATED_TEXT_VERT, ROTATED_TEXT_FRAG}, &rotatedTextShader, "Rotated Text Shader"},
-	{{SHADOW_VERT, SHADOW_FRAG}, &shadowShader, "Shadow Shader"},
-	{{SHADING_VERT, SHADING_FRAG}, &shadingShader, "Shading Shader"},
-	{{TEXTURED_VERT, TEXTURED_FRAG}, &texturedShader, "Textured Shader"},
-	{{CIRCLE_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader"},
-	{{SUN_VERT, SUN_FRAG}, &sunShader, "Sun Shader"},
-	{{LINE_VERT, CONE_FRAG}, &coneShader, "Cone Shader"},
-	{{CHUNK_VERT, CHUNK_FRAG}, &chunkShader, "Chunk Shader"},
+	{{DEFAULT_VERT, DEFAULT_FRAG}, & defaultShader, "Default Shader"},
+	{ {FRAMEBUFFER_VERT, FRAMEBUFFER_FRAG}, &framebufferShader, "Framebuffer Shader" },
+	{ {LINE_VERT, CYLINDER_FRAG}, &cylinderShader, "Cylinder Shader" },
+	{ {LINE_VERT, CAPSULE_FRAG}, &capsuleShader, "Capsule Shader" },
+	{ {TEXT_VERT, TEXT_FRAG}, &textShader, "Text Shader" },
+	{ {ROTATED_TEXT_VERT, ROTATED_TEXT_FRAG}, &rotatedTextShader, "Rotated Text Shader" },
+	{ {SHADOW_VERT, SHADOW_FRAG}, &shadowShader, "Shadow Shader" },
+	{ {SHADING_VERT, SHADING_FRAG}, &shadingShader, "Shading Shader" },
+	{ {TEXTURED_VERT, TEXTURED_FRAG}, &texturedShader, "Textured Shader" },
+	{ {CIRCLE_VERT, CIRCLE_FRAG}, &circleShader, "Circle Shader" },
+	{ {SUN_VERT, SUN_FRAG}, &sunShader, "Sun Shader" },
+	{ {LINE_VERT, CONE_FRAG}, &coneShader, "Cone Shader" },
+	{ {CHUNK_VERT, CHUNK_FRAG}, &chunkShader, "Chunk Shader" },
+	{ {MODEL_VERT, MODEL_FRAG}, &modelShader, "Model Shader" },
 };

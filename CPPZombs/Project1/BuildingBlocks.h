@@ -1,6 +1,4 @@
 #include "Projectile.h"
-
-EntityData dToColData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL);
 class DToCol : public Entity
 {
 public:
@@ -38,12 +36,12 @@ namespace DUpdates
 		DToCol* dToCol = static_cast<DToCol*>(entity);
 		RGBA tempColor = dToCol->color;
 		dToCol->color = dToCol->Color();
-		dToCol->DUpdate(DUPDATE::ENTITY);
+		DUpdates::EntityDU(entity);
 		dToCol->color = tempColor;
 	}
 }
 
-EntityData lightBlockData = EntityData(UPDATE::ENTITY, VUPDATE::FRICTION, DUPDATE::DTOCOL, UIUPDATE::ENTITY, ONDEATH::LIGHTBLOCK);
+EntityData dToColData = EntityData(Updates::EntityU, VUpdates::FrictionVU, DUpdates::DToColDU);
 class LightBlock : public DToCol
 {
 public:
@@ -100,6 +98,8 @@ namespace OnDeaths {
 	}
 }
 
+EntityData lightBlockData = EntityData(Updates::EntityU, VUpdates::FrictionVU, DUpdates::DToColDU, UIUpdates::EntityUIU, OnDeaths::LightBlockOD);
+
 namespace Shootables
 {
 	DToCol brick = DToCol(&dToColData, vZero, 0.75, RGBA(168, 101, 81), RGBA(), 15, 0.2f, 600, 600, "Brick");
@@ -110,10 +110,10 @@ namespace Shootables
 
 namespace Resources
 {
-	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", VUPDATE::GRAVITY, 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding brick = PlacedOnLanding(ITEMTYPE::BRICK, &Shootables::brick, "Brick", "Wall", VUpdates::GravityVU, 6, Shootables::brick.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 	
-	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", VUPDATE::GRAVITY, 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
-	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Wall", VUPDATE::GRAVITY, 6, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding cheese = PlacedOnLanding(ITEMTYPE::CHEESE, &Shootables::cheese, "Cheese", "Light", VUpdates::GravityVU, 3, Shootables::cheese.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
+	PlacedOnLanding shade = PlacedOnLanding(ITEMTYPE::SHADE, &Shootables::shade, "Shade", "Wall", VUpdates::GravityVU, 6, Shootables::shade.color, 0, 15, false, 0.25f, 12, 0.5f, false, true, true);
 }
 
 namespace Collectibles
@@ -123,26 +123,6 @@ namespace Collectibles
 	Collectible* cheese = new Collectible(Resources::cheese.Clone());
 	Collectible* shade = new Collectible(Resources::shade.Clone());
 }
-
-enum class TUPDATE
-{
-	DEFAULT, SHRUB, TREE, VINE
-};
-
-vector<function<bool(Entity*)>> tUpdates;
-
-class FunctionalBlockData : public EntityData
-{
-public:
-	TUPDATE tUpdate;
-
-	FunctionalBlockData(TUPDATE tUpdate = TUPDATE::DEFAULT, UPDATE update = UPDATE::ENTITY, VUPDATE vUpdate = VUPDATE::FRICTION,
-		DUPDATE dUpdate = DUPDATE::ENTITY, UIUPDATE uiUpdate = UIUPDATE::ENTITY, ONDEATH onDeath = ONDEATH::ENTITY) :
-		EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
-		tUpdate(tUpdate) {}
-};
-
-FunctionalBlockData functionalBlockData = FunctionalBlockData(TUPDATE::DEFAULT, UPDATE::FUNCTIONALBLOCK, VUPDATE::FRICTION);
 
 class FunctionalBlock : public Entity
 {
@@ -164,18 +144,7 @@ public:
 	}
 
 	FunctionalBlock() = default;
-
-	inline bool TUpdate()
-	{
-		return TUpdate(static_cast<FunctionalBlockData*>(data)->tUpdate);
-	}
-	bool TUpdate(TUPDATE tempTUpdate)
-	{
-		return tUpdates[UnEnum(tempTUpdate)](this);
-	}
 };
-
-FunctionalBlockData functionalBlock2Data = FunctionalBlockData(TUPDATE::DEFAULT, UPDATE::FUNCTIONALBLOCK2, VUPDATE::FRICTION);
 
 class FunctionalBlock2 : public Entity // Can have speed multipliers.
 {
@@ -202,15 +171,19 @@ public:
 	{
 		return game->dTime;
 	}
+};
 
-	inline bool TUpdate()
-	{
-		return TUpdate(static_cast<FunctionalBlockData*>(data)->tUpdate);
-	}
-	bool TUpdate(TUPDATE tempTUpdate)
-	{
-		return tUpdates[UnEnum(tempTUpdate)](this);
-	}
+namespace TUpdates { bool DefaultTU(Entity* entity) { return true; } }
+
+class FunctionalBlockData : public EntityData
+{
+public:
+	TUpdate tUpdate;
+
+	FunctionalBlockData(TUpdate tUpdate = TUpdates::DefaultTU, Update update = Updates::EntityU, VUpdate vUpdate = VUpdates::EntityVU,
+		DUpdate dUpdate = DUpdates::EntityDU, UIUpdate uiUpdate = UIUpdates::EntityUIU, OnDeath onDeath = OnDeaths::EntityOD) :
+		EntityData(update, vUpdate, dUpdate, uiUpdate, onDeath),
+		tUpdate(tUpdate) {}
 };
 
 namespace Updates
@@ -220,7 +193,7 @@ namespace Updates
 		FunctionalBlock* block = static_cast<FunctionalBlock*>(entity);
 		if (tTime - block->lastTime >= block->timePer)
 		{
-			if (block->TUpdate())
+			if (static_cast<FunctionalBlockData*>(block->data)->tUpdate(entity))
 				block->lastTime = tTime;
 		}
 	}
@@ -231,13 +204,14 @@ namespace Updates
 		block->timeSince += block->TimeIncrease();
 		if (block->timeSince >= block->timePer)
 		{
-			if (block->TUpdate())
+			if (static_cast<FunctionalBlockData*>(block->data)->tUpdate(entity))
 				block->timeSince -= block->timePer;
 		}
 	}
 }
 
-namespace TUpdates { bool DefaultTU(Entity* entity) { return true; } }
+FunctionalBlockData functionalBlockData = FunctionalBlockData(TUpdates::DefaultTU, Updates::FunctionalBlockU, VUpdates::FrictionVU);
+FunctionalBlockData functionalBlock2Data = FunctionalBlockData(TUpdates::DefaultTU, Updates::FunctionalBlock2U, VUpdates::FrictionVU);
 
 /*class Spring : public DToCol
 {

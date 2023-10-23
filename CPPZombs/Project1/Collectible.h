@@ -1,6 +1,7 @@
 #include "Particles.h"
 
-EntityData collectibleData = EntityData(UPDATE::COLLECTIBLE, VUPDATE::FRICTION, DUPDATE::COLLECTIBLE);
+namespace Updates { void CollectibleU(Entity* entity); } namespace DUpdates { void CollectibleDU(Entity* entity); }
+EntityData collectibleData = EntityData(Updates::CollectibleU, VUpdates::FrictionVU, DUpdates::CollectibleDU);
 class Collectible : public Entity
 {
 public:
@@ -48,23 +49,22 @@ namespace Collectibles
 	Collectible* silver = new Collectible(Resources::silver.Clone());
 }
 
+#define DEFAULT_TRANSPARENCY_DISTANCE_LERP 5.f
+
+float TransparencyDistanceLerp(Entity* a, Entity* b, float transparencyDistance = DEFAULT_TRANSPARENCY_DISTANCE_LERP)
+{
+	return (glm::distance2(a->pos, b->pos) < (transparencyDistance + a->radius + b->radius) *
+		(transparencyDistance + a->radius + b->radius)) ? ClampF01((glm::distance(a->pos, b->pos) -
+			a->radius - b->radius) / transparencyDistance) : 1;
+}
+
 namespace DUpdates
 {
-	#define COLLECTIBLE_TRANSPARENT_DIST 5.f
-
 	void CollectibleDU(Entity* entity)
 	{
-		if (glm::distance2(game->PlayerPos(), entity->pos) < (COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius) *
-			(COLLECTIBLE_TRANSPARENT_DIST + entity->radius + game->playerE->radius))
-		{
-			byte alpha = entity->color.a;
-			entity->color.a = static_cast<byte>(entity->color.a * ClampF01((glm::distance(game->PlayerPos(), entity->pos) -
-				entity->radius - game->playerE->radius) /
-				COLLECTIBLE_TRANSPARENT_DIST));
-			entity->DUpdate(DUPDATE::ENTITY);
-			entity->color.a = alpha;
-			return;
-		}
-		entity->DUpdate(DUPDATE::ENTITY); // dist < ctd + rad + rad2
+		byte alpha = entity->color.a;
+		entity->color.a = static_cast<byte>(entity->color.a * TransparencyDistanceLerp(entity, game->playerE));
+		DUpdates::EntityDU(entity);
+		entity->color.a = alpha;
 	}
 }

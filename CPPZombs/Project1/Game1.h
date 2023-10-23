@@ -5,6 +5,12 @@ class Base; class Planet;
 enum class SEEDINDICES;
 
 #pragma region Psuedo-Virtuals
+typedef function<void(Entity* entity)> Update, VUpdate, DUpdate, UIUpdate;
+typedef function<void(Entity* entity, Entity* damageDealer)> OnDeath;
+typedef function<bool(Entity* entity)> TUpdate;
+typedef function<bool(Entity* from, Entity* to)> EntityMaskFun;
+typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
+
 enum class STARTCALLBACK
 {
 	NONE, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
