@@ -107,13 +107,7 @@ public:
 
 	virtual void Start() { }
 
-	void Draw(Vec3 pos)
-	{
-		Vec3 tempPos = this->pos;
-		this->pos = pos;
-		DUpdate();
-		this->pos = tempPos;
-	}
+	void Draw(Vec3 pos);
 
 	Vec2 BottomLeft() // Not always accurate.
 	{
@@ -418,5 +412,13 @@ public:
 		update(update), vUpdate(vUpdate), dUpdate(dUpdate),
 		uiUpdate(uiUpdate), onDeath(onDeath) { }
 };
+
+void Entity::Draw(Vec3 pos)
+{
+	Vec3 tempPos = this->pos;
+	this->pos = pos;
+	data->dUpdate(this);
+	this->pos = tempPos;
+}
 
 EntityData fadeOutData = EntityData(Updates::FadeOutU, VUpdates::EntityVU , DUpdates::FadeOutDU);

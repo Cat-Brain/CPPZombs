@@ -13,13 +13,13 @@ typedef function<float(Entity* from, Entity* to)> EntityExtremetyFun;
 
 enum class STARTCALLBACK
 {
-	NONE, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
+	DEFAULT, TUTORIAL1, TUTORIAL2, TUTORIAL3, TUTORIAL4
 };
 vector<function<void()>> startCallbacks;
 
 enum class UPDATEMODE
 {
-	MAINMENU, CHAR_SELECT, SEED_SELECT, TUTORIAL_SELECT, IN_GAME, PAUSED, DEAD
+	MAIN_MENU, CHAR_SELECT, SEED_SELECT, TUTORIAL_SELECT, IN_GAME, PAUSED, DEAD
 };
 vector<function<void()>> updateModes;
 
@@ -84,8 +84,8 @@ public:
 
 	bool showUI = true;
 
-	STARTCALLBACK startCallback = STARTCALLBACK::NONE;
-	UPDATEMODE updateMode = UPDATEMODE::MAINMENU;
+	STARTCALLBACK startCallback = STARTCALLBACK::DEFAULT;
+	UPDATEMODE updateMode = UPDATEMODE::MAIN_MENU;
 	PREUPDATE preUpdate = PREUPDATE::DEFAULT;
 	POSTUPDATE postUpdate = POSTUPDATE::DEFAULT;
 
@@ -112,7 +112,7 @@ public:
 	void EndRun()
 	{
 		updateMode = UPDATEMODE::DEAD;
-		if (startCallback == STARTCALLBACK::NONE && preUpdate == PREUPDATE::DEFAULT && postUpdate == POSTUPDATE::DEFAULT)
+		if (startCallback == STARTCALLBACK::DEFAULT && preUpdate == PREUPDATE::DEFAULT && postUpdate == POSTUPDATE::DEFAULT)
 		{
 			settings.highScores[difficulty] = max(settings.highScores[difficulty], totalGamePoints);
 			settings.Write();

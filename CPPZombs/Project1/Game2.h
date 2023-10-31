@@ -848,7 +848,7 @@ namespace UpdateModes
 			game->updateMode = UPDATEMODE::SEED_SELECT;
 		}
 		if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * 0.75f)), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
-			game->updateMode = UPDATEMODE::MAINMENU;
+			game->updateMode = UPDATEMODE::MAIN_MENU;
 
 		for (int i = 0; i < characters.size(); i++)
 			if (InputHoverSquare(iVec2(0, static_cast<int>(ScrHeight() * (0.625f - i * 0.125f))), ScrHeight() / 10.0f, characters[i]->name,
@@ -877,7 +877,7 @@ namespace UpdateModes
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * (1 - 0.125f * ++i)), ScrHeight() / 10.0f, "Begin!",
 			RGBA(0, 255, 255).CLerp(RGBA(0, 0, 255), sineLerp), RGBA(0, 127, 127).CLerp(RGBA(0, 0, 127), sineLerp)))
 		{
-			game->startCallback = STARTCALLBACK::NONE;
+			game->startCallback = STARTCALLBACK::DEFAULT;
 			game->preUpdate = PREUPDATE::DEFAULT;
 			game->postUpdate = POSTUPDATE::DEFAULT;
 			game->updateMode = UPDATEMODE::IN_GAME;
@@ -956,7 +956,7 @@ namespace UpdateModes
 		if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() / 10.0f, "Back") || game->inputs.keys[KeyCode::PAUSE].pressed)
 		{
 			game->scroll = 0;
-			game->updateMode = UPDATEMODE::MAINMENU;
+			game->updateMode = UPDATEMODE::MAIN_MENU;
 		}
 
 		for (int i = 0; i < tutorialStrs.size(); i++)
@@ -1152,7 +1152,7 @@ namespace UpdateModes
 			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.625f), ScrHeight() / 10.0f, "Main Menu"))
 			{
 				game->EndRun();
-				game->updateMode = UPDATEMODE::MAINMENU;
+				game->updateMode = UPDATEMODE::MAIN_MENU;
 			}
 			if (InputHoverSquare(Vec2(0, ScrHeight() * 0.5f), ScrHeight() / 10.0f, "Settings"))
 				game->logBook->OpenSettings();
@@ -1192,7 +1192,7 @@ namespace UpdateModes
 			font.Render(p.first, { -ScrWidth(), -ScrHeight() + offset2 + scale3 * i++ }, scale4, p.second);
 	
 		if (InputHoverSquare(Vec2(0, offset + scale * i++), scale2, "Main menu"))
-			game->updateMode = UPDATEMODE::MAINMENU;
+			game->updateMode = UPDATEMODE::MAIN_MENU;
 		if (InputHoverSquare(iVec2(0, offset + scale * i++), scale2, "Restart"))
 		{
 			game->Start();
@@ -1240,11 +1240,11 @@ namespace PreUpdates
 
 		if (game->tutorialState == 0 && game->inputs.MoveDir() != vZero)
 			game->tutorialState = 1;
-		if (game->tutorialState == 1 && game->player->lastPrimary != -game->player->primaryTime)
+		if (game->tutorialState == 1 && game->player->lastPrimary != 0)
 			game->tutorialState = 2;
-		if (game->tutorialState == 2 && game->player->lastUtility != -game->player->utilityTime)
+		if (game->tutorialState == 2 && game->player->lastUtility != 0)
 			game->tutorialState = 3;
-		if (game->tutorialState == 3 && game->player->lastSecondary != -game->player->secondaryTime)
+		if (game->tutorialState == 3 && game->player->lastSecondary != 0)
 		{
 			game->tutorialState = 4;
 			// Make enemies spawn:

@@ -2,8 +2,8 @@
 difficulty = Hard
 chunk render dist = 3
 start seeds = ffftftffttffftftf
-character = 0
-high scores = 9,1795,339
+character = 2
+high scores = 9,1795,18720
 color band = true
 vSync = false
 display FPS = true

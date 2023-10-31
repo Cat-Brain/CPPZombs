@@ -340,4 +340,13 @@ glm::mat4 PosScaleMat(Vec3 pos, Vec3 scale = vOne)
 	result = glm::scale(result, scale);
 	return result;
 }
+
+glm::mat4 PosScaleRotMat(Vec3 pos, Vec3 scale, glm::vec4 rotation)
+{
+	glm::mat4 result = glm::mat4(1.0f);
+	result = glm::translate(result, pos);
+	result = glm::rotate(result, rotation.w, (Vec3)rotation);
+	result = glm::scale(result, scale);
+	return result;
+}
 #pragma endregion

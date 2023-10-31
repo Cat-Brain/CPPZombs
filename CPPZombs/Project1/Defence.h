@@ -371,7 +371,7 @@ namespace TUpdates
 		Vec3 placementPos = vine->pos + vine->radius * 2 * vine->nextPlacementPos;
 		if (vine->generation >= vine->maxGenerations)
 		{
-			vine->currentLifespan = vine->deadStage;
+			vine->currentLifespan = max(vine->currentLifespan, vine->deadStage);
 			if (vine->currentLifespan >= vine->cycToDecomp)
 			{
 				vine->ApplyHit(100000, vine);
@@ -554,10 +554,10 @@ namespace Plants
 		Vine leadVine = Vine(&vineData, Resources::lead.Clone(), ItemInstance(ITEMTYPE::LEAD_VINE_SEED), 1.6f, 2, 4, 10, 25, 10, 4.f, 0.25f, 0.5f, babyLeadVineColor, leadVineColor, deadLeadVineColor, 2, 0, 10, 10, "Lead vine");
 		
 		RGBA babyTopazVineColor = RGBA(255, 218, 84), topazVineColor = RGBA(181, 142, 0), deadTopazVineColor = RGBA(107, 84, 0);
-		Vine topazVine = Vine(&vineData, Resources::topaz.Clone(), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 1, 9, 50, 50, 10, 2.0f, 0.25f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 0, 60, 60, "Topaz vine");
+		Vine topazVine = Vine(&vineData, Resources::topaz.Clone(), ItemInstance(ITEMTYPE::TOPAZ_VINE_SEED), 0.8f, 1, 9, 50, 50, 10, 5.0f, 0.25f, 1.5f, babyTopazVineColor, topazVineColor, deadTopazVineColor, 5, 0, 30, 30, "Topaz vine");
 		
 		RGBA babySapphireVineColor = RGBA(125, 91, 212), sapphireVineColor = RGBA(132, 89, 255), deadSapphireVineColor = RGBA(75, 69, 92);
-		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 5, 100, 100, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 40, 40, "Sapphire vine");
+		Vine sapphireVine = Vine(&vineData, Resources::sapphire.Clone(), ItemInstance(ITEMTYPE::SAPPHIRE_VINE_SEED), 0.8f, 3, 5, 100, 100, 15, 0.125f, 0.25f, 0.5f, babySapphireVineColor, sapphireVineColor, deadSapphireVineColor, 1, 0, 20, 20, "Sapphire vine");
 	}
 
 	// Keep a list of all of the plants. Shrub is the base of all plants so it's what we'll use for the pointer.

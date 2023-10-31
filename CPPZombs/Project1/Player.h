@@ -242,7 +242,7 @@ public:
 	{
 		if (isBuilding)
 		{
-			if (tTime - lastUse < bItem.useTime * shootSpeed)
+			if (tTime2 - lastUse < bItem.useTime * shootSpeed)
 				return false;
 			for (Tower* tower : Defences::Towers::towers)
 				if (CanMake(tower->recipe))
@@ -250,7 +250,7 @@ public:
 			return false;
 		}
 		int index = currentIndex + width * currentRow;
-		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
+		return (*this)[index].count != 0 && tTime2 - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
 	bool Use(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
@@ -283,50 +283,12 @@ public:
 		return RemoveIfEmpty(index);
 	}
 
-	/*TryUse TryUse(float lastUse, float shootSpeed, Vec3 dir)
-	{
-		if (isBuilding)
-		{
-			if (tTime - lastUse < bItem.useTime * shootSpeed)
-				return false;
-			vector<Tower*> buildableTowers;
-			for (Tower* tower : Defences::Towers::towers)
-				if (CanMake(tower->recipe))
-					buildableTowers.push_back(tower);
-					return true;
-			return false;
-			for (Tower* tower : Defences::Towers::towers)
-				if (CanMake(tower->recipe))
-			if (buildableTowers.size() == 0) return true;
-			if (buildableTowers[currentIndex]->TryCreate(this, player->pos, dir, player))
-			{
-				// If we created a tower then we should make sure that currentIndex is still a valid value.
-				buildableTowers.clear();
-				for (Tower* tower : Defences::Towers::towers)
-					if (CanMake(tower->recipe))
-						buildableTowers.push_back(tower);
-
-				if (buildableTowers.size() == 0)
-					currentIndex = 0;
-				else
-					currentIndex = currentIndex % buildableTowers.size();
-			}
-			return true;
-		}
-		int index = currentIndex + width * currentRow;
-		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
-		int index = currentIndex + currentRow * width;
-		ItemInstance& currentItem = (*this)[index];
-		currentItem->Use(currentItem, player->pos, dir * currentItem->range, player, player->name, nullptr, 0);
-		return RemoveIfEmpty(index);
-	}*/
-
 	bool CanUseOffhand(Vec3 pos, Vec3 dir, float lastUse, float shootSpeed)
 	{
 		if (isBuilding)
-			return tTime - lastUse >= bItem.useTime * shootSpeed && game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
+			return tTime2 - lastUse >= bItem.useTime * shootSpeed && game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
 		int index = size() - 1;
-		return (*this)[index].count != 0 && tTime - lastUse >= (*this)[index]->useTime * shootSpeed;
+		return (*this)[index].count != 0 && tTime2 - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
 	bool UseOffhand(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
@@ -415,11 +377,10 @@ public:
 		iTime = 0;
 		sTime = 0;
 
-		lastPrimary = -primaryTime;
-		lastSecondary = -secondaryTime;
-		lastUtility = -utilityTime;
+		lastPrimary = 0;
+		lastSecondary = 0;
+		lastUtility = 0;
 		shouldVacuum = true;
-
 		items = PlayerInventory(this, 10, 4, startItems);
 
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
@@ -478,22 +439,22 @@ public:
 
 	virtual float PrimaryFill()
 	{
-		return min(1.f, (tTime - lastPrimary) / (items.GetCurrentItem()->useTime * shootSpeed));
+		return min(1.f, (tTime2 - lastPrimary) / (items.GetCurrentItem()->useTime * shootSpeed));
 	}
 
 	virtual float OffhandFill()
 	{
-		return min(1.f, (tTime - lastOffhand) / (items.GetCurrentOffhand()->useTime * shootSpeed));
+		return min(1.f, (tTime2 - lastOffhand) / (items.GetCurrentOffhand()->useTime * shootSpeed));
 	}
 
 	virtual float SecondaryFill()
 	{
-		return min(1.f, (tTime - lastSecondary) / secondaryTime);
+		return min(1.f, (tTime2 - lastSecondary) / secondaryTime);
 	}
 
 	virtual float UtilityFill()
 	{
-		return min(1.f, (tTime - lastUtility) / utilityTime);
+		return min(1.f, (tTime2 - lastUtility) / utilityTime);
 	}
 };
 
@@ -570,7 +531,7 @@ public:
 
 	float OffhandFill() override
 	{
-		return items.isBuilding ? Player::OffhandFill() : min(1.f, (tTime - lastOffhand) / (offhandTime));
+		return items.isBuilding ? Player::OffhandFill() : min(1.f, (tTime2 - lastOffhand) / (offhandTime));
 	}
 };
 #pragma endregion
@@ -731,11 +692,11 @@ namespace PMovements
 	{
 		player->vel = Vec3(TryAdd2V2(player->vel, Vec2(player->inputs.MoveDir()) * game->dTime * (player->moveSpeed + game->planet->friction),
 			player->maxSpeed), player->vel.z);
-		if (player->inputs.keys[KeyCode::JUMP].pressed && tTime - player->lastJump > 0.25f &&
+		if (player->inputs.keys[KeyCode::JUMP].pressed && tTime2 - player->lastJump > 0.25f &&
 			player->Grounded())
 		{
 			player->vel.z += 7 - min(0.f, player->vel.z);
-			player->lastJump = tTime;
+			player->lastJump = tTime2;
 		}
 	}
 
@@ -764,7 +725,7 @@ namespace Primaries
 	{
 		if (player->items.CanUse(player->pos, player->camDir, player->lastPrimary, player->shootSpeed))
 		{
-			player->lastPrimary = tTime + player->primaryTime;
+			player->lastPrimary = tTime2 + player->primaryTime;
 			player->items.Use(player->pos, player->camDir);
 		}
 		return false;
@@ -792,7 +753,7 @@ namespace Offhands
 	{
 		if (player->items.CanUseOffhand(player->pos, player->camDir, player->lastOffhand, player->shootSpeed))
 		{
-			player->lastOffhand = tTime + player->offhandTime;
+			player->lastOffhand = tTime2 + player->offhandTime;
 			player->items.UseOffhand(player->pos, player->camDir);
 		}
 		return false;
@@ -1109,6 +1070,7 @@ namespace Updates
 {
 	void PlayerU(Entity* entity)
 	{
+		std::cout << tTime2 << ", ";
 		Player* player = static_cast<Player*>(entity);
 
 		player->inputs = game->inputs;
@@ -1158,14 +1120,14 @@ namespace Updates
 
 			ItemInstance currentShootingItem = player->items.GetCurrentItem();
 
-			if (!player->items.isOpen && player->inputs.keys[KeyCode::PRIMARY].held && tTime - player->lastPrimary >= player->primaryTime && player->primary(player))
-				player->lastPrimary = tTime;
-			if (!player->items.isOpen && player->inputs.keys[KeyCode::OFFHAND].held && tTime - player->lastOffhand >= player->offhandTime && player->offhand(player))
-				player->lastOffhand = tTime;
-			if (player->inputs.keys[KeyCode::SECONDARY].held && tTime - player->lastSecondary >= player->secondaryTime && player->secondary(player))
-				player->lastSecondary = tTime;
-			if (player->inputs.keys[KeyCode::UTILITY].held && tTime - player->lastUtility >= player->utilityTime && player->utility(player))
-				player->lastUtility = tTime;
+			if (!player->items.isOpen && player->inputs.keys[KeyCode::PRIMARY].held && tTime2 - player->lastPrimary >= player->primaryTime && player->primary(player))
+				player->lastPrimary = tTime2;
+			if (!player->items.isOpen && player->inputs.keys[KeyCode::OFFHAND].held && tTime2 - player->lastOffhand >= player->offhandTime && player->offhand(player))
+				player->lastOffhand = tTime2;
+			if (player->inputs.keys[KeyCode::SECONDARY].held && tTime2 - player->lastSecondary >= player->secondaryTime && player->secondary(player))
+				player->lastSecondary = tTime2;
+			if (player->inputs.keys[KeyCode::UTILITY].held && tTime2 - player->lastUtility >= player->utilityTime && player->utility(player))
+				player->lastUtility = tTime2;
 			
 			 if (player->shouldVacuum)
 				 game->entities->Vacuum(player->pos, player->vacDist, player->vacSpeed, player->maxVacSpeed, player->vacMaskFun, player);
