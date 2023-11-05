@@ -84,13 +84,82 @@ public:
 	}
 };
 
-typedef function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)> ItemU;
+struct ProjUData
+{
+	Vec3 pos, dir;
+	Entity* creator;
 
-typedef function<void(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)> ItemOD; // All item on-death effects.
+	ProjUData(Vec3 pos, Vec3 dir, Entity* creator) :
+		pos(pos), dir(dir), creator(creator) { }
+};
 
-namespace ItemUs { void DefaultU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType); }
-namespace ItemODs { void DefaultOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType);
-	void GoneOnLandItemOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+struct ProjODFlags
+{
+	bool usedAmmo : 1; // 1
+	bool b : 1; //        2
+	bool c : 1; //        4
+	bool d : 1; //        8
+	bool e : 1; //       16
+	bool f : 1; //       32
+	bool g : 1; //       64
+	bool h : 1; //      128
+
+	ProjODFlags(byte value = 0)
+	{
+		*this = value; // Uses custom = operator;
+	}
+
+	inline void operator = (byte value)
+	{
+		*(byte*)this = value;
+	}
+
+	inline ProjODFlags operator | (ProjODFlags other)
+	{
+		return *((byte*)this) | *((byte*)&other);
+	}
+
+	inline ProjODFlags operator + (ProjODFlags other)
+	{
+		return *this | other;
+	}
+
+	inline byte OverlapByte(ProjODFlags other)
+	{
+		return *((byte*)this) & *((byte*)&other);
+	}
+
+	inline ProjODFlags Overlap(ProjODFlags other)
+	{
+		return ProjODFlags(OverlapByte(other));
+	}
+
+	inline bool HasOverlap(ProjODFlags other)
+	{
+		return OverlapByte(other) != 0;
+	}
+};
+
+struct ProjODData
+{
+	Vec3 pos, dir, vel;
+	Entity* creator;
+	string creatorName;
+	Entity* callReason;
+	HitResult hitType;
+	ProjODFlags flags;
+
+	ProjODData(Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, HitResult hitType, ProjODFlags flags) :
+		pos(pos), dir(dir), vel(vel), creator(creator), creatorName(creatorName), callReason(callReason), hitType(hitType), flags(flags) { }
+};
+
+typedef function<void(ItemInstance& item, ProjUData data)> ItemU;
+
+typedef function<void(ItemInstance& item, ProjODData data)> ItemOD; // All item on-death effects.
+
+namespace ItemUs { void DefaultU(ItemInstance& item, ProjUData data); }
+namespace ItemODs { void DefaultOD(ItemInstance& item, ProjODData data);
+	void GoneOnLandItemOD(ItemInstance& item, ProjODData data); }
 class Item
 {
 public:
@@ -161,10 +230,7 @@ public:
 	}
 };
 
-namespace ItemODs
-{
-	void GoneOnLandItemOD(ItemInstance item, Vec2 pos, Vec2 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType) { }
-}
+void ItemODs::GoneOnLandItemOD(ItemInstance& item, ProjODData data) { }
 
 typedef vector<ItemInstance> Recipe;
 

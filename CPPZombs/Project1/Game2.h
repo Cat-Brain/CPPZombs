@@ -51,8 +51,8 @@ void LogBook::DUpdate()
 			"or diable vacuuming"
 		};
 		float scale = ScrHeight() * 0.125f;
-		int rows = renderStrings.size() + 1;
-		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, rows - 8));
+		int rows = static_cast<int>(renderStrings.size() + 1);
+		scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0.f, rows - 8.f));
 		float offset = scroll * scale;
 		int i = 0;
 		for (string str : renderStrings)
@@ -68,8 +68,8 @@ void LogBook::DUpdate()
 		if (individualIndex == -1)
 		{
 			float scale = ScrHeight() * 0.125f;
-			int rows = Plants::plants.size() + 1;
-			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
+			int rows = static_cast<int>(Plants::plants.size() + 1);
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8.f);
 			float offset = scroll * scale;
 			if (InputHoverSquare(iVec2(0, static_cast<int>(offset + ScrHeight() * 0.875f)), ScrHeight() * 0.1f, "Return"))
 				logMode = LOGMODE::MAIN;
@@ -99,8 +99,8 @@ void LogBook::DUpdate()
 		if (individualIndex == -1)
 		{
 			float scale = ScrHeight() * 0.125f;
-			int rows = Defences::Towers::towers.size() + 1;
-			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8);
+			int rows = static_cast<int>(Defences::Towers::towers.size() + 1);
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, rows - 8.f);
 			float offset = scroll * scale;
 			if (InputHoverSquare(Vec2(0, offset + ScrHeight() * 0.875f), ScrHeight() * 0.1f, "Return"))
 				logMode = LOGMODE::MAIN;
@@ -123,8 +123,8 @@ void LogBook::DUpdate()
 			split(*tower->description, '\n', renderStrings);
 
 			float scale = ScrHeight() * 0.125f;
-			int rows = renderStrings.size() + 1;
-			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0, rows - 8));
+			int rows = static_cast<int>(renderStrings.size() + 1);
+			scroll = ClampF(scroll - game->inputs.mouseScrollF, 0, max(0.f, rows - 8.f));
 			float offset = scroll * scale;
 			int i = 0;
 			for (string str : renderStrings)
@@ -279,43 +279,43 @@ void Chunk::Finalize()
 	if ((index = game->entities->ChunkAtPos(pos + upI * CHUNK_WIDTH)) != -1)
 	{
 		zPlus = index;
-		game->entities->chunks[index].zMin = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->zMin = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// zMin
 	if ((index = game->entities->ChunkAtPos(pos + downI * CHUNK_WIDTH)) != -1)
 	{
 		zMin = index;
-		game->entities->chunks[index].zPlus = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->zPlus = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// yPlus
 	if ((index = game->entities->ChunkAtPos(pos + northI * CHUNK_WIDTH)) != -1)
 	{
 		yPlus = index;
-		game->entities->chunks[index].yMin = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->yMin = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// yMin
 	if ((index = game->entities->ChunkAtPos(pos + southI * CHUNK_WIDTH)) != -1)
 	{
 		yMin = index;
-		game->entities->chunks[index].yPlus = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->yPlus = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// xPlus
 	if ((index = game->entities->ChunkAtPos(pos + westI * CHUNK_WIDTH)) != -1)
 	{
 		xPlus = index;
-		game->entities->chunks[index].xMin = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->xMin = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// xMin
 	if ((index = game->entities->ChunkAtPos(pos + eastI * CHUNK_WIDTH)) != -1)
 	{
 		xMin = index;
-		game->entities->chunks[index].xPlus = thisIndex;
-		game->entities->chunks[index].RegenerateMesh();
+		game->entities->chunks[index]->xPlus = thisIndex;
+		game->entities->chunks[index]->RegenerateMesh();
 	}
 	GenerateMesh();
 }
@@ -350,7 +350,7 @@ void Chunk::GenerateMesh()
 		for (byte x = 1; x < CHUNK_WIDTH - 1; x++)
 			for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
 				GenTile(data, x, y, CHUNK_WIDTH - 1,
-					game->entities->chunks[zPlus].tiles[x][y][0] == 0,
+					game->entities->chunks[zPlus]->tiles[x][y][0] == 0,
 					tiles[x][y][CHUNK_WIDTH - 2] == 0,
 					tiles[x][y + 1][CHUNK_WIDTH - 1] == 0,
 					tiles[x][y - 1][CHUNK_WIDTH - 1] == 0,
@@ -361,7 +361,7 @@ void Chunk::GenerateMesh()
 			for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
 				GenTile(data, x, y, 0,
 					tiles[x][y][1] == 0,
-					game->entities->chunks[zMin].tiles[x][y][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[zMin]->tiles[x][y][CHUNK_WIDTH - 1] == 0,
 					tiles[x][y + 1][0] == 0,
 					tiles[x][y - 1][0] == 0,
 					tiles[x + 1][y][0] == 0,
@@ -374,7 +374,7 @@ void Chunk::GenerateMesh()
 				GenTile(data, x, CHUNK_WIDTH - 1, z,
 					tiles[x][CHUNK_WIDTH - 1][z + 1] == 0,
 					tiles[x][CHUNK_WIDTH - 1][z - 1] == 0,
-					game->entities->chunks[yPlus].tiles[x][0][z] == 0,
+					game->entities->chunks[yPlus]->tiles[x][0][z] == 0,
 					tiles[x][CHUNK_WIDTH - 2][z] == 0,
 					tiles[x + 1][CHUNK_WIDTH - 1][z] == 0,
 					tiles[x - 1][CHUNK_WIDTH - 1][z] == 0);
@@ -385,7 +385,7 @@ void Chunk::GenerateMesh()
 					tiles[x][0][z + 1] == 0,
 					tiles[x][0][z - 1] == 0,
 					tiles[x][1][z] == 0,
-					game->entities->chunks[yMin].tiles[x][CHUNK_WIDTH - 1][z] == 0,
+					game->entities->chunks[yMin]->tiles[x][CHUNK_WIDTH - 1][z] == 0,
 					tiles[x + 1][0][z] == 0,
 					tiles[x - 1][0][z] == 0);
 #pragma endregion
@@ -398,7 +398,7 @@ void Chunk::GenerateMesh()
 					tiles[CHUNK_WIDTH - 1][y][z - 1] == 0,
 					tiles[CHUNK_WIDTH - 1][y + 1][z] == 0,
 					tiles[CHUNK_WIDTH - 1][y - 1][z] == 0,
-					game->entities->chunks[xPlus].tiles[0][y][z] == 0,
+					game->entities->chunks[xPlus]->tiles[0][y][z] == 0,
 					tiles[CHUNK_WIDTH - 2][y][z] == 0);
 	if (xMin != -1)
 		for (byte y = 1; y < CHUNK_WIDTH - 1; y++)
@@ -409,7 +409,7 @@ void Chunk::GenerateMesh()
 					tiles[0][y + 1][z] == 0,
 					tiles[0][y - 1][z] == 0,
 					tiles[1][y][z] == 0,
-					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][y][z] == 0);
+					game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][y][z] == 0);
 #pragma endregion
 #pragma endregion
 #pragma region edge cases
@@ -424,35 +424,35 @@ void Chunk::GenerateMesh()
 					tiles[0][0][z + 1] == 0,
 					tiles[0][0][z - 1] == 0,
 					tiles[0][1][z] == 0,
-					game->entities->chunks[yMin].tiles[0][CHUNK_WIDTH - 1][z] == 0,
+					game->entities->chunks[yMin]->tiles[0][CHUNK_WIDTH - 1][z] == 0,
 					tiles[1][0][z] == 0,
-					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][0][z] == 0);
+					game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][0][z] == 0);
 			// (min, plus)
 			if (xMin != -1 && yPlus != -1)
 				GenTile(data, 0, CHUNK_WIDTH - 1, z,
 					tiles[0][CHUNK_WIDTH - 1][z + 1] == 0,
 					tiles[0][CHUNK_WIDTH - 1][z - 1] == 0,
-					game->entities->chunks[yPlus].tiles[0][0][z] == 0,
+					game->entities->chunks[yPlus]->tiles[0][0][z] == 0,
 					tiles[0][CHUNK_WIDTH - 2][z] == 0,
 					tiles[1][CHUNK_WIDTH - 1][z] == 0,
-					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0);
+					game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0);
 			// (plus, min)
 			if (xPlus != -1 && yMin != -1)
 				GenTile(data, CHUNK_WIDTH - 1, 0, z,
 					tiles[CHUNK_WIDTH - 1][0][z + 1] == 0,
 					tiles[CHUNK_WIDTH - 1][0][z - 1] == 0,
 					tiles[CHUNK_WIDTH - 1][1][z] == 0,
-					game->entities->chunks[yMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0,
-					game->entities->chunks[xPlus].tiles[0][0][z] == 0,
+					game->entities->chunks[yMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z] == 0,
+					game->entities->chunks[xPlus]->tiles[0][0][z] == 0,
 					tiles[CHUNK_WIDTH - 2][0][z] == 0);
 			// (plus, plus)
 			if (xPlus != -1 && yPlus != -1)
 				GenTile(data, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1, z,
 					tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z + 1] == 0,
 					tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][z - 1] == 0,
-					game->entities->chunks[yPlus].tiles[CHUNK_WIDTH - 1][0][z] == 0,
+					game->entities->chunks[yPlus]->tiles[CHUNK_WIDTH - 1][0][z] == 0,
 					tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 2][z] == 0,
-					game->entities->chunks[xPlus].tiles[0][CHUNK_WIDTH - 1][z] == 0,
+					game->entities->chunks[xPlus]->tiles[0][CHUNK_WIDTH - 1][z] == 0,
 					tiles[CHUNK_WIDTH - 2][CHUNK_WIDTH - 1][z] == 0);
 		}
 	}
@@ -466,37 +466,37 @@ void Chunk::GenerateMesh()
 			if (xMin != -1 && zMin != -1)
 				GenTile(data, 0, y, 0,
 					tiles[0][y][1] == 0,
-					game->entities->chunks[zMin].tiles[0][y][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[zMin]->tiles[0][y][CHUNK_WIDTH - 1] == 0,
 					tiles[0][y + 1][0] == 0,
 					tiles[0][y - 1][0] == 0,
 					tiles[1][y][0] == 0,
-					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][y][0] == 0);
+					game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][y][0] == 0);
 			// (min, plus)
 			if (xMin != -1 && zPlus != -1)
 				GenTile(data, 0, y, CHUNK_WIDTH - 1,
-					game->entities->chunks[zPlus].tiles[0][y][0] == 0,
+					game->entities->chunks[zPlus]->tiles[0][y][0] == 0,
 					tiles[0][y][CHUNK_WIDTH - 2] == 0,
 					tiles[0][y + 1][CHUNK_WIDTH - 1] == 0,
 					tiles[0][y - 1][CHUNK_WIDTH - 1] == 0,
 					tiles[1][y][CHUNK_WIDTH - 1] == 0,
-					game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][y][CHUNK_WIDTH - 1] == 0);
+					game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][y][CHUNK_WIDTH - 1] == 0);
 			// (plus, min)
 			if (xPlus != -1 && zMin != -1)
 				GenTile(data, CHUNK_WIDTH - 1, y, 0,
 					tiles[CHUNK_WIDTH - 1][y][1] == 0,
-					game->entities->chunks[zMin].tiles[CHUNK_WIDTH - 1][y][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[zMin]->tiles[CHUNK_WIDTH - 1][y][CHUNK_WIDTH - 1] == 0,
 					tiles[CHUNK_WIDTH - 1][y + 1][0] == 0,
 					tiles[CHUNK_WIDTH - 1][y - 1][0] == 0,
-					game->entities->chunks[xPlus].tiles[0][y][0] == 0,
+					game->entities->chunks[xPlus]->tiles[0][y][0] == 0,
 					tiles[CHUNK_WIDTH - 2][y][0] == 0);
 			// (plus, plus)
 			if (xPlus != -1 && zPlus != -1)
 				GenTile(data, CHUNK_WIDTH - 1, y, CHUNK_WIDTH - 1,
-					game->entities->chunks[zPlus].tiles[CHUNK_WIDTH - 1][y][0] == 0,
+					game->entities->chunks[zPlus]->tiles[CHUNK_WIDTH - 1][y][0] == 0,
 					tiles[CHUNK_WIDTH - 1][y][CHUNK_WIDTH - 2] == 0,
 					tiles[CHUNK_WIDTH - 1][y + 1][CHUNK_WIDTH - 1] == 0,
 					tiles[CHUNK_WIDTH - 1][y - 1][CHUNK_WIDTH - 1] == 0,
-					game->entities->chunks[xPlus].tiles[0][y][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[xPlus]->tiles[0][y][CHUNK_WIDTH - 1] == 0,
 					tiles[CHUNK_WIDTH - 2][y][CHUNK_WIDTH - 1] == 0);
 		}
 	}
@@ -510,35 +510,35 @@ void Chunk::GenerateMesh()
 			if (yMin != -1 && zMin != -1)
 				GenTile(data, x, 0, 0,
 					tiles[x][0][1] == 0,
-					game->entities->chunks[zMin].tiles[x][0][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[zMin]->tiles[x][0][CHUNK_WIDTH - 1] == 0,
 					tiles[x][1][0] == 0,
-					game->entities->chunks[yMin].tiles[x][CHUNK_WIDTH - 1][0] == 0,
+					game->entities->chunks[yMin]->tiles[x][CHUNK_WIDTH - 1][0] == 0,
 					tiles[x + 1][0][0] == 0,
 					tiles[x - 1][0][0] == 0);
 			// (min, plus)
 			if (yMin != -1 && zPlus != -1)
 				GenTile(data, x, 0, CHUNK_WIDTH - 1,
-					game->entities->chunks[zPlus].tiles[x][0][0] == 0,
+					game->entities->chunks[zPlus]->tiles[x][0][0] == 0,
 					tiles[x][0][CHUNK_WIDTH - 2] == 0,
 					tiles[x][1][CHUNK_WIDTH - 1] == 0,
-					game->entities->chunks[yMin].tiles[x][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[yMin]->tiles[x][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
 					tiles[x + 1][0][CHUNK_WIDTH - 1] == 0,
 					tiles[x - 1][0][CHUNK_WIDTH - 1] == 0);
 			// (plus, min)
 			if (yPlus != -1 && zMin != -1)
 				GenTile(data, x, CHUNK_WIDTH - 1, 0,
 					tiles[x][CHUNK_WIDTH - 1][1] == 0,
-					game->entities->chunks[zMin].tiles[x][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
-					game->entities->chunks[yPlus].tiles[x][0][0] == 0,
+					game->entities->chunks[zMin]->tiles[x][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[yPlus]->tiles[x][0][0] == 0,
 					tiles[x][CHUNK_WIDTH - 2][0] == 0,
 					tiles[x + 1][CHUNK_WIDTH - 1][0] == 0,
 					tiles[x - 1][CHUNK_WIDTH - 1][0] == 0);
 			// (plus, plus)
 			if (yPlus != -1 && zPlus != -1)
 				GenTile(data, x, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1,
-					game->entities->chunks[zPlus].tiles[x][CHUNK_WIDTH - 1][0] == 0,
+					game->entities->chunks[zPlus]->tiles[x][CHUNK_WIDTH - 1][0] == 0,
 					tiles[x][CHUNK_WIDTH - 1][CHUNK_WIDTH - 2] == 0,
-					game->entities->chunks[yPlus].tiles[x][0][CHUNK_WIDTH - 1] == 0,
+					game->entities->chunks[yPlus]->tiles[x][0][CHUNK_WIDTH - 1] == 0,
 					tiles[x][CHUNK_WIDTH - 2][CHUNK_WIDTH - 1] == 0,
 					tiles[x + 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
 					tiles[x - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0);
@@ -549,68 +549,68 @@ void Chunk::GenerateMesh()
 #pragma region corner cases
 	if (xPlus != -1 && yPlus != -1 && zPlus != -1)
 		GenTile(data, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1,
-			game->entities->chunks[zPlus].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0,
+			game->entities->chunks[zPlus]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0,
 			tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 2] == 0,
-			game->entities->chunks[yPlus].tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yPlus]->tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0,
 			tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 2][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[xPlus].tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[xPlus]->tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
 			tiles[CHUNK_WIDTH - 2][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0);
 	if (xPlus != -1 && yPlus != -1 && zMin != -1)
 		GenTile(data, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1, 0,
 			tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][1] == 0,
-			game->entities->chunks[zMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[yPlus].tiles[CHUNK_WIDTH - 1][0][0] == 0,
+			game->entities->chunks[zMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yPlus]->tiles[CHUNK_WIDTH - 1][0][0] == 0,
 			tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 2][0] == 0,
-			game->entities->chunks[xPlus].tiles[0][CHUNK_WIDTH - 1][0] == 0,
+			game->entities->chunks[xPlus]->tiles[0][CHUNK_WIDTH - 1][0] == 0,
 			tiles[CHUNK_WIDTH - 2][CHUNK_WIDTH - 1][0] == 0);
 	if (xPlus != -1 && yMin != -1 && zPlus != -1)
 		GenTile(data, CHUNK_WIDTH - 1, 0, CHUNK_WIDTH - 1,
-			game->entities->chunks[zPlus].tiles[CHUNK_WIDTH - 1][0][0] == 0,
+			game->entities->chunks[zPlus]->tiles[CHUNK_WIDTH - 1][0][0] == 0,
 			tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 2] == 0,
 			tiles[CHUNK_WIDTH - 1][1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[yMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[xPlus].tiles[0][0][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[xPlus]->tiles[0][0][CHUNK_WIDTH - 1] == 0,
 			tiles[CHUNK_WIDTH - 2][0][CHUNK_WIDTH - 1] == 0);
 	if (xPlus != -1 && yMin != -1 && zMin != -1)
 		GenTile(data, CHUNK_WIDTH - 1, 0, 0,
 			tiles[CHUNK_WIDTH - 1][0][1] == 0,
-			game->entities->chunks[zMin].tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[zMin]->tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0,
 			tiles[CHUNK_WIDTH - 1][1][0] == 0,
-			game->entities->chunks[yMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0,
-			game->entities->chunks[xPlus].tiles[0][0][0] == 0,
+			game->entities->chunks[yMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0,
+			game->entities->chunks[xPlus]->tiles[0][0][0] == 0,
 			tiles[CHUNK_WIDTH - 2][0][0] == 0);
 	if (xMin != -1 && yPlus != -1 && zPlus != -1)
 		GenTile(data, 0, CHUNK_WIDTH - 1, CHUNK_WIDTH - 1,
-			game->entities->chunks[zPlus].tiles[0][CHUNK_WIDTH - 1][0] == 0,
+			game->entities->chunks[zPlus]->tiles[0][CHUNK_WIDTH - 1][0] == 0,
 			tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 2] == 0,
-			game->entities->chunks[yPlus].tiles[0][0][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yPlus]->tiles[0][0][CHUNK_WIDTH - 1] == 0,
 			tiles[0][CHUNK_WIDTH - 2][CHUNK_WIDTH - 1] == 0,
 			tiles[1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0);
+			game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0);
 	if (xMin != -1 && yPlus != -1 && zMin != -1)
 		GenTile(data, 0, CHUNK_WIDTH - 1, 0,
 			tiles[0][CHUNK_WIDTH - 1][1] == 0,
-			game->entities->chunks[zMin].tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[yPlus].tiles[0][0][0] == 0,
+			game->entities->chunks[zMin]->tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yPlus]->tiles[0][0][0] == 0,
 			tiles[0][CHUNK_WIDTH - 2][0] == 0,
 			tiles[1][CHUNK_WIDTH - 1][0] == 0,
-			game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0);
+			game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][CHUNK_WIDTH - 1][0] == 0);
 	if (xMin != -1 && yMin != -1 && zPlus != -1)
 		GenTile(data, 0, 0, CHUNK_WIDTH - 1,
-			game->entities->chunks[zPlus].tiles[0][0][0] == 0,
+			game->entities->chunks[zPlus]->tiles[0][0][0] == 0,
 			tiles[0][0][CHUNK_WIDTH - 2] == 0,
 			tiles[0][1][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[yMin].tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[yMin]->tiles[0][CHUNK_WIDTH - 1][CHUNK_WIDTH - 1] == 0,
 			tiles[1][0][CHUNK_WIDTH - 1] == 0,
-			game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0);
+			game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][0][CHUNK_WIDTH - 1] == 0);
 	if (xMin != -1 && yMin != -1 && zMin != -1)
 		GenTile(data, 0, 0, 0,
 			tiles[0][0][1] == 0,
-			game->entities->chunks[zMin].tiles[0][0][CHUNK_WIDTH - 1] == 0,
+			game->entities->chunks[zMin]->tiles[0][0][CHUNK_WIDTH - 1] == 0,
 			tiles[0][1][0] == 0,
-			game->entities->chunks[yMin].tiles[0][CHUNK_WIDTH - 1][0] == 0,
+			game->entities->chunks[yMin]->tiles[0][CHUNK_WIDTH - 1][0] == 0,
 			tiles[1][0][0] == 0,
-			game->entities->chunks[xMin].tiles[CHUNK_WIDTH - 1][0][0] == 0);
+			game->entities->chunks[xMin]->tiles[CHUNK_WIDTH - 1][0][0] == 0);
 #pragma endregion
 
 	vector<uint> indices = vector<uint>(data.size() / 4 * 6);

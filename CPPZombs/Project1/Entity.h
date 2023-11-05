@@ -19,9 +19,9 @@ enum ALLEGIANCES : byte
 };
 struct Allegiance
 {
-	bool a : 1; //   1 - player
-	bool b : 1; //   2 - enemy1
-	bool c : 1; //   4 - enemy2
+	bool a : 1; //   1 - Player
+	bool b : 1; //   2 - Enemy 1
+	bool c : 1; //   4 - Enemy 2
 	bool d : 1; //   8 - 
 	bool e : 1; //  16 - 
 	bool f : 1; //  32 - 
@@ -63,7 +63,6 @@ struct Allegiance
 		return OverlapByte(other) != 0;
 	}
 };
-
 
 class Entities;
 class EntityData;
@@ -125,11 +124,11 @@ public:
 	virtual void SetPos(Vec3 newPos);
 	virtual void SetRadius(float newRadius);
 
-	virtual int ApplyHitHarmless(int damage, Entity* damageDealer); // 0 = lived, 1 = dead
-	virtual int ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
+	virtual HitResult ApplyHitHarmless(int damage, Entity* damageDealer); // 0 = lived, 1 = dead
+	virtual HitResult ApplyHit(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 	{
-		int result = ApplyHitHarmless(damage, damageDealer);
-		if (result == 1)
+		HitResult result = ApplyHitHarmless(damage, damageDealer);
+		if (result == HitResult::DIED)
 			DestroySelf(damageDealer);
 		return result;
 	}

@@ -9,10 +9,11 @@ public:
     int damage; // It's damage on hit.
     float speed; // It's speed.
     float begin; // When it was created.
-    int callType = 0; // Internal value for what type of death this projectile had.
+    HitResult hitType = HitResult::MISSED; // Internal value for what type of death this projectile had.
     bool shouldCollide; // Should this collide with objects.
     bool collideTerrain;
     VUpdate vUpdate; // Runs instead of described by data.
+    ProjODFlags flags = 0;
 
     Projectile(EntityData* data, float range = 10, int damage = 1, float speed = 8.0f, float radius = 0.5f, VUpdate vUpdate = VUpdates::EntityVU, RGBA color = RGBA(),
         float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", bool corporeal = false, bool shouldCollide = true, bool collideTerrain = false, Allegiance allegiance = 0) :
@@ -61,39 +62,29 @@ namespace Updates
 
         if (!projectile->shouldCollide)
             return projectile->MovePos();
-        int result;
+        HitResult result = HitResult::MISSED;
         if (projectile->collideTerrain)
         {
-            if ((result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
-            {
-                projectile->callType = 1 + int(result == 3);
-                projectile->DestroySelf(nullptr);
-                return;
-            }
+            if ((result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != HitResult::MISSED)
+                goto DestroySelf;
             Vec3 oldPos = projectile->pos;
             projectile->MovePos();
-            if (oldPos != projectile->pos && (result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
-            {
-                projectile->callType = 1 + int(result == 3);
-                projectile->DestroySelf(nullptr);
-            }
+            if (oldPos != projectile->pos && (result = game->entities->TryDealDamageTiles(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != HitResult::MISSED)
+                goto DestroySelf;
         }
         else
         {
-            if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
-            {
-                projectile->callType = 1 + int(result == 3);
-                projectile->DestroySelf(nullptr);
-                return;
-            }
+            if ((result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != HitResult::MISSED)
+                goto DestroySelf;
             Vec3 oldPos = projectile->pos;
             projectile->MovePos();
-            if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != 0)
-            {
-                projectile->callType = 1 + int(result == 3);
-                projectile->DestroySelf(nullptr);
-            }
+            if (oldPos != projectile->pos && (result = game->entities->TryDealDamage(projectile->damage, projectile->pos, projectile->radius, MaskF::IsNonAlly, projectile)) != HitResult::MISSED)
+                goto DestroySelf;
         }
+        return;
+        DestroySelf:
+        projectile->hitType = result;
+        projectile->DestroySelf(nullptr);
     }
 }
 
@@ -119,23 +110,7 @@ public:
         Start();
     }
 
-    ShotItem(ShotItem* baseClass, Vec3 pos, Vec3 direction, Entity* creator) :
-        ShotItem(*baseClass)
-    {
-        this->creator = creator;
-        this->dir = Normalized(direction);
-        range = item->range;
-        this->pos = pos;
-        begin = tTime;
-        if (creator != nullptr)
-        {
-            allegiance = creator->allegiance;
-            creatorName = creator->name;
-        }
-        Start();
-    }
-
-    ShotItem(ShotItem* baseClass, ItemInstance item, Vec3 pos, Vec3 direction, Entity* creator) :
+    ShotItem(ShotItem* baseClass, ItemInstance item, Vec3 pos, Vec3 direction, Entity* creator, ProjODFlags flags = 0) :
         ShotItem(*baseClass)
     {
         vUpdate = item->vUpdate;
@@ -161,17 +136,13 @@ public:
             allegiance = creator->allegiance;
             creatorName = creator->name;
         }
+        this->flags = flags;
         Start();
     }
 
-    unique_ptr<Entity> Clone(ItemInstance baseItem, Vec3 pos, Vec3 direction, Entity* creator)
+    unique_ptr<Entity> Clone(ItemInstance baseItem, Vec3 pos, Vec3 direction, Entity* creator, ProjODFlags flags = 0)
     {
-        return make_unique<ShotItem>(this, baseItem, pos, direction, creator);
-    }
-
-    unique_ptr<Entity> Clone(Vec3 pos, Vec3 direction, Entity* creator) override
-    {
-        return make_unique<ShotItem>(this, pos, direction, creator);
+        return make_unique<ShotItem>(this, baseItem, pos, direction, creator, flags);
     }
 };
 
@@ -180,7 +151,7 @@ namespace OnDeaths
     void ShotItemOD(Entity* entity, Entity* damageDealer)
     {
         ShotItem* shot = static_cast<ShotItem*>(entity);
-        shot->item->itemOD(shot->item, shot->pos, shot->dir, shot->vel, shot->creator, shot->creatorName, damageDealer, shot->callType);
+        shot->item->itemOD(shot->item, ProjODData(shot->pos, shot->dir, shot->vel, shot->creator, shot->creatorName, damageDealer, shot->hitType, shot->flags));
     }
 }
 
@@ -188,10 +159,10 @@ ShotItem* basicShotItem = new ShotItem(&shotItemData, Resources::copper.Clone(),
 
 namespace ItemUs
 {
-    void DefaultU(ItemInstance& item, Vec3 pos, Vec3 dir, Entity* creator, string creatorName, Entity* callReason, int callType)
+    void DefaultU(ItemInstance& item, ProjUData data)
     {
         game->entities->push_back(basicShotItem->Clone(item.Clone(1),
-            pos, dir, creator));
+            data.pos, data.dir, data.creator));
         item.count--;
     }
 }

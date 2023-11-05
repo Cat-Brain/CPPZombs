@@ -20,7 +20,7 @@ namespace Enemies
 			mUpdate(mUpdate), aUpdate(aUpdate) {}
 	};
 
-#define ENEMY_SIGHT_DIST 30.f
+	constexpr float ENEMY_SIGHT_DIST = 30.f;
 	class Enemy : public DToCol
 	{
 	public:
@@ -31,8 +31,8 @@ namespace Enemies
 		int points, firstWave;
 		int damage;
 
-		Enemy(EntityData* data, Allegiance allegiance = 0, Mesh2* mesh = nullptr, float timePer = 0.5f, float speed = 0.25f, float maxSpeed = 0.25f, float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f,
-			RGBA color = RGBA(), RGBA color2 = RGBA(),
+		Enemy(EntityData* data, Allegiance allegiance = 0, Mesh2* mesh = nullptr, float timePer = 0.5f, float speed = 0.25f, float maxSpeed = 0.25f,
+			float jumpTime = 0.5f, int points = 1, int firstWave = 1, int damage = 1, float radius = 0.5f, RGBA color = RGBA(), RGBA color2 = RGBA(),
 			float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME") :
 			DToCol(data, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, allegiance),
 			mesh(mesh), timePer(timePer), lastTime(0.0f), speed(speed), maxSpeed(maxSpeed), timePerMove(0.0f), lastMove(0.0f), points(points),
@@ -385,14 +385,14 @@ namespace Enemies
 			}
 		}
 
-		int ApplyHit(int damage, Entity* damageDealer) override
+		HitResult ApplyHit(int damage, Entity* damageDealer) override
 		{
-			if (health <= 0) return 1;
+			if (health <= 0) return HitResult::DIED;
 			if (next != nullptr)
 				return front->ApplyHit(damage, damageDealer);
 
-			int result = Enemy::ApplyHitHarmless(damage, damageDealer);
-			if (result == 1)
+			HitResult result = Enemy::ApplyHitHarmless(damage, damageDealer);
+			if (result == HitResult::DIED)
 			{
 				health = 0;
 				OnDeath(damageDealer);
@@ -546,7 +546,7 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int ApplyHit(int damage, Entity* damageDealer) override
+		HitResult ApplyHit(int damage, Entity* damageDealer) override
 		{
 			for (int i = 0; i < damage; i++)
 				if ((health - i) % 10 == 0)
@@ -636,7 +636,7 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int ApplyHit(int damage, Entity* damageDealer) override
+		HitResult ApplyHit(int damage, Entity* damageDealer) override
 		{
 			return Enemy::ApplyHit(Clamp(damage, -1, 1), damageDealer);
 		}
@@ -694,9 +694,9 @@ namespace Enemies
 			return std::move(newEnemy);
 		}
 
-		int ApplyHit(int damage, Entity* damageDealer) override
+		HitResult ApplyHit(int damage, Entity* damageDealer) override
 		{
-			return 0;
+			return HitResult::LIVED;
 		}
 	};
 
@@ -1448,7 +1448,7 @@ namespace Enemies
 	{
 		bool DefaultAU(Enemy* enemy)
 		{
-			return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy);
+			return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy) != HitResult::MISSED;
 		}
 
 		bool ExploderAU(Enemy* enemy)
@@ -1508,7 +1508,7 @@ namespace Enemies
 		{
 			Thief* thief = static_cast<Thief*>(enemy);
 			if (thief->grabbed != nullptr)
-				return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy);
+				return game->entities->TryDealDamage(enemy->damage, enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy) != HitResult::MISSED;
 			thief->grabbed = game->entities->FirstOverlap(enemy->BitePos(), enemy->BiteRad(), MaskF::IsNonAlly, enemy);
 			if (thief->grabbed != nullptr)
 				thief->grabbed->observers.push_back(thief);
@@ -1574,15 +1574,15 @@ namespace Enemies
 
 	int superWaveModifiers[] = { 3, 4, 5 }, difficultySeedSuperWaveCount[] = { 5, 4, 3 };
 
+	constexpr float ENEMY_SPAWN_DIST = 50.f;
+	constexpr float ENEMY_SPAWN_HEIGHT = 50.f;
+
 	class Instance : public vector<Enemy*>
 	{
 	public:
 		using vector<Enemy*>::vector;
 		bool superWave = false;
 		Entity* defaultTarget = nullptr;
-
-#define ENEMY_SPAWN_DIST 50.f
-#define ENEMY_SPAWN_HEIGHT 50.f
 		void SpawnEnemy(int index)
 		{
 			float randomValue = RandFloat() * 6.283184f;
@@ -1675,7 +1675,7 @@ namespace Enemies
 		{
 			int totalSize = 0;
 			for (int i = 0; i < size(); i++)
-				totalSize += (*this)[i].size();
+				totalSize += (int)(*this)[i].size();
 			Instance result(totalSize);
 
 			for (int x = 0, i = 0; x < size(); x++)

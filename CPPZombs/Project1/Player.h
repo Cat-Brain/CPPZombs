@@ -279,7 +279,7 @@ public:
 		}
 		int index = currentIndex + currentRow * width;
 		ItemInstance& currentItem = (*this)[index];
-		currentItem->itemU(currentItem, pos, dir, player, player->name, nullptr, 0);
+		currentItem->itemU(currentItem, ProjUData(pos, dir, player));
 		return RemoveIfEmpty(index);
 	}
 
@@ -287,32 +287,13 @@ public:
 	{
 		if (isBuilding)
 			return tTime2 - lastUse >= bItem.useTime * shootSpeed && game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
-		int index = size() - 1;
+		int index = int(size() - 1);
 		return (*this)[index].count != 0 && tTime2 - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
-	bool UseOffhand(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
-	{ // *if isBuilding is true then it will return true.
-		if (isBuilding)
-		{
-			RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
-			if (hit.index != -1)
-			{
-				Entity* hitEntity = (*game->entities)[hit.index].get();
-				if (hitEntity != reinterpret_cast<Entity*>(game->base))
-					hitEntity->ApplyHit(100000, player);
-
-			}
-			return true;
-		}
-		int index = size() - 1;
-		ItemInstance& currentItem = (*this)[index];
-		currentItem->itemU(currentItem, pos, dir, player, player->name, nullptr, 0);
-		return RemoveIfEmpty(index);
-	}
+	bool UseOffhand(Vec3 pos, Vec3 dir); // True means stack is empty* and false means the opposite.
+	// *if isBuilding is true then it will return true.
 };
-
-#define NUM_START_ITEMS 3
 
 int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
 int difficultySeedSelectQuantity[] = { 4, 5, 6 };
@@ -320,6 +301,26 @@ int difficultySeedSelectQuantity[] = { 4, 5, 6 };
 #pragma region Player Types
 typedef std::function<void(Player* player)> PMovement;
 typedef std::function<bool(Player* player)> Primary, Offhand, Secondary, Utility;
+
+class PlayerBody : public Entity
+{
+public:
+	PlayerBody(EntityData* data, Vec3 pos, Entity* creator) :
+		Entity(data, pos, creator->radius, creator->color, creator->mass, creator->bounciness, 1, 1, creator->name + "'s body", creator->allegiance)
+	{
+		this->colOverlapFun = MaskF::IsCorporealNotCreator;
+		this->creator = this->creator;
+		Start();
+	}
+
+	HitResult ApplyHit(int damage, Entity* damageDealer) override
+	{
+		HitResult result = creator->ApplyHit(damage, damageDealer);
+		if (result == HitResult::DIED)
+			DestroySelf(damageDealer);
+		return result;
+	}
+};
 
 namespace Updates { void PlayerU(Entity* entity); void FlareU(Entity* entity); } namespace DUpdates { void PlayerDU(Entity* entity); }
 namespace UIUpdates { void PlayerUIU(Entity* entity); void FlareUIU(Entity* entity); void EngineerUIU(Entity* entity); }
@@ -403,7 +404,7 @@ public:
 		return make_unique<Player>(this, startSeeds, pos);
 	}
 
-	int ApplyHit(int damage, Entity* damageDealer) override
+	HitResult ApplyHit(int damage, Entity* damageDealer) override
 	{
 		if (damageDealer == this)
 			return LightBlock::ApplyHit(damage, damageDealer);
@@ -630,7 +631,7 @@ public:
 
 FlameGlob flameGlob = FlameGlob(&flameGlobData, &flamePuddle, JRGB(255, 127), 15, 0.25f, RGBA(255, 255), 0.25f, 0, 60, "Grenade");
 
-namespace ItemODs { void FlareFlameOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void FlareFlameOD(ItemInstance& item, ProjODData data); }
 class FlareFlame : public Item
 {
 public:
@@ -775,9 +776,9 @@ namespace Offhands
 
 namespace Secondaries
 {
+	constexpr float GRENADE_THROW_SPEED = 20.f;
 	bool GrenadeThrow(Player* player)
 	{
-#define GRENADE_THROW_SPEED 20.f
 		game->entities->push_back(grenade.Clone(player->pos + player->camDir * player->radius, player->camDir * GRENADE_THROW_SPEED, player));
 		return true;
 	}
@@ -810,7 +811,7 @@ namespace Utilities
 {
 	bool TacticoolRoll(Player* player)
 	{
-#define TACTICOOL_ROLL_SPEED 15.f
+		constexpr float TACTICOOL_ROLL_SPEED = 15.f;
 		Vec3 dir = game->inputs.MoveDir();
 
 		if (dir == vZero)
@@ -826,7 +827,7 @@ namespace Utilities
 		if (flare->currentFlame < 1) return false;
 		flare->currentFlame--;
 		ItemInstance temp = ItemInstance(ITEMTYPE::FLARE_FLAME, 999);
-		temp->itemU(temp, flare->pos, flare->dir, flare, flare->name, nullptr, 0);
+		temp->itemU(temp, ProjUData(flare->pos, flare->dir, flare));
 		return true;
 	}
 
@@ -890,7 +891,7 @@ public:
 		return make_unique<Base>(this, pos);
 	}
 
-	int ApplyHit(int damage, Entity* damageDealer) override
+	HitResult ApplyHit(int damage, Entity* damageDealer) override
 	{
 		if (damage > 0)
 			timeSinceHit = 0;
@@ -902,6 +903,26 @@ public:
 Base soldierBase = Base(&baseData, JRGB(127, 127, 255), true, 15, 2.5f, RGBA(127, 127, 255), RGBA(), 10, 0.25f, 360, "base");
 vector<Base*> charBases = { &soldierBase, &soldierBase, &soldierBase };
 #pragma endregion
+
+bool PlayerInventory::UseOffhand(Vec3 pos, Vec3 dir)
+{
+	if (isBuilding)
+	{
+		RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
+		if (hit.index != -1)
+		{
+			Entity* hitEntity = (*game->entities)[hit.index].get();
+			if (hitEntity != static_cast<Entity*>(game->base))
+				hitEntity->ApplyHit(100000, player);
+
+		}
+		return true;
+	}
+	int index = int(size() - 1);
+	ItemInstance& currentItem = (*this)[index];
+	currentItem->itemU(currentItem, ProjUData(pos, dir, player));
+	return RemoveIfEmpty(index);
+}
 
 namespace OnDeaths
 {
@@ -940,9 +961,9 @@ namespace OnDeaths
 
 namespace ItemODs
 {
-	void FlareFlameOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void FlareFlameOD(ItemInstance& item, ProjODData data)
 	{
-		if (callType != 0 && game->player && game->player->name == "Flare")
+		if (data.hitType != HitResult::MISSED && game->player && game->player->name == "Flare")
 			static_cast<Flare*>(game->player)->currentFlame += static_cast<FlareFlame*>(item.Type())->flameRestore;
 	}
 }
@@ -1042,7 +1063,7 @@ void PlayerInventory::Update(bool shouldScroll)
 		isHovering = true;
 		if (game->inputs.keys[KeyCode::PRIMARY].pressed)
 		{
-			int newSelected = size() - 1;
+			int newSelected = int(size() - 1);
 			if (currentSelected == -1)
 				currentSelected = newSelected;
 			else if (currentSelected == newSelected)
@@ -1193,7 +1214,7 @@ namespace Updates
 				if (e == creator && (itr = std::find_if(e->statuses.begin(), e->statuses.end(), [](StatusEffect const& s) { return s.status == STATUS::FLARE_FIRE; })) != e->statuses.end())
 					itr->timeTillRemove = 3;
 				else
-					e->statuses.push_back(StatusEffect(e, STATUS::FLARE_FIRE, e == creator ? 3 : 1));
+					e->statuses.push_back(StatusEffect(e, STATUS::FLARE_FIRE, e == creator ? 3.f : 1.f));
 
 				creator->currentFlame++;
 			}
@@ -1210,7 +1231,7 @@ namespace Updates
 			game->entities->ExtremestOverlap(turret->pos, turret->projectiles->range, MaskF::IsNonAlly, ExtrF::SqrDist, turret).first) != nullptr)
 		{
 			turret->dir = Normalized(hitEntity->pos - turret->pos);
-			turret->projectiles->itemU(turret->projectiles, turret->pos, turret->dir, turret->creator, turret->name, nullptr, 0);
+			turret->projectiles->itemU(turret->projectiles, ProjUData(turret->pos, turret->dir, turret->creator));
 			if (turret->projectiles.count <= 0)
 				return turret->DestroySelf(nullptr);
 			turret->timeTill = turret->timePer * turret->projectiles->useTime;
@@ -1276,7 +1297,7 @@ namespace UIUpdates
 		// Ability UI:
 		int scrHeight = ScrHeight();
 		float scale = scrHeight / 30.f;
-		iVec2 offset = iVec2(ScrWidth(), -scrHeight);
+		Vec2 offset = iVec2(ScrWidth(), -scrHeight);
 		offset.x -= scale * 2;
 		game->DrawFBL(offset, RGBA(0, 0, 0), Vec2(scale));
 		game->DrawFBL(offset, RGBA(255, 0, 0), Vec2(scale, scale * player->UtilityFill()));
@@ -1301,7 +1322,7 @@ namespace UIUpdates
 		if (!game->showUI) return;
 		PlayerUIU(entity);
 		float scale = ScrHeight() / 30.f;
-		iVec2 offset = iVec2(ScrWidth() - scale * 8, scale * 2 - ScrHeight());
+		Vec2 offset = Vec2(ScrWidth() - scale * 8, scale * 2 - ScrHeight());
 		game->DrawFBL(offset, RGBA(18, 156, 163), Vec2(scale * 4, scale));
 		game->DrawFBL(offset, RGBA(163, 71, 18), Vec2(4 * scale * flare->currentFlame / flare->maxFlame, scale));
 		vector<StatusEffect>::iterator itr;
@@ -1309,7 +1330,7 @@ namespace UIUpdates
 		{
 			offset.y += scale * 2;
 			float ratio = 0.33333f * itr->timeTillRemove;
-			game->DrawFBL(offset, RGBA(41, 45, 74, ratio * 255), Vec2(scale * 4, scale));
+			game->DrawFBL(offset, RGBA(41, 45, 74, byte(ratio * 255)), Vec2(scale * 4, scale));
 			game->DrawFBL(offset, RGBA(15, 35, 166).CLerp(RGBA(104, 201, 212), 0.5f + 0.5f * sinf(tTime * PI_F * 3)).CLerp(
 				RGBA(15, 35, 166).CLerp(RGBA(104, 201, 212), 0.5f), 1 - ratio), Vec2(4 * scale * ratio, scale));
 		}
@@ -1347,7 +1368,7 @@ namespace StatusFuncs
 		status.entity->frictionMultiplier *= 0.1f;
 	}
 
-#define FLARE_FIRE_SPD 2
+	constexpr int FLARE_FIRE_SPD = 2;
 	void FlareFireStr(StatusEffect& status)
 	{
 		if (status.entity == game->player && game->player->name == "Flare")

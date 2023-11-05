@@ -148,7 +148,7 @@ namespace Livestock
 			else
 			{
 				kiwi->fullness -= game->dTime * kiwi->foodPerSecond;
-				if (kiwi->fullness < 0 && int(tTime) != int(tTime - game->dTime) && kiwi->ApplyHit(1, kiwi) == 1)
+				if (kiwi->fullness < 0 && int(tTime) != int(tTime - game->dTime) && kiwi->ApplyHit(1, kiwi) == HitResult::DIED)
 					return;
 			}
 			switch (kiwi->ai)

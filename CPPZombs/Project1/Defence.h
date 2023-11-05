@@ -247,17 +247,16 @@ public:
 		}
 	}
 
-	int ApplyHit(int damage, Entity* damageDealer) override
+	HitResult ApplyHit(int damage, Entity* damageDealer) override
 	{
-		if (health <= 0) return 1;
+		if (health <= 0) return HitResult::DIED;
 		if (back != nullptr)
 			return base->ApplyHit(damage, damageDealer);
 
-		int result = Shrub::ApplyHitHarmless(damage, damageDealer);
-		if (result == 1)
+		HitResult result = Shrub::ApplyHitHarmless(damage, damageDealer);
+		if (result == HitResult::DIED)
 		{
 			health = 0;
-			OnDeath(damageDealer);
 			DelayedDestroySelf();
 		}
 		return result;
@@ -587,7 +586,7 @@ namespace Resources::Seeds
 	// Vines
 	PlacedOnLanding cheeseVineSeed = PlacedOnLanding(ITEMTYPE::CHEESE_VINE_SEED, &Plants::Vines::cheeseVine, "Cheese vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::cheeseVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::cheeseVine.babyRadius, false, true, true);
 	PlacedOnLanding topazVineSeed = PlacedOnLanding(ITEMTYPE::TOPAZ_VINE_SEED, &Plants::Vines::topazVine, "Topaz vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::topazVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::topazVine.babyRadius, false, true, true);
-	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", VUpdates::GravityVU, 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
+	CorruptOnKill sapphireVineSeed = CorruptOnKill(ITEMTYPE::SAPPHIRE_VINE_SEED, &Plants::Vines::sapphireVine, "Sapphire vine seed", "Corruption Seed", VUpdates::EntityVU, 2, Plants::Vines::sapphireVineColor, 10, 15.f, false, 0.25f, 12.f, Plants::Vines::sapphireVine.babyRadius);
 	PlacedOnLanding leadVineSeed = PlacedOnLanding(ITEMTYPE::LEAD_VINE_SEED, &Plants::Vines::leadVine, "Lead vine seed", "Seed", VUpdates::GravityVU, 4, Plants::Vines::leadVineColor, 0, 15.f, false, 0.25f, 12.f, Plants::Vines::leadVine.babyRadius, false, true, true);
 
 	// Keep a list of all of the seeds.

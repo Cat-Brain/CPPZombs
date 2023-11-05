@@ -44,13 +44,13 @@ typedef int8_t sByte; // Signed byte
 #pragma endregion
 
 #pragma region Global variables
-#define PI_F 3.141592f
-#define PI_D 3.14159275
+constexpr float PI_F = 3.141592f;
+constexpr float PI_D = 3.14159275;
 
-#define SQRTTWO_F 1.41421356f
-#define SQRTTWO_D 1.41421356237
+constexpr float SQRTTWO_F = 1.41421356f;
+constexpr float SQRTTWO_D = 1.41421356237;
 
-#define CHUNK_WIDTH 16
+constexpr int CHUNK_WIDTH = 16;
 
 uint trueScreenWidth, trueScreenHeight;
 float screenRatio; // Width / height
@@ -178,3 +178,12 @@ int PsuedoRandom()
 
 int ScrWidth();
 int ScrHeight();
+
+#pragma region Enum Classes
+enum class HitResult : sByte
+{
+	LIVED, DIED,
+	HIT_TERRAIN,
+	MISSED = -1
+};
+#pragma endregion

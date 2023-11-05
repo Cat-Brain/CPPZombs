@@ -73,6 +73,7 @@ public:
     }
 };
 
+constexpr int DEFFERED_CHANNEL_COUNT = 3;
 class DeferredFramebuffer : public Framebuffer
 {
 public:
@@ -115,8 +116,7 @@ public:
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, positionBuffer, 0);
-        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-#define DEFFERED_CHANNEL_COUNT 3
+        // tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
         uint attachments[DEFFERED_CHANNEL_COUNT] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
         glDrawBuffers(DEFFERED_CHANNEL_COUNT, attachments);
         // create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
@@ -146,9 +146,9 @@ public:
     }
 };
 
-#define TRUESCREEN 0
-#define MAINSCREEN 1
-#define SHADOWMAP 2
+constexpr int TRUESCREEN = 0;
+constexpr int MAINSCREEN = 1;
+constexpr int SHADOWMAP = 2;
 unique_ptr<DeferredFramebuffer> mainScreen;
 unique_ptr<Framebuffer> shadowMap;
 vector<Framebuffer*> framebuffers;

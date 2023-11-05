@@ -1,7 +1,7 @@
 
 difficulty = Hard
-chunk render dist = 3
-start seeds = ffftftffttffftftf
+chunk render dist = 7
+start seeds = ftftffftttffffftf
 character = 2
 high scores = 9,1795,18720
 color band = true

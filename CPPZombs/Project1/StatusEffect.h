@@ -33,7 +33,7 @@ enum class STATUS
 	FLARE_FIRE
 };
 
-#define ARTIFICIALLY_DESTROYED -10
+constexpr int ARTIFICIALLY_DESTROYED = -10;
 
 class StatusEffect
 {

@@ -16,8 +16,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void window_maximize_callback(GLFWwindow* window, int maximized);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-#define START_SCR_WIDTH 990
-#define START_SCR_HEIGHT 990
+constexpr int START_SCR_WIDTH = 990;
+constexpr int START_SCR_HEIGHT = 990;
 
 enum DIFFICULTY
 {
@@ -282,24 +282,24 @@ private:
 		glfwSetCursor(window, cursor);
 
 
-		for (std::tuple<std::pair<int, int>, uint*, string>& pairPair : shaders)
+		for (auto& [locations, shader, shaderName] : shaders)
 		{
-			Resource vert(std::get<0>(pairPair).first, TEXT_FILE);
+			Resource vert(locations.first, TEXT_FILE);
 			char* vert2 = new char[vert.size + 2];
 			for (int i = 0; i < vert.size; i++)
 				vert2[i] = ((char*)vert.ptr)[i];
 			vert2[vert.size] = '\0';
-			Resource frag(std::get<0>(pairPair).second, TEXT_FILE);
+			Resource frag(locations.second, TEXT_FILE);
 			char* frag2 = new char[frag.size + 2];
 			for (int i = 0; i < frag.size; i++)
 				frag2[i] = ((char*)frag.ptr)[i];
 			frag2[frag.size] = '\0';
-			*(std::get<1>(pairPair)) = CreateShader(vert2, frag2, std::get<2>(pairPair));
+			*shader = CreateShader(vert2, frag2, shaderName);
 		}
 
 		uint textureType = std::get<0>(textures);
-		for (std::tuple<Texture&, int, int>& textureTuple : std::get<1>(textures))
-			std::get<0>(textureTuple) = Texture(std::get<1>(textureTuple), textureType, std::get<2>(textureTuple));
+		for (auto& [texture, location, spriteCount] : std::get<1>(textures))
+			texture = Texture(location, textureType, spriteCount);
 
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
@@ -423,8 +423,8 @@ private:
 			glDeleteProgram(*(std::get<1>(pairPair)));
 		for (Framebuffer* framebuffer : framebuffers)
 			framebuffer->Destroy();
-		for (std::tuple<Texture&, int, int>& textureTuple : std::get<1>(textures))
-			std::get<0>(textureTuple).Destroy();
+		for (auto& [texture, location, spriteCount] : std::get<1>(textures))
+			texture.Destroy();
 		for (Mesh* mesh : meshes)
 			mesh->Destroy();
 		glfwTerminate();
@@ -444,7 +444,7 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
-	string version = "v0.7.4.3-alpha";
+	string version = "v0.7.4.4-alpha";
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
 	uint instanceVBO = 0;

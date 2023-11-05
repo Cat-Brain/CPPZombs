@@ -49,7 +49,7 @@ namespace Collectibles
 	Collectible* silver = new Collectible(Resources::silver.Clone());
 }
 
-#define DEFAULT_TRANSPARENCY_DISTANCE_LERP 5.f
+constexpr float DEFAULT_TRANSPARENCY_DISTANCE_LERP = 5.f;
 
 float TransparencyDistanceLerp(Entity* a, Entity* b, float transparencyDistance = DEFAULT_TRANSPARENCY_DISTANCE_LERP)
 {

@@ -1,6 +1,6 @@
 #include "LightSource.h"
 
-#define RUBY_SOIL_MULTIPLIER 2.f
+constexpr float RUBY_SOIL_MULTIPLIER = 2;
 enum class TILE : byte // The " : byte" forces this enum to be a single byte in size instead of the default of 4.
 {
 	AIR, ROCK, SAND, BAD_SOIL, MID_SOIL, MAX_SOIL, RUBY_SOIL, HIGH_ROCK, SNOW

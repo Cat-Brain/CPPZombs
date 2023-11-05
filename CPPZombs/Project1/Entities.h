@@ -38,7 +38,7 @@ public:
 	vector<unique_ptr<Particle>> particles;
 	vector<Entity*> toDelEntities;
 	vector<unique_ptr<Entity>> toAddEntities;
-	vector<Chunk> chunks;
+	vector<unique_ptr<Chunk>> chunks;
 	vector<Chunk*> renderedChunks;
 	bool createdChunkThisFrame = false;
 
@@ -50,8 +50,8 @@ public:
 
 	~Entities()
 	{
-		for (Chunk chunk : chunks)
-			chunk.DestroyMesh();
+		for (unique_ptr<Chunk>& chunk : chunks)
+			chunk->DestroyMesh();
 	}
 
 	void DelayedDestroy(Entity* entity)
@@ -93,7 +93,7 @@ public:
 
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(entityPtr->pos, entityPtr->radius);
 		for (int chunk : chunkOverlaps)
-			chunks[chunk].push_back(index);
+			chunks[chunk]->push_back(index);
 	}
 #pragma endregion
 #pragma region Overlaps and Collision Stuff
@@ -101,14 +101,14 @@ public:
 	int ChunkAtPos(iVec3 pos)
 	{
 		for (int i = 0; i < chunks.size(); i++)
-			if (chunks[i].pos == pos)
+			if (chunks[i]->pos == pos)
 				return i;
 		return -1;
 	}
 
 	Chunk* ChunkAtFPos(Vec3 pos)
 	{
-		return &chunks[ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH)];
+		return chunks[ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH)].get();
 	}
 
 	vector<int> MainChunkOverlaps(iVec3 minPos, iVec3 maxPos) // In chunk coords, do NOT plug in normal space coords.
@@ -135,8 +135,8 @@ public:
 						continue;
 					}
 					result[i++] = static_cast<int>(chunks.size());
-					chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
-					chunks[chunks.size() - 1].Finalize();
+					chunks.push_back(make_unique<Chunk>(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+					chunks[chunks.size() - 1]->Finalize();
 				}
 		return result;
 	}
@@ -159,8 +159,8 @@ public:
 			for (int y = minPos.y; y <= maxPos.y; y++)
 				for (int z = minPos.z; z <= maxPos.z; z++)
 				{
-					Chunk& chunk = chunks[ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH))];
-					chunk.erase(find(chunk.begin(), chunk.end(), index));
+					unique_ptr<Chunk>& chunk = chunks[ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH))];
+					chunk->erase(find(chunk->begin(), chunk->end(), index));
 				}
 	}
 
@@ -176,12 +176,12 @@ public:
 		vector<int> chunkOverlaps = FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - chunks[i].pos);
-			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - chunks[i]->pos);
+			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - chunks[i]->pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
 					for (int z = minPos.z; z <= maxPos.z; z++)
-						if (chunks[i].TileAtCPos(Vec3(x, y, z)) != UnEnum(TILE::AIR) && BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						if (chunks[i]->TileAtCPos(Vec3(x, y, z)) != UnEnum(TILE::AIR) && BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f, Vec3(0.5f)))
 							return true;
 		}
 		return false;
@@ -190,7 +190,7 @@ public:
 	bool CubeDoesOverlap(vector<int> chunkOverlaps, Vec3 pos, Vec3 dim, EntityMaskFun func, Entity* from = nullptr)
 	{
 		for (int chunk : chunkOverlaps)
-			for (vector<int>::iterator iter = chunks[chunk].begin(); iter != chunks[chunk].end(); iter++)
+			for (vector<int>::iterator iter = chunks[chunk]->begin(); iter != chunks[chunk]->end(); iter++)
 				if ((*this)[*iter] && BoxCircleOverlap((*this)[*iter]->pos, (*this)[*iter]->radius, pos, dim) && (*this)[*iter]->active && func(from, (*this)[*iter].get())) return true;
 		return false;
 	}
@@ -205,7 +205,7 @@ public:
 	{
 		Entity* tempEnt;
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk].get())
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt)) return true;
@@ -222,7 +222,7 @@ public:
 	{
 		Entity* tempEnt;
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk])
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt)) return tempEnt;
@@ -240,7 +240,7 @@ public:
 		Entity* tempEnt;
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk])
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt) &&
@@ -259,7 +259,7 @@ public:
 		Entity* tempEnt;
 		vector<Entity*> overlaps{};
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk])
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active &&
@@ -278,7 +278,7 @@ public:
 		Entity* tempEnt;
 		vector<Entity*> successful{}, unsuccessful{};
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk])
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && ((func(from, tempEnt) &&
@@ -308,7 +308,7 @@ public:
 	{
 		int index = ChunkAtPos(ToIV3(pos * (1.f / CHUNK_WIDTH)) * CHUNK_WIDTH);
 		if (index == -1) return UnEnum(TILE::AIR);
-		return chunks[index].TileAtPos(ToIV3(pos));
+		return chunks[index]->TileAtPos(ToIV3(pos));
 	}
 
 	std::pair<Entity*, float> ExtremestOverlap(vector<int> chunkOverlaps, Vec3 pos, float radius, EntityMaskFun func, EntityExtremetyFun extr, Entity* from = nullptr)
@@ -317,7 +317,7 @@ public:
 		float tempExtr;
 		Entity* tempEnt;
 		for (int chunk : chunkOverlaps)
-			for (int i : chunks[chunk])
+			for (int i : *chunks[chunk])
 			{
 				tempEnt = (*this)[i].get();
 				if (tempEnt != nullptr && tempEnt->Overlaps(pos, radius) && tempEnt->active && func(from, tempEnt) &&
@@ -395,7 +395,7 @@ public:
 		{
 			int chunk = ChunkAtPos(ToIV3(pos));
 			if (chunk == -1) break;
-			for (int index : chunks[chunk])
+			for (int index : *chunks[chunk])
 			{
 				if (!func(from, (*this)[index].get())) continue;
 				RaycastHit newHit = RaySphere(ro, rd, glm::vec4((*this)[index]->pos, (*this)[index]->radius), index);
@@ -446,105 +446,105 @@ public:
 	}
 #pragma endregion
 #pragma region Damage stuff
-	int TryDealDamage(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
+	HitResult TryDealDamage(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			return 2 + entity->ApplyHit(damage, from);
-		return 0;
+			return entity->ApplyHit(damage, from);
+		return HitResult::MISSED;
 	}
 
-	int TryDealDamageAll(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
+	HitResult TryDealDamageAll(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
-		int result = 0;
+		HitResult result = HitResult::MISSED;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			result = 2 + entity->ApplyHit(damage, from);
+			result = entity->ApplyHit(damage, from);
 		return result;
 	}
 
-	int TryDealDamageAllUp(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
+	HitResult TryDealDamageAllUp(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr) // Can't hit tiles!!!
 	{
-		int result = 0;
+		HitResult result = HitResult::MISSED;
 		vector<Entity*> hitEntities = FindOverlaps(pos, radius, func, from);
 		for (Entity* entity : hitEntities)
 			if (entity->pos.z + entity->radius > pos.z)
-			result = 2 + entity->ApplyHit(damage, from);
+				result = entity->ApplyHit(damage, from);
 		return result;
 	}
 
-	int TryDealDamageTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
+	HitResult TryDealDamageTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
-			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i]->pos);
+			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i]->pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
 					for (int z = minPos.z; z <= maxPos.z; z++)
-						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
-							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						if (game->entities->chunks[i]->TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f, Vec3(0.5f)))
 						{
 							Chunk::DamageTile(damage, i, x, y, z);
-							return 1;
+							return HitResult::HIT_TERRAIN;
 						}
 		}
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			return 2 + entity->ApplyHit(damage, from);
-		return 0;
+			return entity->ApplyHit(damage, from);
+		return HitResult::MISSED;
 	}
 
-	int TryDealDamageAllTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
+	HitResult TryDealDamageAllTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
-		int result = 0;
+		HitResult result = HitResult::MISSED;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
-			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i]->pos);
+			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i]->pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
 					for (int z = minPos.z; z <= maxPos.z; z++)
-						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
-							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						if (game->entities->chunks[i]->TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f, Vec3(0.5f)))
 						{
 							Chunk::DamageTile(damage, i, x, y, z);
-							result = 1;
+							result = HitResult::HIT_TERRAIN;
 						}
 		}
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
-			result = 2 + entity->ApplyHit(damage, from);
+			result = entity->ApplyHit(damage, from);
 		return result;
 	}
 
-	int TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
+	HitResult TryDealDamageAllUpTiles(int damage, Vec3 pos, float radius, EntityMaskFun func, Entity* from = nullptr)
 	{
-		int result = 0;
+		HitResult result = HitResult::MISSED;
 		vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 		for (int i : chunkOverlaps)
 		{
-			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - Vec3(radius, radius, 0)) - game->entities->chunks[i].pos);
-			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+			iVec3 minPos = glm::max(vZeroI, ToIV3(pos - Vec3(radius, radius, 0)) - game->entities->chunks[i]->pos);
+			iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i]->pos);
 			for (int x = minPos.x; x <= maxPos.x; x++)
 				for (int y = minPos.y; y <= maxPos.y; y++)
 					for (int z = minPos.z; z <= maxPos.z; z++)
-						if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
-							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
+						if (game->entities->chunks[i]->TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR) &&
+							BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f, Vec3(0.5f)))
 						{
 							Chunk::DamageTile(damage, i, x, y, z);
-							result = 1;
+							result = HitResult::HIT_TERRAIN;
 						}
 		}
 
 		vector<Entity*> hitEntities = FindOverlaps(chunkOverlaps, pos, radius, func, from);
 		for (Entity* entity : hitEntities)
 			if (entity->pos.z + entity->radius > pos.z)
-				result = 2 + entity->ApplyHit(damage, from);
+				result = entity->ApplyHit(damage, from);
 		return result;
 	}
 #pragma endregion
@@ -675,16 +675,16 @@ public:
 						}
 						else if (!createdChunkThisFrame)
 						{
-							chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
-							chunks[chunks.size() - 1].Finalize();
+							chunks.push_back(make_unique<Chunk>(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+							chunks[chunks.size() - 1]->Finalize();
 						}
 					}
 					else
 					{
 						if (ChunkAtPos(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)) == -1 && !createdChunkThisFrame)
 						{
-							chunks.push_back(Chunk(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
-							chunks[chunks.size() - 1].Finalize();
+							chunks.push_back(make_unique<Chunk>(iVec3(x * CHUNK_WIDTH, y * CHUNK_WIDTH, z * CHUNK_WIDTH)));
+							chunks[chunks.size() - 1]->Finalize();
 						}
 					}
 				}
@@ -717,7 +717,7 @@ public:
 			// Chunks:
 			glUseProgram(chunkShader);
 			for (int i : chunkOverlaps)
-				chunks[i].Draw();
+				chunks[i]->Draw();
 		}
 	}
 
@@ -794,22 +794,8 @@ public:
 
 
 #pragma region Post Entities functions
-
-namespace HitResult
+HitResult Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
 {
-	enum
-	{
-		LIVED, DIED, MISSED = -1
-	};
-}
-int Entity::ApplyHitHarmless(int damage, Entity* damageDealer) // 0 = lived, 1 = dead
-{
-	//if (damage > 0)
-	//	game->entities->particles.push_back(make_unique<SpinText>(Vec3(pos) +
-	//		Vec3(RandFloat(), RandFloat(), 0) * Vec3(radius * 2 - 1) - north, RandFloat() * 2 - 1, to_string(damage),
-	//		RGBA(damageDealer->color.r, damageDealer->color.g, damageDealer->color.b, damageDealer->color.a / 2),
-	//		static_cast<float>(COMMON_TEXT_SCALE), RandFloat() * 5.0f, COMMON_TEXT_SCALE * (RandFloat() * 0.25f + 0.25f)));
-
 	health = min(health - damage, maxHealth);
 	return health <= 0 ? HitResult::DIED : HitResult::LIVED;
 }
@@ -838,10 +824,10 @@ void Entity::SetPos(Vec3 newPos)
 		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
 		vector<int> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldPos.first, minMaxOldPos.second);
 		for (int chunk : oldChunkOverlaps)
-			game->entities->chunks[chunk].erase(find(game->entities->chunks[chunk].begin(), game->entities->chunks[chunk].end(), position));
+			game->entities->chunks[chunk]->erase(find(game->entities->chunks[chunk]->begin(), game->entities->chunks[chunk]->end(), position));
 		vector<int> newChunkOverlaps = game->entities->FindCreateChunkOverlapsMain(minMaxNewPos.first, minMaxNewPos.second);
 		for (int chunk : newChunkOverlaps)
-			game->entities->chunks[chunk].push_back(position);
+			game->entities->chunks[chunk]->push_back(position);
 	}
 	pos = newPos;
 }
@@ -855,10 +841,10 @@ void Entity::SetRadius(float newRadius)
 		int position = static_cast<int>(distance(game->entities->begin(), std::find_if(game->entities->begin(), game->entities->end(), [this](std::unique_ptr<Entity> const& i) { return i.get() == this; })));
 		vector<int> oldChunkOverlaps = game->entities->MainChunkOverlaps(minMaxOldRadius.first, minMaxOldRadius.second);
 		for (int chunk : oldChunkOverlaps)
-			game->entities->chunks[chunk].erase(find(game->entities->chunks[chunk].begin(), game->entities->chunks[chunk].end(), position));
+			game->entities->chunks[chunk]->erase(find(game->entities->chunks[chunk]->begin(), game->entities->chunks[chunk]->end(), position));
 		vector<int> newChunkOverlaps = game->entities->FindCreateChunkOverlapsMain(minMaxNewRadius.first, minMaxNewRadius.second);
 		for (int chunk : newChunkOverlaps)
-			game->entities->chunks[chunk].push_back(position);
+			game->entities->chunks[chunk]->push_back(position);
 	}
 	radius = newRadius;
 }
@@ -870,18 +856,18 @@ void Entity::UpdateChunkCollision()
 	vector<int> chunkOverlaps = game->entities->FindCreateChunkOverlaps(pos, radius);
 	for (int i : chunkOverlaps)
 	{
-		iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i].pos);
-		iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i].pos);
+		iVec3 minPos = glm::max(vZeroI, ToIV3(pos - radius) - game->entities->chunks[i]->pos);
+		iVec3 maxPos = glm::min(iVec3(CHUNK_WIDTH - 1), ToIV3(pos + radius) - game->entities->chunks[i]->pos);
 		for (int x = minPos.x; x <= maxPos.x; x++)
 			for (int y = minPos.y; y <= maxPos.y; y++)
 				for (int z = minPos.z; z <= maxPos.z; z++)
 				{
-					if (game->entities->chunks[i].TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR))
+					if (game->entities->chunks[i]->TileAtCPos(iVec3(x, y, z)) != UnEnum(TILE::AIR))
 					{
-						if (ToIV3(pos) == iVec3(x, y, z) + game->entities->chunks[i].pos)
+						if (ToIV3(pos) == iVec3(x, y, z) + game->entities->chunks[i]->pos)
 							return SetPos(pos + up);
-						if (BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f, Vec3(0.5f)))
-							hitPositions.push_back(Vec3(iVec3(x, y, z) + game->entities->chunks[i].pos) + 0.5f);
+						if (BoxCircleOverlap(pos, radius, Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f, Vec3(0.5f)))
+							hitPositions.push_back(Vec3(iVec3(x, y, z) + game->entities->chunks[i]->pos) + 0.5f);
 					}
 					//else
 						//overlappedAllPossible = false;
@@ -931,24 +917,23 @@ void Entity::UpdateCollision()
 bool TileData::Damage(int damage)
 {
 	damageDealt += damage;
-	if (damageDealt >= tileHealths[game->entities->chunks[chunkIndex].tiles[x][y][z]])
+	if (damageDealt >= tileHealths[game->entities->chunks[chunkIndex]->tiles[x][y][z]])
 	{
-		game->entities->chunks[chunkIndex].tiles[x][y][z] = UnEnum(TILE::AIR);
-		game->entities->chunks[chunkIndex].RegenerateMesh();
+		game->entities->chunks[chunkIndex]->tiles[x][y][z] = UnEnum(TILE::AIR);
+		game->entities->chunks[chunkIndex]->RegenerateMesh();
 		return true;
 	}
 	lastDamage = tTime;
 	return false;
 }
-
 #pragma endregion
 
 
 #pragma region Post entities definition entities
 
-#define EXPLOSION_PARTICLE_COUNT 25
-#define EXPLOSION_PARTICLE_SPEED 16.0f
-#define EXPLOSION_PARTICLE_DURATION 0.5f
+constexpr int EXPLOSION_PARTICLE_COUNT = 25;
+constexpr float EXPLOSION_PARTICLE_SPEED = 16.0f;
+constexpr float EXPLOSION_PARTICLE_DURATION = 0.5f;
 namespace Updates { void ExplodeNextFrameU(Entity* entity); void UpExplodeNextFrameU(Entity* entity); }
 EntityData explodeNextFrameData = EntityData(Updates::ExplodeNextFrameU);
 class ExplodeNextFrame : public Entity
@@ -1197,7 +1182,7 @@ inline void CreateUpExplosion(Vec3 pos, float explosionRadius, RGBA color, strin
 
 #pragma region Post entities definition items
 #pragma region Types
-namespace ItemODs { void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void PlacedOnLandingOD(ItemInstance& item, ProjODData data); }
 class PlacedOnLanding : public Item
 {
 public:
@@ -1223,7 +1208,7 @@ public:
 	}
 };
 
-namespace ItemODs { void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void CorruptOnKillOD(ItemInstance& item, ProjODData data); }
 class CorruptOnKill : public PlacedOnLanding
 {
 public:
@@ -1244,7 +1229,7 @@ public:
 	}
 };
 
-namespace ItemODs { void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void PlacedOnLandingBoomOD(ItemInstance& item, ProjODData data); }
 class PlacedOnLandingBoom : public PlacedOnLanding
 {
 public:
@@ -1269,7 +1254,7 @@ public:
 	}
 };
 
-namespace ItemODs { void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void ExplodeOnLandingOD(ItemInstance& item, ProjODData data); }
 class ExplodeOnLanding : public Item
 {
 public:
@@ -1286,7 +1271,7 @@ public:
 	}
 };
 
-namespace ItemODs { void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void UpExplodeOnLandingOD(ItemInstance& item, ProjODData data); }
 class UpExplodeOnLanding : public ExplodeOnLanding
 {
 public:
@@ -1299,7 +1284,7 @@ public:
 	}
 };
 
-namespace ItemODs { void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void ImproveSoilOnLandingOD(ItemInstance& item, ProjODData data); }
 class ImproveSoilOnLanding : public Item
 {
 public:
@@ -1314,7 +1299,7 @@ public:
 	}
 };
 
-namespace ItemODs { void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType); }
+namespace ItemODs { void SetTileOnLandingOD(ItemInstance& item, ProjODData data); }
 class SetTileOnLanding : public Item
 {
 public:
@@ -1334,51 +1319,51 @@ public:
 #pragma region Instances
 namespace ItemODs
 {
-	void DefaultOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void DefaultOD(ItemInstance& item, ProjODData data)
 	{
-		unique_ptr<Collectible> collectible = make_unique<Collectible>(item.Clone(), pos);
+		unique_ptr<Collectible> collectible = make_unique<Collectible>(item.Clone(), data.pos);
 		game->entities->push_back(std::move(collectible));
 	}
 
-	void PlacedOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingOD(ItemInstance& item, ProjODData data)
 	{
 		PlacedOnLanding* pOL = static_cast<PlacedOnLanding*>(item.Type());
 
-		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(pos, dir, creator);
+		unique_ptr<Entity> placedEntity = pOL->entityToPlace->Clone(data.pos, data.dir, data.creator);
 		if (pOL->sayCreator)
-			placedEntity->name += " from " + creatorName;
+			placedEntity->name += " from " + data.creatorName;
 		game->entities->push_back(std::move(placedEntity));
 	}
 
-	void CorruptOnKillOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void CorruptOnKillOD(ItemInstance& item, ProjODData data)
 	{
-		if (callType == 2) return PlacedOnLandingOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
-		return DefaultOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
+		if (data.hitType == HitResult::DIED) return PlacedOnLandingOD(item, data);
+		DefaultOD(item, data);
 	}
 
-	void PlacedOnLandingBoomOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void PlacedOnLandingBoomOD(ItemInstance& item, ProjODData data)
 	{
 		PlacedOnLandingBoom* explosion = static_cast<PlacedOnLandingBoom*>(item.Type());
-		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
-			explosion->damage, explosion->explosionDamage, creator);
-		PlacedOnLandingOD(item, pos, dir, vel, creator, creatorName, callReason, callType);
+		CreateExplosion(data.pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + data.creatorName),
+			explosion->damage, explosion->explosionDamage, data.creator);
+		PlacedOnLandingOD(item, data);
 	}
 
-	void ExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ExplodeOnLandingOD(ItemInstance& item, ProjODData data)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
-		CreateExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
-			explosion->damage, explosion->explosionDamage, creator);
+		CreateExplosion(data.pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + data.creatorName),
+			explosion->damage, explosion->explosionDamage, data.creator);
 	}
 
-	void UpExplodeOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void UpExplodeOnLandingOD(ItemInstance& item, ProjODData data)
 	{
 		ExplodeOnLanding* explosion = static_cast<ExplodeOnLanding*>(item.Type());
-		CreateUpExplosion(pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + creatorName),
-			explosion->damage, explosion->explosionDamage, creator);
+		CreateUpExplosion(data.pos, explosion->explosionRadius, explosion->color, explosion->name + string(" shot by " + data.creatorName),
+			explosion->damage, explosion->explosionDamage, data.creator);
 	}
 
-	void ImproveSoilOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void ImproveSoilOnLandingOD(ItemInstance& item, ProjODData data)
 	{
 		ImproveSoilOnLanding* soilItem = static_cast<ImproveSoilOnLanding*>(item.Type());
 
@@ -1387,21 +1372,21 @@ namespace ItemODs
 			for (int y = 0; y < soilItem->improveRadius; y++)
 				for (int z = 0; z < soilItem->improveRadius; z++)
 				{
-					iVec3 currentPos = ToIV3(pos) + iVec3(x, y, z) + offset;
+					iVec3 currentPos = ToIV3(data.pos) + iVec3(x, y, z) + offset;
 					Chunk* chunk = game->entities->ChunkAtFPos(currentPos);
 					TILE tile = TILE(chunk->TileAtPos(currentPos));
-					chunk->SetTileAtPos(currentPos, UnEnum(tile == TILE::ROCK ? TILE::SAND : tile == TILE::SAND ? TILE::BAD_SOIL : tile == TILE::BAD_SOIL ?
-						TILE::MID_SOIL : tile == TILE::MID_SOIL ? TILE::MAX_SOIL : tile));
+					chunk->SetTileAtPos(currentPos, UnEnum(tile == TILE::SNOW ? TILE::ROCK : tile == TILE::ROCK ? TILE::SAND : tile == TILE::SAND ?
+						TILE::BAD_SOIL : tile == TILE::BAD_SOIL ? TILE::MID_SOIL : tile == TILE::MID_SOIL ? TILE::MAX_SOIL : tile));
 				}
 	}
 
-	void SetTileOnLandingOD(ItemInstance& item, Vec3 pos, Vec3 dir, Vec3 vel, Entity* creator, string creatorName, Entity* callReason, int callType)
+	void SetTileOnLandingOD(ItemInstance& item, ProjODData data)
 	{
 		SetTileOnLanding* tileItem = static_cast<SetTileOnLanding*>(item.Type());
 
-		pos.z += tileItem->zOffset;
-		Chunk* chunk = game->entities->ChunkAtFPos(pos);
-		chunk->SetTileAtPos(ToIV3(pos), UnEnum(tileItem->tile));
+		data.pos.z += tileItem->zOffset;
+		Chunk* chunk = game->entities->ChunkAtFPos(data.pos);
+		chunk->SetTileAtPos(ToIV3(data.pos), UnEnum(tileItem->tile));
 	}
 }
 
