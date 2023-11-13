@@ -695,24 +695,37 @@ void Game::Start()
 	player = playerUnique.get();
 	playerE = player;
 
-	unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
-	base = static_cast<Base*>(baseUnique.get());
-	player->base = base;
+	if (!settings.newBalanceChange)
+	{
+		unique_ptr<Entity> baseUnique = charBases[UnEnum(settings.character)]->Clone(player->pos);
+		base = static_cast<Base*>(baseUnique.get());
+		player->base = base;
 
-	planet->faction1Spawns->defaultTarget = base;
+		planet->faction1Spawns->defaultTarget = base;
+
+		for (int i = 0; i < 100; i++)
+		{
+			if (!entities->OverlapsTile(base->pos, base->radius))
+				break;
+			else
+				base->pos.z++;
+		}
+		player->pos = base->pos + up * (base->radius + player->radius);
+		entities->push_back(std::move(baseUnique));
+	}
+	else
+		planet->faction1Spawns->defaultTarget = player;
 	planet->wildSpawns->defaultTarget = player;
 
 	for (int i = 0; i < 100; i++)
 	{
-		if (!entities->OverlapsTile(base->pos, base->radius))
+		if (!entities->OverlapsTile(player->pos, player->radius))
 			break;
 		else
-			base->pos.z++;
+			player->pos.z++;
 	}
-	player->pos = base->pos + up * (base->radius + player->radius);
 
 	entities->push_back(std::move(playerUnique));
-	entities->push_back(std::move(baseUnique));
 }
 	
 void Game::Update()

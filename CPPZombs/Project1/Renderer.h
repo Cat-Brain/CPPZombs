@@ -48,12 +48,16 @@ public:
 	float sensitivity = 300;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	bool colorBand = true, vSync = true, displayFPS = true, maximized = true,
-		spawnAllTypesInTier = true, canChangeRow = false, hasLoadedModels = false; // <- to be removed probably
+		spawnAllTypesInTier = true, canChangeRow = false, hasLoadedModels = false, newBalanceChange = true; // <- to be removed probably
 
 	vector<std::pair<bool*, string>> dispBoolSettings = {
-		{&colorBand, "color band"}, {&vSync, "vSync"},
+		{&colorBand, "color band"},
+		{&vSync, "vSync"},
 		{&displayFPS, "display FPS"},
-		{&spawnAllTypesInTier, "spawn all types in tier"}, {&canChangeRow, "can change row"} };
+		{&spawnAllTypesInTier, "spawn all types in tier"},
+		{&canChangeRow, "can change row"},
+		{&newBalanceChange, "new balance change"}
+	};
 	vector<std::pair<bool*, string>> hidBoolSettings = {
 		{&maximized, "maximized"}, {&hasLoadedModels, "Has Loaded Models"} };
 	int highScores[3] = { 0 };
@@ -301,6 +305,10 @@ private:
 		for (auto& [texture, location, spriteCount] : std::get<1>(textures))
 			texture = Texture(location, textureType, spriteCount);
 
+		glUseProgram(circleShader);
+		glUniform1i(glGetUniformLocation(circleShader, "stippleTexture"), 8);
+		glUniform1i(glGetUniformLocation(circleShader, "stippleTextureWidth"), stippleTexture.width);
+
 		quad = Mesh({ 0.0f, 0.0f,  0.0f, 1.0f,  1.0f, 1.0f,  1.0f, 0.0f }, {0, 1, 2, 0, 2, 3});
 		screenSpaceQuad = Mesh({ -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f }, { 0, 1, 2, 0, 2, 3});
 		line = Mesh({ 1.0f, 0.0f, 0.0f, 1.0f }, { 0, 1 }, GL_LINES);
@@ -444,7 +452,7 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
-	string version = "v0.7.4.4-alpha";
+	string version = "v0.7.5.0-alpha";
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
 	uint instanceVBO = 0;
@@ -546,6 +554,7 @@ public:
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glUseProgram(circleShader);
+		stippleTexture.Activate(GL_TEXTURE8);
 		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(toDrawCircles.size()));
 		toDrawCircles.clear();
 		glEnable(GL_BLEND);

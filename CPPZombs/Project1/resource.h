@@ -66,6 +66,7 @@
 
 #define SPRITE_SHEET 201
 #define RETICLE_SPRITE 202
+#define STIPPLE_TEXTURE 203
 
 
 #define OBJ_FILE 300

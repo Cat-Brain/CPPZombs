@@ -1393,6 +1393,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 30.0f, 1, 0.1f, vZero, 5, RGBA(80, 43, 92, 127));
+	//VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCorporealNotCollectible, 1, 3, -64, 32, RGBA(255, 255, 255, 51));
 	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCollectible, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
 }
 

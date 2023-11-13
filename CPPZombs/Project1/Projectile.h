@@ -144,6 +144,11 @@ public:
     {
         return make_unique<ShotItem>(this, baseItem, pos, direction, creator, flags);
     }
+
+    unique_ptr<Entity> Clone(Vec3 pos, Vec3 direction, Entity* creator) override
+    {
+        return Clone(item, pos, direction, creator);
+    }
 };
 
 namespace OnDeaths

@@ -1,13 +1,14 @@
 
 difficulty = Hard
 chunk render dist = 7
-start seeds = ftftffftttffffftf
-character = 2
+start seeds = ftftffftttffftfff
+character = 1
 high scores = 9,1795,18720
 color band = true
 vSync = false
 display FPS = true
 spawn all types in tier = true
 can change row = false
+new balance change = true
 maximized = true
 Has Loaded Models = true

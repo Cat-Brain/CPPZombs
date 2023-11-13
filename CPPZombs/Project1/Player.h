@@ -383,6 +383,11 @@ public:
 		lastUtility = 0;
 		shouldVacuum = true;
 		items = PlayerInventory(this, 10, 4, startItems);
+		if (game->settings.newBalanceChange)
+		{
+			this->moveSpeed *= 0.5f;
+			this->maxSpeed *= 0.5f;
+		}
 
 		for (int i = 0; i < UnEnum(SEEDINDICES::COUNT); i++)
 			if (startSeeds[i])
@@ -500,11 +505,11 @@ EntityData engineerData = EntityData(Updates::PlayerU, VUpdates::FrictionVU, DUp
 class Engineer : public Player
 {
 public:
-	float rollAccel, rollSpeed, turretedShootSpeed;
+	float rollAccelMul, rollSpeedMul, turretedShootSpeed;
 	EngState engState = EngState::DEFAULT;
 
 	Engineer(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
-		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccel = 8, float rollSpeed = 16,
+		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccelMul = 8, float rollSpeedMul = 16,
 		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float turretedShootSpeed = 2, float primaryTime = 1, float offhandTime = 1,
 		float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1,
@@ -512,7 +517,7 @@ public:
 		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
 			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems),
-		rollAccel(rollAccel), rollSpeed(rollSpeed), turretedShootSpeed(turretedShootSpeed)
+		rollAccelMul(rollAccelMul), rollSpeedMul(rollSpeedMul), turretedShootSpeed(turretedShootSpeed)
 	{ }
 
 	Engineer(Engineer* baseClass, bool* startSeeds, Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) :
@@ -533,6 +538,37 @@ public:
 	float OffhandFill() override
 	{
 		return items.isBuilding ? Player::OffhandFill() : min(1.f, (tTime2 - lastOffhand) / (offhandTime));
+	}
+};
+
+EntityData orchidData = EntityData(Updates::PlayerU, VUpdates::FrictionVU, DUpdates::PlayerDU, UIUpdates::PlayerUIU, OnDeaths::PlayerOD);
+class Orchid : public Player
+{
+public:
+	Orchid(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccel = 8, float rollSpeed = 16,
+		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1,
+		float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
+		bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1,
+		string name = "NULL NAME", Items startItems = {}) :
+		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color, color2,
+			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems)
+	{ }
+
+	Orchid(Orchid* baseClass, bool* startSeeds, Vec3 pos, Vec3 dir = north, Entity* creator = nullptr) :
+		Orchid(*baseClass)
+	{
+		this->baseClass = baseClass;
+		std::copy(startSeeds, startSeeds + sizeof(bool) * UnEnum(SEEDINDICES::COUNT), this->startSeeds);
+		this->pos = pos;
+		this->creator = creator;
+		Start();
+	}
+
+	unique_ptr<Player> PClone(bool* startSeeds, Vec3 pos = vZero, Vec3 dir = north, Entity* creator = nullptr)
+	{
+		return make_unique<Orchid>(this, startSeeds, pos, dir, creator);
 	}
 };
 #pragma endregion
@@ -709,8 +745,8 @@ namespace PMovements
 		{
 			float moveSpeed = engineer->moveSpeed;
 			float maxSpeed = engineer->maxSpeed;
-			engineer->moveSpeed = engineer->rollAccel;
-			engineer->maxSpeed = engineer->rollSpeed;
+			engineer->moveSpeed *= engineer->rollAccelMul;
+			engineer->maxSpeed *= engineer->rollSpeedMul;
 			Default(engineer);
 			engineer->moveSpeed = moveSpeed;
 			engineer->maxSpeed = maxSpeed;
@@ -859,7 +895,7 @@ Flare flare = Flare(&flareData, 100, PMovements::Default, Primaries::Pistol, Off
 	JRGB(127, 127, 127), true, 5.f, 1.5f, 0.25f, 100, 50, "Flare", Items({ Resources::rock.Clone(10) }));
 
 Engineer engineer = Engineer(&engineerData, PMovements::EngineerPM, Primaries::EngineerPr, Offhands::MakeTurret, Secondaries::Turretify,
-	Utilities::Rollify, MaskF::IsCollectible, 0.4f, 32, 8, 32, 16, 6, 256, 32, 1, 0.25f, 0, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
+	Utilities::Rollify, MaskF::IsCollectible, 0.4f, 32, 8, 1, 2, 6, 256, 32, 1, 0.25f, 0, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
 	true, 20, 5, 0.25f, 100, 50, "Engineer", Items({ Resources::copper.Clone(30) }));
 
 vector<Player*> characters = { &soldier, &flare, &engineer };
@@ -904,26 +940,6 @@ Base soldierBase = Base(&baseData, JRGB(127, 127, 255), true, 15, 2.5f, RGBA(127
 vector<Base*> charBases = { &soldierBase, &soldierBase, &soldierBase };
 #pragma endregion
 
-bool PlayerInventory::UseOffhand(Vec3 pos, Vec3 dir)
-{
-	if (isBuilding)
-	{
-		RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
-		if (hit.index != -1)
-		{
-			Entity* hitEntity = (*game->entities)[hit.index].get();
-			if (hitEntity != static_cast<Entity*>(game->base))
-				hitEntity->ApplyHit(100000, player);
-
-		}
-		return true;
-	}
-	int index = int(size() - 1);
-	ItemInstance& currentItem = (*this)[index];
-	currentItem->itemU(currentItem, ProjUData(pos, dir, player));
-	return RemoveIfEmpty(index);
-}
-
 namespace OnDeaths
 {
 	void PlayerOD(Entity* entity, Entity* damageDealer)
@@ -932,7 +948,8 @@ namespace OnDeaths
 
 		game->cursorUnlockCount = 1;
 
-		LightBlockOD(player->base, damageDealer);
+		if (!game->settings.newBalanceChange)
+			LightBlockOD(player->base, damageDealer);
 		LightBlockOD(player, damageDealer);
 		playerAlive = false;
 		deathName = player->name;
@@ -1079,6 +1096,26 @@ void PlayerInventory::Update(bool shouldScroll)
 		game->player->inputs.keys[KeyCode::PRIMARY] = KeyPress(false, false, true);
 	}
 	else if (game->inputs.keys[KeyCode::PRIMARY].pressed) currentSelected = -1;
+}
+
+bool PlayerInventory::UseOffhand(Vec3 pos, Vec3 dir)
+{
+	if (isBuilding)
+	{
+		RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
+		if (hit.index != -1)
+		{
+			Entity* hitEntity = (*game->entities)[hit.index].get();
+			if (hitEntity != static_cast<Entity*>(game->base))
+				hitEntity->ApplyHit(100000, player);
+
+		}
+		return true;
+	}
+	int index = int(size() - 1);
+	ItemInstance& currentItem = (*this)[index];
+	currentItem->itemU(currentItem, ProjUData(pos, dir, player));
+	return RemoveIfEmpty(index);
 }
 
 Vec3 Inputs::MoveDir()
