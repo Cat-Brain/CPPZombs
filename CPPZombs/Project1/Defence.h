@@ -6,6 +6,8 @@
 
 float difficultyGrowthModifier[] = { 1.5f, 1.0f, 0.7f };
 
+// Allied with player and wild enemies
+Allegiance plantAllegiance = ALLEGIANCES::WILD_A | ALLEGIANCES::PLAYER_A;
 namespace TUpdates { bool ShrubTU(Entity* entity); bool VineTU(Entity* entity); } namespace DUpdates { void ShrubDU(Entity* entity); }
 FunctionalBlockData shrubData = FunctionalBlockData(TUpdates::ShrubTU, Updates::FunctionalBlock2U, VUpdates::FrictionVU, DUpdates::ShrubDU);
 class Shrub : public FunctionalBlock2
@@ -31,8 +33,7 @@ public:
 	{
 		this->pos = pos;
 		this->baseClass = baseClass;
-		if (creator != nullptr)
-			allegiance = creator->allegiance;
+		allegiance = plantAllegiance;
 		Start();
 	}
 
@@ -227,8 +228,7 @@ public:
 		this->dir = glm::normalize(dir);
 		if (IsUnreal(this->dir)) this->dir = RandCircPoint();
 		this->baseClass = baseClass;
-		if (creator != nullptr)
-			allegiance = creator->allegiance;
+		allegiance = plantAllegiance;
 		base = this;
 		Start();
 	}

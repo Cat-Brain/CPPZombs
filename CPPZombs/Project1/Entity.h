@@ -15,13 +15,13 @@ public:
 
 enum ALLEGIANCES : byte
 {
-	BARBARIAN_A = 0, PLAYER_A = 1, ENEMY1_A = 2, ENEMY2_A = 4
+	BARBARIAN_A = 0, PLAYER_A = 1, WILD_A = 2, COMPANY_A = 4
 };
 struct Allegiance
 {
 	bool a : 1; //   1 - Player
-	bool b : 1; //   2 - Enemy 1
-	bool c : 1; //   4 - Enemy 2
+	bool b : 1; //   2 - Wild
+	bool c : 1; //   4 - Company
 	bool d : 1; //   8 - 
 	bool e : 1; //  16 - 
 	bool f : 1; //  32 - 

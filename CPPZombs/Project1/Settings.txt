@@ -1,13 +1,14 @@
 
+version = v0.7.6.0-alpha
 difficulty = Hard
-chunk render dist = 7
+chunk render dist = 3
 start seeds = ftftffftttffftfff
-character = 1
-high scores = 9,1795,18720
+character = 2
+high scores = 0,0,17571
 color band = true
 vSync = false
 display FPS = true
-spawn all types in tier = true
+display benchmarks = true
 can change row = false
 new balance change = true
 maximized = true

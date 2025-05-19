@@ -3,6 +3,7 @@
 #include "FastNoiseLite.h"
 #define FAST_OBJ_IMPLEMENTATION
 #include "fast_obj.h"
+#include "lodepng.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -11,10 +12,11 @@
 #include <set>
 #include <map>
 #include <chrono>
-#include <thread>
+#include <mutex>
 #include <ft2build.h>
 #include <Windows.h>
 #include <glad/glad.h>
+#include <omp.h>
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <algorithm>
@@ -51,7 +53,11 @@ constexpr float PI_D = 3.14159275;
 constexpr float SQRTTWO_F = 1.41421356f;
 constexpr float SQRTTWO_D = 1.41421356237;
 
+constexpr float SQRTTHREE_F = 1.73205080f;
+
 constexpr int CHUNK_WIDTH = 16;
+
+int totalThreads = std::thread::hardware_concurrency();
 
 uint trueScreenWidth, trueScreenHeight;
 float screenRatio; // Width / height
@@ -84,7 +90,8 @@ inline int CeilToInt(float f)
 	return static_cast<int>(ceilf(f));
 }
 
-inline float RandFloat() // Float from 0-1
+// Float from 0-1
+inline float RandFloat()
 {
 	return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }

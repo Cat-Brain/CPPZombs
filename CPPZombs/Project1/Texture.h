@@ -13,16 +13,17 @@ public:
 		if (resource.size == 0)
 			std::cout << "Failed to load texture!\n";
 		vector<unsigned char> loadedData;
-		unsigned long width, height;
+		uint width, height;
 		int error;
-		if ((error = decodePNG(loadedData, width, height, static_cast<const unsigned char*>(resource.ptr), resource.size)))
+		lodepng::State state; //optionally customize this one
+		if ((error = lodepng::decode(loadedData, width, height, state, static_cast<byte*>(resource.ptr), resource.size)))
 			std::cout << "Error decrypting texture! Error code = " << error << "\n";
 		if (loadedData.size() == 0)
 			std::cout << "Failed to decrypt texture!\n";
 		this->width = width;
 		this->height = height;
 
-		// OpenGL part of texture loading.
+		// OpenGL part of texture loading
 		glGenTextures(1, &id);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, id);

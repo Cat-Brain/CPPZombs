@@ -601,6 +601,8 @@ public:
 		if (addedEntity)
 			SortEntities();
 
+		std::chrono::steady_clock::time_point startUpd = std::chrono::high_resolution_clock::now();
+
 		for (int i = 0; i < collectibles.size(); i++)
 			if (collectibles[i]->active)
 				collectibles[i]->data->update(collectibles[i]);
@@ -618,6 +620,9 @@ public:
 		for (int i = 0; i < toDelEntities.size(); i++)
 			Remove(toDelEntities[i]);
 		toDelEntities.clear();
+
+		std::chrono::steady_clock::time_point startVUpd = std::chrono::high_resolution_clock::now();
+		game->updBench = std::chrono::duration_cast<std::chrono::microseconds>(startVUpd - startUpd).count();
 
 		for (int i = 0; i < size(); i++)
 			if ((*this)[i] && (*this)[i]->active)
@@ -649,10 +654,16 @@ public:
 
 		if (addedEntity)
 			SortEntities();
+
+		std::chrono::steady_clock::time_point endVUpd = std::chrono::high_resolution_clock::now();
+		game->vUpdBench = std::chrono::duration_cast<std::chrono::microseconds>(endVUpd - startVUpd).count();
+		game->entityBenchmark = size();
 	}
 
 	void DUpdate()
 	{
+		std::chrono::steady_clock::time_point startDUpd = std::chrono::high_resolution_clock::now();
+
 		std::pair<iVec3, iVec3> minMaxPos = Chunk::MinMaxPos(game->PlayerPos(), float(game->settings.chunkRenderDist * CHUNK_WIDTH));
 		vector<int> chunkOverlaps = {};
 		for (int i = 0, x = minMaxPos.first.x; x <= minMaxPos.second.x; x++)
@@ -692,6 +703,32 @@ public:
 		std::pair<vector<Entity*>, vector<Entity*>> toRenderPair = FindPairOverlaps(chunkOverlaps, game->PlayerPos(), static_cast<float>(game->settings.chunkRenderDist * CHUNK_WIDTH), MaskF::IsCorporealNotCollectible, nullptr);
 		if (!game->inputs.keys[KeyCode::COMMA].held)
 		{
+			/*vector<std::thread> dUpdateThreads(totalThreads);
+			int currentThread = 0;
+			// Collectibles
+			for (Entity* entity : toRenderPair.second)
+			{
+				dUpdateThreads[currentThread++] = std::thread(entity->data->dUpdate, entity);
+				if (currentThread >= totalThreads)
+				{
+					for (std::thread& thread : dUpdateThreads)
+						thread.join();
+					currentThread = 0;
+				}
+			}
+			// Normal entities
+			for (Entity* entity : toRenderPair.first)
+			{
+				dUpdateThreads[currentThread++] = std::thread(entity->data->dUpdate, entity);
+				if (currentThread >= totalThreads)
+				{
+					for (std::thread& thread : dUpdateThreads)
+						thread.join();
+					currentThread = 0;
+				}
+			}
+			while (currentThread > 0)
+				dUpdateThreads[--currentThread].join();*/
 			// Collectibles
 			for (Entity* entity : toRenderPair.second)
 				entity->data->dUpdate(entity);
@@ -716,13 +753,32 @@ public:
 		{
 			// Chunks:
 			glUseProgram(chunkShader);
+			/*vector<std::thread> chunkThreads(totalThreads);
+			int currentThread = 0;
+			for (int i : chunkOverlaps)
+			{
+				chunkThreads[currentThread++] = std::thread(&Chunk::Draw, chunks[i].get());
+				if (currentThread >= totalThreads)
+				{
+					for (std::thread& thread : chunkThreads)
+						thread.join();
+					currentThread = 0;
+				}
+			}
+			while (currentThread > 0)
+				chunkThreads[--currentThread].join();*/
 			for (int i : chunkOverlaps)
 				chunks[i]->Draw();
 		}
+
+		std::chrono::steady_clock::time_point endDUpd = std::chrono::high_resolution_clock::now();
+		game->dUpdBench = std::chrono::duration_cast<std::chrono::microseconds>(endDUpd - startDUpd).count();
 	}
 
 	void UIUpdate()
 	{
+		std::chrono::steady_clock::time_point startDUpd = std::chrono::high_resolution_clock::now();
+
 		for (index = 0; index < collectibles.size(); index++)
 			if (collectibles[index]->dActive && collectibles[index]->uiActive)
 				collectibles[index]->data->uiUpdate(collectibles[index]);
@@ -730,6 +786,9 @@ public:
 		for (index = 0; index < sortedNCEntities.size(); index++)
 			if (sortedNCEntities[index]->dActive && sortedNCEntities[index]->uiActive)
 				sortedNCEntities[index]->data->uiUpdate(sortedNCEntities[index]);
+
+		std::chrono::steady_clock::time_point endDUpd = std::chrono::high_resolution_clock::now();
+		game->uiUpdBench = std::chrono::duration_cast<std::chrono::microseconds>(endDUpd - startDUpd).count();
 	}
 #pragma endregion
 #pragma region Destruction stuff
@@ -1393,8 +1452,7 @@ namespace ItemODs
 namespace Hazards
 {
 	FadeOutPuddle leadPuddle = FadeOutPuddle(&fadeOutPuddleData, 30.0f, 1, 0.1f, vZero, 5, RGBA(80, 43, 92, 127));
-	//VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCorporealNotCollectible, 1, 3, -64, 32, RGBA(255, 255, 255, 51));
-	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCollectible, 5, 25, 16, 4, RGBA(255, 255, 255, 51));
+	VacuumFor vacuumPuddle = VacuumFor(&vacuumForData, vZero, MaskF::IsCollectible, 5, 25, 16, 4, RGBA(255, 255, 255, 31));
 }
 
 namespace Resources

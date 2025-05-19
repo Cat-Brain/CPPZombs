@@ -1,11 +1,30 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (Project1.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   main.cpp
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(49,22): warning C4305: 'initializing': truncation from 'double' to 'const float'
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(52,27): warning C4305: 'initializing': truncation from 'double' to 'const float'
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(51,22): warning C4305: 'initializing': truncation from 'double' to 'const float'
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(54,27): warning C4305: 'initializing': truncation from 'double' to 'const float'
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Mesh.h(76,34): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Renderer.h(335,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Renderer.h(338,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Renderer.h(342,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:             _Rep=__int64
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(659,101): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(659,101): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(659,101): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(659,101): warning C4244:             _Rep=__int64
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(659,101): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(660,31): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(775,101): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(775,101): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(775,101): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(775,101): warning C4244:             _Rep=__int64
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(775,101): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(791,102): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(791,102): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(791,102): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(791,102): warning C4244:             _Rep=__int64
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(791,102): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1699,21): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(149,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(150,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(151,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
@@ -13,41 +32,40 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(798,43): warni
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(850,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(877,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
-          with
-          [
-              _Ty=int
-          ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:             _Ty=int
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         ]
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(959,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
-          with
-          [
-              _Ty=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1243,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1495,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1503,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1509,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1509,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.37.32822\include\utility(242,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data
-          with
-          [
-              _Ty=int
-          ]
-          and
-          [
-              _Ty2=float
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(316,38): message : see reference to function template instantiation 'std::pair<Entity *,float>::pair<nullptr,int,0>(_Other1 &&,_Other2 &&) noexcept' being compiled
-          with
-          [
-              _Other1=nullptr,
-              _Other2=int
-          ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(316,38): message : see the first reference to 'std::pair<Entity *,float>::pair' in 'Entities::ExtremestOverlap'
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:             _Ty=int
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1245,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1497,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1505,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1511,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1511,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\main.cpp(7,16): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         with
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         [
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:             _Ty=int
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         and
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         [
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:             _Ty2=float
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244: 'argument': conversion from '_Ty' to 'float', possible loss of data
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244:         with
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244:         [
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244:             _Ty=int
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244:         ]
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  573 of 6557 functions ( 8.7%) were compiled, the rest were copied from previous compilation.
+  0 of 6643 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    17 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Project1.vcxproj -> C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\x64\Release\Martionotany.exe

@@ -13,6 +13,7 @@ in vec3 tPos;
 
 uniform sampler2D stippleTexture;
 uniform int stippleTextureWidth;
+uniform float nearPlane, farPlane;
 
 float Mask(vec2 pos)
 {
@@ -35,7 +36,7 @@ void main()
 	}
 
 	float h = sqrt(d);
-	if (-b + h <= 0 || (color.a != 1. && color.a < Mask(gl_FragCoord.xy)))
+	if (-b + h <= 0 || (color.a < 0.99 && color.a < Mask(gl_FragCoord.xy)))
 	{
 		discard;
 		return;
@@ -43,10 +44,10 @@ void main()
 	float dstNear = -h - b;
 
 
-	FragColor = color;
+	FragColor = color;//vec4(vec3((2.0 * nearPlane * farPlane) / (farPlane + nearPlane - (gl_FragCoord.z * 2.0 - 1.0) * (farPlane - nearPlane)) * 0.1), 1.0);
 	
 	position = vec4(dir * max(0, dstNear), 1.);
 	vec4 dPos = perspective * vec4(position.xyz, 1.);
 	normal = vec4(normalize(dir * dstNear - pos), 1.);
-	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;
+	gl_FragDepth = 0.5 + 0.5 * dPos.z / dPos.w;//farPlane * dPos
 } 

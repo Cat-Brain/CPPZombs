@@ -42,19 +42,20 @@ string settingsLocation = "Settings.txt";
 class Settings
 {
 public:
+	string lastVersion = "";
 	DIFFICULTY difficulty = DIFFICULTY::EASY;
 	CHARS character = CHARS::SOLDIER;
 	uint chunkRenderDist = 3;
 	float sensitivity = 300;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
-	bool colorBand = true, vSync = true, displayFPS = true, maximized = true,
-		spawnAllTypesInTier = true, canChangeRow = false, hasLoadedModels = false, newBalanceChange = true; // <- to be removed probably
+	bool colorBand = true, vSync = true, displayFPS = true, maximized = true, displayBenchmarks = false,
+		canChangeRow = false, hasLoadedModels = false, newBalanceChange = true; // <- to be removed probably
 
 	vector<std::pair<bool*, string>> dispBoolSettings = {
 		{&colorBand, "color band"},
 		{&vSync, "vSync"},
 		{&displayFPS, "display FPS"},
-		{&spawnAllTypesInTier, "spawn all types in tier"},
+		{&displayBenchmarks, "display benchmarks"},
 		{&canChangeRow, "can change row"},
 		{&newBalanceChange, "new balance change"}
 	};
@@ -80,7 +81,7 @@ public:
 						difficulty = (DIFFICULTY)i;
 						continue;
 					}
-				else if (contents.find("chunk render dist = ") == 0)
+				if (contents.find("chunk render dist = ") == 0)
 				{
 					int result = std::stoi(contents.substr(20));
 					if (result != -1)
@@ -126,6 +127,9 @@ public:
 					highScores[1] = std::stoi(medium);
 					highScores[2] = std::stoi(hard);
 				}
+				else if (contents.find("version = ") == 0)
+					lastVersion = contents.substr(string("version = ").size());
+
 				for (std::pair<bool*, string> boolSetting : dispBoolSettings)
 				{
 					if (contents == boolSetting.second + " = false")
@@ -165,6 +169,7 @@ public:
 			startSeedsStr += b ? "t" : "f";
 
 		string contents =
+			"\nversion = " + lastVersion +
 			"\ndifficulty = " + difficultyStrs[difficulty] +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
 			startSeedsStr +
@@ -319,63 +324,73 @@ private:
 			1.f, -1.f, -1.f,  1.f, -1.f, 1.f,  1.f, 1.f, -1.f,  1.f, 1.f, 1.f}, {1, 3, 7, 1, 7, 5,
 			0, 2, 3, 0, 3, 1,  0, 1, 5, 0, 5, 4,  2, 6, 7, 2, 7, 3,  6, 4, 5, 6, 5, 7,  0, 4, 6, 0, 6, 2},
 			GL_TRIANGLES, GL_STATIC_DRAW, 3);
-
+		
+		if (settings.lastVersion != version)
+		{
+			settings.hasLoadedModels = false;
+			settings.Write();
+		}
 		if (!settings.hasLoadedModels)
 		{
-			Resource shrubResource = Resource(SHRUB_MODEL, OBJ_FILE);
-			std::ofstream shrubStream;
-			shrubStream.open("Shrub.obj");
-			shrubStream.write(static_cast<const char*>(shrubResource.ptr), shrubResource.size);
+			for (auto& [model, location, name] : mesh2s)
+			{
+				Resource resource = Resource(location, OBJ_FILE);
+				std::ofstream stream;
+				stream.open(name + ".obj");
+				stream.write(static_cast<const char*>(resource.ptr), resource.size);
+			}
 			settings.hasLoadedModels = true;
 			settings.Write();
 		}
-		fastObjMesh* shrubMesh = fast_obj_read("Shrub.obj");
-
-		vector<float> positions;
-		for (int i = 3; i < shrubMesh->position_count * 3; i++)
-			positions.push_back(shrubMesh->positions[i]);
-		vector<float> normals;
-		for (int i = 3; i < shrubMesh->normal_count * 3; i++)
-			normals.push_back(shrubMesh->normals[i]);
-
-		vector<uint> indices;
-		for (int i = 0; i * 3 < shrubMesh->index_count; i++)
+		for (auto& [model, location, name] : mesh2s)
 		{
-			indices.push_back(shrubMesh->indices[i * 3 + 2].p - 1);
-			indices.push_back(shrubMesh->indices[i * 3 + 1].p - 1);
-			indices.push_back(shrubMesh->indices[i * 3].p - 1);
-			indices.push_back(shrubMesh->indices[i * 3 + 2].n - 1);
-			indices.push_back(shrubMesh->indices[i * 3 + 1].n - 1);
-			indices.push_back(shrubMesh->indices[i * 3].n - 1);
+			fastObjMesh* mesh = fast_obj_read((name + ".obj").c_str());
+
+			vector<float> positions;
+			for (uint i = 3; i < mesh->position_count * 3; i++)
+				positions.push_back(mesh->positions[i]);
+			vector<float> normals;
+			for (uint i = 3; i < mesh->normal_count * 3; i++)
+				normals.push_back(mesh->normals[i]);
+
+			vector<uint> indices;
+			for (uint i = 0; i * 3 < mesh->index_count; i++)
+			{
+				indices.push_back(mesh->indices[i * 3 + 2].p - 1);
+				indices.push_back(mesh->indices[i * 3 + 1].p - 1);
+				indices.push_back(mesh->indices[i * 3].p - 1);
+				indices.push_back(mesh->indices[i * 3 + 2].n - 1);
+				indices.push_back(mesh->indices[i * 3 + 1].n - 1);
+				indices.push_back(mesh->indices[i * 3].n - 1);
+			}
+			fast_obj_destroy(mesh);
+
+			vector<float> data;
+			for (int i = 0; i * 6 < indices.size(); i++)
+			{
+				data.push_back(positions[indices[i * 6] * 3]);
+				data.push_back(positions[indices[i * 6] * 3 + 1]);
+				data.push_back(positions[indices[i * 6] * 3 + 2]);
+				data.push_back(normals[indices[i * 6 + 3] * 3]);
+				data.push_back(normals[indices[i * 6 + 3] * 3 + 1]);
+				data.push_back(normals[indices[i * 6 + 3] * 3 + 2]);
+
+				data.push_back(positions[indices[i * 6 + 1] * 3]);
+				data.push_back(positions[indices[i * 6 + 1] * 3 + 1]);
+				data.push_back(positions[indices[i * 6 + 1] * 3 + 2]);
+				data.push_back(normals[indices[i * 6 + 4] * 3]);
+				data.push_back(normals[indices[i * 6 + 4] * 3 + 1]);
+				data.push_back(normals[indices[i * 6 + 4] * 3 + 2]);
+
+				data.push_back(positions[indices[i * 6 + 2] * 3]);
+				data.push_back(positions[indices[i * 6 + 2] * 3 + 1]);
+				data.push_back(positions[indices[i * 6 + 2] * 3 + 2]);
+				data.push_back(normals[indices[i * 6 + 5] * 3]);
+				data.push_back(normals[indices[i * 6 + 5] * 3 + 1]);
+				data.push_back(normals[indices[i * 6 + 5] * 3 + 2]);
+			}
+			*model = Mesh2(data, GL_TRIANGLES, GL_STATIC_DRAW, 3);
 		}
-
-		vector<float> data;
-		for (int i = 0; i * 6 < indices.size(); i++)
-		{
-			data.push_back(positions[indices[i * 6    ] * 3]);
-			data.push_back(positions[indices[i * 6    ] * 3 + 1]);
-			data.push_back(positions[indices[i * 6    ] * 3 + 2]);
-			data.push_back(normals  [indices[i * 6 + 3] * 3]);
-			data.push_back(normals  [indices[i * 6 + 3] * 3 + 1]);
-			data.push_back(normals  [indices[i * 6 + 3] * 3 + 2]);
-
-			data.push_back(positions[indices[i * 6 + 1] * 3]);
-			data.push_back(positions[indices[i * 6 + 1] * 3 + 1]);
-			data.push_back(positions[indices[i * 6 + 1] * 3 + 2]);
-			data.push_back(normals  [indices[i * 6 + 4] * 3]);
-			data.push_back(normals  [indices[i * 6 + 4] * 3 + 1]);
-			data.push_back(normals  [indices[i * 6 + 4] * 3 + 2]);
-
-			data.push_back(positions[indices[i * 6 + 2] * 3]);
-			data.push_back(positions[indices[i * 6 + 2] * 3 + 1]);
-			data.push_back(positions[indices[i * 6 + 2] * 3 + 2]);
-			data.push_back(normals  [indices[i * 6 + 5] * 3]);
-			data.push_back(normals  [indices[i * 6 + 5] * 3 + 1]);
-			data.push_back(normals  [indices[i * 6 + 5] * 3 + 2]);
-		}
-		shrub = Mesh2(data, GL_TRIANGLES, GL_STATIC_DRAW, 3);
-
-		fast_obj_destroy(shrubMesh);
 
 		glGenBuffers(1, &instanceVBO);
 		glBindVertexArray(cube.vao);
@@ -401,6 +416,12 @@ private:
 		glStencilMask(0x00);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+		if (settings.lastVersion != version)
+		{
+			settings.lastVersion = version;
+			settings.Write();
+		}
+
 		return true;
 	}
 
@@ -411,7 +432,18 @@ private:
 		fpsCount++;
 		if (int(lastTime) != int(glfwGetTime()))
 		{
-			glfwSetWindowTitle(window, (name + (settings.displayFPS ? " FPS = " + to_string(fpsCount) : "")).c_str());
+			string tempTitle = name;
+			if (settings.displayFPS)
+				tempTitle += " FPS = " + to_string(fpsCount);
+			if (settings.displayBenchmarks)
+			{
+				tempTitle += " upd: " + to_string(updBench) + "ms";
+				tempTitle += " vupd: " + to_string(vUpdBench) + "ms";
+				tempTitle += " dupd: " + to_string(dUpdBench) + "ms";
+				tempTitle += " uiupd: " + to_string(uiUpdBench) + "ms";
+				tempTitle += " ent count: " + to_string(entityBenchmark);
+			}
+			glfwSetWindowTitle(window, tempTitle.c_str());
 			fpsCount = 0;
 		}
 		lastTime = static_cast<float>(glfwGetTime());
@@ -452,10 +484,13 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
-	string version = "v0.7.5.0-alpha";
+	string version = "v0.7.6.0-alpha";
+	
+	std::mutex renderingLock;
 
 	vector<std::pair<glm::vec4, glm::vec4>> toDrawCircles;
 	uint instanceVBO = 0;
+	int updBench = 0, vUpdBench = 0, dUpdBench = 0, uiUpdBench = 0, entityBenchmark = 0;
 
 	Renderer() { }
 
@@ -493,6 +528,7 @@ public:
 	// FBL stands for From Bottom Left.
 	void DrawFBL(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
 	{
+		renderingLock.lock();
 		glUseProgram(defaultShader);
 		if (currentFramebuffer == 0) // We're rendering to the big television in the sky.
 		{
@@ -518,6 +554,7 @@ public:
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(defaultShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		quad.Draw();
+		renderingLock.unlock();
 	}
 
 	inline void Draw(Vec2 pos, RGBA color, Vec2 dimensions = vOne)
@@ -527,52 +564,63 @@ public:
 
 	inline void DrawCircle(Vec3 pos, RGBA color, float radius = 1)
 	{
-		//for (int i = 0; i < cube.vertices.size(); i += 3)
-		//	if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
-		//	{
-		//	}
-		// radius *= -1;
+		if (glm::distance2(pos, camPos) < radius * radius * SQRTTHREE_F * SQRTTHREE_F)
+			for (int i = 0; i < cube.vertices.size(); i += 3)
+				if ((camera * glm::vec4(pos + radius * Vec3(cube.vertices[i], cube.vertices[i + 1], cube.vertices[i + 2]), 1.f)).z < 0)
+				{
+					radius *= -1;
+					break;
+				}
+		renderingLock.lock();
 		toDrawCircles.push_back({ glm::vec4(pos, radius), glm::vec4(color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f) });
+		renderingLock.unlock();
 	}
 
 	void DrawCircleInstantly(glm::vec4 posScale, RGBA color) // DOESN'T WORK
 	{
+		renderingLock.lock();
 		glUseProgram(circleShader);
 		glUniform4f(glGetUniformLocation(circleShader, "posScale"), posScale.x, posScale.y, posScale.z, posScale.w);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(circleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 
 		cube.Draw();
+		renderingLock.unlock();
 	}
 
 	void DrawAllCircles()
 	{
+		renderingLock.lock();
 		glBindVertexArray(cube.vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * toDrawCircles.size(), toDrawCircles.data(), GL_DYNAMIC_DRAW);
 		glDisable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		glUseProgram(circleShader);
 		stippleTexture.Activate(GL_TEXTURE8);
 		glDrawElementsInstanced(cube.mode, static_cast<GLsizei>(cube.indices.size()), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(toDrawCircles.size()));
 		toDrawCircles.clear();
 		glEnable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
+		renderingLock.unlock();
 	}
 
 	void DrawMesh(Mesh2* mesh, glm::mat4 transformation, RGBA color)
 	{
+		renderingLock.lock();
 		glUseProgram(modelShader);
 		glUniformMatrix4fv(glGetUniformLocation(modelShader, "transformation"), 1, GL_FALSE, glm::value_ptr(transformation));
 
+		Vec3 pos = transformation * glm::vec4(0, 0, 0, 1);
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(modelShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glUniform4f(glGetUniformLocation(modelShader, "color"), color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
 		mesh->Draw();
+		renderingLock.unlock();
 	}
 
 	void DrawCone(Vec3 a, Vec3 b, RGBA color, float thicknessA, float thicknessB = 0)
 	{
+		renderingLock.lock();
 		glUseProgram(coneShader);
 		glUniform3f(glGetUniformLocation(coneShader, "a"), a.x, a.y, a.z);
 		glUniform3f(glGetUniformLocation(coneShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
@@ -581,19 +629,23 @@ public:
 		glUniform1f(glGetUniformLocation(coneShader, "thicknessB"), thicknessB);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(coneShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glUniform4f(glGetUniformLocation(coneShader, "color"), color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
 		glDisable(GL_CULL_FACE);
 		cube.Draw();
 		glEnable(GL_CULL_FACE);
+		renderingLock.unlock();
 	}
 
 	inline void DrawString(string text, Vec2 pos, float scale, RGBA color, iVec2 pixelOffset = vZero) // In normal coordinates.
 	{
+		renderingLock.lock();
 		font.Render(text, pixelOffset + static_cast<iVec2>(Vec2((pos - Vec2(PlayerPos())) * 2.f) / Vec2(mainScreen->ScrDim()) * Vec2(ScrDim())), scale, color);
+		renderingLock.unlock();
 	}
 
 	void DrawTextured(Texture& texture, uint spriteToDraw, Vec2 pivot, Vec2 pos, RGBA color, Vec2 dimensions)
 	{
+		renderingLock.lock();
 		glUseProgram(texturedShader);
 		glUniform2f(glGetUniformLocation(texturedShader, "scale"),
 			dimensions.x / screenRatio, dimensions.y);
@@ -608,38 +660,44 @@ public:
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
 		glUniform4f(glGetUniformLocation(texturedShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
 		quad.Draw();
+		renderingLock.unlock();
 	}
 
 	inline void DrawCylinder(Vec3 a, Vec3 b, RGBA color, float thickness)
 	{
+		renderingLock.lock();
 		glUseProgram(cylinderShader);
 		glUniform3f(glGetUniformLocation(cylinderShader, "a"), a.x, a.y, a.z);
 		glUniform3f(glGetUniformLocation(cylinderShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
 		glUniform1f(glGetUniformLocation(cylinderShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(cylinderShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glUniform4f(glGetUniformLocation(cylinderShader, "color"), color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
 		glDisable(GL_CULL_FACE);
 		cube.Draw();
 		glEnable(GL_CULL_FACE);
+		renderingLock.unlock();
 	}
 
 	inline void DrawCapsule(Vec3 a, Vec3 b, RGBA color, float thickness)
 	{
+		renderingLock.lock();
 		glUseProgram(capsuleShader);
 		glUniform3f(glGetUniformLocation(capsuleShader, "a"), a.x, a.y, a.z);
 		glUniform3f(glGetUniformLocation(capsuleShader, "b"), b.x + 0.01f, b.y + 0.01f, b.z + 0.01f);
 		glUniform1f(glGetUniformLocation(capsuleShader, "thickness"), thickness);
 
 		// The " / 255.0f" is to put the 0-255 range colors into 0-1 range colors.
-		glUniform4f(glGetUniformLocation(capsuleShader, "color"), color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+		glUniform4f(glGetUniformLocation(capsuleShader, "color"), color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f);
 		glDisable(GL_CULL_FACE);
 		cube.Draw();
 		glEnable(GL_CULL_FACE);
+		renderingLock.unlock();
 	}
 
 	void DrawLight(Vec3 pos, float range, JRGB color) // You have to set a lot of variables manually before calling this!!!
 	{
+		renderingLock.lock();
 		glUniform3f(glGetUniformLocation(shadowShader, "pos"), pos.x, pos.y, pos.z);
 		pos = camera * glm::vec4(pos, 1);
 		glUniform3f(glGetUniformLocation(shadowShader, "position"), pos.x, pos.y, pos.z);
@@ -650,10 +708,12 @@ public:
 		glCullFace(GL_FRONT);
 		cube.Draw();
 		glCullFace(GL_BACK);
+		renderingLock.unlock();
 	}
 
 	void DrawFramebufferOnto(uint newFramebuffer)
 	{
+		renderingLock.lock();
 		glUseProgram(framebufferShader);
 		glBindTexture(GL_TEXTURE_2D, framebuffers[static_cast<size_t>(currentFramebuffer) - 1]->textureColorbuffer);	// use the color attachment texture as the texture of the quad plane
 		glUniform1i(glGetUniformLocation(framebufferShader, "screenTexture"), currentFramebuffer - 1);
@@ -668,6 +728,7 @@ public:
 
 		screenSpaceQuad.Draw();
 		glUseProgram(defaultShader);
+		renderingLock.unlock();
 	}
 
 	inline Vec3 PlayerPos(); // The position of the player
@@ -680,6 +741,7 @@ public:
 
 	void Fullscreen()
 	{
+		renderingLock.lock();
 		if (IsFullscreen())
 		{
 			glfwSetWindowMonitor(window, NULL, 100, 100, START_SCR_WIDTH, START_SCR_HEIGHT, 0);
@@ -688,6 +750,7 @@ public:
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+		renderingLock.unlock();
 	}
 };
 

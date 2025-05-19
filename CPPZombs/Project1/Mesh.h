@@ -11,7 +11,7 @@ public:
 	Mesh() : vbo(0), ebo(0), vao(0), vertices{}, indices{}, mode(GL_TRIANGLES) { }
 
 	Mesh(vector<float> vertices, vector<uint> indices, GLenum mode = GL_TRIANGLES, GLenum drawMode = GL_STATIC_DRAW, uint dimension = 2) :
-		vertices(vertices), indices(indices), mode(mode)
+		vbo(0), ebo(0), vao(0), vertices(vertices), indices(indices), mode(mode)
 	{
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
@@ -88,4 +88,4 @@ Mesh2 shrub;
 
 vector<Mesh*> meshes{ &quad, &screenSpaceQuad, &line, &dot, &lineThick, &cube, // Destroys them at the end.
 	};
-vector<Mesh2*> mesh2s{ &shrub }; // Destroys them at the end.
+vector<std::tuple<Mesh2*, int, string>> mesh2s{ {&shrub, SHRUB_MODEL, "Shrub"} }; // Destroys them at the end.

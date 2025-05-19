@@ -1,6 +1,14 @@
 #include "Texture.h"
 
 typedef glm::ivec2 iVec2;
+typedef glm::vec2 Vec2;
+typedef glm::ivec3 iVec3;
+typedef glm::vec3 Vec3;
+
+iVec2 northI2(0, 1), eastI2(1, 0), southI2(0, -1), westI2(-1, 0), vZeroI2(0), vOneI2(1);
+Vec2 north2(0, 1), east2(1, 0), south2(0, -1), west2(-1, 0), vZero2(0), vOne2(1);
+iVec3 northI(0, 1, 0), eastI(1, 0, 0), southI(0, -1, 0), westI(-1, 0, 0), upI(0, 0, 1), downI(0, 0, -1), vZeroI(0), vOneI(1);
+Vec3 north(0, 1, 0), east(1, 0, 0), south(0, -1, 0), west(-1, 0, 0), up(0, 0, 1), down(0, 0, -1), vZero(0), vOne(1);
 
 #pragma region iVec2 functions
 inline iVec2 RotateLeft(iVec2 a)
@@ -67,10 +75,6 @@ inline iVec2 Squarmalized(iVec2 a)
 	return a / max(1, Squagnitude(a));
 }
 #pragma endregion
-
-iVec2 northI2(0, 1), westI2(1, 0), southI2(0, -1), eastI2(-1, 0), vZeroI2(0), vOneI2(1);
-
-typedef glm::vec2 Vec2;
 
 #pragma region Vec2 functions
 inline iVec2 ToIV2(Vec2 a)
@@ -191,16 +195,6 @@ inline Vec2 TryAdd2V2(Vec2 original, Vec2 additional, float maxMagnitude)
 	return original;
 }
 #pragma endregion
-
-Vec2 north2(0, 1), west2(1, 0), south2(0, -1), east2(-1, 0), vZero2(0), vOne2(1);
-
-typedef glm::ivec3 iVec3;
-typedef glm::vec3 Vec3;
-
-// Flipflop east and west:
-Vec3 north(0, 1, 0), west(1, 0, 0), south(0, -1, 0), east(-1, 0, 0), up(0, 0, 1), down(0, 0, -1), vZero(0), vOne(1);
-
-iVec3 northI(0, 1, 0), westI(1, 0, 0), southI(0, -1, 0), eastI(-1, 0, 0), upI(0, 0, 1), downI(0, 0, -1), vZeroI(0), vOneI(1);
 
 #pragma region Vec3 functions
 inline iVec3 ToIV3(Vec3 a)

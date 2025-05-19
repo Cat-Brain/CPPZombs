@@ -241,11 +241,11 @@ Planet::Planet()
 	fog.g = rand() % 8;
 	fog.b = rand() % 8;
 
-	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses.RandomClone());
+	bosses = make_unique<Enemies::Instance>(Enemies::spawnableBosses);
 
-	faction1Spawns = make_unique<Enemies::OvertimeInstance>(Enemies::faction1Spawns.RandomClone());
+	faction1Spawns = make_unique<Enemies::OvertimeInstance>(Enemies::faction1Spawns, 240, 360);
 	faction1Spawns->Randomize();
-	wildSpawns = make_unique<Enemies::OvertimeInstance>(Enemies::wildSpawns.RandomClone());
+	wildSpawns = make_unique<Enemies::OvertimeInstance>(Enemies::wildSpawns, 30, 90);
 	wildSpawns->Randomize();
 }
 
@@ -304,14 +304,14 @@ void Chunk::Finalize()
 		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// xPlus
-	if ((index = game->entities->ChunkAtPos(pos + westI * CHUNK_WIDTH)) != -1)
+	if ((index = game->entities->ChunkAtPos(pos + eastI * CHUNK_WIDTH)) != -1)
 	{
 		xPlus = index;
 		game->entities->chunks[index]->xMin = thisIndex;
 		game->entities->chunks[index]->RegenerateMesh();
 	}
 	// xMin
-	if ((index = game->entities->ChunkAtPos(pos + eastI * CHUNK_WIDTH)) != -1)
+	if ((index = game->entities->ChunkAtPos(pos + westI * CHUNK_WIDTH)) != -1)
 	{
 		xMin = index;
 		game->entities->chunks[index]->xPlus = thisIndex;
@@ -996,8 +996,8 @@ namespace UpdateModes
 		}
 		// We're not dead so the update code gets run.
 #pragma region Pre-Update
-		if (game->dTime >= 1.f)
-			return; // Don't run frame if there was a GIGANTIC frame drop.
+		if (game->dTime >= 1.f || game->dTime == 0.f)
+			return; // Don't run frame if there was a GIGANTIC frame drop or if there was a glitch and it thinks that dTime is 0 which should be impossible.
 		// This is normally off.
 		glEnable(GL_DEPTH_TEST);
 		// Prepare current framebuffer to be used in rendering of the frame.
@@ -1067,6 +1067,8 @@ namespace UpdateModes
 		glUniformMatrix4fv(glGetUniformLocation(circleShader, "cameraInv"), 1, GL_FALSE, glm::value_ptr(game->cameraInv));
 		glUniformMatrix4fv(glGetUniformLocation(circleShader, "perspective"), 1, GL_FALSE, glm::value_ptr(game->perspective));
 		glUniform3f(glGetUniformLocation(circleShader, "camPos"), game->camPos.x, game->camPos.y, game->camPos.z);
+		glUniform1f(glGetUniformLocation(circleShader, "nearPlane"), game->nearDist);
+		glUniform1f(glGetUniformLocation(circleShader, "farPlane"), game->farDist);
 		glUseProgram(cylinderShader);
 		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camera"), 1, GL_FALSE, glm::value_ptr(game->camera));
 		glUniformMatrix4fv(glGetUniformLocation(cylinderShader, "camRot"), 1, GL_FALSE, glm::value_ptr(game->camRot));

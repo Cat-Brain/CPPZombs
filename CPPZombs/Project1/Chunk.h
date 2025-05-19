@@ -35,7 +35,6 @@ class Chunk : public vector<int>
 public:
 	iVec3 pos;
 	byte tiles[CHUNK_WIDTH][CHUNK_WIDTH][CHUNK_WIDTH];
-	Mesh mesh;
 	uint vbo = 0, ebo = 0, vao = 0, indCount = 0; // For mesh rendering.
 	int xPlus, xMin, yPlus, yMin, zPlus, zMin;
 
@@ -59,7 +58,6 @@ public:
 	}
 
 	Chunk(iVec3 pos = vZero);
-	void Finalize();
 
 	bool Overlaps(Vec2 pos, Vec2 dimensions)
 	{
@@ -102,9 +100,11 @@ public:
 	void Draw()
 	{
 		if (indCount == 0) return;
+		game->renderingLock.lock();
 		glUniform3f(glGetUniformLocation(chunkShader, "position"), float(pos.x), float(pos.y), float(pos.z));
 		glBindVertexArray(vao);
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indCount), GL_UNSIGNED_INT, 0);
+		game->renderingLock.unlock();
 	}
 
 	byte TileAtCPos(iVec3 pos)
@@ -224,6 +224,7 @@ public:
 	}
 
 	void GenerateMesh();
+	void Finalize();
 
 	void RegenerateMesh()
 	{

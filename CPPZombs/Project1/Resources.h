@@ -1,4 +1,4 @@
-#include "picopng.h"
+#include "Include.h"
 
 HMODULE GCM()
 {
@@ -30,5 +30,5 @@ public:
 					ptr = LockResource(hData);
 			}
 		}
-	}
+	} // <- There's a memory leak in here!
 };

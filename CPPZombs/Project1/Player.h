@@ -253,30 +253,37 @@ public:
 		return (*this)[index].count != 0 && tTime2 - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
-	bool Use(Vec3 pos, Vec3 dir) // True means stack is empty* and false means the opposite.
-	{ // *if isBuilding is true then it will return true.
-		if (isBuilding)
-		{
-			vector<Tower*> buildableTowers;
-			for (Tower* tower : Defences::Towers::towers)
-				if (CanMake(tower->recipe))
-					buildableTowers.push_back(tower);
-			if (buildableTowers.size() == 0) return true;
-			if (buildableTowers[currentIndex]->TryCreate(this, pos, dir, player))
-			{
-				// If we created a tower then we should make sure that currentIndex is still a valid value.
-				buildableTowers.clear();
-				for (Tower* tower : Defences::Towers::towers)
-					if (CanMake(tower->recipe))
-						buildableTowers.push_back(tower);
+	bool CanBuildOffhand(Vec3 pos, Vec3 dir)
+	{
+		return game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
+	}
 
-				if (buildableTowers.size() == 0)
-					currentIndex = 0;
-				else
-					currentIndex = currentIndex % buildableTowers.size();
-			}
-			return true;
-		}
+	bool Build(Vec3 pos, Vec3 dir)
+	{
+		vector<Tower*> buildableTowers;
+		for (Tower* tower : Defences::Towers::towers)
+			if (CanMake(tower->recipe))
+				buildableTowers.push_back(tower);
+		if (buildableTowers.size() == 0 || !buildableTowers[currentIndex]->TryCreate(this, pos, dir, player)) return false;
+		// If we created a tower then we should make sure that currentIndex is still a valid value.
+		buildableTowers.clear();
+		for (Tower* tower : Defences::Towers::towers)
+			if (CanMake(tower->recipe))
+				buildableTowers.push_back(tower);
+
+		if (buildableTowers.size() == 0)
+			currentIndex = 0;
+		else
+			currentIndex = currentIndex % buildableTowers.size();
+
+		return true;
+	}
+
+	bool BuildOffhand(Vec3 pos, Vec3 dir);
+
+	// True means stack is empty and false means the opposite.
+	bool Use(Vec3 pos, Vec3 dir)
+	{
 		int index = currentIndex + currentRow * width;
 		ItemInstance& currentItem = (*this)[index];
 		currentItem->itemU(currentItem, ProjUData(pos, dir, player));
@@ -285,14 +292,12 @@ public:
 
 	bool CanUseOffhand(Vec3 pos, Vec3 dir, float lastUse, float shootSpeed)
 	{
-		if (isBuilding)
-			return tTime2 - lastUse >= bItem.useTime * shootSpeed && game->entities->RaycastEnt(pos, dir, 30, MaskF::IsAlly, player).index != -1;
 		int index = int(size() - 1);
 		return (*this)[index].count != 0 && tTime2 - lastUse >= (*this)[index]->useTime * shootSpeed;
 	}
 
-	bool UseOffhand(Vec3 pos, Vec3 dir); // True means stack is empty* and false means the opposite.
-	// *if isBuilding is true then it will return true.
+	// True means stack is empty and false means the opposite.
+	bool UseOffhand(Vec3 pos, Vec3 dir);
 };
 
 int difficultySeedSpawnQuantity[] = { 7, 5, 3 };
@@ -301,6 +306,7 @@ int difficultySeedSelectQuantity[] = { 4, 5, 6 };
 #pragma region Player Types
 typedef std::function<void(Player* player)> PMovement;
 typedef std::function<bool(Player* player)> Primary, Offhand, Secondary, Utility;
+typedef function<bool(Player* player, bool creating)> Build;
 
 class PlayerBody : public Entity
 {
@@ -337,13 +343,14 @@ public:
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	Vec2 placingDir = north;
 	float moveSpeed, maxSpeed, vacDist, vacSpeed, maxVacSpeed, shootSpeed,
-		lastPrimary = 0, primaryTime, lastOffhand = 0, offhandTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
+		lastPrimary = 0, primaryTime, lastBuild = 0, buildTime, lastOffhand = 0, offhandTime, lastSecondary = 0, secondaryTime, lastUtility = 0, utilityTime, lastJump = 0;
 	bool shouldVacuum = true, shouldPickup = true, shouldScroll = true,
 		shouldRenderInventory = true;
 	float timeSinceHit = 0, timeTillHeal = 0;
 	EntityMaskFun vacMaskFun;
 	PMovement movement;
 	Primary primary;
+	Build build;
 	Offhand offhand;
 	Secondary secondary;
 	Utility utility;
@@ -357,16 +364,16 @@ public:
 	Vec3 upDir = vZero; // Perpendicular to rightDir and moveDir.
 #pragma endregion
 
-	Player(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility, EntityMaskFun vacMaskFun,
+	Player(EntityData* data, PMovement movement, Primary primary, Build build, Offhand offhand, Secondary secondary, Utility utility, EntityMaskFun vacMaskFun,
 		float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
 		float maxVacSpeed = 16, float shootSpeed = 1,
-		float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(),
+		float primaryTime = 1, float buildTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(),
 		JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0,
 		int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}) :
 		LightBlock(data, lightColor, lightOrDark, range, vZero, radius, color, color2, mass, bounciness, maxHealth, health, name, PLAYER_A),
-		movement(movement), primary(primary), offhand(offhand), secondary(secondary), utility(utility), vacDist(vacDist),
+		movement(movement), primary(primary), build(build), offhand(offhand), secondary(secondary), utility(utility), vacDist(vacDist),
 		moveSpeed(moveSpeed), startItems(startItems), vacMaskFun(vacMaskFun), vacSpeed(vacSpeed), maxSpeed(maxSpeed), maxVacSpeed(maxVacSpeed),
-		shootSpeed(shootSpeed), primaryTime(primaryTime), offhandTime(offhandTime), secondaryTime(secondaryTime), utilityTime(utilityTime)
+		shootSpeed(shootSpeed), primaryTime(primaryTime), buildTime(buildTime), offhandTime(offhandTime), secondaryTime(secondaryTime), utilityTime(utilityTime)
 	{
 		uiActive = true;
 	}
@@ -379,6 +386,7 @@ public:
 		sTime = 0;
 
 		lastPrimary = 0;
+		lastBuild = 0;
 		lastSecondary = 0;
 		lastUtility = 0;
 		shouldVacuum = true;
@@ -445,7 +453,7 @@ public:
 
 	virtual float PrimaryFill()
 	{
-		return min(1.f, (tTime2 - lastPrimary) / (items.GetCurrentItem()->useTime * shootSpeed));
+		return items.isBuilding ? min(1.f, (tTime2 - lastBuild) / buildTime) : min(1.f, (tTime2 - lastPrimary) / (items.GetCurrentItem()->useTime * shootSpeed));
 	}
 
 	virtual float OffhandFill()
@@ -470,13 +478,13 @@ class Flare : public Player
 public:
 	float currentFlame, maxFlame;
 
-	Flare(EntityData* data, float maxFlame, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+	Flare(EntityData* data, float maxFlame, PMovement movement, Primary primary, Build build, Offhand offhand, Secondary secondary, Utility utility,
 		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float vacDist = 6, float vacSpeed = 16,
-		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1,
+		float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float buildTime = 1, float offhandTime = 1, float secondaryTime = 1, float utilityTime = 1,
 		RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127), bool lightOrDark = true, float range = 10, float mass = 1,
 		float bounciness = 0, int maxHealth = 1, int health = 1, string name = "NULL NAME", Items startItems = {}) :
-		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
-			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color,
+		Player(data, movement, primary, build, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, buildTime, offhandTime, secondaryTime, utilityTime, color,
 			color2, lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems),
 		currentFlame(maxFlame), maxFlame(maxFlame)
 	{ }
@@ -508,14 +516,15 @@ public:
 	float rollAccelMul, rollSpeedMul, turretedShootSpeed;
 	EngState engState = EngState::DEFAULT;
 
-	Engineer(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+	Engineer(EntityData* data, PMovement movement, Primary primary, Build build, Offhand offhand, Secondary secondary, Utility utility,
 		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccelMul = 8, float rollSpeedMul = 16,
-		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float turretedShootSpeed = 2, float primaryTime = 1, float offhandTime = 1,
+		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float turretedShootSpeed = 2, float primaryTime = 1,
+		float buildTime = 1, float offhandTime = 1,
 		float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1,
 		string name = "NULL NAME", Items startItems = {}) :
-		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
-			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color, color2,
+		Player(data, movement, primary, build, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, buildTime, offhandTime, secondaryTime, utilityTime, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems),
 		rollAccelMul(rollAccelMul), rollSpeedMul(rollSpeedMul), turretedShootSpeed(turretedShootSpeed)
 	{ }
@@ -545,14 +554,14 @@ EntityData orchidData = EntityData(Updates::PlayerU, VUpdates::FrictionVU, DUpda
 class Orchid : public Player
 {
 public:
-	Orchid(EntityData* data, PMovement movement, Primary primary, Offhand offhand, Secondary secondary, Utility utility,
+	Orchid(EntityData* data, PMovement movement, Primary primary, Build build, Offhand offhand, Secondary secondary, Utility utility,
 		EntityMaskFun vacMaskFun, float radius = 0.5f, float moveSpeed = 8, float maxSpeed = 8, float rollAccel = 8, float rollSpeed = 16,
-		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float offhandTime = 1,
+		float vacDist = 6, float vacSpeed = 16, float maxVacSpeed = 16, float shootSpeed = 1, float primaryTime = 1, float buildTime = 1, float offhandTime = 1,
 		float secondaryTime = 1, float utilityTime = 1, RGBA color = RGBA(), RGBA color2 = RGBA(), JRGB lightColor = JRGB(127, 127, 127),
 		bool lightOrDark = true, float range = 10, float mass = 1, float bounciness = 0, int maxHealth = 1, int health = 1,
 		string name = "NULL NAME", Items startItems = {}) :
-		Player(data, movement, primary, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
-			maxVacSpeed, shootSpeed, primaryTime, offhandTime, secondaryTime, utilityTime, color, color2,
+		Player(data, movement, primary, build, offhand, secondary, utility, vacMaskFun, radius, moveSpeed, maxSpeed, vacDist, vacSpeed,
+			maxVacSpeed, shootSpeed, primaryTime, buildTime, offhandTime, secondaryTime, utilityTime, color, color2,
 			lightColor, lightOrDark, range, mass, bounciness, maxHealth, health, name, startItems)
 	{ }
 
@@ -784,6 +793,16 @@ namespace Primaries
 	}
 }
 
+namespace Builds
+{
+	bool Default(Player* player, bool creating)
+	{
+		if (!creating)
+			return player->items.BuildOffhand(player->pos, player->camDir);
+		return player->items.Build(player->pos, player->camDir);
+	}
+}
+
 namespace Offhands
 {
 	bool DualWield(Player* player)
@@ -886,16 +905,16 @@ namespace Utilities
 }
 #pragma endregion
 #pragma region Player Instances
-Player soldier = Player(&playerData, PMovements::Default, Primaries::Pistol, Offhands::DualWield, Secondaries::GrenadeThrow,
-	Utilities::TacticoolRoll, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 4, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
+Player soldier = Player(&playerData, PMovements::Default, Primaries::Pistol, Builds::Default, Offhands::DualWield, Secondaries::GrenadeThrow,
+	Utilities::TacticoolRoll, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0.25f, 0, 2, 4, RGBA(0, 0, 255), RGBA(), JRGB(127, 127, 127), true, 20, 5, 0.25f, 100, 50,
 	"Soldier", Items({ Resources::iron.Clone(10) }));
 
-Flare flare = Flare(&flareData, 100, PMovements::Default, Primaries::Pistol, Offhands::DualWield, Secondaries::ThrowFlame,
-	Utilities::FlameThrower, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0, 2, 0.0625f, RGBA(255, 255), RGBA(0, 0, 255),
+Flare flare = Flare(&flareData, 100, PMovements::Default, Primaries::Pistol, Builds::Default, Offhands::DualWield, Secondaries::ThrowFlame,
+	Utilities::FlameThrower, MaskF::IsCollectible, 0.4f, 32, 8, 6, 256, 32, 1, 0, 0.25f, 0, 2, 0.0625f, RGBA(255, 255), RGBA(0, 0, 255),
 	JRGB(127, 127, 127), true, 5.f, 1.5f, 0.25f, 100, 50, "Flare", Items({ Resources::rock.Clone(10) }));
 
-Engineer engineer = Engineer(&engineerData, PMovements::EngineerPM, Primaries::EngineerPr, Offhands::MakeTurret, Secondaries::Turretify,
-	Utilities::Rollify, MaskF::IsCollectible, 0.4f, 32, 8, 1, 2, 6, 256, 32, 1, 0.25f, 0, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
+Engineer engineer = Engineer(&engineerData, PMovements::EngineerPM, Primaries::EngineerPr, Builds::Default, Offhands::MakeTurret, Secondaries::Turretify,
+	Utilities::Rollify, MaskF::IsCollectible, 0.4f, 32, 8, 1, 2, 6, 256, 32, 1, 0.25f, 0, 0.25f, 1, 0.5f, 0.25f, RGBA(127, 63, 63), RGBA(), JRGB(127, 127, 127),
 	true, 20, 5, 0.25f, 100, 50, "Engineer", Items({ Resources::copper.Clone(30) }));
 
 vector<Player*> characters = { &soldier, &flare, &engineer };
@@ -1098,20 +1117,17 @@ void PlayerInventory::Update(bool shouldScroll)
 	else if (game->inputs.keys[KeyCode::PRIMARY].pressed) currentSelected = -1;
 }
 
+bool PlayerInventory::BuildOffhand(Vec3 pos, Vec3 dir)
+{
+	RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
+	if (hit.index == -1) return false;
+	Entity* hitEntity = (*game->entities)[hit.index].get();
+	if (hitEntity != static_cast<Entity*>(game->base))
+		return hitEntity->ApplyHit(100000, player) == HitResult::DIED;
+}
+
 bool PlayerInventory::UseOffhand(Vec3 pos, Vec3 dir)
 {
-	if (isBuilding)
-	{
-		RaycastHit hit = game->entities->RaycastEnt(pos, player->dir, 30, MaskF::IsAlly, player);
-		if (hit.index != -1)
-		{
-			Entity* hitEntity = (*game->entities)[hit.index].get();
-			if (hitEntity != static_cast<Entity*>(game->base))
-				hitEntity->ApplyHit(100000, player);
-
-		}
-		return true;
-	}
 	int index = int(size() - 1);
 	ItemInstance& currentItem = (*this)[index];
 	currentItem->itemU(currentItem, ProjUData(pos, dir, player));
@@ -1128,7 +1144,6 @@ namespace Updates
 {
 	void PlayerU(Entity* entity)
 	{
-		std::cout << tTime2 << ", ";
 		Player* player = static_cast<Player*>(entity);
 
 		player->inputs = game->inputs;
@@ -1178,10 +1193,19 @@ namespace Updates
 
 			ItemInstance currentShootingItem = player->items.GetCurrentItem();
 
-			if (!player->items.isOpen && player->inputs.keys[KeyCode::PRIMARY].held && tTime2 - player->lastPrimary >= player->primaryTime && player->primary(player))
-				player->lastPrimary = tTime2;
-			if (!player->items.isOpen && player->inputs.keys[KeyCode::OFFHAND].held && tTime2 - player->lastOffhand >= player->offhandTime && player->offhand(player))
-				player->lastOffhand = tTime2;
+			if (player->items.isBuilding)
+			{
+				if ((player->inputs.keys[KeyCode::PRIMARY].held || player->inputs.keys[KeyCode::OFFHAND].held)
+					&& tTime2 - player->lastBuild >= player->buildTime && player->build(player, player->inputs.keys[KeyCode::PRIMARY].held))
+					player->lastBuild = tTime2;
+			}
+			else if (!player->items.isOpen)
+			{
+				if (player->inputs.keys[KeyCode::PRIMARY].held && tTime2 - player->lastPrimary >= player->primaryTime && player->primary(player))
+					player->lastPrimary = tTime2;
+				if (player->inputs.keys[KeyCode::OFFHAND].held && tTime2 - player->lastOffhand >= player->offhandTime && player->offhand(player))
+					player->lastOffhand = tTime2;
+			}
 			if (player->inputs.keys[KeyCode::SECONDARY].held && tTime2 - player->lastSecondary >= player->secondaryTime && player->secondary(player))
 				player->lastSecondary = tTime2;
 			if (player->inputs.keys[KeyCode::UTILITY].held && tTime2 - player->lastUtility >= player->utilityTime && player->utility(player))
