@@ -3,6 +3,7 @@
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(51,22): warning C4305: 'initializing': truncation from 'double' to 'const float'
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Include.h(54,27): warning C4305: 'initializing': truncation from 'double' to 'const float'
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Mesh.h(76,34): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Renderer.h(72,30): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:         with
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Entities.h(625,101): warning C4244:         [
@@ -28,25 +29,25 @@ C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Enemy.h(1699,21): warn
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(149,12): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(150,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(151,16): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(798,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(850,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(877,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         with
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         [
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:             _Ty=int
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(884,73): warning C4244:         ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(959,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         with
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         [
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:             _Ty=int
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(966,73): warning C4244:         ]
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1245,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1497,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1505,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1511,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1511,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(815,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(867,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(894,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(901,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(901,73): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(901,73): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(901,73): warning C4244:             _Ty=int
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(901,73): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(976,43): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(983,73): warning C4244: 'argument': conversion from 'const _Ty' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(983,73): warning C4244:         with
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(983,73): warning C4244:         [
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(983,73): warning C4244:             _Ty=int
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(983,73): warning C4244:         ]
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1262,22): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1514,25): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1522,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1528,55): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\Game2.h(1528,38): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\0501j\Programming\C++\CPPZombs\CPPZombs\Project1\main.cpp(7,16): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\utility(247,54): warning C4244:         with
@@ -64,7 +65,7 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.3380
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.40.33807\include\memory(3595,56): warning C4244:         ]
 LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  0 of 6643 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+  0 of 6645 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

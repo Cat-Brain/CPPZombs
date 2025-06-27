@@ -69,10 +69,7 @@ int main()
 }
 
 /*
-v0.7.6.0 Changelog:
-	Decreased oppacity of vaccumium
-	Some reorganization, refactoring, and stuff of that kin
-	Added max round spawns for enemies! Maybe will help performance?
-	Reimplemented wave counter as now being time based. Not sure why that wasn't the case...
-	Changed "wave" that enemies spawn on for most enemies
+v0.7.6.1 Changelog:
+	Changed size of quartz projectile to make using it more enjoyable
+	Added setting for sensitivity
 */

@@ -1,7 +1,8 @@
 
-version = v0.7.6.0-alpha
+version = v0.7.6.1-alpha
 difficulty = Hard
 chunk render dist = 3
+sensitivity multiplier = 0
 start seeds = ftftffftttffftfff
 character = 2
 high scores = 0,0,17571

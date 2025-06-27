@@ -175,20 +175,37 @@ void LogBook::DUpdate()
 			game->settings.Write();
 		}
 
-		float horOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(game->settings.chunkRenderDist)) * scale;
+		float chunkRenderDistHOffset = font.TextWidthTrue("Chunk Render Dist =  " + to_string(game->settings.chunkRenderDist)) * scale;
 		font.Render("Chunk Render Dist = " + to_string(game->settings.chunkRenderDist), Vec2(-ScrWidth(), offset * 2 + ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
-		if (InputHoverSquare(Vec2(horOffset, offset + ScrHeight() * (1 - 0.125 * i)), scale,
+		if (InputHoverSquare(Vec2(chunkRenderDistHOffset, offset + ScrHeight() * (1 - 0.125 * i)), scale,
 			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
 		{
 			game->settings.chunkRenderDist--;
 			game->settings.chunkRenderDist = max(1u, game->settings.chunkRenderDist);
 			game->settings.Write();
 		}
-		horOffset += font.TextWidthTrue("\\/ ") * scale;
-		if (InputHoverSquare(Vec2(horOffset, offset + ScrHeight() * (1 - 0.125 * i++)), scale,
+		chunkRenderDistHOffset += font.TextWidthTrue("\\/ ") * scale;
+		if (InputHoverSquare(Vec2(chunkRenderDistHOffset, offset + ScrHeight() * (1 - 0.125 * i++)), scale,
 			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
 		{
 			game->settings.chunkRenderDist++;
+			game->settings.Write();
+		}
+
+		string sensitivityString = "Sensitivity =  " + ToStringWithPrecision(game->settings.sensitivity, 3);
+		float SensitivityHOffset = font.TextWidthTrue(sensitivityString) * scale;
+		font.Render(sensitivityString, Vec2(-ScrWidth(), offset * 2 + ScrHeight() * (2 - 0.25 * i) - ScrHeight()), scale * 2, RGBA(255, 255, 255));
+		if (InputHoverSquare(Vec2(SensitivityHOffset, offset + ScrHeight() * (1 - 0.125 * i)), scale,
+			"\\/", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			game->settings.sensitivityMul--;
+			game->settings.Write();
+		}
+		SensitivityHOffset += font.TextWidthTrue("\\/ ") * scale;
+		if (InputHoverSquare(Vec2(SensitivityHOffset, offset + ScrHeight() * (1 - 0.125 * i++)), scale,
+			"/\\", RGBA(255, 255, 255), RGBA(127, 127, 127)))
+		{
+			game->settings.sensitivityMul++;
 			game->settings.Write();
 		}
 

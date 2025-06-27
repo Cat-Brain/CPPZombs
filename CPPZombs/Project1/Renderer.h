@@ -19,6 +19,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 constexpr int START_SCR_WIDTH = 990;
 constexpr int START_SCR_HEIGHT = 990;
 
+constexpr float SENSITIVITY_EXPONENT = 1.02f;
+constexpr float SENSITIVITY_DEFAULT = 300;
+
 enum DIFFICULTY
 {
 	EASY, MEDIUM, HARD
@@ -46,7 +49,8 @@ public:
 	DIFFICULTY difficulty = DIFFICULTY::EASY;
 	CHARS character = CHARS::SOLDIER;
 	uint chunkRenderDist = 3;
-	float sensitivity = 300;
+	float sensitivity = SENSITIVITY_DEFAULT;
+	int sensitivityMul = 0;
 	bool startSeeds[UnEnum(SEEDINDICES::COUNT)] = { false };
 	bool colorBand = true, vSync = true, displayFPS = true, maximized = true, displayBenchmarks = false,
 		canChangeRow = false, hasLoadedModels = false, newBalanceChange = true; // <- to be removed probably
@@ -62,6 +66,11 @@ public:
 	vector<std::pair<bool*, string>> hidBoolSettings = {
 		{&maximized, "maximized"}, {&hasLoadedModels, "Has Loaded Models"} };
 	int highScores[3] = { 0 };
+
+	float SensitivityMulToSensitivity(int mul)
+	{
+		return SENSITIVITY_DEFAULT * std::pow(SENSITIVITY_EXPONENT, mul);
+	}
 
 	void TryOpen()
 	{
@@ -86,6 +95,17 @@ public:
 					int result = std::stoi(contents.substr(20));
 					if (result != -1)
 						chunkRenderDist = result;
+				}
+				else if (contents.find("sensitivity multiplier = ") == 0)
+				{
+					bool negative = contents[25] == '-';
+					int result = std::stoi(contents.substr(25 + (negative ? 1 : 0)));
+					std::cout << '(' << contents.substr(25) << ")\n";
+					if (result != -1)
+					{
+						sensitivityMul = result * (negative ? -1 : 1);
+						sensitivity = SensitivityMulToSensitivity(sensitivityMul);
+					}
 				}
 				else if (contents.find("start seeds = ") == 0)
 				{
@@ -168,10 +188,13 @@ public:
 		for (bool b : startSeeds)
 			startSeedsStr += b ? "t" : "f";
 
+		sensitivity = SensitivityMulToSensitivity(sensitivityMul);
+
 		string contents =
 			"\nversion = " + lastVersion +
 			"\ndifficulty = " + difficultyStrs[difficulty] +
 			"\nchunk render dist = " + to_string(chunkRenderDist) +
+			"\nsensitivity multiplier = " + to_string(sensitivityMul) +
 			startSeedsStr +
 			"\ncharacter = " + to_string(UnEnum(character)) +
 			"\nhigh scores = " + to_string(highScores[0]) + ',' + to_string(highScores[1]) + ',' + to_string(highScores[2]);
@@ -484,7 +507,7 @@ public:
 	glm::mat4 camera = glm::mat4(1), cameraInv = glm::mat4(1), camRot = glm::mat4(1), perspective = glm::mat4(1);
 	int cursorUnlockCount = 1, lastCursorUnlockCount = 1;
 	Frustum camFrustum;
-	string version = "v0.7.6.0-alpha";
+	string version = "v0.7.6.1-alpha";
 	
 	std::mutex renderingLock;
 

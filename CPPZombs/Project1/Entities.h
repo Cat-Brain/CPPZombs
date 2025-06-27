@@ -1463,7 +1463,7 @@ namespace Resources
 	ExplodeOnLanding sapphire = ExplodeOnLanding(ITEMTYPE::SAPPHIRE, 1.5f, 10, "Sapphire", "Ammo", VUpdates::EntityVU, 1, RGBA(78, 25, 212), 0, 15.0f, 0.125f, 12, 0.1f, false, true, true);
 	PlacedOnLanding lead = PlacedOnLanding(ITEMTYPE::LEAD, &Hazards::leadPuddle, "Lead", "Ammo", VUpdates::GravityVU, 1, RGBA(80, 43, 92), 0, 15.0f, true, 3, 12, 0.4f, false, true, true);
 	PlacedOnLanding vacuumium = PlacedOnLanding(ITEMTYPE::VACUUMIUM, &Hazards::vacuumPuddle, "Vacuumium", "Push Ammo", VUpdates::EntityVU, 1, RGBA(255, 255, 255), 0, 15, false, 0.25f, 12, 0.1f, false, true, true);
-	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", VUpdates::EntityVU, 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.5f, false, true, true);
+	ImproveSoilOnLanding quartz = ImproveSoilOnLanding(ITEMTYPE::QUARTZ, 3, "Quartz", "Tile", VUpdates::EntityVU, 5, RGBA(156, 134, 194), 0, 15, 0.125f, 12.f, 0.125f, false, true, true);
 }
 
 namespace Collectibles
